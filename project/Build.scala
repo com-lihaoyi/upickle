@@ -3,7 +3,7 @@ import Keys._
 import scala.scalajs.sbtplugin.ScalaJSPlugin.ScalaJSKeys.scalaJSEnvironment
 import scala.scalajs.sbtplugin.ScalaJSPlugin.scalaJSSettings
 
-class CrossCrossBuild(sharedSettings: Seq[Def.Setting[_]]){
+class CrossCrossBuild(sharedSettings: Def.Setting[_]*){
   val defaultSettings = Seq(
     unmanagedSourceDirectories in Compile <+= baseDirectory(_ / ".." / "shared" / "main" / "scala"),
     unmanagedSourceDirectories in Test <+= baseDirectory(_ / ".." / "shared" / "test" / "scala")
@@ -42,39 +42,36 @@ class CrossCrossBuild(sharedSettings: Seq[Def.Setting[_]]){
 
 object Build extends sbt.Build{
   val cross = new CrossCrossBuild(
-    Seq(
-      organization := "com.lihaoyi",
+    organization := "com.lihaoyi",
 
-      version := "0.1.0",
-      name := "upickle",
+    version := "0.1.0",
+    name := "upickle",
 
-      // Sonatype
-      publishArtifact in Test := false,
-      publishTo <<= version { (v: String) =>
-        Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
-      },
+    // Sonatype
+    publishArtifact in Test := false,
+    publishTo <<= version { (v: String) =>
+      Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+    },
 
-      pomExtra := (
-        <url>https://github.com/lihaoyi/upickle</url>
-        <licenses>
-          <license>
-            <name>MIT license</name>
-            <url>http://www.opensource.org/licenses/mit-license.php</url>
-          </license>
-        </licenses>
-        <scm>
-          <url>git://github.com/lihaoyi/upickle.git</url>
-          <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
-        </scm>
-        <developers>
-          <developer>
-            <id>lihaoyi</id>
-            <name>Li Haoyi</name>
-            <url>https://github.com/lihaoyi</url>
-          </developer>
-        </developers>
-      )
-    )
+    pomExtra :=
+      <url>https://github.com/lihaoyi/upickle</url>
+      <licenses>
+        <license>
+          <name>MIT license</name>
+          <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+      </licenses>
+      <scm>
+        <url>git://github.com/lihaoyi/upickle.git</url>
+        <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>lihaoyi</id>
+          <name>Li Haoyi</name>
+          <url>https://github.com/lihaoyi</url>
+        </developer>
+      </developers>
   )
 
   lazy val root = cross.root
