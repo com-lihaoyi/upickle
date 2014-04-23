@@ -51,7 +51,7 @@ trait Implicits {
   )
   implicit def Tuple2Reader[T1: Reader, T2: Reader] = new ReaderCls[(T1, T2)]({
     case Js.Array(Seq(x1, x2)) => (readJs[T1](x1), readJs[T2](x2))
-    case x => println(x); throw new Exception()
+    case x => throw new Exception()
   })
   implicit def Tuple3Writer[T1: Writer, T2: Writer, T3: Writer] = new WriterCls[(T1, T2, T3)](
     x => Js.Array(Seq(writeJs(x._1), writeJs(x._2), writeJs(x._3)))

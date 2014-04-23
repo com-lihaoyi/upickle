@@ -13,9 +13,9 @@ import utest.asserts._
  */
 package object upickle extends Implicits{
 
-  def write[T: Writer](expr: T): String = Json.write(writeJs(expr))
+  def write[T: Writer](expr: T): String = Js.write(writeJs(expr))
   def writeJs[T: Writer](expr: T): Js.Value = implicitly[Writer[T]].write(expr)
-  def read[T: Reader](expr: String): T = readJs[T](Json.read(expr))
+  def read[T: Reader](expr: String): T = readJs[T](Js.read(expr))
   def readJs[T: Reader](expr: Js.Value): T = implicitly[Reader[T]].read(expr)
 }
 

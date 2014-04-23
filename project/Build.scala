@@ -3,12 +3,14 @@ import Keys._
 import scala.scalajs.sbtplugin.ScalaJSPlugin.ScalaJSKeys.scalaJSEnvironment
 import scala.scalajs.sbtplugin.ScalaJSPlugin.scalaJSSettings
 object Build extends sbt.Build{
+  lazy val root = project.in(file("."))
+                         .aggregate(js, jvm)
+                         .settings(crossScalaVersions := Seq("2.10.4", "2.11.0"))
   lazy val js = project.in(file("js"))
                        .settings(sharedSettings ++ scalaJSSettings:_*)
                        .settings(
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules.scalajs" %% "scalajs-dom" % "0.3",
-      "com.lihaoyi" %% "utest" % "0.1.3-JS"
+      "com.lihaoyi" %% "utest" % "0.1.3-JS" % "test"
     ),
     (loadedTestFrameworks in Test) := {
       (loadedTestFrameworks in Test).value.updated(
@@ -22,15 +24,13 @@ object Build extends sbt.Build{
                         .settings(sharedSettings:_*)
                         .settings(
     libraryDependencies ++= Seq(
-      "org.parboiled" %% "parboiled" % "2.0-M2",
-      "com.lihaoyi" %% "utest" % "0.1.3"
+      "com.lihaoyi" %% "utest" % "0.1.3" % "test"
     ),
     testFrameworks += new TestFramework("utest.runner.JvmFramework")
   )
 
   val sharedSettings = Seq(
     organization := "com.lihaoyi",
-    crossScalaVersions := Seq("2.10.4", "2.11.0-RC4"),
     scalaVersion := "2.10.4",
     version := "0.1.0",
     name := "upickle",
@@ -54,7 +54,7 @@ object Build extends sbt.Build{
         </licenses>
         <scm>
           <url>git://github.com/lihaoyi/upickle.git</url>
-          <connection>scm:git://github.com/lihaoyi/utest.git</connection>
+          <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
         </scm>
         <developers>
           <developer>

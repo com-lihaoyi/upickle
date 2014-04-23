@@ -11,11 +11,7 @@ object TestUtil {
     val writtenT = write(t)
     val s = if (sIn == null) writtenT else sIn.trim
     val readS = read[T](s)
-    println("A")
-    println(writtenT)
-    println(s)
-    println(k(readS))
-    println(k(t))
+
     assert(
       writtenT == s,
       k(readS) == k(t)
