@@ -1,7 +1,4 @@
 
-import scala.collection.generic.CanBuildFrom
-import scala.reflect.ClassTag
-import utest.asserts._
 
 /**
  * Picklite tries the following mechanisms for pickling a type
