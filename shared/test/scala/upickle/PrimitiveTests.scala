@@ -25,8 +25,12 @@ object PrimitiveTests extends TestSuite{
       "max" - rw(Int.MaxValue, "2147483647")
     }
 
-    "Double" - rw(125123: Double, """ "125123.0" """)
-    "Double2" - rw(125123.1542312, """ "125123.1542312" """)
+    "Double" - {
+      "whole" - rw(125123: Double, """ "125123.0" """)
+      "fractional" - rw(125123.1542312, """ "125123.1542312" """)
+      "negative" - rw(125123.1542312, """ "-125123.1542312" """)
+    }
+
     "Short" - {
       "simple" - rw(25123: Short, "25123")
       "min" - rw(Short.MinValue, "-32768")

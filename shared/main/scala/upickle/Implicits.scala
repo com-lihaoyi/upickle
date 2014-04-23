@@ -20,14 +20,14 @@ trait Implicits {
   }
   class NumericStringReadWriter[T](func: String => T) extends ReadWriter[T](
     x => Js.String(x.toString),
-    x => func(x.asInstanceOf[Js.String].s)
+    x => func(x.asInstanceOf[Js.String].value)
   )
   class NumericReadWriter[T](func: String => T) extends ReadWriter[T](
     x => Js.Number(x.toString),
-    x => func(x.asInstanceOf[Js.Number].d)
+    x => func(x.asInstanceOf[Js.Number].value)
   )
 
-  implicit object StringPickler extends ReadWriter[String](Js.String, _.asInstanceOf[Js.String].s)
+  implicit object StringPickler extends ReadWriter[String](Js.String, _.asInstanceOf[Js.String].value)
   implicit val NothingReader = new ReaderCls[Nothing](x => ???)
   implicit val NothingWriter= new WriterCls[Nothing](x => ???)
   implicit val CharPickler = new NumericStringReadWriter[Char](_(0))
@@ -108,7 +108,7 @@ trait Implicits {
     x => Js.Array(g(x).get.map(x => writeJs(x)))
   )
   def SeqLikeReader[T: Reader, R[_]](f: Seq[T] => R[T]): ReaderCls[R[T]] = new ReaderCls[R[T]](
-    x => f(x.asInstanceOf[Js.Array].args.map(readJs[T]))
+    x => f(x.asInstanceOf[Js.Array].value.map(readJs[T]))
   )
 
   implicit def SeqWriter[T: Writer] = SeqLikeWriter[T, Seq](Seq.unapplySeq)
@@ -136,7 +136,7 @@ trait Implicits {
     x => Js.Array(x.toSeq.map(writeJs[(K, V)]))
   )
   implicit def MapReader[K: Reader, V: Reader] = new ReaderCls[Map[K, V]](
-    x => x.asInstanceOf[Js.Array].args.map(readJs[(K, V)]).toMap
+    x => x.asInstanceOf[Js.Array].value.map(readJs[(K, V)]).toMap
   )
 
   implicit val DurationWriter = new WriterCls[Duration]({

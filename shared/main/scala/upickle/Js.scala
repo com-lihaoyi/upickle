@@ -1,19 +1,28 @@
 package upickle
 
 import scala.annotation.switch
-import scala.Predef._
-import scala.Some
 
 object Js {
-  sealed trait Value
-  case class String(s: java.lang.String) extends Value
-  case class Object(kv: Seq[(java.lang.String, Value)]) extends Value
-  case class Array(args: Seq[Value]) extends Value
-  case class Number(d: java.lang.String) extends Value
-  case object False extends Value
-  case object True extends Value
-  case object Null extends Value
+  sealed trait Value{
+    def value: Any
+    def apply(i: Int): Value = this.asInstanceOf[Array].value(i)
+    def apply(s: java.lang.String): Value = this.asInstanceOf[Object].value.find(_._1 == s).get._2
+  }
+  case class String(value: java.lang.String) extends Value
+  case class Object(value: Seq[(java.lang.String, Value)]) extends Value
+  case class Array(value: Seq[Value]) extends Value
+  case class Number(value: java.lang.String) extends Value
+  case object False extends Value{
+    def value = true
+  }
+  case object True extends Value{
+    def value = false
+  }
+  case object Null extends Value{
+    def value = null
+  }
 }
+
 
 object Json {
   def write(v: Js.Value): String = v match {
@@ -174,8 +183,8 @@ object Json {
 
     // *** LEXER ***
 
-    var tokenKind: TokenKind = BLANK
-    var tokenValue: String = ""
+    var tokenKind = BLANK
+    var tokenValue = ""
     var linePos = 1
     var charPos = 1
 
@@ -280,18 +289,18 @@ object Json {
                       chNext()
                     }
                     sb.append(code.toChar.toString)
-
                 }
                 first = chMark
               } else {
                 chNext()
               }
             }
-            if (ch != '"') chError("Unexpected string character:" + ch.toChar)
+            if (ch != '"') chError("Unexpected string character: " + ch.toChar)
 
             sb.append(chSubstr(first))
 
             tokenKind = STRING
+
             tokenValue = sb.toString()
             chNext()
             if (tokenValue.length() == 0 && ch == '{') {
@@ -309,7 +318,7 @@ object Json {
             tokenKind = BLANK
             tokenValue = ""
 
-          case Other => chError("Unexpected character")
+          case Other => chError("Unexpected character: " + ch.toChar + " " + ch)
           case Eof =>
             chNext()
             tokenKind = EOF
@@ -369,7 +378,17 @@ object Json {
       tokenNext()
       Js.Object(result.reverse)
     }
+    def handleNumber(name: String, f: String => Unit) = {
+      val v = try {
+        f(tokenValue)
+      } catch {
+        case _: Throwable => tokenError("Bad " + name)
+      }
+      val old = tokenValue
+      tokenNext()
 
+      Js.Number(old)
+    }
     def getJson(): Js.Value = {
       val kind: Int = tokenKind
       val result: Js.Value = (kind: @switch) match {
@@ -389,16 +408,9 @@ object Json {
           tokenNext()
           Js.String(result)
 
-        case NUMBER | BIGNUMBER | FLOATNUMBER =>
-          val v = try {
-            tokenValue.toLong
-          } catch {
-            case _: Throwable => tokenError("Bad integer")
-          }
-          tokenNext()
-          val r = if (v >= Int.MinValue && v <= Int.MaxValue) v.toInt else v
-          Js.Number("" + r)
-
+        case NUMBER => handleNumber("NUMBER", _.toLong)
+        case BIGNUMBER => handleNumber("BIGNUMBER", _.toDouble)
+        case FLOATNUMBER => handleNumber("FLOATNUMBER", _.toDouble)
         case COLON => handleUnexpected(":")
         case COMMA => handleUnexpected(",")
         case LOBJ => handleObject()
