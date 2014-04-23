@@ -1,6 +1,4 @@
-package picklite
-import scala.language.experimental.macros
-import scala.reflect.macros.{TypecheckException, Context}
+package upickle
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success}
 import scala.collection.SortedSet

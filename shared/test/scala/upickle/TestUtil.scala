@@ -1,4 +1,4 @@
-package picklite
+package upickle
 
 /**
  * Created by haoyi on 4/22/14.

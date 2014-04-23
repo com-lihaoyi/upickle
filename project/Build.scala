@@ -33,7 +33,7 @@ object Build extends sbt.Build{
     crossScalaVersions := Seq("2.10.4", "2.11.0-RC4"),
     scalaVersion := "2.10.4",
     version := "0.1.0",
-    name := "picklite",
+    name := "upickle",
 
     unmanagedSourceDirectories in Compile <+= baseDirectory(_ / ".." / "shared" / "main" / "scala"),
     unmanagedSourceDirectories in Test <+= baseDirectory(_ / ".." / "shared" / "test" / "scala"),
@@ -45,7 +45,7 @@ object Build extends sbt.Build{
     },
 
     pomExtra := (
-      <url>https://github.com/lihaoyi/utest</url>
+      <url>https://github.com/lihaoyi/upickle</url>
         <licenses>
           <license>
             <name>MIT license</name>
@@ -53,7 +53,7 @@ object Build extends sbt.Build{
           </license>
         </licenses>
         <scm>
-          <url>git://github.com/lihaoyi/utest.git</url>
+          <url>git://github.com/lihaoyi/upickle.git</url>
           <connection>scm:git://github.com/lihaoyi/utest.git</connection>
         </scm>
         <developers>

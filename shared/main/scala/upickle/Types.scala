@@ -1,4 +1,4 @@
-package picklite
+package upickle
 
 trait Writer[T]{val write: T => Js.Value}
 trait Reader[T]{val read: Js.Value => T}

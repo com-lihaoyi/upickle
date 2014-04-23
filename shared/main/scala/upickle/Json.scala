@@ -1,4 +1,4 @@
-package picklite
+package upickle
 
 import scala.annotation.switch
 import scala.collection.mutable

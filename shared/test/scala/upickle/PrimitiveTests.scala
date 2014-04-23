@@ -1,4 +1,4 @@
-package picklite
+package upickle
 
 import utest._
 import scala.collection.SortedSet

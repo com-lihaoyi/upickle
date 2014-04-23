@@ -1,8 +1,6 @@
 
 import scala.collection.generic.CanBuildFrom
 import scala.reflect.ClassTag
-import scala.reflect.macros.Context
-import utest.framework.{TestTreeSeq, Test}
 import utest.asserts._
 
 /**
@@ -13,9 +11,7 @@ import utest.asserts._
  * - Does the companion have matching apply/unapplySeq?
  *
  */
-package object picklite extends Implicits{
-
-  import language.experimental.macros
+package object upickle extends Implicits{
 
   def write[T: Writer](expr: T): String = Json.write(writeJs(expr))
   def writeJs[T: Writer](expr: T): Js.Value = implicitly[Writer[T]].write(expr)
