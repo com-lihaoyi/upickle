@@ -3,45 +3,9 @@ import Keys._
 import scala.scalajs.sbtplugin.ScalaJSPlugin.ScalaJSKeys.scalaJSEnvironment
 import scala.scalajs.sbtplugin.ScalaJSPlugin.scalaJSSettings
 
-class CrossCrossBuild(sharedSettings: Def.Setting[_]*){
-  val defaultSettings = Seq(
-    unmanagedSourceDirectories in Compile <+= baseDirectory(_ / ".." / "shared" / "main" / "scala"),
-    unmanagedSourceDirectories in Test <+= baseDirectory(_ / ".." / "shared" / "test" / "scala")
-  )
-  lazy val js = project.in(file("js"))
-                       .settings(sharedSettings ++ scalaJSSettings ++ defaultSettings: _*)
-                       .settings(
-      libraryDependencies ++= Seq(
-        "com.lihaoyi" %% "utest" % "0.1.3-JS" % "test"
-      ),
-      (loadedTestFrameworks in Test) := {
-        (loadedTestFrameworks in Test).value.updated(
-          sbt.TestFramework(classOf[utest.runner.JsFramework].getName),
-          new utest.runner.JsFramework(environment = (scalaJSEnvironment in Test).value)
-        )
-      },
-      version := version.value + "-JS"
-    )
-  lazy val jvm = project.in(file("jvm"))
-                        .settings(sharedSettings ++ defaultSettings:_*)
-                        .settings(
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "utest" % "0.1.3" % "test"
-    ),
-    testFrameworks += new TestFramework("utest.runner.JvmFramework")
-  )
-
-  lazy val root = project.in(file("."))
-                         .aggregate(js, jvm)
-                         .settings(
-
-    crossScalaVersions := Seq("2.10.4", "2.11.0"),
-    scalaVersion := "2.10.4"
-  )
-}
 
 object Build extends sbt.Build{
-  val cross = new CrossCrossBuild(
+  val cross = new utest.jsrunner.JsCrossBuild(
     organization := "com.lihaoyi",
 
     version := "0.1.0",
