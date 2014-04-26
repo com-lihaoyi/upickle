@@ -25,33 +25,67 @@ object Js {
 
 
 object Json {
-  def write(v: Js.Value): String = v match {
+  def writeToBuffer(v: Js.Value, sb: StringBuffer): Unit = v match {
     case Js.String(s) =>
-      val out = s.flatMap {
-        case '\\' => "\\\\"
-        case '"' => "\\\""
-        case '/' => "\\/"
-        case '\b' => "\\b"
-        case '\t' => "\\t"
-        case '\n' => "\\n"
-        case '\f' => "\\f"
-        case '\r' => "\\r"
-        case c if c < ' ' =>
-          val t = "000" + Integer.toHexString(c)
-          "\\u" + t.takeRight(4)
-        case c => c.toString
+      sb.append('"')
+      var i = 0
+      while(i < s.length){
+        (s.charAt(i): @switch) match {
+          case '\\' => sb.append("\\\\")
+          case '"' => sb.append("\\\"")
+          case '/' => sb.append("\\/")
+          case '\b' => sb.append("\\b")
+          case '\t' => sb.append("\\t")
+          case '\n' => sb.append("\\n")
+          case '\f' => sb.append("\\f")
+          case '\r' => sb.append("\\r")
+          case c =>
+            if (c < ' '){
+              val t = "000" + Integer.toHexString(c)
+              sb.append("\\u" + t.takeRight(4))
+            }else{
+              sb.append(c.toString)
+            }
+        }
+        i += 1
       }
-      '"' + out + '"'
+      sb.append('"')
     case Js.Object(kv) =>
-      val contents = kv.toIterator.map{
-        case (k, v) => s"${write(Js.String(k))}: ${write(v)}"
-      }.mkString(", ")
-      s"{$contents}"
-    case Js.Array(vs) => s"[${vs.map(write).mkString(", ")}]"
-    case Js.Number(d) => d
-    case Js.False => "false"
-    case Js.True => "true"
-    case Js.Null => "null"
+      sb.append("{")
+      if (kv.length > 0) {
+        writeToBuffer(Js.String(kv(0)._1), sb)
+        sb.append(": ")
+        writeToBuffer(kv(0)._2, sb)
+      }
+      var i = 1
+      while(i < kv.length){
+        sb.append(", ")
+        writeToBuffer(Js.String(kv(i)._1), sb)
+        sb.append(": ")
+        writeToBuffer(kv(i)._2, sb)
+        i += 1
+      }
+      sb.append("}")
+
+    case Js.Array(vs) =>
+      sb.append("[")
+      if (vs.length > 0) writeToBuffer(vs(0), sb)
+      var i = 1
+      while(i < vs.length){
+        sb.append(", ")
+        writeToBuffer(vs(i), sb)
+        i += 1
+      }
+      sb.append("]")
+    case Js.Number(d) => sb.append(d)
+    case Js.False => sb.append("false")
+    case Js.True => sb.append("true")
+    case Js.Null => sb.append("null")
+  }
+  def write(v: Js.Value): String = {
+    val sb = new StringBuffer()
+    Json.writeToBuffer(v, sb)
+    sb.toString
   }
 
   /**
