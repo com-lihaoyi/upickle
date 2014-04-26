@@ -1,5 +1,5 @@
 package upickle
-
+import utest._
 /**
  * Created by haoyi on 4/22/14.
  */

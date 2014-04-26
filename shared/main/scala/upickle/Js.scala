@@ -413,7 +413,7 @@ object Json {
       Js.Object(result.reverse)
     }
     def handleNumber(name: String, f: String => Unit) = {
-      val v = try {
+      try {
         f(tokenValue)
       } catch {
         case _: Throwable => tokenError("Bad " + name)

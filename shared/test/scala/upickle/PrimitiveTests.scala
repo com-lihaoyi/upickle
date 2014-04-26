@@ -28,7 +28,7 @@ object PrimitiveTests extends TestSuite{
     "Double" - {
       "whole" - rw(125123: Double, """ "125123.0" """)
       "fractional" - rw(125123.1542312, """ "125123.1542312" """)
-      "negative" - rw(125123.1542312, """ "-125123.1542312" """)
+      "negative" - rw(-125123.1542312, """ "-125123.1542312" """)
     }
 
     "Short" - {
@@ -36,7 +36,7 @@ object PrimitiveTests extends TestSuite{
       "min" - rw(Short.MinValue, "-32768")
       "max" - rw(Short.MaxValue, "32767")
       "all" - {
-        for (i <- Short.MinValue to Short.MaxValue) rw(i)
+        for (i <- Short.MinValue to Short.MaxValue by 100) rw(i)
       }
     }
 
@@ -45,7 +45,7 @@ object PrimitiveTests extends TestSuite{
       "min" - rw(Byte.MinValue, "-128")
       "max" - rw(Byte.MaxValue, "127")
       "all" - {
-        for (i <- Byte.MinValue to Byte.MaxValue) rw(i)
+        for (i <- Byte.MinValue to Byte.MaxValue by 10) rw(i)
       }
     }
 
@@ -63,7 +63,7 @@ object PrimitiveTests extends TestSuite{
       "plus" - rw('+', """ "+" """)
 
       "all" - {
-        for(i <- Char.MinValue until Char.MaxValue) {
+        for(i <- Char.MinValue until Char.MaxValue by 100) {
           rw(i)
         }
       }
