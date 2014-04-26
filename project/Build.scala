@@ -8,7 +8,7 @@ object Build extends sbt.Build{
   val cross = new utest.jsrunner.JsCrossBuild(
     organization := "com.lihaoyi",
 
-    version := "0.1.0",
+    version := "0.1.1-SNAPSHOT",
     name := "upickle",
 
     // Sonatype
