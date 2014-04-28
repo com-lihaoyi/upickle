@@ -4,73 +4,73 @@ import scala.concurrent.duration._
 import TestUtil._
 object StructTests extends TestSuite{
   val tests = TestSuite{
-    "arrays" - {
-      "empty" - rwk(Array[Int](), "[]")(_.toSeq)
-      "Boolean" - rwk(Array(true, false), "[true, false]")(_.toSeq)
-      "Int" - rwk(Array(1, 2, 3, 4, 5), "[1, 2, 3, 4, 5]")(_.toSeq)
-      "String" - rwk(Array("omg", "i am", "cow"), """["omg", "i am", "cow"]""")(_.toSeq)
+    'arrays{
+      'empty-rwk(Array[Int](), "[]")(_.toSeq)
+      'Boolean-rwk(Array(true, false), "[true, false]")(_.toSeq)
+      'Int-rwk(Array(1, 2, 3, 4, 5), "[1, 2, 3, 4, 5]")(_.toSeq)
+      'String-rwk(Array("omg", "i am", "cow"), """["omg", "i am", "cow"]""")(_.toSeq)
     }
 
-    "tuples" - {
+    'tuples{
       "2" - rw((1, 2, 3.0), "[1, 2, \"3.0\"]")
       "2-1" - rw((false, 1), "[false, 1]")
       "3" - rw(("omg", 1, "bbq"), """["omg", 1, "bbq"]""")
     }
 
-    "seqs" - {
-      "Seq" - {
+    'seqs{
+      'Seq{
         rw(Seq(true, false), "[true, false]")
         //        rw(Seq(), "[]")
       }
-      "Vector" - {
+      'Vector{
         rw(Vector(1, 2, 3, 4, 5), "[1, 2, 3, 4, 5]")
         rw(Vector.empty[Int], "[]")
       }
-      "List" - {
+      'List{
         rw(List("omg", "i am", "cow"), """["omg", "i am", "cow"]""")
         //        rw(List(), "[]")
         //        rw(Nil, "[]")
       }
-      "Set" - rw(Set("omg", "i am", "cow"), """["omg", "i am", "cow"]""")
-      "SortedSet" - rw(collection.SortedSet("omg", "i am", "cow"), """["cow", "i am", "omg"]""")
-      "Map" - rw(Map(Nil -> List(1), List(1) -> List(1, 2, 3)), "[[[], [1]], [[1], [1, 2, 3]]]")
+      'Set-rw(Set("omg", "i am", "cow"), """["omg", "i am", "cow"]""")
+      'SortedSet-rw(collection.SortedSet("omg", "i am", "cow"), """["cow", "i am", "omg"]""")
+      'Map-rw(Map(Nil -> List(1), List(1) -> List(1, 2, 3)), "[[[], [1]], [[1], [1, 2, 3]]]")
     }
 
-    "option" - {
-      "Some" - rw(Some(123), "[123]")
-      "None" - rw(None, "[]")
-      "Option" - {
+    'option{
+      'Some-rw(Some(123), "[123]")
+      'None-rw(None, "[]")
+      'Option{
         rw(Some(123): Option[Int], "[123]")
         rw(None: Option[Int], "[]")
       }
     }
 
-    "either" - {
-      "Left" - rw(Left(123), "[0, 123]")
-      "Right" - rw(Right(123), "[1, 123]")
-      "Either" - {
+    'either{
+      'Left-rw(Left(123), "[0, 123]")
+      'Right-rw(Right(123), "[1, 123]")
+      'Either{
         rw(Left(123): Either[Int, Int], "[0, 123]")
         rw(Right(123): Either[Int, Int], "[1, 123]")
       }
     }
 
-    "durations" - {
-      "inf" - rw(Duration.Inf, """ "inf" """)
+    'durations{
+      'inf-rw(Duration.Inf, """ "inf" """)
       "-inf" - rw(Duration.MinusInf, """ "-inf" """)
-      "undef" - rw(Duration.Undefined, """ "undef" """)
+      'undef-rw(Duration.Undefined, """ "undef" """)
       "1-second" - rw(1.second, """ "1000000000" """)
       "2-hour" - rw(2.hours, """ "7200000000000" """)
     }
 
-    "combinations" - {
-      "SeqListMapOptionString" - rw[Seq[List[Map[Option[String], String]]]](
+    'combinations{
+      'SeqListMapOptionString-rw[Seq[List[Map[Option[String], String]]]](
         Seq(Nil, List(Map(Some("omg") -> "omg"), Map(Some("lol") -> "lol", None -> "")), List(Map())),
         """[[], [[[["omg"], "omg"]], [[["lol"], "lol"], [[], ""]]], [[]]]"""
       )
 
-      "tuples" - rw((1, (2.0, true), (3.0, 4.0, 5.0)), """[1, ["2.0", true], ["3.0", "4.0", "5.0"]]""")
+      'tuples-rw((1, (2.0, true), (3.0, 4.0, 5.0)), """[1, ["2.0", true], ["3.0", "4.0", "5.0"]]""")
 
-      "EitherDurationOptionDuration" - {
+      'EitherDurationOptionDuration{
         rw(Left(10 seconds), """[0, "10000000000"]""")
         rw(Right(Some(0.33 millis)), """[1, ["330000"]]""")
         rw(Left(10 seconds): Either[Duration, Option[Duration]], """[0, "10000000000"]""")
@@ -78,8 +78,8 @@ object StructTests extends TestSuite{
       }
     }
 
-    "transmutation" - {
-      "vectorToList" - {
+    'transmutation{
+      'vectorToList{
         val vectorToList = read[Seq[Double]](write(Vector(1.1, 2.2, 3.3)))
         assert(
           vectorToList.isInstanceOf[List[Double]],
@@ -87,7 +87,7 @@ object StructTests extends TestSuite{
         )
 
       }
-      "listToMap" - {
+      'listToMap{
         val listToMap = read[Map[Int, String]](write(List((1, "1"), (2, "2"))))
         assert(
           listToMap.isInstanceOf[Map[Int, String]],
@@ -96,7 +96,7 @@ object StructTests extends TestSuite{
       }
 
     }
-    "caseClasses" - {
+    'caseClasses{
       case class Box(i: Double)
       case class Pairing(i: Int, s: String)
       case class Trilobyte(b: Boolean, a: Float, t: (Int, Int))
@@ -110,7 +110,7 @@ object StructTests extends TestSuite{
       rw(Trilobyte(true, 3, (5, 6)), "[true, \"3.0\", [5, 6]]")
     }
 
-    "sealedTraits" - {
+    'sealedTraits{
 
       sealed trait T
       object T{
@@ -162,7 +162,7 @@ object StructTests extends TestSuite{
       rw(T.C, "[2]")
     }
 
-    "recursiveADT" - {
+    'recursiveADT{
 
       sealed trait ConsList
       case class Cons(i: Int, next: ConsList) extends ConsList
