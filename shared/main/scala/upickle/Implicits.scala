@@ -9,7 +9,7 @@ trait Implicits {
   // Special-case picklers
   implicit object BooleanPickler extends ReadWriter[Boolean](
     if (_) Js.True else Js.False,
-    _ match{
+    {
       case Js.True => true
       case Js.False => false
     }
@@ -20,15 +20,15 @@ trait Implicits {
   }
   class NumericStringReadWriter[T](func: String => T) extends ReadWriter[T](
     x => Js.String(x.toString),
-    x => func(x.asInstanceOf[Js.String].value)
+    {case x: Js.String => func(x.value)}
   )
   class NumericReadWriter[T](func: String => T) extends ReadWriter[T](
     x => Js.Number(x.toString),
-    x => func(x.asInstanceOf[Js.Number].value)
+    {case x: Js.Number => func(x.value)}
   )
 
-  implicit object StringPickler extends ReadWriter[String](Js.String, _.asInstanceOf[Js.String].value)
-  implicit val NothingReader = new ReaderCls[Nothing](x => ???)
+  implicit object StringPickler extends ReadWriter[String](Js.String, {case x: Js.String => x.value})
+  implicit val NothingReader = new ReaderCls[Nothing]({case x => ???})
   implicit val NothingWriter= new WriterCls[Nothing](x => ???)
   implicit val CharPickler = new NumericStringReadWriter[Char](_(0))
   implicit val BytePickler = new NumericReadWriter(_.toByte)
@@ -82,33 +82,33 @@ trait Implicits {
 
   def Case1ReadWriter[T1: Reader: Writer, R]
   (f: (T1) => R, g: R => Option[T1])
-  = new ReadWriter[R](x => writeJs(Tuple1(g(x).get)), x => f(readJs[Tuple1[T1]](x)._1))
+  = new ReadWriter[R](x => writeJs(Tuple1(g(x).get)), {case x => f(readJs[Tuple1[T1]](x)._1)})
 
   def Case2ReadWriter[T1: Reader: Writer, T2: Reader: Writer, R]
   (f: (T1, T2) => R, g: R => Option[(T1, T2)])
-  = new ReadWriter[R](x => writeJs(g(x).get), x => f.tupled(readJs[(T1, T2)](x)))
+  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2)](x))})
 
   def Case3ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, R]
   (f: (T1, T2, T3) => R, g: R => Option[(T1, T2, T3)])
-  = new ReadWriter[R](x => writeJs(g(x).get), x => f.tupled(readJs[(T1, T2, T3)](x)))
+  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3)](x))})
 
   def Case4ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, R]
   (f: (T1, T2, T3, T4) => R, g: R => Option[(T1, T2, T3, T4)])
-  = new ReadWriter[R](x => writeJs(g(x).get), x => f.tupled(readJs[(T1, T2, T3, T4)](x)))
+  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4)](x))})
 
   def Case5ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, T5: Reader: Writer, R]
   (f: (T1, T2, T3, T4, T5) => R, g: R => Option[(T1, T2, T3, T4, T5)])
-  = new ReadWriter[R](x => writeJs(g(x).get), x => f.tupled(readJs[(T1, T2, T3, T4, T5)](x)))
+  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4, T5)](x))})
 
   def Case6ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, T5: Reader: Writer, T6: Reader: Writer, R]
   (f: (T1, T2, T3, T4, T5, T6) => R, g: R => Option[(T1, T2, T3, T4, T5, T6)])
-  = new ReadWriter[R](x => writeJs(g(x).get), x => f.tupled(readJs[(T1, T2, T3, T4, T5, T6)](x)))
+  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4, T5, T6)](x))})
 
   def SeqLikeWriter[T: Writer, R[_]](g: R[T] => Option[Seq[T]]): WriterCls[R[T]] = new WriterCls[R[T]](
     x => Js.Array(g(x).get.map(x => writeJs(x)))
   )
   def SeqLikeReader[T: Reader, R[_]](f: Seq[T] => R[T]): ReaderCls[R[T]] = new ReaderCls[R[T]](
-    x => f(x.asInstanceOf[Js.Array].value.map(readJs[T]))
+    {case x => f(x.asInstanceOf[Js.Array].value.map(readJs[T]))}
   )
 
   implicit def SeqWriter[T: Writer] = SeqLikeWriter[T, Seq](Seq.unapplySeq)
@@ -126,8 +126,8 @@ trait Implicits {
   implicit def SomeWriter[T: Writer] = new WriterCls[Some[T]](OptionWriter[T].write)
   implicit def NoneWriter = new WriterCls[None.type](OptionWriter[Int].write)
   implicit def OptionReader[T: Reader] = SeqLikeReader[T, Option](_.headOption)
-  implicit def SomeReader[T: Reader] = new ReaderCls[Some[T]](OptionReader[T].read(_).asInstanceOf[Some[T]])
-  implicit def NoneReader = new ReaderCls[None.type](OptionReader[Int].read(_).asInstanceOf[None.type])
+  implicit def SomeReader[T: Reader] = new ReaderCls[Some[T]](OptionReader[T].read andThen (_.asInstanceOf[Some[T]]))
+  implicit def NoneReader = new ReaderCls[None.type](OptionReader[Int].read andThen (_.asInstanceOf[None.type]))
 
   implicit def ArrayWriter[T: Writer: ClassTag] = SeqLikeWriter[T, Array](Array.unapplySeq)
   implicit def ArrayReader[T: Reader: ClassTag] = SeqLikeReader[T, Array](x => Array.apply(x:_*))
@@ -136,7 +136,7 @@ trait Implicits {
     x => Js.Array(x.toSeq.map(writeJs[(K, V)]))
   )
   implicit def MapReader[K: Reader, V: Reader] = new ReaderCls[Map[K, V]](
-    x => x.asInstanceOf[Js.Array].value.map(readJs[(K, V)]).toMap
+    {case x: Js.Array => x.value.map(readJs[(K, V)]).toMap}
   )
 
   implicit val DurationWriter = new WriterCls[Duration]({
@@ -145,22 +145,19 @@ trait Implicits {
     case x if x eq Duration.Undefined => writeJs("undef")
     case x => writeJs(x.toNanos)
   })
-  implicit val DurationReader= new ReaderCls[Duration]({
+  implicit val InfiniteWriter = new WriterCls[Duration.Infinite](DurationWriter.write)
+  implicit val InfiniteReader = new ReaderCls[Duration.Infinite]({
     case Js.String("inf") => Duration.Inf
     case Js.String("-inf") => Duration.MinusInf
     case Js.String("undef") => Duration.Undefined
-    case Js.String(x) => Duration.fromNanos(x.toLong)
   })
-  implicit val InfiniteWriter = new WriterCls[Duration.Infinite](DurationWriter.write)
-  implicit val InfiniteReader = new ReaderCls[Duration.Infinite](
-    x => DurationReader.read(x).asInstanceOf[Duration.Infinite]
-  )
 
   implicit val FiniteWriter = new WriterCls[FiniteDuration](DurationWriter.write)
-  implicit val FiniteReader = new ReaderCls[FiniteDuration](
-    x => DurationReader.read(x).asInstanceOf[FiniteDuration]
-  )
+  implicit val FiniteReader = new ReaderCls[FiniteDuration]({
+    case Js.String(x) => Duration.fromNanos(x.toLong)
+  })
 
+  implicit val DurationReader = new ReaderCls[Duration](FiniteReader.read orElse InfiniteReader.read)
   implicit def EitherWriter[A: Writer, B: Writer] = new WriterCls[Either[A, B]]({
     case Left(a) => Js.Array(Seq(Js.Number("0"), writeJs(a)))
     case Right(b) => Js.Array(Seq(Js.Number("1"), writeJs(b)))

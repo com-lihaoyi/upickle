@@ -126,16 +126,7 @@ object StructTests extends TestSuite{
       val b: T = T.B("omg")
       val c: T = T.C
 
-      implicit def TWriter = new WriterCls[T](_ match{
-        case T.A(i) => Js.Array(Seq(writeJs(0), writeJs(T.A(i))(ARW)))
-        case T.B(s) => Js.Array(Seq(writeJs(1), writeJs(T.B(s))(BRW)))
-        case T.C => Js.Array(Seq(writeJs(2)))
-      })
-      implicit def TReader = new ReaderCls[T](_ match{
-        case Js.Array(Seq(Js.Number("0"), value)) => readJs(value)(ARW)
-        case Js.Array(Seq(Js.Number("1"), value)) => readJs(value)(BRW)
-        case Js.Array(Seq(Js.Number("2"))) => T.C
-      })
+
       implicit def AWriter = new WriterCls[T.A](_ match{
         case T.A(i) => Js.Array(Seq(writeJs(0), writeJs(T.A(i))(ARW)))
       })
@@ -152,6 +143,13 @@ object StructTests extends TestSuite{
         case T.C => Js.Array(Seq(writeJs(2)))
       })
       implicit def CReader = new ReaderCls[T.C.type](_ match{
+        case Js.Array(Seq(Js.Number("2"))) => T.C
+      })
+      implicit def TWriter = new WriterCls[T](AWriter.)
+
+      implicit def TReader = new ReaderCls[T](_ match{
+        case Js.Array(Seq(Js.Number("0"), value)) => readJs(value)(ARW)
+        case Js.Array(Seq(Js.Number("1"), value)) => readJs(value)(BRW)
         case Js.Array(Seq(Js.Number("2"))) => T.C
       })
       rw(a, "[0, [1]]")
