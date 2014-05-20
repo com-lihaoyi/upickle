@@ -9,7 +9,7 @@
  *
  */
 package object upickle extends Implicits{
-
+  type PF[A, B] = PartialFunction[A, B]
   def write[T: Writer](expr: T): String = Json.write(writeJs(expr))
   def writeJs[T: Writer](expr: T): Js.Value = implicitly[Writer[T]].write(expr)
   def read[T: Reader](expr: String): T = readJs[T](Json.read(expr))
