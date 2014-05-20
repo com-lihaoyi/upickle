@@ -189,6 +189,7 @@ trait Implicits {
     def read = _read
     def write = _write
     def copyFrom(rw: RW[T]) = {
+      println("COPYFROM WOR")
       _write = rw.write
       _read = rw.read
     }
