@@ -4,7 +4,10 @@ import scala.util.{Failure, Success}
 import scala.collection.SortedSet
 import scala.concurrent.duration.{FiniteDuration, Duration}
 
-
+object Implicits extends Implicits{
+  implicit val NothingReader: Reader[Nothing] = new ReaderCls[Nothing]({case x => ???})
+  implicit val NothingWriter: Writer[Nothing] = new WriterCls[Nothing](x => ???)
+}
 trait Implicits {
   // Special-case picklers
   type JPF[T] = PartialFunction[Js.Value, T]
@@ -33,8 +36,7 @@ trait Implicits {
   )
   val stringReaderFunc: JPF[String] = {case x: Js.String => x.value}
   implicit object StringPickler extends ReadWriter[String](Js.String, stringReaderFunc)
-  implicit val NothingReader = new ReaderCls[Nothing]({case x => ???})
-  implicit val NothingWriter= new WriterCls[Nothing](x => ???)
+
   implicit val CharPickler = new NumericStringReadWriter[Char](_(0))
   implicit val BytePickler = new NumericReadWriter(_.toByte)
   implicit val ShortPickler = new NumericReadWriter(_.toShort)
@@ -164,27 +166,17 @@ trait Implicits {
   })
 
   implicit val DurationReader = new ReaderCls[Duration](FiniteReader.read orElse InfiniteReader.read)
-  implicit def EitherWriter[A: Writer, B: Writer] = new WriterCls[Either[A, B]]({
-    case Left(a) => Js.Array(Seq(Js.Number("0"), writeJs(a)))
-    case Right(b) => Js.Array(Seq(Js.Number("1"), writeJs(b)))
-  })
-  implicit def LeftWriter[A: Writer] = new WriterCls[Left[A, Nothing]]({
-    EitherWriter(implicitly[Writer[A]], implicitly[Writer[A]]).write
-  })
-  implicit def LeftReader[A: Reader] = new ReaderCls[Left[A, Nothing]]({
-    case Js.Array(Seq(Js.Number("0"), a)) => Left(readJs[A](a))
-  })
-  implicit def RightWriter[B: Writer] = new WriterCls[Right[Nothing, B]]({
-    EitherWriter(implicitly[Writer[B]], implicitly[Writer[B]]).write
-  })
-  implicit def RightReader[B: Reader] = new ReaderCls[Right[Nothing, B]]({
-    case Js.Array(Seq(Js.Number("1"), b)) => Right(readJs[B](b))
-  })
-  implicit def EitherReader[A: Reader, B: Reader] = {
-    new ReaderCls[Either[A, B]](LeftReader[A].read orElse RightReader[B].read)
+
+  def eitherRW[T: R: W, V: R: W]: (RW[Either[T, V]], RW[Left[T, V]], RW[Right[T, V]]) = {
+    knotRW{implicit i: RWKnot[Either[T, V]] => sealedRW(
+      Case1ReadWriter(Left.apply[T, V], Left.unapply[T, V]),
+      Case1ReadWriter(Right.apply[T, V], Right.unapply[T, V]),
+      i
+    )}
   }
-  type CT[V] = ClassTag[V]
-  type RW[V] = ReadWriter[V]
+  implicit def EitherRW[A: W: R, B: W: R] = eitherRW[A, B]._1
+  implicit def LeftRW[A: W: R, B: W: R] = eitherRW[A, B]._2
+  implicit def RightRW[A: W: R, B: W: R] = eitherRW[A, B]._3
 
   def knotRW[T, V](implicit f: RWKnot[T] => V): V = f(new RWKnot(null, null))
   private[this] def annotate[V: CT](rw: ReadWriter[V], n: String) = new ReadWriter[V](

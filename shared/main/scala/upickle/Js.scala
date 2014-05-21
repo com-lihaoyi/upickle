@@ -30,7 +30,7 @@ object Json {
       sb.append('"')
       var i = 0
       while(i < s.length){
-        (s.charAt(i): @switch) match {
+        s.charAt(i) match {
           case '\\' => sb.append("\\\\")
           case '"' => sb.append("\\\"")
           case '/' => sb.append("\\/")
@@ -283,7 +283,7 @@ object Json {
         linePos = chLinePos
         charPos = chCharPos
         val kind: Int = chKind
-        (kind: @switch) match {
+        kind match {
           case Letter =>
             val first = chMark
             while (chKind == Letter || chKind == Digit) {
@@ -382,7 +382,7 @@ object Json {
       var result = List.empty[Js.Value]
       while (tokenKind != RARR) {
         result = getJson() :: result
-        (tokenKind: @switch) match{
+        tokenKind match{
           case COMMA => tokenNext()
           case RARR => // do nothing
           case _ => tokenError("Expecting , or ]")
@@ -403,7 +403,7 @@ object Json {
         if (tokenKind != COLON) tokenError("Expecting :")
         tokenNext()
         result = (name -> getJson()) :: result
-        (tokenKind: @switch) match{
+        tokenKind match{
           case COMMA => tokenNext()
           case ROBJ => // do nothing
           case _ => tokenError("Expecting , or }")
@@ -425,7 +425,7 @@ object Json {
     }
     def getJson(): Js.Value = {
       val kind: Int = tokenKind
-      val result: Js.Value = (kind: @switch) match {
+      val result: Js.Value = kind match {
         case ID =>
           val result = tokenValue match {
             case "true" => Js.True

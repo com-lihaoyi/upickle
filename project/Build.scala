@@ -42,6 +42,9 @@ object Build extends sbt.Build{
 
   lazy val js = cross.js.settings(scalaVersion := "2.11.0")
 
-  lazy val jvm = cross.jvm.settings(scalaVersion := "2.11.0")
+  lazy val jvm = cross.jvm.settings(
+    scalaVersion := "2.11.0",
+    scalacOptions += "-Xlog-implicits"
+  )
 }
 

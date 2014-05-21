@@ -2,6 +2,7 @@ package upickle
 import utest._
 import scala.concurrent.duration._
 import TestUtil._
+import Implicits._
 import scala.reflect.ClassTag
 
 object StructTests extends TestSuite{
@@ -23,7 +24,7 @@ object StructTests extends TestSuite{
     'seqs{
       'Seq{
         rw(Seq(true, false), "[true, false]")
-        //        rw(Seq(), "[]")
+        rw(Seq(), "[]")
       }
       'Vector{
         rw(Vector(1, 2, 3, 4, 5), "[1, 2, 3, 4, 5]")
@@ -31,8 +32,8 @@ object StructTests extends TestSuite{
       }
       'List{
         rw(List("omg", "i am", "cow"), """["omg", "i am", "cow"]""")
-        //        rw(List(), "[]")
-        //        rw(Nil, "[]")
+        rw(List(), "[]")
+        rw(Nil, "[]")
       }
       'Set-rw(Set("omg", "i am", "cow"), """["omg", "i am", "cow"]""")
       'SortedSet-rw(collection.SortedSet("omg", "i am", "cow"), """["cow", "i am", "omg"]""")

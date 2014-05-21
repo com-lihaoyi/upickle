@@ -1,5 +1,5 @@
 package upickle
-
+import Implicits._
 import utest._
 import scala.collection.SortedSet
 import scala.concurrent.duration._
