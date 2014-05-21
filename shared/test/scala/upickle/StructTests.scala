@@ -126,11 +126,13 @@ object StructTests extends TestSuite{
       val b: T = T.B("omg")
       val c: T = T.C
 
-      implicit val (tRW, aRW, bRW, cRW) = makeRW[T].make(
+      val x = knotRW{implicit i: RWKnot[T] => sealedRW(
         Case1ReadWriter(T.A.apply, T.A.unapply),
         Case1ReadWriter(T.B.apply, T.B.unapply),
-        Case0ReadWriter(T.C)
-      )
+        Case0ReadWriter(T.C),
+        i
+      )}
+      implicit val (tRW, aRW, bRW, cRW) = x
 
       rw(a, "[0, [1]]")
       rw(T.A(2), "[0, [2]]")
@@ -139,7 +141,29 @@ object StructTests extends TestSuite{
       rw(c, "[2, []]")
       rw(T.C, "[2, []]")
     }
+    'recursiveADT{
+      sealed trait ConsList
+      case class Cons(i: Int, next: ConsList) extends ConsList
+      case object End extends ConsList
 
+      val x = knotRW{implicit i: RWKnot[ConsList] => sealedRW(
+        Case2ReadWriter(Cons.apply, Cons.unapply),
+        Case0ReadWriter(End),
+        i
+      )}
+      implicit val (cLRW, cRW, eRW) = x
+      val c = Cons(5, Cons(6, End))
+      val cl: ConsList = c
+      val serialized = "[0, [5, [0, [6, [1, []]]]]]"
+      assert(
+        write(c) == serialized,
+        c == read[ConsList](serialized),
+        c == read[Cons](serialized),
+        write(cl) == serialized,
+        cl == read[ConsList](serialized),
+        cl == read[Cons](serialized)
+      )
+    }
 
   }
 }

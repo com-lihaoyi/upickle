@@ -185,100 +185,86 @@ trait Implicits {
   }
   type CT[V] = ClassTag[V]
   type RW[V] = ReadWriter[V]
-  class FakeReadWriter[T](var _write: T => Js.Value, var _read: PF[Js.Value, T]) extends Reader[T] with Writer[T]{
-    def read = _read
-    def write = _write
-    def copyFrom(rw: RW[T]) = {
-      println("COPYFROM WOR")
-      _write = rw.write
-      _read = rw.read
-    }
-  }
-  def rec[T, V](implicit f: FakeReadWriter[T] => V): V = f(new FakeReadWriter(null, null))
-  case class makeRW[T](implicit knot: FakeReadWriter[T] = null) {
 
-    def annotate[V: CT](rw: ReadWriter[V], n: String) = new ReadWriter[V](
+  def knotRW[T, V](implicit f: RWKnot[T] => V): V = f(new RWKnot(null, null))
+  private[this] def annotate[V: CT](rw: ReadWriter[V], n: String) = new ReadWriter[V](
     {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))},
     {case Js.Array(Seq(Js.Number(`n`), x)) => rw.read(x)}
-    )
-    implicit class mergable[T: CT, R](f: T => R){
-      def merge[V: CT, U](g: V => R): U => R = {
-        case v: V => g(v)
-        case t: T => f(t)
-      }
-    }
+  )
+  
 
-    def rec[A](i: RW[T] => makeRW[T] => (RW[T], RW[A])): (RW[T], RW[A]) = {
-      ???
-    }
-    def rec[A, B](i: RW[T] => makeRW[T] => (RW[T], RW[A], RW[B])): (RW[T], RW[A], RW[B]) = {
-      ???
-    }
 
-    def make[A <: T: CT, B <: T: CT]
-            (a: RW[A], b: RW[B]) = {
-      val a2 = annotate(a, "0")
-      val b2 = annotate(b, "1")
-      val t = new ReadWriter[T](
-        a2.write merge b2.write,
-        a2.read orElse b2.read
-      )
-      Option(knot).foreach(_.copyFrom(t))
-      (t, a2, b2)
-    }
-    def make[A <: T: CT, B <: T: CT, C <: T: CT]
-            (a: RW[A], b: RW[B], c: RW[C]) = {
-      val a2 = annotate(a, "0")
-      val b2 = annotate(b, "1")
-      val c2 = annotate(c, "2")
-      val t = new ReadWriter[T](
-        a2.write merge b2.write merge c2.write,
-        a2.read orElse b2.read orElse c2.read
-      )
-      Option(knot).foreach(_.copyFrom(t))
-      (t, a2, b2, c2)
-    }
-    def make[A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT]
-            (a: RW[A], b: RW[B], c: RW[C], d: RW[D]) = {
-      val a2 = annotate(a, "0")
-      val b2 = annotate(b, "1")
-      val c2 = annotate(c, "2")
-      val d2 = annotate(d, "3")
-      val t = new ReadWriter[T](
-        a2.write merge b2.write merge c2.write merge d2.write,
-        a2.read orElse b2.read orElse c2.read orElse d2.read
-      )
-      Option(knot).foreach(_.copyFrom(t))
-      (t, a2, b2, c2, d2)
-    }
-    def make[A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT, E <: T: CT]
-            (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E]) = {
-      val a2 = annotate(a, "0")
-      val b2 = annotate(b, "1")
-      val c2 = annotate(c, "2")
-      val d2 = annotate(d, "3")
-      val e2 = annotate(e, "4")
-      val t = new ReadWriter[T](
-        a2.write merge b2.write merge c2.write merge d2.write merge e2.write,
-        a2.read orElse b2.read orElse c2.read orElse d2.read orElse e2.read
-      )
-      Option(knot).foreach(_.copyFrom(t))
-      (t, a2, b2, c2, d2, e2)
-    }
-    def make[A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT, E <: T: CT, F <: T: CT]
-            (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], f: RW[F]) = {
-      val a2 = annotate(a, "0")
-      val b2 = annotate(b, "1")
-      val c2 = annotate(c, "2")
-      val d2 = annotate(d, "3")
-      val e2 = annotate(e, "4")
-      val f2 = annotate(f, "5")
-      val t = new ReadWriter[T](
-        a2.write merge b2.write merge c2.write merge d2.write merge e2.write merge f2.write,
-        a2.read orElse b2.read orElse c2.read orElse d2.read orElse e2.read orElse f2.read
-      )
-      Option(knot).foreach(_.copyFrom(t))
-      (t, a2, b2, c2, d2, e2, f2)
+  private[this] implicit class mergable[T: CT, R](f: T => R){
+    def merge[V: CT, U](g: V => R): U => R = {
+      case v: V => g(v)
+      case t: T => f(t)
     }
   }
+
+  def sealedRW[T, A <: T: CT, B <: T: CT]
+          (a: RW[A], b: RW[B], knot: RWKnot[T]) = {
+    val a2 = annotate(a, "0")
+    val b2 = annotate(b, "1")
+    val t = new ReadWriter[T](
+      a2.write merge b2.write,
+      a2.read orElse b2.read
+    )
+    Option(knot).foreach(_.copyFrom(t))
+    (t, a2, b2)
+  }
+  def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT]
+          (a: RW[A], b: RW[B], c: RW[C], knot: RWKnot[T]) = {
+    val a2 = annotate(a, "0")
+    val b2 = annotate(b, "1")
+    val c2 = annotate(c, "2")
+    val t = new ReadWriter[T](
+      a2.write merge b2.write merge c2.write,
+      a2.read orElse b2.read orElse c2.read
+    )
+    Option(knot).foreach(_.copyFrom(t))
+    (t, a2, b2, c2)
+  }
+  def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT]
+          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], knot: RWKnot[T]) = {
+    val a2 = annotate(a, "0")
+    val b2 = annotate(b, "1")
+    val c2 = annotate(c, "2")
+    val d2 = annotate(d, "3")
+    val t = new ReadWriter[T](
+      a2.write merge b2.write merge c2.write merge d2.write,
+      a2.read orElse b2.read orElse c2.read orElse d2.read
+    )
+    Option(knot).foreach(_.copyFrom(t))
+    (t, a2, b2, c2, d2)
+  }
+  def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT, E <: T: CT]
+          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], knot: RWKnot[T]) = {
+    val a2 = annotate(a, "0")
+    val b2 = annotate(b, "1")
+    val c2 = annotate(c, "2")
+    val d2 = annotate(d, "3")
+    val e2 = annotate(e, "4")
+    val t = new ReadWriter[T](
+      a2.write merge b2.write merge c2.write merge d2.write merge e2.write,
+      a2.read orElse b2.read orElse c2.read orElse d2.read orElse e2.read
+    )
+    Option(knot).foreach(_.copyFrom(t))
+    (t, a2, b2, c2, d2, e2)
+  }
+  def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT, E <: T: CT, F <: T: CT]
+          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], f: RW[F], knot: RWKnot[T]) = {
+    val a2 = annotate(a, "0")
+    val b2 = annotate(b, "1")
+    val c2 = annotate(c, "2")
+    val d2 = annotate(d, "3")
+    val e2 = annotate(e, "4")
+    val f2 = annotate(f, "5")
+    val t = new ReadWriter[T](
+      a2.write merge b2.write merge c2.write merge d2.write merge e2.write merge f2.write,
+      a2.read orElse b2.read orElse c2.read orElse d2.read orElse e2.read orElse f2.read
+    )
+    Option(knot).foreach(_.copyFrom(t))
+    (t, a2, b2, c2, d2, e2, f2)
+  }
+  
 }
