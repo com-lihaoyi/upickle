@@ -19,8 +19,4 @@ package object upickle {
   type RW[V] = ReadWriter[V]
   type R[V] = Reader[V]
   type W[V] = Writer[V]
-  import Implicits._
-  val l: Either[Int, Nothing] = Left(1)
-  write(l)
 }
-

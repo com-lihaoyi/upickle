@@ -16,7 +16,7 @@ object StructTests extends TestSuite{
     }
 
     'tuples{
-      "2" - rw((1, 2, 3.0), "[1, 2, \"3.0\"]")
+      "2" - rw((1, 2, 3.0), "[1, 2, \"3.0\"]", "[1, 2, \"3\"]")
       "2-1" - rw((false, 1), "[false, 1]")
       "3" - rw(("omg", 1, "bbq"), """["omg", 1, "bbq"]""")
     }
@@ -24,7 +24,7 @@ object StructTests extends TestSuite{
     'seqs{
       'Seq{
         rw(Seq(true, false), "[true, false]")
-        rw(Seq(), "[]")
+        rw(Seq(): Seq[Int], "[]")
       }
       'Vector{
         rw(Vector(1, 2, 3, 4, 5), "[1, 2, 3, 4, 5]")
@@ -32,8 +32,8 @@ object StructTests extends TestSuite{
       }
       'List{
         rw(List("omg", "i am", "cow"), """["omg", "i am", "cow"]""")
-        rw(List(), "[]")
-        rw(Nil, "[]")
+        rw(List(): List[String], "[]")
+        rw(Nil: List[List[Int]], "[]")
       }
       'Set-rw(Set("omg", "i am", "cow"), """["omg", "i am", "cow"]""")
       'SortedSet-rw(collection.SortedSet("omg", "i am", "cow"), """["cow", "i am", "omg"]""")
@@ -42,7 +42,7 @@ object StructTests extends TestSuite{
 
     'option{
       'Some-rw(Some(123), "[123]")
-      'None-rw(None, "[]")
+      'None-rw(None: Option[String], "[]")
       'Option{
         rw(Some(123): Option[Int], "[123]")
         rw(None: Option[Int], "[]")
@@ -50,11 +50,11 @@ object StructTests extends TestSuite{
     }
 
     'either{
-      'Left-rw(Left(123), "[0, 123]")
-      'Right-rw(Right(123), "[1, 123]")
+      'Left-rw(Left(123): Left[Int, Int], "[0, [123]]")
+      'Right-rw(Right(123): Right[Int, Int], "[1, [123]]")
       'Either{
-        rw(Left(123): Either[Int, Int], "[0, 123]")
-        rw(Right(123): Either[Int, Int], "[1, 123]")
+        rw(Left(123): Either[Int, Int], "[0, [123]]")
+        rw(Right(123): Either[Int, Int], "[1, [123]]")
       }
     }
 
@@ -72,13 +72,17 @@ object StructTests extends TestSuite{
         """[[], [[[["omg"], "omg"]], [[["lol"], "lol"], [[], ""]]], [[]]]"""
       )
 
-      'tuples-rw((1, (2.0, true), (3.0, 4.0, 5.0)), """[1, ["2.0", true], ["3.0", "4.0", "5.0"]]""")
+      'tuples-rw(
+        (1, (2.0, true), (3.0, 4.0, 5.0)),
+        """[1, ["2.0", true], ["3.0", "4.0", "5.0"]]""",
+        """[1, ["2", true], ["3", "4", "5"]]"""
+      )
 
       'EitherDurationOptionDuration{
-        rw(Left(10 seconds), """[0, "10000000000"]""")
-        rw(Right(Some(0.33 millis)), """[1, ["330000"]]""")
-        rw(Left(10 seconds): Either[Duration, Option[Duration]], """[0, "10000000000"]""")
-        rw(Right(Some(0.33 millis)): Either[Duration, Option[Duration]], """[1, ["330000"]]""")
+        rw(Left(10 seconds): Either[Duration, Int], """[0, ["10000000000"]]""")
+        rw(Right(Some(0.33 millis)): Either[Int, Option[Duration]], """[1, [["330000"]]]""")
+        rw(Left(10 seconds): Either[Duration, Option[Duration]], """[0, ["10000000000"]]""")
+        rw(Right(Some(0.33 millis)): Either[Duration, Option[Duration]], """[1, [["330000"]]]""")
       }
     }
 
@@ -111,7 +115,11 @@ object StructTests extends TestSuite{
 
       rw(Pairing(1, "omg"), "[1, \"omg\"]")
       rw(Box(1.02), "[\"1.02\"]")
-      rw(Trilobyte(true, 3, (5, 6)), "[true, \"3.0\", [5, 6]]")
+      rw(
+        Trilobyte(true, 3, (5, 6)),
+        "[true, \"3.0\", [5, 6]]",
+        "[true, \"3\", [5, 6]]"
+      )
     }
 
     'sealedTraits{

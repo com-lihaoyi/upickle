@@ -1,14 +1,17 @@
 import sbt._
 import Keys._
-import scala.scalajs.sbtplugin.ScalaJSPlugin.ScalaJSKeys.scalaJSEnvironment
-import scala.scalajs.sbtplugin.ScalaJSPlugin.scalaJSSettings
 
+import scala.scalajs.sbtplugin.env.nodejs.NodeJSEnv
+import scala.scalajs.sbtplugin.ScalaJSPlugin._
+
+import scala.scalajs.sbtplugin.ScalaJSPlugin.ScalaJSKeys._
 
 object Build extends sbt.Build{
   val cross = new utest.jsrunner.JsCrossBuild(
     organization := "com.lihaoyi",
 
     version := "0.1.1-SNAPSHOT",
+    scalaVersion := "2.11.0",
     name := "upickle",
 
     // Sonatype
@@ -40,11 +43,10 @@ object Build extends sbt.Build{
 
   lazy val root = cross.root
 
-  lazy val js = cross.js.settings(scalaVersion := "2.11.0")
-
-  lazy val jvm = cross.jvm.settings(
-    scalaVersion := "2.11.0",
-    scalacOptions += "-Xlog-implicits"
+  lazy val js = cross.js.settings(
+    (jsEnv in Test) := new NodeJSEnv
   )
+
+  lazy val jvm = cross.jvm
 }
 

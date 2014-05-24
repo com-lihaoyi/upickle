@@ -5,10 +5,11 @@ import scala.collection.SortedSet
 import scala.concurrent.duration.{FiniteDuration, Duration}
 
 object Implicits extends Implicits{
-  implicit val NothingReader: Reader[Nothing] = new ReaderCls[Nothing]({case x => ???})
-  implicit val NothingWriter: Writer[Nothing] = new WriterCls[Nothing](x => ???)
+
 }
 trait Implicits {
+  implicit val NothingReader: Reader[Nothing] = new ReaderCls[Nothing]({case x => ???})
+  implicit val NothingWriter: Writer[Nothing] = new WriterCls[Nothing](x => ???)
   // Special-case picklers
   type JPF[T] = PartialFunction[Js.Value, T]
   val booleanReaderFunc: JPF[Boolean] = {
@@ -174,6 +175,7 @@ trait Implicits {
       i
     )}
   }
+  def ?[T](implicit t: T) = implicitly[T]
   implicit def EitherRW[A: W: R, B: W: R] = eitherRW[A, B]._1
   implicit def LeftRW[A: W: R, B: W: R] = eitherRW[A, B]._2
   implicit def RightRW[A: W: R, B: W: R] = eitherRW[A, B]._3
