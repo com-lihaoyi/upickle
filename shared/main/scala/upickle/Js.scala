@@ -13,10 +13,10 @@ object Js {
   case class Array(value: Seq[Value]) extends Value
   case class Number(value: java.lang.String) extends Value
   case object False extends Value{
-    def value = true
+    def value = false
   }
   case object True extends Value{
-    def value = false
+    def value = true
   }
   case object Null extends Value{
     def value = null
