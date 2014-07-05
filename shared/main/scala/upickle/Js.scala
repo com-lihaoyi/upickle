@@ -31,7 +31,7 @@ object Invalid{
    * @param msg Human-readable text saying what went wrong
    */
   case class Data(data: Js.Value, msg: String)
-    extends Exception(s"InvalidData($data, $msg)")
+    extends Exception(s"data: $data msg: $msg")
     with Invalid
 }
 

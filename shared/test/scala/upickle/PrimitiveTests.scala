@@ -26,9 +26,9 @@ object PrimitiveTests extends TestSuite{
     }
 
     'Double{
-      'whole-rw(125123: Double, """ "125123.0" """, """ "125123" """)
-      'fractional-rw(125123.1542312, """ "125123.1542312" """)
-      'negative-rw(-125123.1542312, """ "-125123.1542312" """)
+      'whole-rw(125123: Double, """125123.0""", """125123""")
+      'fractional-rw(125123.1542312, """125123.1542312""")
+      'negative-rw(-125123.1542312, """-125123.1542312""")
     }
 
     'Short{
@@ -50,7 +50,7 @@ object PrimitiveTests extends TestSuite{
     }
 
     'Float{
-      'simple-rw(125.125f, """ "125.125" """)
+      'simple-rw(125.125f, """125.125""")
       'max-rw(Float.MaxValue)
       'min-rw(Float.MinValue)
       'minPos-rw(Float.MinPositiveValue)

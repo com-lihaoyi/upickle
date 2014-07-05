@@ -34,11 +34,16 @@ trait Implicits {
     numericStringReaderFunc[T](func)
   )
   def numericReaderFunc[T](func: String => T): JPF[T] = validate("Number"){
-    case x: Js.Number => func(x.value)
+    case x: Js.Number => try{func(x.value) } catch {case e: NumberFormatException => throw Invalid.Data(x, "Number")}
+    case x: Js.String => try{func(x.value) } catch {case e: NumberFormatException => throw Invalid.Data(x, "Number")}
   }
 
   class NumericReadWriter[T](func: String => T) extends ReadWriter[T](
-    x => Js.Number(x.toString),
+    {
+      case x @ Double.PositiveInfinity => Js.String(x.toString)
+      case x @ Double.NegativeInfinity => Js.String(x.toString)
+      case x => Js.Number(x.toString)
+    },
     numericReaderFunc[T](func)
   )
   val stringReaderFunc: JPF[String] = validate("String"){
@@ -50,9 +55,9 @@ trait Implicits {
   implicit val BytePickler = new NumericReadWriter(_.toByte)
   implicit val ShortPickler = new NumericReadWriter(_.toShort)
   implicit val IntPickler = new NumericReadWriter(_.toInt)
-  implicit val LongPickler = new NumericStringReadWriter[Long](_.toLong)
-  implicit val FloatPickler = new NumericStringReadWriter(_.toFloat)
-  implicit val DoublePickler = new NumericStringReadWriter(_.toDouble)
+  implicit val LongPickler = new NumericReadWriter[Long](_.toLong)
+  implicit val FloatPickler = new NumericReadWriter(_.toFloat)
+  implicit val DoublePickler = new NumericReadWriter(_.toDouble)
 
   // Boilerplate tuple picklers
 
@@ -170,7 +175,7 @@ trait Implicits {
 
   implicit val FiniteWriter = new WriterCls[FiniteDuration](DurationWriter.write)
   implicit val FiniteReader = new ReaderCls[FiniteDuration]({
-    case Js.String(x) => Duration.fromNanos(x.toLong)
+    case Js.Number(x) => Duration.fromNanos(x.toLong)
   })
 
   implicit val DurationReader = new ReaderCls[Duration](validate("DurationString"){FiniteReader.read orElse InfiniteReader.read})
