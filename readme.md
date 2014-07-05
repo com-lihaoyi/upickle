@@ -49,7 +49,7 @@ For ScalaJS applications, use this dependencies instead:
 libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.1.3"
 ```
 
-Other than that, everything is used the same way. upickle-0.1.0-JS is only compatible with ScalaJS 0.4.x.
+Other than that, everything is used the same way. upickle-0.1.3 is only compatible with ScalaJS 0.5.x.
 
 Supported Types
 ===============
