@@ -1,4 +1,4 @@
-µPickle 0.1.2
+µPickle 0.1.3
 =============
 
 uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
@@ -15,7 +15,7 @@ Getting Started
 Add the following to your SBT config:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %% "upickle" % "0.1.2"
+libraryDependencies += "com.lihaoyi" %% "upickle" % "0.1.3"
 ```
 
 And then you can immediately start writing and reading common Scala objects to strings:
@@ -46,7 +46,7 @@ ScalaJS
 For ScalaJS applications, use this dependencies instead:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.1.2"
+libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.1.3"
 ```
 
 Other than that, everything is used the same way. upickle-0.1.0-JS is only compatible with ScalaJS 0.4.x.
@@ -96,6 +96,16 @@ read[(Int, String)](s)
 // res12: (Int, String) = (1,omg)
 ```
 
+Exceptions
+==========
+
+uPickle only throws exceptions on unpickling; if a pickler is properly defined, serializing a data structure to a `String` should never throw an exception.
+
+On unpickling, uPickle throws one of two subclasses of `upickle.Invalid`:
+
+- `upickle.Invalid.Json`: thrown when unpickling fails at the first step which attempst to convert the incoming `String` into semi-structured JSON data. The exception contains data about where parsing failed (`input`, `line`, `col`) as well as a human-readable error message.
+- `upickle.Invalid.Data`: thrown when unpickling fails at the second step which attempts to convert the parsed JSON tree into structured data of the desired type. Contains the offending JSON subtree in `data`, along with a human-readable error message. 
+
 Limitations
 ===========
 
@@ -104,6 +114,7 @@ uPickle is a work in progress, and doesn't currently support:
 - Circular object graphs
 - Serialization of objects in discriminated-union-style sealed class hierarchies
 - Macro-based reading and writing
+- 
 
 These limitations will probably be removed in the future. In addition, it also does not support
 
