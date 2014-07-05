@@ -1,4 +1,5 @@
 import scala.reflect.ClassTag
+import acyclic.file
 
 /**
  * Picklite tries the following mechanisms for pickling a type
@@ -9,7 +10,7 @@ import scala.reflect.ClassTag
  *
  */
 package object upickle {
-  type PF[A, B] = PartialFunction[A, B]
+
   def write[T: Writer](expr: T): String = Json.write(writeJs(expr))
   def writeJs[T: Writer](expr: T): Js.Value = implicitly[Writer[T]].write(expr)
   def read[T: Reader](expr: String): T = readJs[T](Json.read(expr))
@@ -19,4 +20,6 @@ package object upickle {
   type RW[V] = ReadWriter[V]
   type R[V] = Reader[V]
   type W[V] = Writer[V]
+
+
 }

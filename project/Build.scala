@@ -19,7 +19,11 @@ object Build extends sbt.Build{
     publishTo <<= version { (v: String) =>
       Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
     },
+    libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
 
+    autoCompilerPlugins := true,
+
+    addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
     pomExtra :=
       <url>https://github.com/lihaoyi/upickle</url>
       <licenses>

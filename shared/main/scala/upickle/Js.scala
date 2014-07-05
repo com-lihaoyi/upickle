@@ -1,6 +1,39 @@
 package upickle
-
+import acyclic.file
 import scala.annotation.switch
+
+/**
+ * Exceptions that can be thrown by upickle; placed in the same file
+ * as JSON parser due to circular dependencies between exception types
+ * and JSON types
+ */
+sealed trait Invalid extends Exception
+object Invalid{
+
+  /**
+   * Thrown when the JSON parser finds itself trying to parse invalid JSON.
+   * 
+   * @param msg Human-readable text saying what went wrong
+   * @param input The `String` it was trying to parse
+   * @param line Line number the the parser failed at 
+   * @param col Column number the parser failed at 
+   */
+  case class Json(msg: String, input: String, line: Int, col: Int)
+    extends scala.Exception(s"JsonParse Error: $msg line $line [$col] in $input")
+    with Invalid
+
+  /**
+   * Thrown when uPickle tries to convert a JSON blob into a given data 
+   * structure but fails because part the blob is invalid 
+   * 
+   * @param data The section of the JSON blob that uPickle tried to convert.
+   *             This could be the entire blob, or it could be some subtree.
+   * @param msg Human-readable text saying what went wrong
+   */
+  case class Data(data: Js.Value, msg: String)
+    extends Exception(s"InvalidData($data, $msg)")
+    with Invalid
+}
 
 object Js {
   sealed trait Value{
@@ -24,7 +57,13 @@ object Js {
 }
 
 
+/**
+ * JSON handling utilities
+ */
 object Json {
+  /**
+   * Serializes a [[Js.Value]] to a `StringBuffer`
+   */
   def writeToBuffer(v: Js.Value, sb: StringBuffer): Unit = v match {
     case Js.String(s) =>
       sb.append('"')
@@ -206,7 +245,7 @@ object Json {
 
 
     def chError(msg: String): Nothing = {
-      throw new Json.Exception(msg, s, chLinePos, chCharPos)
+      throw new Invalid.Json(msg, s, chLinePos, chCharPos)
     }
 
     def chMark = pos - 1
@@ -369,7 +408,7 @@ object Json {
     }
 
     def tokenError(msg: String): Nothing = {
-      throw new Json.Exception(msg, s, linePos, charPos)
+      throw new Invalid.Json(msg, s, linePos, charPos)
     }
 
     // *** PARSER ***
@@ -464,9 +503,5 @@ object Json {
     }
     parse()
   }
-  class Exception(val msg: String,
-                  val input: String,
-                  val line: Int,
-                  val char: Int)
-    extends scala.Exception(s"JsonParse Error: $msg line $line [$char] in $input")
+
 }
