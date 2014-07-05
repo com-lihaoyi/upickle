@@ -10,7 +10,7 @@ object Build extends sbt.Build{
   val cross = new utest.jsrunner.JsCrossBuild(
     organization := "com.lihaoyi",
 
-    version := "0.1.2",
+    version := "0.1.3",
     scalaVersion := "2.11.0",
     name := "upickle",
 
