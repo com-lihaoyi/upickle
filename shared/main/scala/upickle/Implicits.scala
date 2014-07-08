@@ -4,9 +4,9 @@ import scala.reflect.ClassTag
 import scala.util.{Failure, Success}
 import scala.collection.SortedSet
 import scala.concurrent.duration.{FiniteDuration, Duration}
+import scala.reflect.macros.Context
 
-object Implicits extends Implicits
-trait Implicits {
+object Implicits extends Implicits{
   def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
     pf.orElse { case x => throw Invalid.Data(x, name) }
   }
@@ -197,7 +197,7 @@ trait Implicits {
     {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))},
     {case Js.Array(Seq(Js.Number(`n`), x)) => rw.read(x)}
   )
-  
+
 
 
   private[this] implicit class mergable[T: CT, R](f: T => R){
@@ -272,5 +272,26 @@ trait Implicits {
     Option(knot).foreach(_.copyFrom(t))
     (t, a2, b2, c2, d2, e2, f2)
   }
+  def macroRWImpl[T: c.WeakTypeTag](c: Context) = {
+    println("LULS")
+    import c.universe._
 
+    println(
+      weakTypeTag[T]
+        .tpe
+        .decl(nme.CONSTRUCTOR)
+        .asMethod
+        .paramLists
+        .flatten
+        .map(m => (
+          m.name,
+          appliedType(typeOf[RW[_]], m.typeSignature)
+        ))
+    )
+    ???
+  }
+}
+import language.experimental.macros
+trait Implicits {
+  implicit def macroRW[T]: RW[T] = macro Implicits.macroRWImpl[T]
 }

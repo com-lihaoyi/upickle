@@ -13,13 +13,16 @@ object Build extends sbt.Build{
     version := "0.1.4",
     scalaVersion := "2.11.0",
     name := "upickle",
-
+//    scalacOptions := Seq("-Xlog-implicits"),
     // Sonatype
     publishArtifact in Test := false,
     publishTo <<= version { (v: String) =>
       Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
     },
-    libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+    ),
 
     autoCompilerPlugins := true,
 
