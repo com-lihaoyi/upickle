@@ -193,14 +193,14 @@ object Implicits extends Implicits{
   implicit def RightRW[A: W: R, B: W: R] = eitherRW[A, B]._3
 
   def knotRW[T, V](implicit f: RWKnot[T] => V): V = f(new RWKnot(null, null))
-  private[this] def annotate[V: CT](rw: ReadWriter[V], n: String) = new ReadWriter[V](
+  def annotate[V: CT](rw: ReadWriter[V], n: String) = new ReadWriter[V](
     {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))},
     {case Js.Array(Seq(Js.Number(`n`), x)) => rw.read(x)}
   )
 
 
 
-  private[this] implicit class mergable[T: CT, R](f: T => R){
+  implicit class mergable[T: CT, R](f: T => R){
     def merge[V: CT, U](g: V => R): U => R = {
       case v: V => g(v)
       case t: T => f(t)
@@ -272,31 +272,9 @@ object Implicits extends Implicits{
     Option(knot).foreach(_.copyFrom(t))
     (t, a2, b2, c2, d2, e2, f2)
   }
-  def macroRWImpl[T: c.WeakTypeTag](c: Context) = {
-    println("LULS")
-    import c.universe._
-    val args =
-      weakTypeTag[T]
-        .tpe
-        .decl(nme.CONSTRUCTOR)
-        .asMethod
-        .paramLists
-        .flatten
-    val params =
-      args.map{m =>
-        (m.name, appliedType(typeOf[RW[_]], m.typeSignature))
-      }
-    val name = TermName(weakTypeTag[T].tpe.typeSymbol.name.toString)
-
-    val rwName = TermName(s"Case${params.length}ReadWriter")
-    val z = q"""
-      $rwName($name.apply, $name.unapply)
-    """
-    println("z " + z)
-    c.Expr[RW[T]](z)
-  }
 }
+
 import language.experimental.macros
 trait Implicits {
-  implicit def macroRW[T]: RW[T] = macro Implicits.macroRWImpl[T]
+  implicit def macroRW[T]: RW[T] = macro Macros.macroRWImpl[T]
 }
