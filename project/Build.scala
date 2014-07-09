@@ -11,7 +11,7 @@ object Build extends sbt.Build{
     organization := "com.lihaoyi",
 
     version := "0.1.5",
-    scalaVersion := "2.11.0",
+    scalaVersion := "2.11.1",
     name := "upickle",
 //    scalacOptions := Seq("-Xlog-implicits"),
     // Sonatype

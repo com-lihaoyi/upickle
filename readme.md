@@ -1,7 +1,7 @@
 µPickle 0.1.5
 =============
 
-uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
+uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala 2.11. It's key features are:
 
 - [Less than 1000 lines of code](https://github.com/lihaoyi/upickle/graphs/contributors)
 - [Zero-reflection 100% static serialization and deserialization](#supported-types)
