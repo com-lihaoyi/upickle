@@ -1,7 +1,7 @@
 µPickle 0.1.5
 =============
 
-uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala 2.11. It's key features are:
+uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
 
 - [Less than 1000 lines of code](https://github.com/lihaoyi/upickle/graphs/contributors)
 - [Zero-reflection 100% static serialization and deserialization](#supported-types)
@@ -60,41 +60,13 @@ Out of the box, uPickle supports writing and reading the following types:
 - `Tuple`s from 1 to 6
 - `Seq`, `List`, `Vector`, `Set`, `SortedSet`, `Option`, `Array`, `Map`s
 - `Duration`, `Either`
+- Stand-alone `case class`es and `case object`s
+- `case class`es and `case object`s that are part of a `sealed trait` or `sealed class` hierarchy
+- `sealed trait` and `sealed class`es themselves, assuming that all subclasses are picklable
 
-Readability/writability is recursive: a container such as a `Tuple` is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a `List[Any]`, since uPickle doesn't provide a generic way of serializing `Any`.
+Readability/writability is recursive: a container such as a `Tuple` or `case class` is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a `List[Any]`, since uPickle doesn't provide a generic way of serializing `Any`.
 
-Custom Types
-============
-
-uPickle doesn't read/write custom types out of the box, but allows you to define custom readers/writers for them. For case classes, you can simply define an implicit `CaseNWriter`, `CaseNReader` or `CaseNReadWriter` to provide both at the same time:
-
-```scala
-case class Box(i: Double)
-case class Pairing(i: Int, s: String)
-case class Trilobyte(b: Boolean, a: Float, t: (Int, Int))
-
-implicit val boxPickler = Case1ReadWriter(Box.apply, Box.unapply)
-implicit val pairingPickler = Case2ReadWriter(Pairing.apply, Pairing.unapply)
-implicit val trilobytePickler = Case3ReadWriter(Trilobyte.apply, Trilobyte.unapply)
-
-write(Box(1.02))                    // ["1.02"]
-write(Pairing(1, "omg"))            // [1, "omg"]
-write(Trilobyte(true, 3, (5, 6)))   // [true, "3.0", [5, 6]]
-
-read[Box]("""["1.02"]""")                       // Box(1.02)
-read[Pairing]("""[1, "omg"]""")                 // Pairing(1, "omg")
-read[Trilobyte]("""[true, "3.0", [5, 6]]""")    // Trilobyte(true, 3, (5, 6))
-```
-
-The `CaseNReadWriter`s use the case class's `apply` and `unapply` methods to convert the objects to tuples before writing them, or to convert the tuples it reads into objects. As you can see, you need to provide a type when you read in the objects to tell uPickle what kind of object you want: uPickle doesn't store type information of any sort when it writes out the objects; it's entirely possible to write one type and read another and have it work:
-
-```scala
-val s = write(Pairing(1, "omg"))
-// s: String = [1, "omg"]
-
-read[(Int, String)](s)
-// res12: (Int, String) = (1,omg)
-```
+Case classes in particular are serialized using the `apply` and `unapply` methods on their companion objects. This means that you can make your own classes serializable by giving them companions `apply` and `unapply`. `sealed` hierarchies are serialized as tagged unions: whatever the serialization of the actual object, together with an integer representing the   
 
 Exceptions
 ==========
@@ -112,24 +84,21 @@ Limitations
 uPickle is a work in progress, and doesn't currently support:
 
 - Circular object graphs
-- Serialization of objects in discriminated-union-style sealed class hierarchies
-- Macro-based reading and writing
-- 
-
-These limitations will probably be removed in the future. In addition, it also does not support
-
+- Nulls
 - Reflective reading and writing
-- Reading/writing of untyped values e.g. `Any`
-- Persisting arbitrary variables and values in an object
+- Read/writing of untyped values e.g. `Any`
+- Read/writing arbitrarily shaped objects
 
-These limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away.
+Most of these limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away.
+
+uPickle is also a young project, and macro API in particular is filled with edge-cases
 
 Why uPickle
 ===========
 
 I wrote uPickle because I needed a transparent serialization library that worked both in Scala-JVM and Scala-JS, and my dissatisfaction with existing solutions:
 
-- None of the libraries I could find were pure Scala: [spray-json]() uses [parboiled1]() which is written in Java, [play-json]() uses [Jackson](), which uses Java/reflection. [scala-pickling]() silently falls back to reflection. This makes them difficult to port to ScalaJS, which supports neither Java nor reflection.
+- None of the libraries I could find were pure Scala: [spray-json](https://github.com/spray/spray-json) uses [parboiled1](https://github.com/sirthias/parboiled/wiki) which is written in Java, [play-json](http://www.playframework.com/documentation/2.2.x/ScalaJson) uses [Jackson]http://jackson.codehaus.org/(), which uses Java/reflection. [scala-pickling](https://github.com/scala/pickling) silently falls back to reflection. This makes them difficult to port to ScalaJS, which supports neither Java nor reflection.
 - Those libraries also typically have non-trivial dependency chains. That also makes them hard to port to ScalaJS, since I'd need to port all of their dependencies too.
 - Lastly, many aim for a very ambitious target: untyped serialization of arbitrary object graphs. That forces them to use reflection, and makes their internals and semantics much more complex.
 
