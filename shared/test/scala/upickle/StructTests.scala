@@ -174,9 +174,22 @@ object StructTests extends TestSuite{
 //      )
 //    }
     'macros{
-      case class ADT(i: Int)
+      'simpleAdt {
+        case class ADTa(i: Int)
+        case class ADTb(i: Int, s: String)
+        case class ADTc(i: Int, s: String, t: (Double, Double))
+        case class ADTd(i: Int, s: String, t: (Double, Double), a: ADTa)
+        case class ADTe(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double])
+        case class ADTf(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double], o: Option[Option[Boolean]])
 
-      rw(ADT(1), """[1]""")
+        rw(ADTa(1), """[1]""")
+        rw(ADTb(1, "lol"), """[1, "lol"]""")
+        rw(ADTc(1, "lol", (1.1, 1.2)), """[1, "lol", [1.1, 1.2]]""")
+        rw(ADTd(1, "lol", (1.1, 1.2), ADTa(1)), """[1, "lol", [1.1, 1.2], [1]]""")
+        rw(ADTe(1, "lol", (1.1, 1.2), ADTa(1), List(1.0, 2.0, 3.14)), """[1, "lol", [1.1, 1.2], [1], [1.0, 2.0, 3.14]]""")
+        rw(ADTf(1, "lol", (1.1, 1.2), ADTa(1), List(1.0, 2.0, 3.14), Some(None)), """[1, "lol", [1.1, 1.2], [1], [1.0, 2.0, 3.14], [[]]]""")
+      }
+
     }
   }
 }

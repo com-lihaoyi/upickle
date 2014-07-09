@@ -275,20 +275,25 @@ object Implicits extends Implicits{
   def macroRWImpl[T: c.WeakTypeTag](c: Context) = {
     println("LULS")
     import c.universe._
-
-    println(
+    val args =
       weakTypeTag[T]
         .tpe
         .decl(nme.CONSTRUCTOR)
         .asMethod
         .paramLists
         .flatten
-        .map(m => (
-          m.name,
-          appliedType(typeOf[RW[_]], m.typeSignature)
-        ))
-    )
-    ???
+    val params =
+      args.map{m =>
+        (m.name, appliedType(typeOf[RW[_]], m.typeSignature))
+      }
+    val name = TermName(weakTypeTag[T].tpe.typeSymbol.name.toString)
+
+    val rwName = TermName(s"Case${params.length}ReadWriter")
+    val z = q"""
+      $rwName($name.apply, $name.unapply)
+    """
+    println("z " + z)
+    c.Expr[RW[T]](z)
   }
 }
 import language.experimental.macros
