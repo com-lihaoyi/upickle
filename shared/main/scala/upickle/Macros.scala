@@ -8,7 +8,6 @@ import scala.Some
  */
 object Macros {
   def macroRWImpl[T: c.WeakTypeTag](c: Context) = {
-    println("LULS")
     import c.universe._
     val z = picklerFor(c)(weakTypeTag[T].tpe)
 
@@ -33,6 +32,10 @@ object Macros {
         case None => pickler
       }
     }
+
+    println(tpe.typeSymbol.companion)
+    println(tpe.typeSymbol.companion.info.member(TermName("apply")).typeSignature.paramLists.flatten.map(_.typeSignature))
+    println(tpe.typeSymbol.companion.info.member(TermName("unapply")).typeSignature)
     tpe.decl(nme.CONSTRUCTOR) match {
       case NoSymbol if clsSymbol.isSealed => // I'm a sealed trait/class!
         println("I'm a sealed trait/class!")

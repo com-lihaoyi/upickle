@@ -100,30 +100,40 @@ object Implicits extends Implicits{
 
   // Boilerplate case class pickler templates
   def Case0ReadWriter[T](t: T) = new ReadWriter[T](x => Js.Array(Nil), {case x => t})
+  def arrayToMap(a: Js.Array, names: Seq[String]) = Js.Object(names.zip(a.value))
+  def mapToArray(o: Js.Object, names: Seq[String]) = Js.Array(names.map(o.value.toMap))
 
+  def f[T](names: Seq[String], read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {case x: Js.Object => read(mapToArray(x, names))}
+  class ReadWriterCase[T](names: Seq[String], 
+                          write: T => Js.Value,
+                          read: PartialFunction[Js.Value, T])
+                          extends ReadWriter[T](
+      x => arrayToMap(write(x).asInstanceOf[Js.Array], names),
+      f(names, read)
+    )
   def Case1ReadWriter[T1: Reader: Writer, R]
-                     (f: (T1) => R, g: R => Option[T1])
-  = new ReadWriter[R](x => writeJs(Tuple1(g(x).get)), {case x => f(readJs[Tuple1[T1]](x)._1)})
+                     (f: (T1) => R, g: R => Option[T1], names: Seq[String])
+  = new ReadWriterCase[R](names, x => writeJs(Tuple1(g(x).get)), {case x => f(readJs[Tuple1[T1]](x)._1)})
 
   def Case2ReadWriter[T1: Reader: Writer, T2: Reader: Writer, R]
-                     (f: (T1, T2) => R, g: R => Option[(T1, T2)])
-  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2)](x))})
+                     (f: (T1, T2) => R, g: R => Option[(T1, T2)], names: Seq[String])
+  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2)](x))})
 
   def Case3ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, R]
-                     (f: (T1, T2, T3) => R, g: R => Option[(T1, T2, T3)])
-  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3)](x))})
+                     (f: (T1, T2, T3) => R, g: R => Option[(T1, T2, T3)], names: Seq[String])
+  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3)](x))})
 
   def Case4ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, R]
-                     (f: (T1, T2, T3, T4) => R, g: R => Option[(T1, T2, T3, T4)])
-  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4)](x))})
+                     (f: (T1, T2, T3, T4) => R, g: R => Option[(T1, T2, T3, T4)], names: Seq[String])
+  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4)](x))})
 
   def Case5ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, T5: Reader: Writer, R]
-                     (f: (T1, T2, T3, T4, T5) => R, g: R => Option[(T1, T2, T3, T4, T5)])
-  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4, T5)](x))})
+                     (f: (T1, T2, T3, T4, T5) => R, g: R => Option[(T1, T2, T3, T4, T5)], names: Seq[String])
+  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4, T5)](x))})
 
   def Case6ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, T5: Reader: Writer, T6: Reader: Writer, R]
-                     (f: (T1, T2, T3, T4, T5, T6) => R, g: R => Option[(T1, T2, T3, T4, T5, T6)])
-  = new ReadWriter[R](x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4, T5, T6)](x))})
+                     (f: (T1, T2, T3, T4, T5, T6) => R, g: R => Option[(T1, T2, T3, T4, T5, T6)], names: Seq[String])
+  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4, T5, T6)](x))})
 
   def SeqLikeWriter[T: Writer, R[_]](g: R[T] => Option[Seq[T]]): WriterCls[R[T]] = new WriterCls[R[T]](
     x => Js.Array(g(x).get.map(x => writeJs(x)))
@@ -182,8 +192,8 @@ object Implicits extends Implicits{
 
   def eitherRW[T: R: W, V: R: W]: (RW[Either[T, V]], RW[Left[T, V]], RW[Right[T, V]]) = {
     knotRW{implicit i: RWKnot[Either[T, V]] => sealedRW(
-      Case1ReadWriter(Left.apply[T, V], Left.unapply[T, V]),
-      Case1ReadWriter(Right.apply[T, V], Right.unapply[T, V]),
+      Case1ReadWriter(Left.apply[T, V], Left.unapply[T, V], Seq("a")),
+      Case1ReadWriter(Right.apply[T, V], Right.unapply[T, V], Seq("b")),
       i
     )}
   }
