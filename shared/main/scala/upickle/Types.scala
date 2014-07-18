@@ -31,15 +31,35 @@ class ReaderCls[T](val read: PF[Js.Value, T]) extends Reader[T]
 class ReadWriter[T](val write: T => Js.Value, val read: PF[Js.Value, T]) extends Writer[T] with Reader[T]
 
 /**
- * A class that provides a mutable version of [[ReadWriter]], used to
+ * Classes that provides a mutable version of [[ReadWriter]], used to
  * allow serialization and deserialization of recursive data structure
  */
-class RWKnot[T](var _write: T => Js.Value, var _read: PF[Js.Value, T]) extends Reader[T] with Writer[T]{
-  def read = _read
-  def write = _write
-  def copyFrom(rw: ReadWriter[T]) = {
-    _write = rw.write
-    _read = rw.read
+object Knot {
+
+  class RW[T](var _write: T => Js.Value, var _read: PF[Js.Value, T]) extends Reader[T] with Writer[T] {
+    def read = _read
+
+    def write = _write
+
+    def copyFrom(rw: ReadWriter[T]) = {
+      _write = rw.write
+      _read = rw.read
+    }
+  }
+
+  class R[T](var _read: PF[Js.Value, T]) extends Reader[T] {
+    def read = _read
+
+    def copyFrom(rw: Reader[T]) = {
+      _read = rw.read
+    }
+  }
+
+  class W[T](var _write: T => Js.Value) extends Writer[T] {
+    def write = _write
+
+    def copyFrom(rw: Writer[T]) = {
+      _write = rw.write
+    }
   }
 }
-

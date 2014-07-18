@@ -191,7 +191,7 @@ object Implicits extends Implicits{
   implicit val DurationReader = new ReaderCls[Duration](validate("DurationString"){FiniteReader.read orElse InfiniteReader.read})
 
   def eitherRW[T: R: W, V: R: W]: (RW[Either[T, V]], RW[Left[T, V]], RW[Right[T, V]]) = {
-    knotRW{implicit i: RWKnot[Either[T, V]] => sealedRW(
+    knotRW{implicit i: Knot.RW[Either[T, V]] => sealedRW(
       Case1ReadWriter(Left.apply[T, V], Left.unapply[T, V], Seq("a")),
       Case1ReadWriter(Right.apply[T, V], Right.unapply[T, V], Seq("b")),
       i
@@ -202,7 +202,9 @@ object Implicits extends Implicits{
   implicit def LeftRW[A: W: R, B: W: R] = eitherRW[A, B]._2
   implicit def RightRW[A: W: R, B: W: R] = eitherRW[A, B]._3
 
-  def knotRW[T, V](f: RWKnot[T] => V): V = f(new RWKnot(null, null))
+  def knotRW[T, V](f: Knot.RW[T] => V): V = f(new Knot.RW(null, null))
+  def knotR[T, V](f: Knot.R[T] => V): V = f(new Knot.R(null))
+  def knotW[T, V](f: Knot.W[T] => V): V = f(new Knot.W(null))
   def annotate[V: CT](rw: ReadWriter[V], n: String) = new ReadWriter[V](
     {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))},
     {case Js.Array(Seq(Js.Number(`n`), x)) => rw.read(x)}
@@ -218,7 +220,7 @@ object Implicits extends Implicits{
   }
 
   def sealedRW[T, A <: T: CT, B <: T: CT]
-          (a: RW[A], b: RW[B], knot: RWKnot[T]) = {
+          (a: RW[A], b: RW[B], knot: Knot.RW[T]) = {
     val a2 = annotate(a, "0")
     val b2 = annotate(b, "1")
     val t = new ReadWriter[T](
@@ -229,7 +231,7 @@ object Implicits extends Implicits{
     (t, a2, b2)
   }
   def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT]
-          (a: RW[A], b: RW[B], c: RW[C], knot: RWKnot[T]) = {
+          (a: RW[A], b: RW[B], c: RW[C], knot: Knot.RW[T]) = {
     val a2 = annotate(a, "0")
     val b2 = annotate(b, "1")
     val c2 = annotate(c, "2")
@@ -241,7 +243,7 @@ object Implicits extends Implicits{
     (t, a2, b2, c2)
   }
   def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT]
-          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], knot: RWKnot[T]) = {
+          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], knot: Knot.RW[T]) = {
     val a2 = annotate(a, "0")
     val b2 = annotate(b, "1")
     val c2 = annotate(c, "2")
@@ -254,7 +256,7 @@ object Implicits extends Implicits{
     (t, a2, b2, c2, d2)
   }
   def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT, E <: T: CT]
-          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], knot: RWKnot[T]) = {
+          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], knot: Knot.RW[T]) = {
     val a2 = annotate(a, "0")
     val b2 = annotate(b, "1")
     val c2 = annotate(c, "2")
@@ -268,7 +270,7 @@ object Implicits extends Implicits{
     (t, a2, b2, c2, d2, e2)
   }
   def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT, E <: T: CT, F <: T: CT]
-          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], f: RW[F], knot: RWKnot[T]) = {
+          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], f: RW[F], knot: Knot.RW[T]) = {
     val a2 = annotate(a, "0")
     val b2 = annotate(b, "1")
     val c2 = annotate(c, "2")
@@ -286,5 +288,6 @@ object Implicits extends Implicits{
 
 import language.experimental.macros
 trait Implicits {
-  implicit def macroRW[T]: RW[T] = macro Macros.macroRWImpl[T]
+  implicit def macroR[T]: R[T] = macro Macros.macroRImpl[T]
+  implicit def macroW[T]: W[T] = macro Macros.macroWImpl[T]
 }

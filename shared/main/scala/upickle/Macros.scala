@@ -7,14 +7,48 @@ import scala.Some
  * Created by haoyi on 7/8/14.
  */
 object Macros {
-  def macroRWImpl[T: c.WeakTypeTag](c: Context) = {
+  def macroRImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
-    val z = picklerFor(c)(weakTypeTag[T].tpe)
+    val tpe = weakTypeTag[T].tpe
+    val z = picklerFor(c)(tpe){ subPicklers =>
+      val reads = subPicklers.map(p => q"$p.read")
+        .reduceLeft[Tree]((a, b) => q"$a orElse $b")
+      q"""
+          upickle.Implicits.knotR{implicit i: upickle.Knot.R[$tpe] =>
+            new upickle.ReaderCls[$tpe](
+              upickle.Implicits.validate("Sealed"){
+                $reads
+              }
+            )
+          }
+        """
 
-    c.Expr[RW[T]](z)
+    }
+
+    c.Expr[R[T]](z)
+  }
+  def macroWImpl[T: c.WeakTypeTag](c: Context) = {
+    import c.universe._
+    val tpe = weakTypeTag[T].tpe
+    val z = picklerFor(c)(tpe){ subPicklers =>
+      val writes = subPicklers.map(p => q"$p.write")
+        .reduceLeft[Tree]((a, b) => q"$a merge $b")
+
+      q"""
+          upickle.Implicits.knotW{implicit i: upickle.Knot.W[$tpe] =>
+            new upickle.WriterCls[$tpe](
+              $writes
+
+            )
+          }
+        """
+
+    }
+
+    c.Expr[W[T]](z)
   }
 
-  def picklerFor(c: Context)(tpe: c.Type): c.Tree = {
+  def picklerFor(c: Context)(tpe: c.Type)(treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
     import c.universe._
     val clsSymbol = tpe.typeSymbol.asClass
     def annotate(pickler: Tree) = {
@@ -39,24 +73,12 @@ object Macros {
     tpe.decl(nme.CONSTRUCTOR) match {
       case NoSymbol if clsSymbol.isSealed => // I'm a sealed trait/class!
         val subPicklers =
-          for(subCls <- clsSymbol.knownDirectSubclasses) yield {
-            picklerFor(c)(subCls.asType.toType)
+          for(subCls <- clsSymbol.knownDirectSubclasses.toSeq) yield {
+            picklerFor(c)(subCls.asType.toType)(treeMaker)
           }
-        val writes = subPicklers.map(p => q"$p.write")
-                                .reduceLeft[Tree]((a, b) => q"$a merge $b")
 
-        val reads = subPicklers.map(p => q"$p.read")
-                               .reduceLeft[Tree]((a, b) => q"$a orElse $b")
-        val z = q"""
-          upickle.Implicits.knotRW{implicit i: upickle.RWKnot[$tpe] =>
-            new upickle.ReadWriter[$tpe](
-              $writes,
-              upickle.Implicits.validate("Sealed"){
-                $reads
-              }
-            )
-          }
-        """
+        val z = treeMaker(subPicklers)
+
         println(z)
         println("SealedSomething")
 
