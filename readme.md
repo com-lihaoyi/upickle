@@ -60,13 +60,13 @@ Out of the box, uPickle supports writing and reading the following types:
 - `Tuple`s from 1 to 6
 - `Seq`, `List`, `Vector`, `Set`, `SortedSet`, `Option`, `Array`, `Map`s
 - `Duration`, `Either`
-- Stand-alone `case class`es and `case object`s
-- `case class`es and `case object`s that are part of a `sealed trait` or `sealed class` hierarchy
+- Stand-alone `case class`es and `case object`s, and their generic equivalents
+- Non-generic `case class`es and `case object`s that are part of a `sealed trait` or `sealed class` hierarchy
 - `sealed trait` and `sealed class`es themselves, assuming that all subclasses are picklable
 
 Readability/writability is recursive: a container such as a `Tuple` or `case class` is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a `List[Any]`, since uPickle doesn't provide a generic way of serializing `Any`.
 
-Case classes in particular are serialized using the `apply` and `unapply` methods on their companion objects. This means that you can make your own classes serializable by giving them companions `apply` and `unapply`. `sealed` hierarchies are serialized as tagged unions: whatever the serialization of the actual object, together with an integer representing the   
+Case classes in particular are serialized using the `apply` and `unapply` methods on their companion objects. This means that you can make your own classes serializable by giving them companions `apply` and `unapply`. `sealed` hierarchies are serialized as tagged unions: whatever the serialization of the actual object, together with an integer representing the position of the class in the hierarchy.   
 
 Exceptions
 ==========
@@ -87,11 +87,12 @@ uPickle is a work in progress, and doesn't currently support:
 - Nulls
 - Reflective reading and writing
 - Read/writing of untyped values e.g. `Any`
+- Generic sealed hierarchies
 - Read/writing arbitrarily shaped objects
 
-Most of these limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away.
+Most of these limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away. In general, uPickle is designed to serialize statically-typed, tree-shaped, immutable data structures. Anything more complex is out of scope.
 
-uPickle is also a young project, and macro API in particular is filled with edge-cases
+uPickle is also a young project, and macro API in particular is filled with edge-cases, so there are probably other limitations not listed here
 
 Why uPickle
 ===========
@@ -102,9 +103,4 @@ I wrote uPickle because I needed a transparent serialization library that worked
 - Those libraries also typically have non-trivial dependency chains. That also makes them hard to port to ScalaJS, since I'd need to port all of their dependencies too.
 - Lastly, many aim for a very ambitious target: untyped serialization of arbitrary object graphs. That forces them to use reflection, and makes their internals and semantics much more complex.
 
-uPickle on the other hand aims much lower:
-
-- Only pickling statically-known-types and sealed class hierarchies
-- No support at all for pickling untyped values
-- Only pickling "struct"-style case classes by default, and not arbitrary classes
-- No dependencies
+uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with `apply`/`unapply` on the companion?") that makes its behavior predictable and simple to understand.
