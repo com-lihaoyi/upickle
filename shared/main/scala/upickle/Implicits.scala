@@ -143,5 +143,4 @@ object Implicits extends Implicits {
 trait Implicits{
   implicit def macroR[T]: R[T] = macro Macros.macroRImpl[T]
   implicit def macroW[T]: W[T] = macro Macros.macroWImpl[T]
-
 }

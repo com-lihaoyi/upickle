@@ -91,8 +91,8 @@ object Macros {
 
         val z = treeMaker(subPicklers)
 
-//        println(z)
-//        println("SealedSomething")
+        println(z)
+        println("SealedSomething")
 //        Thread.sleep(1000)
         z
       case x if tpe.typeSymbol.isModuleClass =>
@@ -127,8 +127,8 @@ object Macros {
 
 
         val z = annotate(pickler)
-//        println("Class")
-//        println(z)
+        println("Class")
+        println(z)
         z
     }
   }
