@@ -5,11 +5,11 @@ import scala.util.{Failure, Success}
 import scala.collection.SortedSet
 import scala.concurrent.duration.{FiniteDuration, Duration}
 import scala.reflect.macros.Context
-
-object Implicits extends Implicits{
-  def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
-    pf.orElse { case x => throw Invalid.Data(x, name) }
-  }
+import language.experimental.macros
+object Implicits extends Implicits {
+  import Generated.validate
+  import Generated.Tuple2Reader
+  import Generated.Tuple2Writer
   implicit val NothingReader: Reader[Nothing] = new ReaderCls[Nothing]({case x => ???})
   implicit val NothingWriter: Writer[Nothing] = new WriterCls[Nothing](x => ???)
   // Special-case picklers
@@ -59,81 +59,10 @@ object Implicits extends Implicits{
   implicit val FloatPickler = new NumericReadWriter(_.toFloat)
   implicit val DoublePickler = new NumericReadWriter(_.toDouble)
 
-  // Boilerplate tuple picklers
 
-  implicit def Tuple1Writer[T1: Writer] = new WriterCls[Tuple1[T1]](
-    x => Js.Array(Seq(writeJs(x._1)))
-  )
-  implicit def Tuple1Reader[T1: Reader] = new ReaderCls[Tuple1[T1]](
-    validate("Array(1)"){case Js.Array(Seq(x1)) => Tuple1(readJs[T1](x1))}
-  )
-  implicit def Tuple2Writer[T1: Writer, T2: Writer] = new WriterCls[(T1, T2)](
-    x => Js.Array(Seq(writeJs(x._1), writeJs(x._2)))
-  )
-  implicit def Tuple2Reader[T1: Reader, T2: Reader] = new ReaderCls[(T1, T2)](
-    validate("Array(2)"){case Js.Array(Seq(x1, x2)) => (readJs[T1](x1), readJs[T2](x2))}
-  )
-  implicit def Tuple3Writer[T1: Writer, T2: Writer, T3: Writer] = new WriterCls[(T1, T2, T3)](
-    x => Js.Array(Seq(writeJs(x._1), writeJs(x._2), writeJs(x._3)))
-  )
-  implicit def Tuple3Reader[T1: Reader, T2: Reader, T3: Reader] = new ReaderCls[(T1, T2, T3)](
-    validate("Array(3)"){case Js.Array(Seq(x1, x2, x3)) => (readJs[T1](x1), readJs[T2](x2), readJs[T3](x3))}
-  )
-  implicit def Tuple4Writer[T1: Writer, T2: Writer, T3: Writer, T4: Writer] = new WriterCls[(T1, T2, T3, T4)](
-    x => Js.Array(Seq(writeJs(x._1), writeJs(x._2), writeJs(x._3), writeJs(x._4)))
-  )
-  implicit def Tuple4Reader[T1: Reader, T2: Reader, T3: Reader, T4: Reader] = new ReaderCls[(T1, T2, T3, T4)](
-    validate("Array(4)"){case Js.Array(Seq(x1, x2, x3, x4)) => (readJs[T1](x1), readJs[T2](x2), readJs[T3](x3), readJs[T4](x4))}
-  )
-  implicit def Tuple5Writer[T1: Writer, T2: Writer, T3: Writer, T4: Writer, T5: Writer] = new WriterCls[(T1, T2, T3, T4, T5)](
-    x => Js.Array(Seq(writeJs(x._1), writeJs(x._2), writeJs(x._3), writeJs(x._4), writeJs(x._5)))
-  )
-  implicit def Tuple5Reader[T1: Reader, T2: Reader, T3: Reader, T4: Reader, T5: Reader] = new ReaderCls[(T1, T2, T3, T4, T5)](
-    validate("Array(5)"){case Js.Array(Seq(x1, x2, x3, x4, x5)) => (readJs[T1](x1), readJs[T2](x2), readJs[T3](x3), readJs[T4](x4), readJs[T5](x5))}
-  )
-  implicit def Tuple6Writer[T1: Writer, T2: Writer, T3: Writer, T4: Writer, T5: Writer, T6: Writer] = new WriterCls[(T1, T2, T3, T4, T5, T6)](
-    x => Js.Array(Seq(writeJs(x._1), writeJs(x._2), writeJs(x._3), writeJs(x._4), writeJs(x._5), writeJs(x._6)))
-  )
-  implicit def Tuple6Reader[T1: Reader, T2: Reader, T3: Reader, T4: Reader, T5: Reader, T6: Reader] = new ReaderCls[(T1, T2, T3, T4, T5, T6)](
-    validate("Array(6)"){case Js.Array(Seq(x1, x2, x3, x4, x5, x6)) => (readJs[T1](x1), readJs[T2](x2), readJs[T3](x3), readJs[T4](x4), readJs[T5](x5), readJs[T6](x6))}
-  )
+  def Case0Reader[T](t: T) = new ReaderCls[T]({case x => t})
+  def Case0Writer[T](t: T) = new WriterCls[T](x => Js.Array(Nil))
 
-  // Boilerplate case class pickler templates
-  def Case0ReadWriter[T](t: T) = new ReadWriter[T](x => Js.Array(Nil), {case x => t})
-  def arrayToMap(a: Js.Array, names: Seq[String]) = Js.Object(names.zip(a.value))
-  def mapToArray(o: Js.Object, names: Seq[String]) = Js.Array(names.map(o.value.toMap))
-
-  def f[T](names: Seq[String], read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {case x: Js.Object => read(mapToArray(x, names))}
-  class ReadWriterCase[T](names: Seq[String], 
-                          write: T => Js.Value,
-                          read: PartialFunction[Js.Value, T])
-                          extends ReadWriter[T](
-      x => arrayToMap(write(x).asInstanceOf[Js.Array], names),
-      f(names, read)
-    )
-  def Case1ReadWriter[T1: Reader: Writer, R]
-                     (f: (T1) => R, g: R => Option[T1], names: Seq[String])
-  = new ReadWriterCase[R](names, x => writeJs(Tuple1(g(x).get)), {case x => f(readJs[Tuple1[T1]](x)._1)})
-
-  def Case2ReadWriter[T1: Reader: Writer, T2: Reader: Writer, R]
-                     (f: (T1, T2) => R, g: R => Option[(T1, T2)], names: Seq[String])
-  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2)](x))})
-
-  def Case3ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, R]
-                     (f: (T1, T2, T3) => R, g: R => Option[(T1, T2, T3)], names: Seq[String])
-  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3)](x))})
-
-  def Case4ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, R]
-                     (f: (T1, T2, T3, T4) => R, g: R => Option[(T1, T2, T3, T4)], names: Seq[String])
-  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4)](x))})
-
-  def Case5ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, T5: Reader: Writer, R]
-                     (f: (T1, T2, T3, T4, T5) => R, g: R => Option[(T1, T2, T3, T4, T5)], names: Seq[String])
-  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4, T5)](x))})
-
-  def Case6ReadWriter[T1: Reader: Writer, T2: Reader: Writer, T3: Reader: Writer, T4: Reader: Writer, T5: Reader: Writer, T6: Reader: Writer, R]
-                     (f: (T1, T2, T3, T4, T5, T6) => R, g: R => Option[(T1, T2, T3, T4, T5, T6)], names: Seq[String])
-  = new ReadWriterCase[R](names, x => writeJs(g(x).get), {case x => f.tupled(readJs[(T1, T2, T3, T4, T5, T6)](x))})
 
   def SeqLikeWriter[T: Writer, R[_]](g: R[T] => Option[Seq[T]]): WriterCls[R[T]] = new WriterCls[R[T]](
     x => Js.Array(g(x).get.map(x => writeJs(x)))
@@ -190,24 +119,14 @@ object Implicits extends Implicits{
 
   implicit val DurationReader = new ReaderCls[Duration](validate("DurationString"){FiniteReader.read orElse InfiniteReader.read})
 
-  def eitherRW[T: R: W, V: R: W]: (RW[Either[T, V]], RW[Left[T, V]], RW[Right[T, V]]) = {
-    knotRW{implicit i: Knot.RW[Either[T, V]] => sealedRW(
-      Case1ReadWriter(Left.apply[T, V], Left.unapply[T, V], Seq("a")),
-      Case1ReadWriter(Right.apply[T, V], Right.unapply[T, V], Seq("b")),
-      i
-    )}
-  }
-  def ?[T](implicit t: T) = implicitly[T]
-  implicit def EitherRW[A: W: R, B: W: R] = eitherRW[A, B]._1
-  implicit def LeftRW[A: W: R, B: W: R] = eitherRW[A, B]._2
-  implicit def RightRW[A: W: R, B: W: R] = eitherRW[A, B]._3
-
   def knotRW[T, V](f: Knot.RW[T] => V): V = f(new Knot.RW(null, null))
   def knotR[T, V](f: Knot.R[T] => V): V = f(new Knot.R(null))
   def knotW[T, V](f: Knot.W[T] => V): V = f(new Knot.W(null))
-  def annotate[V: CT](rw: ReadWriter[V], n: String) = new ReadWriter[V](
-    {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))},
+  def annotate[V: CT](rw: Reader[V], n: String) = new ReaderCls[V](
     {case Js.Array(Seq(Js.Number(`n`), x)) => rw.read(x)}
+  )
+  def annotate[V: CT](rw: Writer[V], n: String) = new WriterCls[V](
+    {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))}
   )
 
 
@@ -219,75 +138,10 @@ object Implicits extends Implicits{
     }
   }
 
-  def sealedRW[T, A <: T: CT, B <: T: CT]
-          (a: RW[A], b: RW[B], knot: Knot.RW[T]) = {
-    val a2 = annotate(a, "0")
-    val b2 = annotate(b, "1")
-    val t = new ReadWriter[T](
-      a2.write merge b2.write,
-      validate("Sealed"){a2.read orElse b2.read}
-    )
-    Option(knot).foreach(_.copyFrom(t))
-    (t, a2, b2)
-  }
-  def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT]
-          (a: RW[A], b: RW[B], c: RW[C], knot: Knot.RW[T]) = {
-    val a2 = annotate(a, "0")
-    val b2 = annotate(b, "1")
-    val c2 = annotate(c, "2")
-    val t = new ReadWriter[T](
-      a2.write merge b2.write merge c2.write,
-      validate("Sealed"){a2.read orElse b2.read orElse c2.read}
-    )
-    Option(knot).foreach(_.copyFrom(t))
-    (t, a2, b2, c2)
-  }
-  def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT]
-          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], knot: Knot.RW[T]) = {
-    val a2 = annotate(a, "0")
-    val b2 = annotate(b, "1")
-    val c2 = annotate(c, "2")
-    val d2 = annotate(d, "3")
-    val t = new ReadWriter[T](
-      a2.write merge b2.write merge c2.write merge d2.write,
-      validate("Sealed"){a2.read orElse b2.read orElse c2.read orElse d2.read}
-    )
-    Option(knot).foreach(_.copyFrom(t))
-    (t, a2, b2, c2, d2)
-  }
-  def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT, E <: T: CT]
-          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], knot: Knot.RW[T]) = {
-    val a2 = annotate(a, "0")
-    val b2 = annotate(b, "1")
-    val c2 = annotate(c, "2")
-    val d2 = annotate(d, "3")
-    val e2 = annotate(e, "4")
-    val t = new ReadWriter[T](
-      a2.write merge b2.write merge c2.write merge d2.write merge e2.write,
-      validate("Sealed"){a2.read orElse b2.read orElse c2.read orElse d2.read orElse e2.read}
-    )
-    Option(knot).foreach(_.copyFrom(t))
-    (t, a2, b2, c2, d2, e2)
-  }
-  def sealedRW[T, A <: T: CT, B <: T: CT, C <: T: CT, D <: T: CT, E <: T: CT, F <: T: CT]
-          (a: RW[A], b: RW[B], c: RW[C], d: RW[D], e: RW[E], f: RW[F], knot: Knot.RW[T]) = {
-    val a2 = annotate(a, "0")
-    val b2 = annotate(b, "1")
-    val c2 = annotate(c, "2")
-    val d2 = annotate(d, "3")
-    val e2 = annotate(e, "4")
-    val f2 = annotate(f, "5")
-    val t = new ReadWriter[T](
-      a2.write merge b2.write merge c2.write merge d2.write merge e2.write merge f2.write,
-      validate("Sealed"){a2.read orElse b2.read orElse c2.read orElse d2.read orElse e2.read orElse f2.read}
-    )
-    Option(knot).foreach(_.copyFrom(t))
-    (t, a2, b2, c2, d2, e2, f2)
-  }
 }
 
-import language.experimental.macros
-trait Implicits {
+trait Implicits{
   implicit def macroR[T]: R[T] = macro Macros.macroRImpl[T]
   implicit def macroW[T]: W[T] = macro Macros.macroWImpl[T]
+
 }

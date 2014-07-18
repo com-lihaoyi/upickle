@@ -24,6 +24,62 @@ object Build extends sbt.Build{
       "org.scala-lang" % "scala-reflect" % scalaVersion.value
     ),
 
+    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+      val file = dir / "upickle" / "Generated.scala"
+      val tuplesAndCases = (1 to 22).map{ i =>
+        def commaSeparated(s: Int => String) = (1 to i).map(s).mkString(", ")
+        val writerTypes = commaSeparated(j => s"T$j: Writer")
+        val readerTypes = commaSeparated(j => s"T$j: Reader")
+        val typeTuple = commaSeparated(j => s"T$j")
+        val written = commaSeparated(j => s"writeJs(x._$j)")
+        val pattern = commaSeparated(j => s"x$j")
+        val read = commaSeparated(j => s"readJs[T$j](x$j)")
+        val caseReader =
+          if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
+          else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
+
+        s"""
+        implicit def Tuple${i}Writer[$writerTypes] = new WriterCls[Tuple${i}[$typeTuple]](
+          x => Js.Array(Seq($written))
+        )
+        implicit def Tuple${i}Reader[$readerTypes] = new ReaderCls[Tuple${i}[$typeTuple]](
+          validate("Array(${i})"){case Js.Array(Seq($pattern)) => Tuple${i}($read)}
+        )
+
+        def Case${i}Reader[$readerTypes, R]
+                          (f: ($typeTuple) => R, names: Seq[String])
+          = new ReaderCase[R](names, {case x => $caseReader})
+
+        def Case${i}Writer[$writerTypes, R]
+                          (g: R => Option[Tuple${i}[$typeTuple]], names: Seq[String])
+          = new WriterCase[R](names, x => writeJs(g(x).get))
+        """
+      }
+
+      IO.write(file, s"""
+        package upickle
+        import language.experimental.macros
+        object Generated {
+
+          def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
+            pf.orElse { case x => throw Invalid.Data(x, name) }
+          }
+          def f[T](names: Seq[String], read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {case x: Js.Object => read(mapToArray(x, names))}
+          def arrayToMap(a: Js.Array, names: Seq[String]) = Js.Object(names.zip(a.value))
+          def mapToArray(o: Js.Object, names: Seq[String]) = Js.Array(names.map(o.value.toMap))
+          class ReaderCase[T](names: Seq[String],
+                              read: PartialFunction[Js.Value, T])
+                              extends ReaderCls[T](f(names, read))
+          class WriterCase[T](names: Seq[String],
+                              write: T => Js.Value)
+                              extends WriterCls[T](
+            x => arrayToMap(write(x).asInstanceOf[Js.Array], names)
+          )
+          ${tuplesAndCases.mkString("\n")}
+        }
+      """)
+      Seq(file)
+    },
     autoCompilerPlugins := true,
 
     addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
@@ -46,6 +102,7 @@ object Build extends sbt.Build{
           <url>https://github.com/lihaoyi</url>
         </developer>
       </developers>
+
   )
 
   lazy val root = cross.root
