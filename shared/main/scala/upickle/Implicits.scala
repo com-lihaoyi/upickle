@@ -202,7 +202,7 @@ object Implicits extends Implicits{
   implicit def LeftRW[A: W: R, B: W: R] = eitherRW[A, B]._2
   implicit def RightRW[A: W: R, B: W: R] = eitherRW[A, B]._3
 
-  def knotRW[T, V](implicit f: RWKnot[T] => V): V = f(new RWKnot(null, null))
+  def knotRW[T, V](f: RWKnot[T] => V): V = f(new RWKnot(null, null))
   def annotate[V: CT](rw: ReadWriter[V], n: String) = new ReadWriter[V](
     {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))},
     {case Js.Array(Seq(Js.Number(`n`), x)) => rw.read(x)}

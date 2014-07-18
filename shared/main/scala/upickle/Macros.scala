@@ -1,6 +1,6 @@
 package upickle
 
-import scala.reflect.macros._
+import scala.reflect.macros.whitebox._
 import scala.Some
 
 /**
@@ -33,15 +33,13 @@ object Macros {
       }
     }
 
-    println(tpe.typeSymbol.companion)
-    println(tpe.typeSymbol.companion.info.member(TermName("apply")).typeSignature.paramLists.flatten.map(_.typeSignature))
-    println(tpe.typeSymbol.companion.info.member(TermName("unapply")).typeSignature)
+    println()
+
+    println(tpe)
     tpe.decl(nme.CONSTRUCTOR) match {
       case NoSymbol if clsSymbol.isSealed => // I'm a sealed trait/class!
-        println("I'm a sealed trait/class!")
         val subPicklers =
           for(subCls <- clsSymbol.knownDirectSubclasses) yield {
-
             picklerFor(c)(subCls.asType.toType)
           }
         val writes = subPicklers.map(p => q"$p.write")
@@ -49,33 +47,52 @@ object Macros {
 
         val reads = subPicklers.map(p => q"$p.read")
                                .reduceLeft[Tree]((a, b) => q"$a orElse $b")
-        q"""
-          knotRW{implicit i: RWKnot[$tpe] =>
-            new ReadWriter[$tpe](
+        val z = q"""
+          upickle.Implicits.knotRW{implicit i: upickle.RWKnot[$tpe] =>
+            new upickle.ReadWriter[$tpe](
               $writes,
-              validate("Sealed"){
+              upickle.Implicits.validate("Sealed"){
                 $reads
               }
             )
           }
         """
+        println(z)
+        println("SealedSomething")
+
+//        c.typecheck(z, withMacrosDisabled = true)
+        z
       case x if tpe.typeSymbol.isModuleClass =>
         val mod = tpe.typeSymbol.asClass.module
-        println("I'm an object!")
 
-        val z = annotate(q"Case0ReadWriter[$mod.type]($mod)")
-        println("Z " + z)
+        val z  = annotate(q"upickle.Implicits.Case0ReadWriter[$mod.type]($mod)")
+        println("Object")
+
         z
       case x => // I'm a class
 
         val pickler = {
-          val args = x.asMethod.paramLists.flatten
+          val args =
+            tpe.typeSymbol
+               .companion
+               .info
+               .member(TermName("apply"))
+               .typeSignature
+               .paramLists
+               .flatten
+               .map(_.name.toString)
           val rwName = TermName(s"Case${args.length}ReadWriter")
           val name = TermName(tpe.typeSymbol.name.toString)
-          q"$rwName($name.apply, $name.unapply): ReadWriter[$tpe]"
+
+          q"upickle.Implicits.$rwName($name.apply, $name.unapply, Seq(..$args)): upickle.ReadWriter[$tpe]"
         }
-        println(pickler)
-        annotate(pickler)
+//        println(pickler)
+
+
+        val z = annotate(pickler)
+        println("Class")
+
+        z
     }
   }
 }
