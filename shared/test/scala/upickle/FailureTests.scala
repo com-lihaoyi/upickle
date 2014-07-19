@@ -1,9 +1,7 @@
 package upickle
 
-import Implicits._
-import Generated._
 import utest._
-
+import Types._
 /**
 * Generally, every failure should be a Invalid.Json or a
 * InvalidData. If any assertion errors, match errors, number

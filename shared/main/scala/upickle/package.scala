@@ -9,17 +9,6 @@ import acyclic.file
  * - Does the companion have matching apply/unapplySeq?
  *
  */
-package object upickle {
-
-  def write[T: Writer](expr: T): String = Json.write(writeJs(expr))
-  def writeJs[T: Writer](expr: T): Js.Value = implicitly[Writer[T]].write(expr)
-  def read[T: Reader](expr: String): T = readJs[T](Json.read(expr))
-  def readJs[T: Reader](expr: Js.Value): T = implicitly[Reader[T]].read(expr)
-
-  type CT[V] = ClassTag[V]
-  type RW[V] = ReadWriter[V]
-  type R[V] = Reader[V]
-  type W[V] = Writer[V]
-
-
+package object upickle extends Implicits with Generated{
+  object Internal extends InternalCases with InternalThings
 }

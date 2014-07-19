@@ -2,9 +2,9 @@ package upickle
 import utest._
 import scala.concurrent.duration._
 import TestUtil._
-import Implicits._
+
 import scala.reflect.ClassTag
-import Generated._
+
 // These guys all have to be out here because uPickle doesn't
 // support pickling local classes and objects
 object ADTs {
@@ -117,7 +117,7 @@ object StructTests extends TestSuite{
 
     'transmutation{
       'vectorToList{
-        val vectorToList = read[Seq[Double]](write(Vector(1.1, 2.2, 3.3)))
+        val vectorToList = Types.read[Seq[Double]](Types.write(Vector(1.1, 2.2, 3.3)))
         assert(
           vectorToList.isInstanceOf[List[Double]],
           vectorToList == List(1.1, 2.2, 3.3)
@@ -125,7 +125,7 @@ object StructTests extends TestSuite{
 
       }
       'listToMap{
-        val listToMap = read[Map[Int, String]](write(List((1, "1"), (2, "2"))))
+        val listToMap = Types.read[Map[Int, String]](Types.write(List((1, "1"), (2, "2"))))
         assert(
           listToMap.isInstanceOf[Map[Int, String]],
           listToMap == Map(1 -> "1", 2 -> "2")
@@ -159,10 +159,10 @@ object StructTests extends TestSuite{
       'adtTree{
         import Hierarchy._
 
-        rw(B(1), """[0, {"i": 1}]""")
+        rw(B(1), """[0, {"i": 1}]""")(Reader.macroR, Writer.macroW)
         rw(C("a", "b"), """[1, {"s1": "a", "s2": "b"}]""")
 
-        rw(B(1): A, """[0, {"i": 1}]""")
+        rw(B(1): A, """[0, {"i": 1}]""")(Reader.macroR, Writer.macroW)
         rw(C("a", "b"): A, """[1, {"s1": "a", "s2": "b"}]""")
       }
       'singleton{
@@ -202,8 +202,8 @@ object StructTests extends TestSuite{
       'recursive{
         import Recursive._
 
-        rw(End: LL, """[0, []]""")(macroR, macroW)
-        rw(Node(3, End): LL, """[1, {"c": 3, "next": [0, []]}]""")(macroR, macroW)
+        rw(End: LL, """[0, []]""")
+        rw(Node(3, End): LL, """[1, {"c": 3, "next": [0, []]}]""")
         rw(Node(6, Node(3, End)), """[1, {"c": 6, "next": [1, {"c": 3, "next": [0, []]}]}]""")
       }
     }

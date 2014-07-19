@@ -38,44 +38,50 @@ object Build extends sbt.Build{
           if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
           else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
 
-        s"""
-        implicit def Tuple${i}Writer[$writerTypes] = new WriterCls[Tuple${i}[$typeTuple]](
+        (s"""
+        implicit def Tuple${i}Writer[$writerTypes] = Types.Writer[Tuple${i}[$typeTuple]](
           x => Js.Array(Seq($written))
         )
-        implicit def Tuple${i}Reader[$readerTypes] = new ReaderCls[Tuple${i}[$typeTuple]](
+        implicit def Tuple${i}Reader[$readerTypes] = Types.Reader[Tuple${i}[$typeTuple]](
           validate("Array(${i})"){case Js.Array(Seq($pattern)) => Tuple${i}($read)}
         )
-
+        """, s"""
         def Case${i}Reader[$readerTypes, R]
                           (f: ($typeTuple) => R, names: Seq[String])
-          = new ReaderCase[R](names, {case x => $caseReader})
+          = ReaderCase[R](names, {case x => $caseReader})
 
         def Case${i}Writer[$writerTypes, R]
                           (g: R => Option[Tuple${i}[$typeTuple]], names: Seq[String])
-          = new WriterCase[R](names, x => writeJs(g(x).get))
-        """
+          = WriterCase[R](names, x => writeJs(g(x).get))
+        """)
       }
+
+      val (tuples, cases) = tuplesAndCases.unzip
 
       IO.write(file, s"""
         package upickle
+        import acyclic.file
         import language.experimental.macros
-        object Generated {
-
-          def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
-            pf.orElse { case x => throw Invalid.Data(x, name) }
+        trait Generated {
+          import Types._
+          def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T]
+          private[this] def readerCaseFunction[T](names: Seq[String], read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
+            case x: Js.Object => read(mapToArray(x, names))
           }
-          def f[T](names: Seq[String], read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {case x: Js.Object => read(mapToArray(x, names))}
-          def arrayToMap(a: Js.Array, names: Seq[String]) = Js.Object(names.zip(a.value))
-          def mapToArray(o: Js.Object, names: Seq[String]) = Js.Array(names.map(o.value.toMap))
-          class ReaderCase[T](names: Seq[String],
+          private[this] def arrayToMap(a: Js.Array, names: Seq[String]) = Js.Object(names.zip(a.value))
+          private[this] def mapToArray(o: Js.Object, names: Seq[String]) = Js.Array(names.map(o.value.toMap))
+          private[this] def ReaderCase[T](names: Seq[String],
                               read: PartialFunction[Js.Value, T])
-                              extends ReaderCls[T](f(names, read))
-          class WriterCase[T](names: Seq[String],
+                              = Types.Reader[T](readerCaseFunction(names, read))
+          private[this] def WriterCase[T](names: Seq[String],
                               write: T => Js.Value)
-                              extends WriterCls[T](
+                               = Types.Writer[T](
             x => arrayToMap(write(x).asInstanceOf[Js.Array], names)
           )
-          ${tuplesAndCases.mkString("\n")}
+          ${tuples.mkString("\n")}
+          trait InternalCases{
+            ${cases.mkString("\n")}
+          }
         }
       """)
       Seq(file)

@@ -1,7 +1,7 @@
 package upickle
 
 import scala.reflect.macros.whitebox._
-import scala.Some
+//import acyclic.file
 import scala.reflect.macros.TypecheckException
 
 /**
@@ -22,8 +22,8 @@ object Macros {
           val reads = subPicklers.map(p => q"$p.read")
             .reduce[Tree]((a, b) => q"$a orElse $b")
           q"""
-          upickle.Implicits.knotR{implicit i: upickle.Knot.R[$tpe] =>
-            val x = new upickle.ReaderCls[$tpe](upickle.Generated.validate("Sealed"){$reads})
+          upickle.Internal.knotR{implicit i: upickle.Knot.R[$tpe] =>
+            val x = upickle.Types.Reader[$tpe](upickle.validate("Sealed"){$reads})
             i.copyFrom(x)
             x
           }
@@ -32,7 +32,7 @@ object Macros {
         }
     }
 //    println(z)
-    c.Expr[R[T]](z)
+    c.Expr[Reader[T]](z)
   }
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
@@ -43,11 +43,12 @@ object Macros {
       val tpe = weakTypeTag[T].tpe
       picklerFor(c)(tpe, "Writer"){ subPicklers =>
         val writes = subPicklers.map(p => q"$p.write")
-          .reduce[Tree]((a, b) => q"$a merge $b")
+          .reduce[Tree]((a, b) => q"upickle.Internal.mergeable($a) merge $b")
 
         q"""
-          upickle.Implicits.knotW{implicit i: upickle.Knot.W[$tpe] =>
-            val x = new upickle.WriterCls[$tpe]($writes)
+          upickle.Internal.knotW{implicit i: upickle.Knot.W[$tpe] =>
+
+            val x = upickle.Types.Writer[$tpe]($writes)
             i.copyFrom(x)
             x
           }
@@ -57,7 +58,7 @@ object Macros {
     }
 
 //    println(z)
-    c.Expr[W[T]](z)
+    c.Expr[Writer[T]](z)
   }
 
   def picklerFor(c: Context)(tpe: c.Type, name: String)(treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
@@ -74,7 +75,7 @@ object Macros {
               .sortBy(_.fullName)
               .indexWhere(_.fullName == tpe.typeSymbol.fullName)
               .toString
-          q"annotate($pickler, $index)"
+          q"upickle.Internal.annotate($pickler, $index)"
         case None => pickler
       }
     }
@@ -98,7 +99,7 @@ object Macros {
       case x if tpe.typeSymbol.isModuleClass =>
         val mod = tpe.typeSymbol.asClass.module
 
-        val z  = annotate(q"upickle.Implicits.${TermName("Case0"+name)}[$mod.type]($mod)")
+        val z  = annotate(q"upickle.Internal.${TermName("Case0"+name)}[$mod.type]($mod)")
 //        println("Object")
 
         z
@@ -119,16 +120,16 @@ object Macros {
           val actionName = TermName(if (name == "Writer") "unapply" else "apply")
 
           if (args.length == 1 && name == "Writer")
-            q"upickle.Generated.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args)): upickle.${TypeName(name)}[$tpe]"
+            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args)): upickle.${TypeName(name)}[$tpe]"
           else
-            q"upickle.Generated.$rwName($className.$actionName, Seq(..$args)): upickle.${TypeName(name)}[$tpe]"
+            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args)): upickle.${TypeName(name)}[$tpe]"
         }
 //        println(pickler)
 
 
         val z = annotate(pickler)
-        println("Class")
-        println(z)
+//        println("Class")
+//        println(z)
         z
     }
   }
