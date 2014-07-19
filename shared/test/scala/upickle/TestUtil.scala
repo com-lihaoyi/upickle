@@ -1,6 +1,6 @@
 package upickle
 import utest._
-import Types._
+
 /**
  * Created by haoyi on 4/22/14.
  */

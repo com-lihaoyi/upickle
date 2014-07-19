@@ -1,14 +1,18 @@
 package upickle
 
-import scala.reflect.macros.whitebox._
+import scala.reflect.macros._
+import scala.reflect._
 //import acyclic.file
-import scala.reflect.macros.TypecheckException
 
 /**
- * Created by haoyi on 7/8/14.
+ * Implementation of macros used by uPickle to serialize and deserialize
+ * case classes automatically. You probably shouldn't need to use these
+ * directly, since they are called implicitly when trying to read/write
+ * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
   def macroRImpl[T: c.WeakTypeTag](c: Context) = {
+
     import c.universe._
 
     val z: Tree = try {
@@ -23,7 +27,7 @@ object Macros {
             .reduce[Tree]((a, b) => q"$a orElse $b")
           q"""
           upickle.Internal.knotR{implicit i: upickle.Knot.R[$tpe] =>
-            val x = upickle.Types.Reader[$tpe](upickle.validate("Sealed"){$reads})
+            val x = upickle.Reader[$tpe](upickle.validate("Sealed"){$reads})
             i.copyFrom(x)
             x
           }
@@ -48,7 +52,7 @@ object Macros {
         q"""
           upickle.Internal.knotW{implicit i: upickle.Knot.W[$tpe] =>
 
-            val x = upickle.Types.Writer[$tpe]($writes)
+            val x = upickle.Writer[$tpe]($writes)
             i.copyFrom(x)
             x
           }
@@ -83,7 +87,8 @@ object Macros {
 //    println()
 //
 //    println(tpe)
-    tpe.decl(nme.CONSTRUCTOR) match {
+
+    tpe.declaration(nme.CONSTRUCTOR) match {
       case NoSymbol if clsSymbol.isSealed => // I'm a sealed trait/class!
         val subPicklers =
           for(subCls <- clsSymbol.knownDirectSubclasses.toSeq) yield {
@@ -98,8 +103,11 @@ object Macros {
         z
       case x if tpe.typeSymbol.isModuleClass =>
         val mod = tpe.typeSymbol.asClass.module
+//        println("XXX")
+//        println(mod)
 
-        val z  = annotate(q"upickle.Internal.${TermName("Case0"+name)}[$mod.type]($mod)")
+
+        val z  = annotate(q"upickle.Internal.${newTermName("Case0"+name)}($mod)")
 //        println("Object")
 
         z
@@ -108,21 +116,21 @@ object Macros {
         val pickler = {
           val args =
             tpe.typeSymbol
-               .companion
-               .info
-               .member(TermName("apply"))
+               .companionSymbol
                .typeSignature
-               .paramLists
+               .member(newTermName("apply"))
+               .asMethod
+               .paramss
                .flatten
                .map(_.name.toString)
-          val rwName = TermName(s"Case${args.length}$name")
-          val className = TermName(tpe.typeSymbol.name.toString)
-          val actionName = TermName(if (name == "Writer") "unapply" else "apply")
+          val rwName = newTermName(s"Case${args.length}$name")
+          val className = newTermName(tpe.typeSymbol.name.toString)
+          val actionName = newTermName(if (name == "Writer") "unapply" else "apply")
 
           if (args.length == 1 && name == "Writer")
-            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args)): upickle.${TypeName(name)}[$tpe]"
+            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args)): upickle.${newTypeName(name)}[$tpe]"
           else
-            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args)): upickle.${TypeName(name)}[$tpe]"
+            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args)): upickle.${newTypeName(name)}[$tpe]"
         }
 //        println(pickler)
 

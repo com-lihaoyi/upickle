@@ -35,6 +35,10 @@ object Invalid{
     with Invalid
 }
 
+/**
+ * A very small, very simple JSON AST that uPickle uses as part of its
+ * serialization process.
+ */
 object Js {
   sealed trait Value{
     def value: Any
@@ -58,7 +62,8 @@ object Js {
 
 
 /**
- * JSON handling utilities
+ * JSON handling utilities, implemented in whole here to let uPickle work
+ * without any dependencies.
  */
 object Json {
   /**

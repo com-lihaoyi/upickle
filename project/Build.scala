@@ -10,10 +10,10 @@ object Build extends sbt.Build{
   val cross = new utest.jsrunner.JsCrossBuild(
     organization := "com.lihaoyi",
 
-    version := "0.1.5",
-    scalaVersion := "2.11.1",
+    version := "0.1.7",
+    scalaVersion := "2.10.4",
     name := "upickle",
-//    scalacOptions := Seq("-Xlog-implicits"),
+
     // Sonatype
     publishArtifact in Test := false,
     publishTo <<= version { (v: String) =>
@@ -21,7 +21,11 @@ object Build extends sbt.Build{
     },
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      compilerPlugin("org.scalamacros" % s"paradise" % "2.0.0" cross CrossVersion.full)
+    ) ++ (
+      if (scalaVersion.value startsWith "2.11.") Nil
+      else Seq("org.scalamacros" %% s"quasiquotes" % "2.0.0")
     ),
 
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
@@ -39,10 +43,10 @@ object Build extends sbt.Build{
           else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
 
         (s"""
-        implicit def Tuple${i}Writer[$writerTypes] = Types.Writer[Tuple${i}[$typeTuple]](
+        implicit def Tuple${i}Writer[$writerTypes] = Writer[Tuple${i}[$typeTuple]](
           x => Js.Array(Seq($written))
         )
-        implicit def Tuple${i}Reader[$readerTypes] = Types.Reader[Tuple${i}[$typeTuple]](
+        implicit def Tuple${i}Reader[$readerTypes] = Reader[Tuple${i}[$typeTuple]](
           validate("Array(${i})"){case Js.Array(Seq($pattern)) => Tuple${i}($read)}
         )
         """, s"""
@@ -62,8 +66,12 @@ object Build extends sbt.Build{
         package upickle
         import acyclic.file
         import language.experimental.macros
-        trait Generated {
-          import Types._
+        /**
+         * Auto-generated picklers and unpicklers, used for creating the 22
+         * versions of tuple-picklers and case-class picklers
+         */
+        trait Generated extends Types{
+
           def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T]
           private[this] def readerCaseFunction[T](names: Seq[String], read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
             case x: Js.Object => read(mapToArray(x, names))
@@ -72,14 +80,19 @@ object Build extends sbt.Build{
           private[this] def mapToArray(o: Js.Object, names: Seq[String]) = Js.Array(names.map(o.value.toMap))
           private[this] def ReaderCase[T](names: Seq[String],
                               read: PartialFunction[Js.Value, T])
-                              = Types.Reader[T](readerCaseFunction(names, read))
+                              = Reader[T](readerCaseFunction(names, read))
           private[this] def WriterCase[T](names: Seq[String],
                               write: T => Js.Value)
-                               = Types.Writer[T](
+                               = Writer[T](
             x => arrayToMap(write(x).asInstanceOf[Js.Array], names)
           )
           ${tuples.mkString("\n")}
-          trait InternalCases{
+          /**
+           * Contains the 22 case-class picklers, since although they are not
+           * part of the public API, you probably shouldn't be handling them
+           * directly.
+           */
+           trait InternalGenerated{
             ${cases.mkString("\n")}
           }
         }

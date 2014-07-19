@@ -1,4 +1,4 @@
-µPickle 0.1.5
+µPickle 0.1.7
 =============
 
 uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
@@ -15,7 +15,7 @@ Getting Started
 Add the following to your SBT config:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %% "upickle" % "0.1.5"
+libraryDependencies += "com.lihaoyi" %% "upickle" % "0.1.7"
 ```
 
 And then you can immediately start writing and reading common Scala objects to strings:
@@ -46,10 +46,10 @@ ScalaJS
 For ScalaJS applications, use this dependencies instead:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.1.5"
+libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.1.7"
 ```
 
-Other than that, everything is used the same way. upickle-0.1.5 is only compatible with ScalaJS 0.5.x.
+Other than that, everything is used the same way. upickle-0.1.7 is only compatible with ScalaJS 0.5.x.
 
 Supported Types
 ===============
@@ -57,14 +57,14 @@ Supported Types
 Out of the box, uPickle supports writing and reading the following types:
 
 - `Boolean`, `Byte`, `Char`, `Short`, `Int`, `Long`, `Float`, `Double`
-- `Tuple`s from 1 to 6
-- `Seq`, `List`, `Vector`, `Set`, `SortedSet`, `Option`, `Array`, `Map`s
+- `Tuple`s from 1 to 22
+- Immutable `Seq`, `List`, `Vector`, `Set`, `SortedSet`, `Option`, `Array`, `Map`s
 - `Duration`, `Either`
-- Stand-alone `case class`es and `case object`s, and their generic equivalents
+- Stand-alone `case class`es and `case object`s, and their generic equivalents,
 - Non-generic `case class`es and `case object`s that are part of a `sealed trait` or `sealed class` hierarchy
 - `sealed trait` and `sealed class`es themselves, assuming that all subclasses are picklable
 
-Readability/writability is recursive: a container such as a `Tuple` or `case class` is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a `List[Any]`, since uPickle doesn't provide a generic way of serializing `Any`.
+Readability/writability is recursive: a container such as a `Tuple` or `case class` is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a `List[Any]`, since uPickle doesn't provide a generic way of serializing `Any`. Case classes are only serializable up to 22 fields.
 
 Case classes in particular are serialized using the `apply` and `unapply` methods on their companion objects. This means that you can make your own classes serializable by giving them companions `apply` and `unapply`. `sealed` hierarchies are serialized as tagged unions: whatever the serialization of the actual object, together with an integer representing the position of the class in the hierarchy.   
 

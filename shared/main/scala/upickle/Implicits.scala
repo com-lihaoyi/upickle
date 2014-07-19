@@ -7,9 +7,7 @@ import scala.concurrent.duration.{FiniteDuration, Duration}
 import scala.reflect.macros.Context
 import acyclic.file
 
-trait Implicits {
-
-  import Types.{readJs, read, writeJs, write}
+trait Implicits extends Types{
   def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
     pf.orElse { case x => throw Invalid.Data(x, name) }
   }
@@ -19,8 +17,8 @@ trait Implicits {
   implicit def Tuple2Reader[T1: Reader, T2: Reader] : Reader[Tuple2[T1, T2]]
   implicit def Tuple2Writer[T1: Writer, T2: Writer] : Writer[Tuple2[T1, T2]]
 
-  implicit val NothingReader = Types.Reader[Nothing]({case x => ???})
-  implicit val NothingWriter = Types.Writer[Nothing](x => ???)
+  implicit val NothingReader = Reader[Nothing]({case x => ???})
+  implicit val NothingWriter = Writer[Nothing](x => ???)
 
 
   private[this] type JPF[T] = PartialFunction[Js.Value, T]
@@ -28,7 +26,7 @@ trait Implicits {
     case Js.True => true
     case Js.False => false
   }
-  implicit val BooleanPickler = Types.ReadWriter[Boolean](
+  implicit val BooleanPickler = ReadWriter[Boolean](
     if (_) Js.True else Js.False,
     booleanReaderFunc
   )
@@ -40,7 +38,7 @@ trait Implicits {
   private[this] def numericStringReaderFunc[T](func: String => T): JPF[T] = validate("Number"){
     case x: Js.String => func(x.value)
   }
-  private[this] def NumericStringReadWriter[T](func: String => T) = Types.ReadWriter[T](
+  private[this] def NumericStringReadWriter[T](func: String => T) = ReadWriter[T](
     x => Js.String(x.toString),
     numericStringReaderFunc[T](func)
   )
@@ -49,7 +47,7 @@ trait Implicits {
     case x: Js.String => try{func(x.value) } catch {case e: NumberFormatException => throw Invalid.Data(x, "Number")}
   }
 
-  private[this] def NumericReadWriter[T](func: String => T) = Types.ReadWriter[T](
+  private[this] def NumericReadWriter[T](func: String => T) = ReadWriter[T](
     {
       case x @ Double.PositiveInfinity => Js.String(x.toString)
       case x @ Double.NegativeInfinity => Js.String(x.toString)
@@ -60,7 +58,7 @@ trait Implicits {
   private[this] val stringReaderFunc: JPF[String] = validate("String"){
     case x: Js.String => x.value
   }
-  implicit val StringPickler = Types.ReadWriter[String](Js.String, stringReaderFunc)
+  implicit val StringPickler = ReadWriter[String](Js.String, stringReaderFunc)
 
   implicit val CharPickler = NumericStringReadWriter[Char](_(0))
   implicit val BytePickler = NumericReadWriter(_.toByte)
@@ -70,10 +68,10 @@ trait Implicits {
   implicit val FloatPickler = NumericReadWriter(_.toFloat)
   implicit val DoublePickler = NumericReadWriter(_.toDouble)
 
-  private[this] def SeqLikeWriter[T: Writer, R[_]](g: R[T] => Option[Seq[T]]): Writer[R[T]] = Types.Writer[R[T]](
+  private[this] def SeqLikeWriter[T: Writer, R[_]](g: R[T] => Option[Seq[T]]): Writer[R[T]] = Writer[R[T]](
     x => Js.Array(g(x).get.map(x => writeJs(x)))
   )
-  private[this] def SeqLikeReader[T: Reader, R[_]](f: Seq[T] => R[T]): Reader[R[T]] = Types.Reader[R[T]](
+  private[this] def SeqLikeReader[T: Reader, R[_]](f: Seq[T] => R[T]): Reader[R[T]] = Reader[R[T]](
     validate("Array(n)"){case Js.Array(x) => f(x.map(readJs[T]))}
   )
 
@@ -89,63 +87,98 @@ trait Implicits {
   implicit def SortedSetReader[T: Reader: Ordering] = SeqLikeReader[T, SortedSet](SortedSet(_:_*))
 
   implicit def OptionWriter[T: Writer]: Writer[Option[T]] = SeqLikeWriter[T, Option](_.toSeq | Some.apply)
-  implicit def SomeWriter[T: Writer] = Types.Writer[Some[T]](OptionWriter[T].write)
-  implicit def NoneWriter: Writer[None.type] = Types.Writer[None.type](OptionWriter[Int].write)
+  implicit def SomeWriter[T: Writer] = Writer[Some[T]](OptionWriter[T].write)
+  implicit def NoneWriter: Writer[None.type] = Writer[None.type](OptionWriter[Int].write)
   implicit def OptionReader[T: Reader]: Reader[Option[T]] = SeqLikeReader[T, Option](_.headOption)
-  implicit def SomeReader[T: Reader] = Types.Reader[Some[T]](OptionReader[T].read andThen (_.asInstanceOf[Some[T]]))
-  implicit def NoneReader: Reader[None.type] = Types.Reader[None.type](OptionReader[Int].read andThen (_.asInstanceOf[None.type]))
+  implicit def SomeReader[T: Reader] = Reader[Some[T]](OptionReader[T].read andThen (_.asInstanceOf[Some[T]]))
+  implicit def NoneReader: Reader[None.type] = Reader[None.type](OptionReader[Int].read andThen (_.asInstanceOf[None.type]))
 
   implicit def ArrayWriter[T: Writer: ClassTag] = SeqLikeWriter[T, Array](Array.unapplySeq)
   implicit def ArrayReader[T: Reader: ClassTag] = SeqLikeReader[T, Array](x => Array.apply(x:_*))
 
-  implicit def MapWriter[K: Writer, V: Writer] =  Types.Writer[Map[K, V]](
+  implicit def MapWriter[K: Writer, V: Writer] =  Writer[Map[K, V]](
     x => Js.Array(x.toSeq.map(writeJs[(K, V)]))
   )
-  implicit def MapReader[K: Reader, V: Reader] = Types.Reader[Map[K, V]](
+  implicit def MapReader[K: Reader, V: Reader] = Reader[Map[K, V]](
     validate("Array(n)"){case x: Js.Array => x.value.map(readJs[(K, V)]).toMap}
   )
 
-  implicit val DurationWriter: Writer[Duration] = Types.Writer[Duration]({
+  implicit def EitherR[A: Reader, B: Reader] = Reader[Either[A, B]](
+    validate("Either"){
+      case Js.Array(Seq(Js.Number("0"), x)) => Left(readJs[A](x))
+      case Js.Array(Seq(Js.Number("1"), x)) => Right(readJs[B](x))
+    }
+  )
+  implicit def RightR[A: Reader, B: Reader] = Reader[Right[A, B]](
+    validate("Right"){
+      case Js.Array(Seq(Js.Number("1"), x)) => Right(readJs[B](x))
+    }
+  )
+  implicit def LeftR[A: Reader, B: Reader] = Reader[Left[A, B]](
+    validate("Left"){
+      case Js.Array(Seq(Js.Number("0"), x)) => Left(readJs[A](x))
+    }
+  )
+
+  implicit def RightW[A: Writer, B: Writer] = Writer[Right[A, B]] {
+    case Right(t) => Js.Array(Seq(Js.Number("1"), writeJs(t)))
+  }
+  implicit def LeftW[A: Writer, B: Writer] = Writer[Left[A, B]] {
+    case Left(t) => Js.Array(Seq(Js.Number("0"), writeJs(t)))
+  }
+
+  implicit def EitherW[A: Writer, B: Writer] = Writer[Either[A, B]]({
+    case Left(t) => Js.Array(Seq(Js.Number("0"), writeJs(t)))
+    case Right(t) => Js.Array(Seq(Js.Number("1"), writeJs(t)))
+  })
+  implicit val DurationWriter: Writer[Duration] = Writer[Duration]({
     case Duration.Inf => writeJs("inf")
     case Duration.MinusInf => writeJs("-inf")
     case x if x eq Duration.Undefined => writeJs("undef")
     case x => writeJs(x.toNanos)
   })
 
-  implicit val InfiniteWriter = Types.Writer[Duration.Infinite](DurationWriter.write)
-  implicit val InfiniteReader = Types.Reader[Duration.Infinite]({
+  implicit val InfiniteWriter = Writer[Duration.Infinite](DurationWriter.write)
+  implicit val InfiniteReader = Reader[Duration.Infinite]({
     case Js.String("inf") => Duration.Inf
     case Js.String("-inf") => Duration.MinusInf
     case Js.String("undef") => Duration.Undefined
   })
 
-  implicit val FiniteWriter = Types.Writer[FiniteDuration](DurationWriter.write)
-  implicit val FiniteReader = Types.Reader[FiniteDuration]({
+  implicit val FiniteWriter = Writer[FiniteDuration](DurationWriter.write)
+  implicit val FiniteReader = Reader[FiniteDuration]({
     case x: Js.Number => Duration.fromNanos(x.value.toLong)
   })
 
-  implicit val DurationReader = Types.Reader[Duration](validate("DurationString"){FiniteReader.read orElse InfiniteReader.read})
+  implicit val DurationReader = Reader[Duration](validate("DurationString"){FiniteReader.read orElse InfiniteReader.read})
 
-  private[this] object InternalCxx extends InternalThings
-  import InternalCxx._
-  trait InternalThings {
+  private[this] object InternalUtils extends InternalUtils
+  import InternalUtils._
+
+  /**
+   * Utilities that uPickle uses, mostly as part of the automatic case-class
+   * seralization/deserialization process. Needs to be public and accessible
+   * but really shouldn't be called directly.
+   */
+  trait InternalUtils {
     implicit class mergeable[T: ClassTag, R](f: T => R){
       def merge[V: ClassTag, U](g: V => R): U => R = {
         case v: V => g(v)
         case t: T => f(t)
       }
     }
+
     def knotRW[T, V](f: Knot.RW[T] => V): V = f(new Knot.RW(null, null))
     def knotR[T, V](f: Knot.R[T] => V): V = f(new Knot.R(null))
     def knotW[T, V](f: Knot.W[T] => V): V = f(new Knot.W(null))
 
-    def annotate[V: ClassTag](rw: Reader[V], n: String) = Types.Reader[V](
+    def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V](
       {case Js.Array(Seq(Js.Number(`n`), x)) => rw.read(x)}
     )
-    def annotate[V: ClassTag](rw: Writer[V], n: String) = Types.Writer[V](
+    def annotate[V: ClassTag](rw: Writer[V], n: String) = Writer[V](
       {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))}
     )
-    def Case0Reader[T](t: T) = Types.Reader[T]({case x => t})
-    def Case0Writer[T](t: T) = Types.Writer[T](x => Js.Array(Nil))
+    def Case0Reader[T](t: T) = Reader[T]({case x => t})
+    def Case0Writer[T](t: T) = Writer[T](x => Js.Array(Nil))
   }
 }
