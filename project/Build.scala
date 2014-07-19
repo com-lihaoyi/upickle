@@ -43,20 +43,20 @@ object Build extends sbt.Build{
           else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
 
         (s"""
-        implicit def Tuple${i}Writer[$writerTypes] = Writer[Tuple${i}[$typeTuple]](
+        implicit def Tuple${i}W[$writerTypes] = W[Tuple${i}[$typeTuple]](
           x => Js.Array(Seq($written))
         )
-        implicit def Tuple${i}Reader[$readerTypes] = Reader[Tuple${i}[$typeTuple]](
+        implicit def Tuple${i}R[$readerTypes] = R[Tuple${i}[$typeTuple]](
           validate("Array(${i})"){case Js.Array(Seq($pattern)) => Tuple${i}($read)}
         )
         """, s"""
-        def Case${i}Reader[$readerTypes, R]
-                          (f: ($typeTuple) => R, names: Seq[String])
-          = ReaderCase[R](names, {case x => $caseReader})
+        def Case${i}R[$readerTypes, V]
+                          (f: ($typeTuple) => V, names: Seq[String])
+          = RCase[V](names, {case x => $caseReader})
 
-        def Case${i}Writer[$writerTypes, R]
-                          (g: R => Option[Tuple${i}[$typeTuple]], names: Seq[String])
-          = WriterCase[R](names, x => writeJs(g(x).get))
+        def Case${i}W[$writerTypes, V]
+                          (g: V => Option[Tuple${i}[$typeTuple]], names: Seq[String])
+          = WCase[V](names, x => writeJs(g(x).get))
         """)
       }
 
@@ -71,17 +71,17 @@ object Build extends sbt.Build{
          * versions of tuple-picklers and case-class picklers
          */
         trait Generated extends Types{
-
+          import Aliases._
           def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T]
           private[this] def readerCaseFunction[T](names: Seq[String], read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
             case x: Js.Object => read(mapToArray(x, names))
           }
           private[this] def arrayToMap(a: Js.Array, names: Seq[String]) = Js.Object(names.zip(a.value))
           private[this] def mapToArray(o: Js.Object, names: Seq[String]) = Js.Array(names.map(o.value.toMap))
-          private[this] def ReaderCase[T](names: Seq[String],
+          private[this] def RCase[T](names: Seq[String],
                               read: PartialFunction[Js.Value, T])
                               = Reader[T](readerCaseFunction(names, read))
-          private[this] def WriterCase[T](names: Seq[String],
+          private[this] def WCase[T](names: Seq[String],
                               write: T => Js.Value)
                                = Writer[T](
             x => arrayToMap(write(x).asInstanceOf[Js.Array], names)

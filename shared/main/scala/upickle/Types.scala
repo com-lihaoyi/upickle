@@ -80,6 +80,16 @@ object ReadWriter {
   }
 }
 
+object Aliases{
+  type R[T] = Reader[T]
+  val R = Reader
+
+  type W[T] = Writer[T]
+  val W = Writer
+
+  type RW[T] = R[T] with W[T]
+  val RW = ReadWriter
+}
 /**
  * Basic functionality to be able to read and write objects. Kept as a trait so
  * other internal files can use it, while also mixing it into the `upickle`
