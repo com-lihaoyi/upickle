@@ -22,7 +22,7 @@ object Macros {
       case e: TypecheckException =>
         val tpe = weakTypeTag[T].tpe
 
-        picklerFor(c)(tpe, "Reader") { subPicklers =>
+        picklerFor(c)(tpe, "R", "Reader") { subPicklers =>
           val reads = subPicklers.map(p => q"$p.read")
             .reduce[Tree]((a, b) => q"$a orElse $b")
           q"""
@@ -45,7 +45,7 @@ object Macros {
       c.inferImplicitValue(weakTypeOf[Writer[T]], silent = false, withMacrosDisabled = true)
     }catch {case e: TypecheckException =>
       val tpe = weakTypeTag[T].tpe
-      picklerFor(c)(tpe, "Writer"){ subPicklers =>
+      picklerFor(c)(tpe, "W", "Writer"){ subPicklers =>
         val writes = subPicklers.map(p => q"$p.write")
           .reduce[Tree]((a, b) => q"upickle.Internal.mergeable($a) merge $b")
 
@@ -65,7 +65,7 @@ object Macros {
     c.Expr[Writer[T]](z)
   }
 
-  def picklerFor(c: Context)(tpe: c.Type, name: String)(treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
+  def picklerFor(c: Context)(tpe: c.Type, name: String, longName: String)(treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
     import c.universe._
     val clsSymbol = tpe.typeSymbol.asClass
     def annotate(pickler: Tree) = {
@@ -92,7 +92,7 @@ object Macros {
       case NoSymbol if clsSymbol.isSealed => // I'm a sealed trait/class!
         val subPicklers =
           for(subCls <- clsSymbol.knownDirectSubclasses.toSeq) yield {
-            picklerFor(c)(subCls.asType.toType, name)(treeMaker)
+            picklerFor(c)(subCls.asType.toType, name, longName)(treeMaker)
           }
 
         val z = treeMaker(subPicklers)
@@ -125,14 +125,13 @@ object Macros {
                .map(_.name.toString)
           val rwName = newTermName(s"Case${args.length}$name")
           val className = newTermName(tpe.typeSymbol.name.toString)
-          val actionName = newTermName(if (name == "Writer") "unapply" else "apply")
+          val actionName = newTermName(if (name == "W") "unapply" else "apply")
 
-          if (args.length == 1 && name == "Writer")
-            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args)): upickle.${newTypeName(name)}[$tpe]"
+          if (args.length == 1 && name == "W")
+            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args)): upickle.${newTypeName(longName)}[$tpe]"
           else
-            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args)): upickle.${newTypeName(name)}[$tpe]"
+            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args)): upickle.${newTypeName(longName)}[$tpe]"
         }
-//        println(pickler)
 
 
         val z = annotate(pickler)

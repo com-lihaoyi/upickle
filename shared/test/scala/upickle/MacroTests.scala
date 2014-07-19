@@ -56,7 +56,7 @@ object MacroTests extends TestSuite{
     'simpleAdt {
       import ADTs._
 
-      rw(ADTs.ADTa(1), """{"i": 1}""")
+      rw(ADTs.ADTa(1), """{"i": 1}""")(Reader.macroR, Writer.macroW)
       rw(ADTs.ADTb(1, "lol"), """{"i": 1, "s": "lol"}""")
       rw(ADTc(1, "lol", (1.1, 1.2)), """{"i": 1, "s": "lol", "t": [1.1, 1.2]}""")
       rw(

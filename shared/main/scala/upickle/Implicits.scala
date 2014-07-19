@@ -17,7 +17,7 @@ trait Implicits extends Types{
   implicit def Tuple2R[T1: R, T2: R]: R[Tuple2[T1, T2]]
   implicit def Tuple2W[T1: W, T2: W]: W[Tuple2[T1, T2]]
 
-  implicit val NothingR = R[Nothing]({case x => ???})
+  implicit val NothingR = R[Nothing]{case x => ???}
   implicit val NothingW = W[Nothing](x => ???)
 
 
@@ -117,28 +117,28 @@ trait Implicits extends Types{
 
   implicit def LeftW[A: W, B: W]: W[Left[A, B]] = W[Left[A, B]](EitherW[A, B].write)
 
-  implicit def EitherW[A: W, B: W]: W[Either[A, B]] = W[Either[A, B]]({
+  implicit def EitherW[A: W, B: W]: W[Either[A, B]] = W[Either[A, B]]{
     case Left(t) => Js.Array(Seq(Js.Number("0"), writeJs(t)))
     case Right(t) => Js.Array(Seq(Js.Number("1"), writeJs(t)))
-  })
-  implicit val DurationW: W[Duration] = W[Duration]({
+  }
+  implicit val DurationW: W[Duration] = W[Duration]{
     case Duration.Inf => writeJs("inf")
     case Duration.MinusInf => writeJs("-inf")
     case x if x eq Duration.Undefined => writeJs("undef")
     case x => writeJs(x.toNanos)
-  })
+  }
 
-  implicit val InfiniteW= W[Duration.Infinite](DurationW.write)
-  implicit val InfiniteR= R[Duration.Infinite]({
+  implicit val InfiniteW = W[Duration.Infinite](DurationW.write)
+  implicit val InfiniteR = R[Duration.Infinite]{
     case Js.String("inf") => Duration.Inf
     case Js.String("-inf") => Duration.MinusInf
     case Js.String("undef") => Duration.Undefined
-  })
+  }
 
-  implicit val FiniteW= W[FiniteDuration](DurationW.write)
-  implicit val FiniteR= R[FiniteDuration]({
+  implicit val FiniteW = W[FiniteDuration](DurationW.write)
+  implicit val FiniteR = R[FiniteDuration]{
     case x: Js.Number => Duration.fromNanos(x.value.toLong)
-  })
+  }
 
   implicit val DurationR= R[Duration](validate("DurationString"){FiniteR.read orElse InfiniteR.read})
 
