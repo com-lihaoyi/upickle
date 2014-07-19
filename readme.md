@@ -104,3 +104,33 @@ I wrote uPickle because I needed a transparent serialization library that worked
 - Lastly, many aim for a very ambitious target: untyped serialization of arbitrary object graphs. That forces them to use reflection, and makes their internals and semantics much more complex.
 
 uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with `apply`/`unapply` on the companion?") that makes its behavior predictable and simple to understand.
+
+Version History
+===============
+
+0.1.7
+-----
+
+- Cleaned up the external API, marking lots of things which should have been private private or stuffing them in the `Internals` namespace
+- Organized things such that only a single import `import upickle._` is necessary to use the library
+
+0.1.6
+-----
+
+- Tuples and case classes now have implicit picklers up to an arity limit of 22.
+- Case classes now serialize as JSON dictionaries rather than as lists.
+
+0.1.5
+-----
+
+- Simple case classes and case class hierarchies are now auto-serializable view Macros. No need to define your own implicit using `Case0ReadWriter` anymore!
+
+0.1.4
+-----
+
+- Serialize numbers as JSON numbers instead of Strings.
+
+0.1.3
+-----
+
+- Specification of the exception-throwing behavior: instead of failing with random `MatchError`s or similar, parse failures now are restricted to subclasses `upickle.Invalid` which define different failure modes.
