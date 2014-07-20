@@ -185,9 +185,9 @@ Here are some things which are not serializable using uPickle. One is mixed list
  
 ```scala
 write(List(1, "omg"))
-//<console>:11: error: could not find implicit value for evidence parameter of type upickle.Writer[List[Any]]
-//              write(List(1, "omg"))
-//                    ^
+<console>:11: error: could not find implicit value for evidence parameter of type upickle.Writer[List[Any]]
+              write(List(1, "omg"))
+                    ^
 ```
 
 That is because serializing `Any` is not supported
