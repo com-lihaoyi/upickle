@@ -79,7 +79,7 @@ object Macros {
     import c.universe._
     val clsSymbol = tpe.typeSymbol.asClass
     def annotate(pickler: Tree) = {
-      println(tpe.typeSymbol.annotations)
+
       val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
       sealedParent match {
         case Some(parent) =>
@@ -120,25 +120,38 @@ object Macros {
       case x => // I'm a class
 
         val pickler = {
-          val args =
+          val companion =
             tpe.typeSymbol
                .companionSymbol
+          val argSyms =
+            companion
                .typeSignature
                .member(newTermName("apply"))
                .asMethod
                .paramss
                .flatten
-               .map { p =>
-              customKey(c)(p).getOrElse(p.name.toString)
-            }
+
+          val args = argSyms.map { p =>
+            customKey(c)(p).getOrElse(p.name.toString)
+          }
+
           val rwName = newTermName(s"Case${args.length}$name")
           val className = newTermName(tpe.typeSymbol.name.toString)
           val actionName = newTermName(if (name == "W") "unapply" else "apply")
+          val defaults = argSyms.zipWithIndex.map{ case (s, i) =>
+            val defaultName = newTermName("apply$default$" + (i + 1))
+            companion.typeSignature.member(defaultName) match{
+              case NoSymbol => q"null"
+              case x => q"upickle.writeJs($companion.$defaultName)"
+            }
+          }
 
           if (args.length == 1 && name == "W")
-            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args)): upickle.${newTypeName(longName)}[$tpe]"
-          else
-            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args)): upickle.${newTypeName(longName)}[$tpe]"
+            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args), Seq(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
+          else if(name == "W")
+            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args), Seq(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
+          else // name == "R"
+            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args), Seq(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
         }
 
 

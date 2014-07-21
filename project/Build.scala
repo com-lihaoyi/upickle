@@ -51,12 +51,12 @@ object Build extends sbt.Build{
         )
         """, s"""
         def Case${i}R[$readerTypes, V]
-                          (f: ($typeTuple) => V, names: Seq[String])
-          = RCase[V](names, {case x => $caseReader})
+                     (f: ($typeTuple) => V, names: Seq[String], defaults: Seq[Js.Value])
+          = RCase[V](names, defaults, {case x => $caseReader})
 
         def Case${i}W[$writerTypes, V]
-                          (g: V => Option[Tuple${i}[$typeTuple]], names: Seq[String])
-          = WCase[V](names, x => writeJs(g(x).get))
+                     (g: V => Option[Tuple${i}[$typeTuple]], names: Seq[String], defaults: Seq[Js.Value])
+          = WCase[V](names, defaults, x => writeJs(g(x).get))
         """)
       }
 
@@ -70,22 +70,10 @@ object Build extends sbt.Build{
          * Auto-generated picklers and unpicklers, used for creating the 22
          * versions of tuple-picklers and case-class picklers
          */
-        trait Generated extends Types{
+        trait Generated extends Types with GeneratedUtil{
           import Aliases._
           def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T]
-          private[this] def readerCaseFunction[T](names: Seq[String], read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
-            case x: Js.Object => read(mapToArray(x, names))
-          }
-          private[this] def arrayToMap(a: Js.Array, names: Seq[String]) = Js.Object(names.zip(a.value))
-          private[this] def mapToArray(o: Js.Object, names: Seq[String]) = Js.Array(names.map(o.value.toMap))
-          private[this] def RCase[T](names: Seq[String],
-                              read: PartialFunction[Js.Value, T])
-                              = Reader[T](readerCaseFunction(names, read))
-          private[this] def WCase[T](names: Seq[String],
-                              write: T => Js.Value)
-                               = Writer[T](
-            x => arrayToMap(write(x).asInstanceOf[Js.Array], names)
-          )
+
           ${tuples.mkString("\n")}
           /**
            * Contains the 22 case-class picklers, since although they are not

@@ -34,9 +34,9 @@ object PrimitiveTests extends TestSuite{
       'simple-rw(25123: Short, "25123")
       'min-rw(Short.MinValue, "-32768")
       'max-rw(Short.MaxValue, "32767")
-      'all{
-        for (i <- Short.MinValue to Short.MaxValue by 100) rw(i)
-      }
+//      'all{
+//        for (i <- Short.MinValue to Short.MaxValue by 100) rw(i)
+//      }
     }
 
     'Byte{

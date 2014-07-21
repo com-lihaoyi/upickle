@@ -56,67 +56,94 @@ object Annotated {
   @key("0") case class B(@key("omg") i: Int) extends A
   @key("1") case class C(@key("lol") s1: String, @key("wtf") s2: String) extends A
 }
+object Defaults {
+  case class ADTa(i: Int = 0)
+  case class ADTb(i: Int = 1, s: String)
+  case class ADTc(i: Int = 2, s: String, t: (Double, Double) = (1, 2))
+}
 object MacroTests extends TestSuite{
   val tests = TestSuite{
-    'simpleAdt {
-      import ADTs._
+    'commonCustomStructures{
+      'simpleAdt {
+        import ADTs._
 
-      rw(ADTs.ADTa(1), """{"i": 1}""")(Reader.macroR, Writer.macroW)
-      rw(ADTs.ADTb(1, "lol"), """{"i": 1, "s": "lol"}""")
-      rw(ADTc(1, "lol", (1.1, 1.2)), """{"i": 1, "s": "lol", "t": [1.1, 1.2]}""")
-      rw(
-        ADTd(1, "lol", (1.1, 1.2), ADTa(1)),
-        """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}}"""
-      )
+        rw(ADTs.ADTa(1), """{"i": 1}""")(Reader.macroR, Writer.macroW)
+        rw(ADTs.ADTb(1, "lol"), """{"i": 1, "s": "lol"}""")(Reader.macroR, Writer.macroW)
+        rw(ADTc(1, "lol", (1.1, 1.2)), """{"i": 1, "s": "lol", "t": [1.1, 1.2]}""")
+        rw(
+          ADTd(1, "lol", (1.1, 1.2), ADTa(1)),
+          """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}}"""
+        )
 
-      rw(
-        ADTe(1, "lol", (1.1, 1.2), ADTa(1), List(1.2, 2.1, 3.14)),
-        """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}, "q": [1.2, 2.1, 3.14]}"""
-      )
-      rw(
-        ADTf(1, "lol", (1.1, 1.2), ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
-        """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}, "q": [1.2, 2.1, 3.14], "o": [[]]}"""
-      )
-      val chunks = for(i <- 1 to 18) yield{
-        val rhs = if (i % 2 == 1) "1" else "\"1\""
-        val lhs = '"' + s"t$i" + '"'
-        s"$lhs: $rhs"
+        rw(
+          ADTe(1, "lol", (1.1, 1.2), ADTa(1), List(1.2, 2.1, 3.14)),
+          """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}, "q": [1.2, 2.1, 3.14]}"""
+        )
+        rw(
+          ADTf(1, "lol", (1.1, 1.2), ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
+          """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}, "q": [1.2, 2.1, 3.14], "o": [[]]}"""
+        )
+        val chunks = for (i <- 1 to 18) yield {
+          val rhs = if (i % 2 == 1) "1" else "\"1\""
+          val lhs = '"' + s"t$i" + '"'
+          s"$lhs: $rhs"
+        }
+
+        val expected = s"""{${chunks.mkString(", ")}}"""
+
+        rw(
+          ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
+          expected
+        )
       }
+      'adtTree {
+        import Hierarchy._
 
-      val expected = s"""{${chunks.mkString(", ")}}"""
+        rw(B(1), """["upickle.Hierarchy.B", {"i": 1}]""")(Reader.macroR, Writer.macroW)
+        rw(C("a", "b"), """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
 
-      rw(
-        ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
-        expected
-      )
+        rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i": 1}]""")
+        rw(C("a", "b"): A, """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+      }
+      'singleton {
+        import Singletons._
+
+        //        rw(BB, """[0, []]""")
+        //        rw(BC, """[1, []]""")
+        rw(BB: AA, """["upickle.Singletons.BB", []]""")
+        rw(CC: AA, """["upickle.Singletons.CC", []]""")
+      }
     }
-    'adtTree{
-      import Hierarchy._
+    'robustnessAgainstVaryingSchemas {
+      'renameKeysViaAnnotations {
+        import Annotated._
 
-      rw(B(1), """["upickle.Hierarchy.B", {"i": 1}]""")
-      rw(C("a", "b"), """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+        rw(B(1), """["0", {"omg": 1}]""")(Reader.macroR, Writer.macroW)
+        rw(C("a", "b"), """["1", {"lol": "a", "wtf": "b"}]""")
 
-      rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i": 1}]""")
-      rw(C("a", "b"): A, """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+        rw(B(1): A, """["0", {"omg": 1}]""")
+        rw(C("a", "b"): A, """["1", {"lol": "a", "wtf": "b"}]""")
+      }
+      'useDefaults {
+        // Ignore the values which match the default when writing and
+        // substitute in defaults when reading if the key is missing
+        import Defaults._
+        rw(ADTa(), "{}")
+        rw(ADTa(321), """{"i": 321}""")
+        rw(ADTb(s = "123"), """{"s": "123"}""")
+        rw(ADTb(i = 234, s = "567"), """{"i": 234, "s": "567"}""")
+        rw(ADTc(s = "123"), """{"s": "123"}""")
+        rw(ADTc(i = 234, s = "567"), """{"i": 234, "s": "567"}""")
+        rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s": "789", "t": [12.3, 45.6]}""")
+        rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i": 31337, "s": "789", "t": [12.3, 45.6]}""")
+      }
+      'ignoreExtraFieldsWhenDeserializing {
+        import ADTs._
+        assert(read[ADTa]( """{i: 123, j: false, k: "haha"}""") == ADTa(123))
+        assert(read[ADTb]( """{i: 123, j: false, k: "haha", s: "kk", l: true, z: [1, 2, 3]}""") == ADTb(123, "kk"))
+      }
     }
-    'adtTree{
-      import Annotated._
-
-      rw(B(1), """["0", {"omg": 1}]""")
-      rw(C("a", "b"), """["1", {"lol": "a", "wtf": "b"}]""")
-
-      rw(B(1): A, """["0", {"omg": 1}]""")
-      rw(C("a", "b"): A, """["1", {"lol": "a", "wtf": "b"}]""")
-    }
-    'singleton{
-      import Singletons._
-
-      //        rw(BB, """[0, []]""")
-      //        rw(BC, """[1, []]""")
-      rw(BB: AA, """["upickle.Singletons.BB", []]""")
-      rw(CC: AA, """["upickle.Singletons.CC", []]""")
-    }
-    'generic{
+    'GenericDataTypes{
       'simple {
         import Generic.A
         rw(A(1), """{"t": 1}""")
@@ -142,7 +169,7 @@ object MacroTests extends TestSuite{
       }
     }
 
-    'recursive{
+    'recursiveDataTypes{
       import Recursive._
 
       rw(End: LL, """["upickle.Recursive.End", []]""")
