@@ -1,6 +1,7 @@
 package upickle
 import acyclic.file
 import scala.annotation.switch
+import scala.collection.mutable.StringBuilder
 
 /**
  * Exceptions that can be thrown by upickle; placed in the same file
@@ -67,9 +68,9 @@ object Js {
  */
 object Json {
   /**
-   * Serializes a [[Js.Value]] to a `StringBuffer`
+   * Serializes a [[Js.Value]] to a `StringBuilder`
    */
-  def writeToBuffer(v: Js.Value, sb: StringBuffer): Unit = v match {
+  def writeToBuffer(v: Js.Value, sb: StringBuilder): Unit = v match {
     case Js.String(s) =>
       sb.append('"')
       var i = 0
@@ -127,7 +128,7 @@ object Json {
     case Js.Null => sb.append("null")
   }
   def write(v: Js.Value): String = {
-    val sb = new StringBuffer()
+    val sb = new StringBuilder()
     Json.writeToBuffer(v, sb)
     sb.toString
   }
