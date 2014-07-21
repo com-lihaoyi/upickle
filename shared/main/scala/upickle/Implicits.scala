@@ -163,10 +163,10 @@ trait Implicits extends Types{
     def knotW[T, V](f: Knot.W[T] => V): V = f(new Knot.W(null))
 
     def annotate[V: ClassTag](rw: R[V], n: String) = R[V](
-      {case Js.Array(Seq(Js.Number(`n`), x)) => rw.read(x)}
+      {case Js.Array(Seq(Js.String(`n`), x)) => rw.read(x)}
     )
     def annotate[V: ClassTag](rw: W[V], n: String) = W[V](
-      {case x: V => Js.Array(Seq(Js.Number(n), rw.write(x)))}
+      {case x: V => Js.Array(Seq(Js.String(n), rw.write(x)))}
     )
     def Case0R[T](t: T) = R[T]({case x => t})
     def Case0W[T](t: T) = W[T](x => Js.Array(Nil))

@@ -52,7 +52,7 @@ object FailureTests extends TestSuite{
 //        """ {"Extra comma": true,} """
       ).map(_.trim())
       for(failureCase <- failureCases){
-        println(failureCase)
+//        println(failureCase)
         intercept[Invalid.Json] { read[Int](failureCase) }
       }
     }

@@ -51,6 +51,11 @@ object Recursive{
   case object End  extends LL
   case class Node(c: Int, next: LL) extends LL
 }
+object Annotated {
+  sealed trait A
+  @key("0") case class B(@key("omg") i: Int) extends A
+  @key("1") case class C(@key("lol") s1: String, @key("wtf") s2: String) extends A
+}
 object MacroTests extends TestSuite{
   val tests = TestSuite{
     'simpleAdt {
@@ -88,19 +93,28 @@ object MacroTests extends TestSuite{
     'adtTree{
       import Hierarchy._
 
-      rw(B(1), """[0, {"i": 1}]""")
-      rw(C("a", "b"), """[1, {"s1": "a", "s2": "b"}]""")
+      rw(B(1), """["upickle.Hierarchy.B", {"i": 1}]""")
+      rw(C("a", "b"), """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
 
-      rw(Hierarchy.B(1): Hierarchy.A, """[0, {"i": 1}]""")
-      rw(C("a", "b"): A, """[1, {"s1": "a", "s2": "b"}]""")
+      rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i": 1}]""")
+      rw(C("a", "b"): A, """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+    }
+    'adtTree{
+      import Annotated._
+
+      rw(B(1), """["0", {"omg": 1}]""")
+      rw(C("a", "b"), """["1", {"lol": "a", "wtf": "b"}]""")
+
+      rw(B(1): A, """["0", {"omg": 1}]""")
+      rw(C("a", "b"): A, """["1", {"lol": "a", "wtf": "b"}]""")
     }
     'singleton{
       import Singletons._
 
       //        rw(BB, """[0, []]""")
       //        rw(BC, """[1, []]""")
-      rw(BB: AA, """[0, []]""")
-      rw(CC: AA, """[1, []]""")
+      rw(BB: AA, """["upickle.Singletons.BB", []]""")
+      rw(CC: AA, """["upickle.Singletons.CC", []]""")
     }
     'generic{
       'simple {
@@ -131,9 +145,9 @@ object MacroTests extends TestSuite{
     'recursive{
       import Recursive._
 
-      rw(End: LL, """[0, []]""")
-      rw(Node(3, End): LL, """[1, {"c": 3, "next": [0, []]}]""")
-      rw(Node(6, Node(3, End)), """[1, {"c": 6, "next": [1, {"c": 3, "next": [0, []]}]}]""")
+      rw(End: LL, """["upickle.Recursive.End", []]""")
+      rw(Node(3, End): LL, """["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", []]}]""")
+      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node", {"c": 6, "next": ["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", []]}]}]""")
     }
   }
 }

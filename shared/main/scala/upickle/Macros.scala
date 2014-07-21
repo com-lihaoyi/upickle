@@ -2,7 +2,11 @@ package upickle
 
 import scala.reflect.macros._
 import scala.reflect._
+import scala.annotation.{ClassfileAnnotation, StaticAnnotation}
+
 //import acyclic.file
+
+class key(s: String) extends StaticAnnotation
 
 /**
  * Implementation of macros used by uPickle to serialize and deserialize
@@ -64,21 +68,23 @@ object Macros {
 //    println(z)
     c.Expr[Writer[T]](z)
   }
-
+  def customKey(c: Context)(sym: c.Symbol): Option[String] = {
+    import c.universe._
+    sym.annotations
+       .find(_.tpe == typeOf[key])
+       .flatMap(_.scalaArgs.headOption)
+       .map{case Literal(Constant(s)) => s.toString}
+  }
   def picklerFor(c: Context)(tpe: c.Type, name: String, longName: String)(treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
     import c.universe._
     val clsSymbol = tpe.typeSymbol.asClass
     def annotate(pickler: Tree) = {
+      println(tpe.typeSymbol.annotations)
       val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
       sealedParent match {
         case Some(parent) =>
-          val index =
-            parent.asClass
-              .knownDirectSubclasses
-              .toSeq
-              .sortBy(_.fullName)
-              .indexWhere(_.fullName == tpe.typeSymbol.fullName)
-              .toString
+          val index = customKey(c)(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
+
           q"upickle.Internal.annotate($pickler, $index)"
         case None => pickler
       }
@@ -122,7 +128,9 @@ object Macros {
                .asMethod
                .paramss
                .flatten
-               .map(_.name.toString)
+               .map { p =>
+              customKey(c)(p).getOrElse(p.name.toString)
+            }
           val rwName = newTermName(s"Case${args.length}$name")
           val className = newTermName(tpe.typeSymbol.name.toString)
           val actionName = newTermName(if (name == "W") "unapply" else "apply")
