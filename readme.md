@@ -1,4 +1,4 @@
-µPickle 0.1.8
+µPickle 0.2.0
 =============
 
 uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
@@ -15,7 +15,7 @@ Getting Started
 Add the following to your SBT config:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %% "upickle" % "0.1.8"
+libraryDependencies += "com.lihaoyi" %% "upickle" % "0.2.0"
 ```
 
 And then you can immediately start writing and reading common Scala objects to strings:
@@ -46,10 +46,10 @@ ScalaJS
 For ScalaJS applications, use this dependencies instead:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.1.8"
+libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.2.0"
 ```
 
-Other than that, everything is used the same way. upickle-0.1.8 is only compatible with ScalaJS 0.5.x.
+Other than that, everything is used the same way. upickle-0.2.0 is only compatible with ScalaJS 0.5.x.
 
 Supported Types
 ===============
@@ -157,9 +157,9 @@ sealed trait IntOrTuple
 case class IntThing(i: Int) extends IntOrTuple
 case class TupleThing(name: String, t: (Int, Int)) extends IntOrTuple
 
-write(IntThing(1))              // res25: String = [0, {"i": 1}]
+write(IntThing(1))              // res25: String = ["IntThing", {"i": 1}]
 write(TupleThing("naeem", (1, 2)))
-// res26: String = [1, {"name": "naeem", "t": [1, 2]}]
+// res26: String = ["TupleThing", {"name": "naeem", "t": [1, 2]}]
 ```
 
 Serializability is recursive; you can serialize a type only if all its members are serializable. That means that collections, tuples and case-classes made only of serializable members are themselves serializable
@@ -259,7 +259,18 @@ uPickle on the other hand aims much lower: by limiting the scope of the problem 
 Version History
 ===============
 
-0.1.8
+0.2.0
+-----
+
+- Members of sealed trait/class hierarchies are now keyed with the fully-qualified name of their class, rather than an index, as it is less likely to change due to adding or removing classes
+- Members of sealed hierarchies and parameters now support a `upickle.key("...")` annotation, which allows you to override the default key used (which is the class/parameter name) with a custom one, allowing you to change the class/param name in your code while maintaining compatibility with serialized structures
+- Default parameters are now supported: they are used to substitute missing keys when reading, and cause the key/value pair to be omitted if the serialized value matches the default when writing
+- Missing keys when deserializing case classes now throws a proper `Invalid.Data` exception
+- `object`s are now serialized as `{}` rather than `[]`, better matching the style of case classes
+- 0-argument case classes, previously unsupported, now serialize to `{}` the same way as `object`s
+- Fixed a bug that was preventing multi-level sealed class hierarchies from being serialized due to a compilation error
+
+0.1.7
 -----
 
 - Cleaned up the external API, marking lots of things which should have been private private or stuffing them in the `Internals` namespace

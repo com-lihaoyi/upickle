@@ -6,6 +6,7 @@ import scala.Some
 // These guys all have to be out here because uPickle doesn't
 // support pickling local classes and objects
 object ADTs {
+  case class ADT0()
   case class ADTa(i: Int)
   case class ADTb(i: Int, s: String)
   case class ADTc(i: Int, s: String, t: (Double, Double))
@@ -37,6 +38,13 @@ object Hierarchy {
   case class B(i: Int) extends A
   case class C(s1: String, s2: String) extends A
 }
+object DeepHierarchy {
+  sealed trait A
+  case class B(i: Int) extends A
+  sealed trait C extends A
+  case class D(s: String) extends C
+  case class E(b: Boolean) extends C
+}
 object Singletons{
   sealed trait AA
   case object BB extends AA
@@ -67,8 +75,9 @@ object MacroTests extends TestSuite{
       'simpleAdt {
         import ADTs._
 
-        rw(ADTs.ADTa(1), """{"i": 1}""")(Reader.macroR, Writer.macroW)
-        rw(ADTs.ADTb(1, "lol"), """{"i": 1, "s": "lol"}""")(Reader.macroR, Writer.macroW)
+        rw(ADTs.ADT0(), """{}""")(Reader.macroR, Writer.macroW)
+        rw(ADTs.ADTa(1), """{"i": 1}""")
+        rw(ADTs.ADTb(1, "lol"), """{"i": 1, "s": "lol"}""")
         rw(ADTc(1, "lol", (1.1, 1.2)), """{"i": 1, "s": "lol", "t": [1.1, 1.2]}""")
         rw(
           ADTd(1, "lol", (1.1, 1.2), ADTa(1)),
@@ -96,29 +105,47 @@ object MacroTests extends TestSuite{
           expected
         )
       }
-      'adtTree {
+      'sealedHierarchy {
+        // objects in sealed case class hierarchies should always read and write
+        // the same way (with a tag) regardless of what their static type is when
+        // written. This is feasible because sealed hierarchies can only have a
+        // finite number of cases, so we can just check them all and decide which
+        // class the instance belongs to.
         import Hierarchy._
+        'shallow {
+          rw(B(1), """["upickle.Hierarchy.B", {"i": 1}]""")
+          rw(C("a", "b"), """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
 
-        rw(B(1), """["upickle.Hierarchy.B", {"i": 1}]""")(Reader.macroR, Writer.macroW)
-        rw(C("a", "b"), """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+          rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i": 1}]""")
+          rw(C("a", "b"): A, """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+        }
+        'deep{
+          import DeepHierarchy._
 
-        rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i": 1}]""")
-        rw(C("a", "b"): A, """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+          rw(B(1), """["upickle.DeepHierarchy.B", {"i": 1}]""")
+          rw(B(1): A, """["upickle.DeepHierarchy.B", {"i": 1}]""")
+          rw(D("1"), """["upickle.DeepHierarchy.D", {"s": "1"}]""")
+          rw(D("1"): C, """["upickle.DeepHierarchy.D", {"s": "1"}]""")
+          rw(D("1"): A, """["upickle.DeepHierarchy.D", {"s": "1"}]""")
+          rw(E(true), """["upickle.DeepHierarchy.E", {"b": true}]""")
+          rw(E(true): C, """["upickle.DeepHierarchy.E", {"b": true}]""")
+          rw(E(true): A, """["upickle.DeepHierarchy.E", {"b": true}]""")
+        }
       }
       'singleton {
         import Singletons._
 
         //        rw(BB, """[0, []]""")
         //        rw(BC, """[1, []]""")
-        rw(BB: AA, """["upickle.Singletons.BB", []]""")
-        rw(CC: AA, """["upickle.Singletons.CC", []]""")
+        rw(BB: AA, """["upickle.Singletons.BB", {}]""")
+        rw(CC: AA, """["upickle.Singletons.CC", {}]""")
       }
     }
     'robustnessAgainstVaryingSchemas {
       'renameKeysViaAnnotations {
         import Annotated._
 
-        rw(B(1), """["0", {"omg": 1}]""")(Reader.macroR, Writer.macroW)
+        rw(B(1), """["0", {"omg": 1}]""")
         rw(C("a", "b"), """["1", {"lol": "a", "wtf": "b"}]""")
 
         rw(B(1): A, """["0", {"omg": 1}]""")
@@ -172,9 +199,9 @@ object MacroTests extends TestSuite{
     'recursiveDataTypes{
       import Recursive._
 
-      rw(End: LL, """["upickle.Recursive.End", []]""")
-      rw(Node(3, End): LL, """["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", []]}]""")
-      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node", {"c": 6, "next": ["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", []]}]}]""")
+      rw(End: LL, """["upickle.Recursive.End", {}]""")
+      rw(Node(3, End): LL, """["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", {}]}]""")
+      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node", {"c": 6, "next": ["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", {}]}]}]""")
     }
   }
 }

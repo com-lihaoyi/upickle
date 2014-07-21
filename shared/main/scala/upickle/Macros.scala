@@ -26,7 +26,7 @@ object Macros {
       case e: TypecheckException =>
         val tpe = weakTypeTag[T].tpe
 
-        picklerFor(c)(tpe, "R", "Reader") { subPicklers =>
+        picklerFor(c)(tpe, "R", "Reader") { (tpe, subPicklers) =>
           val reads = subPicklers.map(p => q"$p.read")
             .reduce[Tree]((a, b) => q"$a orElse $b")
           q"""
@@ -49,7 +49,7 @@ object Macros {
       c.inferImplicitValue(weakTypeOf[Writer[T]], silent = false, withMacrosDisabled = true)
     }catch {case e: TypecheckException =>
       val tpe = weakTypeTag[T].tpe
-      picklerFor(c)(tpe, "W", "Writer"){ subPicklers =>
+      picklerFor(c)(tpe, "W", "Writer"){ (tpe, subPicklers) =>
         val writes = subPicklers.map(p => q"$p.write")
           .reduce[Tree]((a, b) => q"upickle.Internal.mergeable($a) merge $b")
 
@@ -75,7 +75,7 @@ object Macros {
        .flatMap(_.scalaArgs.headOption)
        .map{case Literal(Constant(s)) => s.toString}
   }
-  def picklerFor(c: Context)(tpe: c.Type, name: String, longName: String)(treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
+  def picklerFor(c: Context)(tpe: c.Type, name: String, longName: String)(treeMaker: (c.Type, Seq[c.Tree]) => c.Tree): c.Tree = {
     import c.universe._
     val clsSymbol = tpe.typeSymbol.asClass
     def annotate(pickler: Tree) = {
@@ -101,7 +101,7 @@ object Macros {
             picklerFor(c)(subCls.asType.toType, name, longName)(treeMaker)
           }
 
-        val z = treeMaker(subPicklers)
+        val z = treeMaker(tpe, subPicklers)
 
 //        println(z)
 //        println("SealedSomething")
@@ -145,8 +145,9 @@ object Macros {
               case x => q"upickle.writeJs($companion.$defaultName)"
             }
           }
-
-          if (args.length == 1 && name == "W")
+          if (args.length == 0)
+            q"upickle.Internal.${newTermName("Case0"+name)}($className())"
+          else if (args.length == 1 && name == "W")
             q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args), Seq(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
           else if(name == "W")
             q"upickle.Internal.$rwName($className.$actionName, Seq(..$args), Seq(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"

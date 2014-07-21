@@ -169,6 +169,6 @@ trait Implicits extends Types{
       {case x: V => Js.Array(Seq(Js.String(n), rw.write(x)))}
     )
     def Case0R[T](t: T) = R[T]({case x => t})
-    def Case0W[T](t: T) = W[T](x => Js.Array(Nil))
+    def Case0W[T](t: T) = W[T](x => Js.Object(Nil))
   }
 }
