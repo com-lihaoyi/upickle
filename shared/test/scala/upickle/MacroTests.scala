@@ -218,7 +218,8 @@ object MacroTests extends TestSuite{
       )
       val stringified = write(data)
       assert(data == readData(stringified))
-      assert(stringified == write(readData(stringified)))
+      val rewritten = write(readData(stringified))
+      assert(stringified == rewritten)
 
       'read{
         var n = 0

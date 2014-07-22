@@ -11,7 +11,7 @@ object Build extends sbt.Build{
     organization := "com.lihaoyi",
 
     version := "0.2.0",
-    scalaVersion := "2.11.1",
+    scalaVersion := "2.10.4",
     name := "upickle",
 
     // Sonatype
