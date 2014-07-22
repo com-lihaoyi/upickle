@@ -148,13 +148,12 @@ object Macros {
           if (args.length == 0)
             q"upickle.Internal.${newTermName("Case0"+name)}($className())"
           else if (args.length == 1 && name == "W")
-            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Seq(..$args), Seq(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
+            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
           else if(name == "W")
-            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args), Seq(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
+            q"upickle.Internal.$rwName($className.$actionName, Array(..$args), Array(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
           else // name == "R"
-            q"upickle.Internal.$rwName($className.$actionName, Seq(..$args), Seq(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
+            q"upickle.Internal.$rwName($className.$actionName, Array(..$args), Array(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
         }
-
 
         val z = annotate(pickler)
 //        println("Class")

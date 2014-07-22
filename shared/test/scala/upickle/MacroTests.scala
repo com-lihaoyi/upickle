@@ -192,7 +192,6 @@ object MacroTests extends TestSuite{
           ),
           """{"a": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "b": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "c": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "d": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "e": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "f": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}}"""
         )
-
       }
     }
 
@@ -202,6 +201,50 @@ object MacroTests extends TestSuite{
       rw(End: LL, """["upickle.Recursive.End", {}]""")
       rw(Node(3, End): LL, """["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", {}]}]""")
       rw(Node(6, Node(3, End)), """["upickle.Recursive.Node", {"c": 6, "next": ["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", {}]}]}]""")
+    }
+    'performance{
+      import Generic.ADT
+      import Hierarchy._
+      import Recursive._
+      import Defaults._
+      import ADTs.ADT0
+      def readData = (s: String) => read[ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]](s)
+      // Some arbitrary data that represents a mix of all the different
+      // ways things can be pickled and unpickled
+      val data = ADT(
+        Vector((1, 2), (3, 4), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13)),
+        """
+          |I am cow, hear me moo
+          |I weigh twice as much as you
+          |And I look good on the barbecueeeee
+        """.stripMargin,
+        C("lol i am a noob", "haha you are a noob"): A,
+        Node(-11, Node(-22, Node(-33, Node(-44, End)))): LL,
+        ADTc(i = 1234567890, s = "i am a strange loop"),
+        ADT0()
+      )
+      val stringified = write(data)
+      assert(data == readData(stringified))
+      assert(stringified == write(readData(stringified)))
+
+      'read{
+        var n = 0
+        val start = System.currentTimeMillis()
+        while(System.currentTimeMillis() < start + 5000){
+          readData(stringified)
+          n += 1
+        }
+        n
+      }
+      'write{
+        var n = 0
+        val start = System.currentTimeMillis()
+        while(System.currentTimeMillis() < start + 5000){
+          write(data)
+          n += 1
+        }
+        n
+      }
     }
   }
 }

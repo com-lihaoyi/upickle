@@ -51,11 +51,11 @@ object Build extends sbt.Build{
         )
         """, s"""
         def Case${i}R[$readerTypes, V]
-                     (f: ($typeTuple) => V, names: Seq[String], defaults: Seq[Js.Value])
+                     (f: ($typeTuple) => V, names: Array[String], defaults: Array[Js.Value])
           = RCase[V](names, defaults, {case x => $caseReader})
 
         def Case${i}W[$writerTypes, V]
-                     (g: V => Option[Tuple${i}[$typeTuple]], names: Seq[String], defaults: Seq[Js.Value])
+                     (g: V => Option[Tuple${i}[$typeTuple]], names: Array[String], defaults: Array[Js.Value])
           = WCase[V](names, defaults, x => writeJs(g(x).get))
         """)
       }

@@ -66,6 +66,42 @@ object Js {
  * without any dependencies.
  */
 object Json {
+
+  private[this] object Constants {
+    type CharKind = Int
+    final val Letter = 0
+    final val Digit = 1
+    final val Minus = 2
+    final val Quote = 3
+    final val Colon = 4
+    final val Comma = 5
+    final val Lbra = 6
+    final val Rbra = 7
+    final val Larr = 8
+    final val Rarr = 9
+    final val Blank = 10
+    final val Other = 11
+    final val Eof = 12
+    final val Slash = 13
+
+    // *** Token Kinds
+
+    type TokenKind = Int
+    final val ID = 0
+    final val STRING = 1
+    final val NUMBER = 2
+    final val BIGNUMBER = 3
+    final val FLOATNUMBER = 4
+    final val COLON = 5
+    final val COMMA = 6
+    final val LOBJ = 7
+    final val ROBJ = 8
+    final val LARR = 9
+    final val RARR = 10
+    final val BLANK = 11
+    final val EOF = 12
+  }
+  import Constants._
   /**
    * Serializes a [[Js.Value]] to a `StringBuffer`
    */
@@ -74,7 +110,7 @@ object Json {
       sb.append('"')
       var i = 0
       while(i < s.length){
-        s.charAt(i) match {
+        (s.charAt(i): @switch) match {
           case '\\' => sb.append("\\\\")
           case '"' => sb.append("\\\"")
           case '/' => sb.append("\\/")
@@ -141,38 +177,7 @@ object Json {
 
     // *** Character Kinds
 
-    type CharKind = Int
-    val Letter = 0
-    val Digit = 1
-    val Minus = 2
-    val Quote = 3
-    val Colon = 4
-    val Comma = 5
-    val Lbra = 6
-    val Rbra = 7
-    val Larr = 8
-    val Rarr = 9
-    val Blank = 10
-    val Other = 11
-    val Eof = 12
-    val Slash = 13
 
-    // *** Token Kinds
-
-    type TokenKind = Int
-    val ID = 0
-    val STRING = 1
-    val NUMBER = 2
-    val BIGNUMBER = 3
-    val FLOATNUMBER = 4
-    val COLON = 5
-    val COMMA = 6
-    val LOBJ = 7
-    val ROBJ = 8
-    val LARR = 9
-    val RARR = 10
-    val BLANK = 11
-    val EOF = 12
 
     // *** Character => CharKind Map ***
 
@@ -327,7 +332,7 @@ object Json {
         linePos = chLinePos
         charPos = chCharPos
         val kind: Int = chKind
-        kind match {
+        (kind: @switch) match {
           case Letter =>
             val first = chMark
             while (chKind == Letter || chKind == Digit) {
@@ -426,7 +431,7 @@ object Json {
       var result = List.empty[Js.Value]
       while (tokenKind != RARR) {
         result = getJson() :: result
-        tokenKind match{
+        (tokenKind: @switch) match{
           case COMMA => tokenNext()
           case RARR => // do nothing
           case _ => tokenError("Expecting , or ]")
@@ -447,7 +452,7 @@ object Json {
         if (tokenKind != COLON) tokenError("Expecting :")
         tokenNext()
         result = (name -> getJson()) :: result
-        tokenKind match{
+        (tokenKind: @switch) match{
           case COMMA => tokenNext()
           case ROBJ => // do nothing
           case _ => tokenError("Expecting , or }")
@@ -469,7 +474,7 @@ object Json {
     }
     def getJson(): Js.Value = {
       val kind: Int = tokenKind
-      val result: Js.Value = kind match {
+      val result: Js.Value = (kind: @switch) match {
         case ID =>
           val result = tokenValue match {
             case "true" => Js.True
