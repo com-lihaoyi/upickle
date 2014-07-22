@@ -137,7 +137,7 @@ object Macros {
             }
           }
           if (args.length == 0) // 0-arg case classes are treated like `object`s
-            q"upickle.Internal.${newTermName("Case0"+rw.short)}($className())"
+            q"upickle.Internal.${newTermName("Case0"+rw.short)}($companion())"
           else if (args.length == 1 && rw == RW.W) // 1-arg case classes need their output wrapped in a Tuple1
             q"upickle.Internal.$rwName(x => $companion.$actionName(x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
           else // Otherwise, reading and writing are kinda identical

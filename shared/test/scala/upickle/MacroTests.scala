@@ -64,8 +64,8 @@ object MacroTests extends TestSuite{
   val tests = TestSuite{
     'commonCustomStructures{
       'simpleAdt {
-        import ADTs._
-        rw(ADTs.ADT0(), """{}""")(Reader.macroR, Writer.macroW)
+
+        rw(ADTs.ADT0(), """{}""")
         rw(ADTs.ADTa(1), """{"i": 1}""")
         rw(ADTs.ADTb(1, "lol"), """{"i": 1, "s": "lol"}""")
 
