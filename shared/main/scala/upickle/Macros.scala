@@ -29,10 +29,13 @@ object Macros {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
     c.Expr[Reader[T]]{
-      picklerFor(c)(tpe, RW.R)(
+      val x = picklerFor(c)(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
          .reduce((a, b) => q"$a orElse $b")
       )
+
+      val msg = "Tagged Object " + tpe.typeSymbol.fullName
+      q"""upickle.validateReader($msg){$x}"""
     }
   }
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
@@ -92,17 +95,14 @@ object Macros {
 
         val combined = treeMaker(subPicklers)
         val knotName = newTermName("knot"+rw.short)
-        val x = q"""
+        q"""
           upickle.Internal.$knotName{implicit i: upickle.Knot.${newTypeName(rw.short)}[$tpe] =>
             val x = upickle.${newTermName(rw.long)}[$tpe]($combined)
             i.copyFrom(x)
             x
           }
         """
-        if (rw == RW.W) x else {
-          val msg = "Tagged Object " + tpe.typeSymbol.fullName
-          q"""upickle.validateReader($msg){$x}"""
-        }
+
 
       case x if tpe.typeSymbol.isModuleClass =>
         val mod = tpe.typeSymbol.asClass.module

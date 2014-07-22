@@ -157,8 +157,10 @@ object MacroTests extends TestSuite{
       }
       'ignoreExtraFieldsWhenDeserializing {
         import ADTs._
-        assert(read[ADTa]( """{i: 123, j: false, k: "haha"}""") == ADTa(123))
-        assert(read[ADTb]( """{i: 123, j: false, k: "haha", s: "kk", l: true, z: [1, 2, 3]}""") == ADTb(123, "kk"))
+        val r1 = read[ADTa]( """{i: 123, j: false, k: "haha"}""")
+        assert(r1 == ADTa(123))
+        val r2 = read[ADTb]( """{i: 123, j: false, k: "haha", s: "kk", l: true, z: [1, 2, 3]}""")
+        assert(r2 == ADTb(123, "kk"))
       }
     }
     'GenericDataTypes{
