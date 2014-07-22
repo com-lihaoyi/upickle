@@ -15,59 +15,50 @@ class key(s: String) extends StaticAnnotation
  * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
+  class RW(val short: String, val long: String, val actionName: String)
+  object RW{
+    object R extends RW("R", "Reader", "apply")
+    object W extends RW("W", "Writer", "unapply")
+  }
   def macroRImpl[T: c.WeakTypeTag](c: Context) = {
-
     import c.universe._
-
-    val z: Tree = try {
-      c.inferImplicitValue(weakTypeOf[Reader[T]], silent = false, withMacrosDisabled = true)
-
-    } catch {
-      case e: TypecheckException =>
-        val tpe = weakTypeTag[T].tpe
-
-        picklerFor(c)(tpe, "R", "Reader") { (tpe, subPicklers) =>
-          val reads = subPicklers.map(p => q"$p.read")
-            .reduce[Tree]((a, b) => q"$a orElse $b")
-          q"""
-          upickle.Internal.knotR{implicit i: upickle.Knot.R[$tpe] =>
-            val x = upickle.Reader[$tpe](upickle.validate("Sealed"){$reads})
-            i.copyFrom(x)
-            x
-          }
-        """
-
+    val tpe = weakTypeTag[T].tpe
+    c.Expr[Reader[T]]{
+      picklerFor(c)(tpe, RW.R) { (tpe, subPicklers) =>
+        val reads = subPicklers.map(p => q"$p.read": Tree)
+                               .reduce((a, b) => q"$a orElse $b")
+        q"""
+        upickle.Internal.knotR{implicit i: upickle.Knot.R[$tpe] =>
+          val x = upickle.Reader[$tpe](upickle.validate("CaseClass"){$reads})
+          i.copyFrom(x)
+          x
         }
+      """
+      }
     }
-//    println(z)
-    c.Expr[Reader[T]](z)
   }
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
-
-    val z: Tree = try {
-      c.inferImplicitValue(weakTypeOf[Writer[T]], silent = false, withMacrosDisabled = true)
-    }catch {case e: TypecheckException =>
-      val tpe = weakTypeTag[T].tpe
-      picklerFor(c)(tpe, "W", "Writer"){ (tpe, subPicklers) =>
-        val writes = subPicklers.map(p => q"$p.write")
-          .reduce[Tree]((a, b) => q"upickle.Internal.mergeable($a) merge $b")
-
+    val tpe = weakTypeTag[T].tpe
+    c.Expr[Writer[T]]{
+      picklerFor(c)(tpe, RW.W){ (tpe, subPicklers) =>
+        val writes = subPicklers.map(p => q"$p.write": Tree)
+                                .reduce((a, b) => q"upickle.Internal.mergeable($a) merge $b")
         q"""
           upickle.Internal.knotW{implicit i: upickle.Knot.W[$tpe] =>
-
             val x = upickle.Writer[$tpe]($writes)
             i.copyFrom(x)
             x
           }
         """
-
       }
     }
-
-//    println(z)
-    c.Expr[Writer[T]](z)
   }
+
+  /**
+   * Get the custom @key annotation from
+   * the parameter Symbol if it exists
+   */
   def customKey(c: Context)(sym: c.Symbol): Option[String] = {
     import c.universe._
     sym.annotations
@@ -75,48 +66,35 @@ object Macros {
        .flatMap(_.scalaArgs.headOption)
        .map{case Literal(Constant(s)) => s.toString}
   }
-  def picklerFor(c: Context)(tpe: c.Type, name: String, longName: String)(treeMaker: (c.Type, Seq[c.Tree]) => c.Tree): c.Tree = {
+
+  def picklerFor(c: Context)
+                (tpe: c.Type, rw: RW)
+                (treeMaker: (c.Type, Seq[c.Tree]) => c.Tree): c.Tree = {
+
     import c.universe._
     val clsSymbol = tpe.typeSymbol.asClass
+
     def annotate(pickler: Tree) = {
-
       val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
-      sealedParent match {
-        case Some(parent) =>
-          val index = customKey(c)(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
-
-          q"upickle.Internal.annotate($pickler, $index)"
-        case None => pickler
+      sealedParent.fold(pickler){ parent =>
+        val index = customKey(c)(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
+        q"upickle.Internal.annotate($pickler, $index)"
       }
     }
-
-//    println()
-//
-//    println(tpe)
 
     tpe.declaration(nme.CONSTRUCTOR) match {
       case NoSymbol if clsSymbol.isSealed => // I'm a sealed trait/class!
         val subPicklers =
           for(subCls <- clsSymbol.knownDirectSubclasses.toSeq) yield {
-            picklerFor(c)(subCls.asType.toType, name, longName)(treeMaker)
+            picklerFor(c)(subCls.asType.toType, rw)(treeMaker)
           }
 
-        val z = treeMaker(tpe, subPicklers)
+        treeMaker(tpe, subPicklers)
 
-//        println(z)
-//        println("SealedSomething")
-//        Thread.sleep(1000)
-        z
       case x if tpe.typeSymbol.isModuleClass =>
         val mod = tpe.typeSymbol.asClass.module
-//        println("XXX")
-//        println(mod)
+        annotate(q"upickle.Internal.${newTermName("Case0"+rw.short)}($mod)")
 
-
-        val z  = annotate(q"upickle.Internal.${newTermName("Case0"+name)}($mod)")
-//        println("Object")
-
-        z
       case x => // I'm a class
 
         val pickler = {
@@ -135,9 +113,9 @@ object Macros {
             customKey(c)(p).getOrElse(p.name.toString)
           }
 
-          val rwName = newTermName(s"Case${args.length}$name")
+          val rwName = newTermName(s"Case${args.length}${rw.short}")
           val className = newTermName(tpe.typeSymbol.name.toString)
-          val actionName = newTermName(if (name == "W") "unapply" else "apply")
+          val actionName = newTermName(rw.actionName)
           val defaults = argSyms.zipWithIndex.map{ case (s, i) =>
             val defaultName = newTermName("apply$default$" + (i + 1))
             companion.typeSignature.member(defaultName) match{
@@ -145,20 +123,15 @@ object Macros {
               case x => q"upickle.writeJs($companion.$defaultName)"
             }
           }
-          if (args.length == 0)
-            q"upickle.Internal.${newTermName("Case0"+name)}($className())"
-          else if (args.length == 1 && name == "W")
-            q"upickle.Internal.$rwName(x => $className.$actionName(x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
-          else if(name == "W")
-            q"upickle.Internal.$rwName($className.$actionName, Array(..$args), Array(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
-          else // name == "R"
-            q"upickle.Internal.$rwName($className.$actionName, Array(..$args), Array(..$defaults)): upickle.${newTypeName(longName)}[$tpe]"
+          if (args.length == 0) // 0-arg case classes are treated like `object`s
+            q"upickle.Internal.${newTermName("Case0"+rw.short)}($className())"
+          else if (args.length == 1 && rw == RW.W) // 1-arg case classes need their output wrapped in a Tuple1
+            q"upickle.Internal.$rwName(x => $companion.$actionName(x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
+          else // Otherwise, reading and writing are kinda identical
+            q"upickle.Internal.$rwName($companion.$actionName, Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
         }
 
-        val z = annotate(pickler)
-//        println("Class")
-//        println(z)
-        z
+        annotate(pickler)
     }
   }
 }

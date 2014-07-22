@@ -1,7 +1,12 @@
 package upickle
 
 import utest._
-case class Foo(i: Int, s: String)
+case class Fee(i: Int, s: String)
+sealed trait Fi
+object Fi{
+  case class Fo(i: Int) extends Fi
+  case class Fum(s: String) extends Fi
+}
 /**
 * Generally, every failure should be a Invalid.Json or a
 * InvalidData. If any assertion errors, match errors, number
@@ -65,8 +70,14 @@ object FailureTests extends TestSuite{
 
       // Separate this guy out because the read macro and
       // the intercept macro play badly with each other
-      val readFoo = () => read[Foo]("""{"i": 123}""")
+      val readFoo = () => read[Fee]("""{"i": 123}""")
       intercept[Invalid.Data] { readFoo() }
+
+      val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
+      intercept[Invalid.Data] { readFoo2() }
+
+      val readFo = () => read[Fi.Fo]("""["omg", {}]""")
+      readFo()
     }
   }
 }

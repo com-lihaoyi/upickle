@@ -8,7 +8,7 @@ import collection.mutable
 private[upickle] trait GeneratedUtil {
   protected[this] def readerCaseFunction[T](names: Array[String],
                                             defaults: Array[Js.Value],
-                                            read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
+                                            read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = validate("Object"){
     case x: Js.Object => read(mapToArray(x, names, defaults))
   }
   protected[this] def arrayToMap(a: Js.Array, names: Array[String], defaults: Array[Js.Value]) = {

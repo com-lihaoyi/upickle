@@ -269,6 +269,8 @@ Version History
 - `object`s are now serialized as `{}` rather than `[]`, better matching the style of case classes
 - 0-argument case classes, previously unsupported, now serialize to `{}` the same way as `object`s
 - Fixed a bug that was preventing multi-level sealed class hierarchies from being serialized due to a compilation error
+- Fixed a bug causing case classes nested in other packages/objects and referred to by their qualified paths to fail pickling
+- Tightened up error handling semantics, swapping out several `MatchError`s with `Invalid.Data` errors
 
 0.1.7
 -----
