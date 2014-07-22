@@ -33,7 +33,8 @@ object Macros {
         _.map(p => q"$p.read": Tree)
          .reduce((a, b) => q"$a orElse $b")
       )
-      q"""upickle.validateReader("hoho"){$x}"""
+      val msg = "Tagged Object " + tpe.typeSymbol.fullName
+      q"""upickle.validateReader($msg){$x}"""
     }
   }
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {

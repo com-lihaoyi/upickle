@@ -72,17 +72,31 @@ object FailureTests extends TestSuite{
       'macroFailures{
         // Separate this guy out because the read macro and
         // the intercept macro play badly with each other
-        val readFoo = () => read[Fee]("""{"i": 123}""")
-        intercept[Invalid.Data] { readFoo() }
+        'missingKey {
+          val readFoo = () => read[Fee]( """{"i": 123}""")
+          val err = intercept[Invalid.Data]{ readFoo() }
+          assert(err.msg.contains("Key Missing: s"))
+        }
+        'completelyInvalid{
+          val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
+          val err = intercept[Invalid.Data] { readFoo2() }
+          assert(err.msg.contains("Object"))
+          println(err)
+        }
 
-        val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
-        intercept[Invalid.Data] { readFoo2() }
+        'invalidTag {
+          val readFo = () => read[Fi.Fo]( """["omg", {}]""")
+          val err = intercept[Invalid.Data]{ readFo() }
+          assert(err.msg.contains("Tagged Object"))
+          assert(err.msg.contains("upickle.Fi.Fo"))
+        }
 
-        val readFo = () => read[Fi.Fo]("""["omg", {}]""")
-        intercept[Invalid.Data]{ readFo() }
-
-        val readFo2 = () => read[Fi]("""["omg", {}]""")
-        intercept[Invalid.Data]{ readFo2() }
+        'invalidTag2{
+          val readFo2 = () => read[Fi]("""["omg", {}]""")
+          val err = intercept[Invalid.Data]{ readFo2() }
+          assert(err.msg.contains("Tagged Object"))
+          assert(err.msg.contains("upickle.Fi"))
+        }
       }
     }
   }
