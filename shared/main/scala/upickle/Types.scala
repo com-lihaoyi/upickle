@@ -80,6 +80,9 @@ object ReadWriter {
   }
 }
 
+/**
+ * Handy shorthands for Reader and Writer
+ */
 object Aliases{
   type R[T] = Reader[T]
   val R = Reader

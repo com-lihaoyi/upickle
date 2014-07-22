@@ -62,22 +62,28 @@ object FailureTests extends TestSuite{
       }
     }
     'otherFailures{
-      intercept[Invalid.Data] { read[Boolean]("\"lol\"") }
-      intercept[Invalid.Data] { read[Int]("\"lol\"") }
-      intercept[Invalid.Data] { read[Seq[Int]]("\"lol\"") }
-      intercept[Invalid.Data] { read[Seq[String]]("[1, 2, 3]") }
-      intercept[Invalid.Data] { read[Seq[(Int, String)]]("[[1, \"1\"], [2, \"2\"], []]") }
+      'nonMacroFailures{
+        intercept[Invalid.Data] { read[Boolean]("\"lol\"") }
+        intercept[Invalid.Data] { read[Int]("\"lol\"") }
+        intercept[Invalid.Data] { read[Seq[Int]]("\"lol\"") }
+        intercept[Invalid.Data] { read[Seq[String]]("[1, 2, 3]") }
+        intercept[Invalid.Data] { read[Seq[(Int, String)]]("[[1, \"1\"], [2, \"2\"], []]") }
+      }
+      'macroFailures{
+        // Separate this guy out because the read macro and
+        // the intercept macro play badly with each other
+        val readFoo = () => read[Fee]("""{"i": 123}""")
+        intercept[Invalid.Data] { readFoo() }
 
-      // Separate this guy out because the read macro and
-      // the intercept macro play badly with each other
-      val readFoo = () => read[Fee]("""{"i": 123}""")
-      intercept[Invalid.Data] { readFoo() }
+        val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
+        intercept[Invalid.Data] { readFoo2() }
 
-      val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
-      intercept[Invalid.Data] { readFoo2() }
+        val readFo = () => read[Fi.Fo]("""["omg", {}]""")
+        intercept[Invalid.Data]{ readFo() }
 
-      val readFo = () => read[Fi.Fo]("""["omg", {}]""")
-      readFo()
+        val readFo2 = () => read[Fi]("""["omg", {}]""")
+        intercept[Invalid.Data]{ readFo2() }
+      }
     }
   }
 }

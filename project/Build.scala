@@ -11,7 +11,7 @@ object Build extends sbt.Build{
     organization := "com.lihaoyi",
 
     version := "0.2.0",
-    scalaVersion := "2.10.4",
+    scalaVersion := "2.11.1",
     name := "upickle",
 
     // Sonatype
@@ -72,7 +72,6 @@ object Build extends sbt.Build{
          */
         trait Generated extends Types with GeneratedUtil{
           import Aliases._
-          def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T]
 
           ${tuples.mkString("\n")}
           /**

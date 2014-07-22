@@ -5,7 +5,11 @@ import scala.reflect._
 import scala.annotation.{ClassfileAnnotation, StaticAnnotation}
 
 //import acyclic.file
-
+/**
+ * Used to annotate either case classes or their fields, telling uPickle
+ * to use a custom string as the key for that class/field rather than the
+ * default string which is the full-name of that class/field.
+ */
 class key(s: String) extends StaticAnnotation
 
 /**
@@ -15,6 +19,7 @@ class key(s: String) extends StaticAnnotation
  * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
+
   class RW(val short: String, val long: String, val actionName: String)
   object RW{
     object R extends RW("R", "Reader", "apply")
@@ -24,34 +29,21 @@ object Macros {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
     c.Expr[Reader[T]]{
-      picklerFor(c)(tpe, RW.R) { (tpe, subPicklers) =>
-        val reads = subPicklers.map(p => q"$p.read": Tree)
-                               .reduce((a, b) => q"$a orElse $b")
-        q"""
-        upickle.Internal.knotR{implicit i: upickle.Knot.R[$tpe] =>
-          val x = upickle.Reader[$tpe](upickle.validate("CaseClass"){$reads})
-          i.copyFrom(x)
-          x
-        }
-      """
-      }
+      val x = picklerFor(c)(tpe, RW.R)(
+        _.map(p => q"$p.read": Tree)
+         .reduce((a, b) => q"$a orElse $b")
+      )
+      q"""upickle.validateReader("hoho"){$x}"""
     }
   }
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
     c.Expr[Writer[T]]{
-      picklerFor(c)(tpe, RW.W){ (tpe, subPicklers) =>
-        val writes = subPicklers.map(p => q"$p.write": Tree)
-                                .reduce((a, b) => q"upickle.Internal.mergeable($a) merge $b")
-        q"""
-          upickle.Internal.knotW{implicit i: upickle.Knot.W[$tpe] =>
-            val x = upickle.Writer[$tpe]($writes)
-            i.copyFrom(x)
-            x
-          }
-        """
-      }
+      picklerFor(c)(tpe, RW.W)(
+        _.map(p => q"$p.write": Tree)
+         .reduce((a, b) => q"upickle.Internal.mergeable($a) merge $b")
+      )
     }
   }
 
@@ -67,9 +59,19 @@ object Macros {
        .map{case Literal(Constant(s)) => s.toString}
   }
 
+  /**
+   * Generates a pickler for a particuler Type
+   *
+   * @param tpe The type we are generating the pickler for
+   * @param rw Configuration that determines whether it's a Reader or
+   *           a Writer, together with the various names wihich vary
+   *           between those two choices
+   * @param treeMaker How to merge the trees of the multiple subpicklers
+   *                  into one larger tree
+   */
   def picklerFor(c: Context)
                 (tpe: c.Type, rw: RW)
-                (treeMaker: (c.Type, Seq[c.Tree]) => c.Tree): c.Tree = {
+                (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
 
     import c.universe._
     val clsSymbol = tpe.typeSymbol.asClass
@@ -89,7 +91,15 @@ object Macros {
             picklerFor(c)(subCls.asType.toType, rw)(treeMaker)
           }
 
-        treeMaker(tpe, subPicklers)
+        val combined = treeMaker(subPicklers)
+        val knotName = newTermName("knot"+rw.short)
+        q"""
+          upickle.Internal.$knotName{implicit i: upickle.Knot.${newTypeName(rw.short)}[$tpe] =>
+            val x = upickle.${newTermName(rw.long)}[$tpe]($combined)
+            i.copyFrom(x)
+            x
+          }
+        """
 
       case x if tpe.typeSymbol.isModuleClass =>
         val mod = tpe.typeSymbol.asClass.module
@@ -135,3 +145,4 @@ object Macros {
     }
   }
 }
+ 

@@ -6,8 +6,6 @@ import acyclic.file
  *
  * - Is there an implicit pickler for that type?
  * - Does the companion have matching apply/unapply?
- *
- *
  */
 package object upickle extends Implicits with Generated with Types{
 

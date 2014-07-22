@@ -7,6 +7,10 @@ import scala.concurrent.duration.{FiniteDuration, Duration}
 import scala.reflect.macros.Context
 import acyclic.file
 
+/**
+ * Typeclasses to allow read/writing of all the common
+ * data-types and data-structures in the standard library
+ */
 trait Implicits extends Types{
   def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
     pf.orElse { case x => throw Invalid.Data(x, name) }

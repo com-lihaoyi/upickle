@@ -6,6 +6,9 @@ import collection.mutable
  * to put in the stringly typed code-generator
  */
 private[upickle] trait GeneratedUtil {
+
+  def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T]
+
   protected[this] def readerCaseFunction[T](names: Array[String],
                                             defaults: Array[Js.Value],
                                             read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = validate("Object"){

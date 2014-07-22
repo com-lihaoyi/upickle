@@ -13,24 +13,15 @@ object ADTs {
   case class ADTd(i: Int, s: String, t: (Double, Double), a: ADTa)
   case class ADTe(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double])
   case class ADTf(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double], o: Option[Option[Boolean]])
-  case class ADTz(t1: Int,
-                  t2: String,
-                  t3: Int,
-                  t4: String,
-                  t5: Int,
-                  t6: String,
-                  t7: Int,
-                  t8: String,
-                  t9: Int,
-                  t10: String,
-                  t11: Int,
-                  t12: String,
-                  t13: Int,
-                  t14: String,
-                  t15: Int,
-                  t16: String,
-                  t17: Int,
-                  t18: String
+  case class ADTz(t1: Int, t2: String,
+                  t3: Int, t4: String,
+                  t5: Int, t6: String,
+                  t7: Int, t8: String,
+                  t9: Int, t10: String,
+                  t11: Int, t12: String,
+                  t13: Int, t14: String,
+                  t15: Int, t16: String,
+                  t17: Int, t18: String
                    )
 }
 object Hierarchy {
@@ -74,22 +65,22 @@ object MacroTests extends TestSuite{
     'commonCustomStructures{
       'simpleAdt {
         import ADTs._
-
         rw(ADTs.ADT0(), """{}""")(Reader.macroR, Writer.macroW)
         rw(ADTs.ADTa(1), """{"i": 1}""")
         rw(ADTs.ADTb(1, "lol"), """{"i": 1, "s": "lol"}""")
-        rw(ADTc(1, "lol", (1.1, 1.2)), """{"i": 1, "s": "lol", "t": [1.1, 1.2]}""")
+
+        rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i": 1, "s": "lol", "t": [1.1, 1.2]}""")
         rw(
-          ADTd(1, "lol", (1.1, 1.2), ADTa(1)),
+          ADTs.ADTd(1, "lol", (1.1, 1.2), ADTs.ADTa(1)),
           """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}}"""
         )
 
         rw(
-          ADTe(1, "lol", (1.1, 1.2), ADTa(1), List(1.2, 2.1, 3.14)),
+          ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
           """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}, "q": [1.2, 2.1, 3.14]}"""
         )
         rw(
-          ADTf(1, "lol", (1.1, 1.2), ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
+          ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
           """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}, "q": [1.2, 2.1, 3.14], "o": [[]]}"""
         )
         val chunks = for (i <- 1 to 18) yield {
@@ -101,7 +92,7 @@ object MacroTests extends TestSuite{
         val expected = s"""{${chunks.mkString(", ")}}"""
 
         rw(
-          ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
+          ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
           expected
         )
       }
