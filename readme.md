@@ -96,7 +96,7 @@ write(12.3f: Float)              // res6: String = 12.3
 write(12.3: Double)              // res7: String = 12.3
 ```
 
-Even numbers too large for Javascript are serialized as JSON numbers, since JSON doesn't specify an upper bound and uPickle can handle it just fine, even in Scala.js, because it uses its own JSON parser rather than relying on Javascript's.
+Even numbers too large for Javascript are serialized as JSON numbers, since JSON doesn't specify an upper bound. uPickle can handle it just fine, even in Scala.js, because it uses its own JSON parser rather than relying on Javascript's.
 
 ```scala
 write(4000000000000L: Long)      // res8: String = 4000000000000
