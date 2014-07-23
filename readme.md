@@ -6,6 +6,8 @@ uPickle (pronounced micro-pickle) is a lightweight serialization library for Sca
 - [Less than 1000 lines of code](https://github.com/lihaoyi/upickle/graphs/contributors)
 - [Zero-reflection 100% static serialization and deserialization](#supported-types)
 - [Human-readable JSON encoding](#getting-started)
+- [A large, well-defined set of supported types](#supported-types)
+- Handling of [default values](#defaults) and [custom keys](#custom-keys), for maintaining backwards compatiblity while schemas change
 - [Zero dependencies](https://github.com/lihaoyi/upickle/blob/master/project/Build.scala)
 - [Works in ScalaJS, allowing transfer of structured data between the JVM and Javascript](#scalajs)
 
@@ -181,47 +183,6 @@ write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3))))
 // res29: String = {"name": "bearrr", "foos": [{"i": 1}, {"i": 2}, {"i": 3}]}
 ```
 
-Unsupported Things
-==================
-
-Here are some things which are not serializable using uPickle. One is mixed lists:
- 
-```scala
-write(List(1, "omg"))
-<console>:11: error: could not find implicit value for evidence parameter of type upickle.Writer[List[Any]]
-              write(List(1, "omg"))
-                    ^
-```
-
-That is because serializing `Any` is not supported
-
-```scala
-write(1: Any)
-<console>:11: error: could not find implicit value for evidence parameter of type upickle.Writer[Any]
-              write(1: Any)
-                   ^
-```
-
-If your case class has an `Any` member, it also can't be serialized:
-
-```scala
-case class AnyThing(x: Int, y: Any)
-write(AnyThing(1, 2))
-<console>:13: error: could not find implicit value for evidence parameter of type upickle.Writer[AnyThing]
-              write(AnyThing(1, 2))
-                   ^
-```
-
-You also can't serialize arbitrary classes; uPickle only supports case classes with a companion object with `apply`/`unapply` methods
-
-```scala
-class NewClass(i: Int)
-write(new NewClass(1))
-<console>:12: error: could not find implicit value for evidence parameter of type upickle.Writer[NewClass]
-              write(new NewClass(1))
-                   ^
-```
-
 Exceptions
 ==========
 
@@ -231,6 +192,60 @@ On unpickling, uPickle throws one of two subclasses of `upickle.Invalid`:
 
 - `upickle.Invalid.Json`: thrown when unpickling fails at the first step which attempst to convert the incoming `String` into semi-structured JSON data. The exception contains data about where parsing failed (`input`, `line`, `col`) as well as a human-readable error message.
 - `upickle.Invalid.Data`: thrown when unpickling fails at the second step which attempts to convert the parsed JSON tree into structured data of the desired type. Contains the offending JSON subtree in `data`, along with a human-readable error message. 
+
+Defaults
+========
+
+If a field is missing upon deserialization, uPickle uses the default value if one exists
+
+```scala
+import upickle._
+case class Foo(i: Int = 10, s: String = "lol")
+
+read[Foo]("{}")             // res1: Foo = Foo(10,lol)
+
+read[Foo]("""{"i": 123}""") // res2: Foo = Foo(123,lol)
+```
+
+In addition, if a field at serialization time has the same value as the default, uPickle leaves it out of the serialized blob
+  
+```scala
+write(Foo(i = 11, s = "lol")) // res3: String = {"i": 11}
+
+write(Foo(i = 10, s = "lol")) // res4: String = {}
+
+write(Foo())                  // res5: String = {}
+```
+
+This allows you to make schema changes gradually, assuming you have already pickled some data and want to add new fields to the case classes you pickled. Simply give the new fields a default value (e.g. `""` for Strings, or wrap it in an `Option[T]` and make the default `None`) and uPickle will happily read the old data, filling in the missing field using the default value.
+
+Custom Keys
+===========
+
+uPickle allows you to specify the key that a field is serialized with via a `@key` annotation
+
+```scala
+case class Bar(@key("hehehe") kekeke: Int)
+
+write(Bar(10))                  // res6: String = {"hehehe": 10}
+
+read[Bar]("""{"hehehe": 10}""") // res7: Bar = Bar(10)
+```
+
+Practically, this is useful if you want to rename the field within your Scala code while still maintaining backwards compatibility with previously-pickled objects. Simple rename the field and add a `@key("...")` with the old name so uPickle can continue to work with the old objects correctly. 
+
+You can also use `@key` to change the name used when pickling the case class itself. Normally case classes are pickled without their name, but an exception is made for members of sealed hierarchies which are tagged with their fully-qualified name. uPickle allows you to use `@key` to override what the class is tagged with:
+  
+```scala
+sealed trait A
+@key("Bee") case class B(i: Int) extends A
+case object C extends A
+
+write(B(10))                      // res9: String = ["Bee", {"i": 10}]
+read[B]("""["Bee", {"i": 10}]""") // res11: B = B(10)
+```
+
+This is useful in cases where you wish to rename the class within your Scala code, or move it to a different package, but want to preserve backwards compatibility with previously pickled instances of that class.
 
 Limitations
 ===========
@@ -245,8 +260,6 @@ uPickle is a work in progress, and doesn't currently support:
 - Read/writing arbitrarily shaped objects
 
 Most of these limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away. In general, uPickle is designed to serialize statically-typed, tree-shaped, immutable data structures. Anything more complex is out of scope.
-
-uPickle is also a young project, and macro API in particular is filled with edge-cases, so there are probably other limitations not listed here
 
 Why uPickle
 ===========
