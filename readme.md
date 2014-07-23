@@ -143,21 +143,24 @@ Case classes of sizes 1-22 are serialized as JSON dictionaries with the keys bei
 
 ```scala
 case class Thing(a: Int, b: String)
-write(Thing(1, "gg"))           // res23: String = {"a": 1, "b": "gg"}
+write(Thing(1, "gg"))           
+// res23: String = {"a": 1, "b": "gg"}
 
 case class Big(i: Int, b: Boolean, str: String, c: Char, d: Double)
 write(Big(1, true, "lol", 'Z', 0.01)) 
 // res24: String = {"i": 1, "b": true, "str": "lol", "c": "Z", "d": 0.01}
 ```
 
-Sealed hierarchies are serialized as tagged values:
+Sealed hierarchies are serialized as tagged values, the serialized object tagged with its full name:
 
 ```scala
 sealed trait IntOrTuple
 case class IntThing(i: Int) extends IntOrTuple
 case class TupleThing(name: String, t: (Int, Int)) extends IntOrTuple
 
-write(IntThing(1))              // res25: String = ["IntThing", {"i": 1}]
+write(IntThing(1))              
+// res25: String = ["IntThing", {"i": 1}]
+
 write(TupleThing("naeem", (1, 2)))
 // res26: String = ["TupleThing", {"name": "naeem", "t": [1, 2]}]
 ```
