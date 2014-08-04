@@ -99,5 +99,23 @@ object FailureTests extends TestSuite{
         }
       }
     }
+    'compileErrors{
+      assert(
+        compileError("write(new Object)").msg.contains(
+          "uPickle does not know how to write [Object]s"
+        )
+      )
+      assert(
+        compileError("""read[Object]("")""").msg.contains(
+          "uPickle does not know how to read [Object]s"
+        )
+      )
+      assert(
+        compileError("""read[Array[Object]]("")""").msg.contains(
+          "uPickle does not know how to read [Array[Object]]s"
+        )
+      )
+
+    }
   }
 }

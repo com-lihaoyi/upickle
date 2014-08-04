@@ -2,10 +2,15 @@ package upickle
 
 import scala.{PartialFunction => PF}
 import language.experimental.macros
+import scala.annotation.implicitNotFound
+
 /**
  * A typeclass that allows you to serialize a type [[T]] to JSON, and
  * eventually to a string
  */
+@implicitNotFound(
+  "uPickle does not know how to write [${T}]s; define an implicit Writer[${T}] to teach it how"
+)
 trait Writer[T]{def write: T => Js.Value}
 object Writer{
   implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T]
@@ -22,6 +27,9 @@ object Writer{
  * A typeclass that allows you to deserialize a type [[T]] from JSON,
  * which can itself be read from a String
  */
+@implicitNotFound(
+  "uPickle does not know how to read [${T}]s; define an implicit Reader[${T}] to teach it how"
+)
 trait Reader[T]{def read: PF[Js.Value, T]}
 object Reader{
   implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T]
