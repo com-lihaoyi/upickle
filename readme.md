@@ -275,6 +275,12 @@ uPickle on the other hand aims much lower: by limiting the scope of the problem 
 Version History
 ===============
 
+0.2.1
+-----
+
+- Improved error messages for unpickle-able types
+- ScalaJS version now built against 0.5.3
+
 0.2.0
 -----
 
