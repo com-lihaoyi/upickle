@@ -1,4 +1,4 @@
-µPickle 0.2.0
+µPickle 0.2.1
 =============
 
 uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
@@ -17,7 +17,7 @@ Getting Started
 Add the following to your SBT config:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %% "upickle" % "0.2.0"
+libraryDependencies += "com.lihaoyi" %% "upickle" % "0.2.1"
 ```
 
 And then you can immediately start writing and reading common Scala objects to strings:
@@ -48,10 +48,10 @@ ScalaJS
 For ScalaJS applications, use this dependencies instead:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.2.0"
+libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.2.1"
 ```
 
-Other than that, everything is used the same way. upickle-0.2.0 is only compatible with ScalaJS 0.5.x.
+Other than that, everything is used the same way. upickle-0.2.1 is only compatible with ScalaJS 0.5.3+.
 
 Supported Types
 ===============
@@ -274,6 +274,12 @@ uPickle on the other hand aims much lower: by limiting the scope of the problem 
 
 Version History
 ===============
+
+0.2.1
+-----
+
+- Improved error messages for unpickle-able types
+- ScalaJS version now built against 0.5.3
 
 0.2.0
 -----
