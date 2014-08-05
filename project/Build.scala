@@ -116,6 +116,7 @@ object Build extends sbt.Build{
   lazy val root = cross.root
 
   lazy val js = cross.js.settings(
+    test in Test := (test in (Test, fastOptStage)).value,
     (jsEnv in Test) := new NodeJSEnv
   )
 
