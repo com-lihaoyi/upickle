@@ -24,7 +24,6 @@ And then you can immediately start writing and reading common Scala objects to s
 
 ```scala
 import upickle._
-import upickle._
 
 write(1)
 res1: String = 1
