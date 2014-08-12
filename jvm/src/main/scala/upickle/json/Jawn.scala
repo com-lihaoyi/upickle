@@ -9,8 +9,8 @@ private[json] object JawnFacade extends MutableFacade[Js.Value] {
   def jnull() = Js.Null
   def jfalse() = Js.False
   def jtrue() = Js.True
-  def jnum(s: String) = Js.Number(s)
-  def jint(s: String) = Js.Number(s)
+  def jnum(s: String) = Js.Number(s.toDouble)
+  def jint(s: String) = Js.Number(s.toDouble)
   def jstring(s: String) = Js.String(s)
   def jarray(vs: mutable.ArrayBuffer[Js.Value]) = Js.Array(vs)
   def jobject(vs: mutable.ArrayBuffer[(String, Js.Value)]) = Js.Object(vs)
@@ -59,7 +59,7 @@ sealed trait Renderer {
       case Js.Null => sb.append("null")
       case Js.True => sb.append("true")
       case Js.False => sb.append("false")
-      case Js.Number(n) => sb.append(n)
+      case Js.Number(n) => sb.append(if (n == n.toInt) n.toInt.toString else n.toString)
       case Js.String(s) => renderString(sb, s)
       case Js.Array(vs) => renderArray(sb, depth, vs)
       case Js.Object(vs) => renderObject(sb, depth, canonicalizeObject(vs))
@@ -70,16 +70,18 @@ sealed trait Renderer {
   def renderString(sb: StringBuilder, s: String): Unit
 
   final def renderArray(sb: StringBuilder, depth: Int, vs: Seq[Js.Value]): Unit = {
-    if (vs.isEmpty) return { sb.append("[]"); () }
-    sb.append("[")
-    render(sb, depth + 1, vs(0))
-    var i = 1
-    while (i < vs.length) {
-      sb.append(",")
-      render(sb, depth + 1, vs(i))
-      i += 1
+    if (vs.isEmpty) sb.append("[]")
+    else {
+      sb.append("[")
+      render(sb, depth + 1, vs(0))
+      var i = 1
+      while (i < vs.length) {
+        sb.append(",")
+        render(sb, depth + 1, vs(i))
+        i += 1
+      }
+      sb.append("]")
     }
-    sb.append("]")
   }
 
   final def renderObject(sb: StringBuilder, depth: Int, it: Iterator[(String, Js.Value)]): Unit = {

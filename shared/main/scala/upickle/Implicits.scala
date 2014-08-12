@@ -49,18 +49,18 @@ trait Implicits extends Types{
     x => Js.String(x.toString),
     numericStringReaderFunc[T](func)
   )
-  private[this] def numericReaderFunc[T](func: String => T): JPF[T] = validate("Number"){
-    case x: Js.Number => try{func(x.value) } catch {case e: NumberFormatException => throw Invalid.Data(x, "Number")}
-    case x: Js.String => try{func(x.value) } catch {case e: NumberFormatException => throw Invalid.Data(x, "Number")}
+  private[this] def numericReaderFunc[T: Numeric](func: Double => T, func2: String => T): JPF[T] = validate("Number"){
+    case n @ Js.Number(x) => try{func(x) } catch {case e: NumberFormatException => throw Invalid.Data(n, "Number")}
+    case s @ Js.String(x) => try{func2(x) } catch {case e: NumberFormatException => throw Invalid.Data(s, "Number")}
   }
 
-  private[this] def NumericReadWriter[T](func: String => T) = RW[T](
+  private[this] def NumericReadWriter[T: Numeric](func: Double => T, func2: String => T): RW[T] = RW[T](
     {
       case x @ Double.PositiveInfinity => Js.String(x.toString)
       case x @ Double.NegativeInfinity => Js.String(x.toString)
-      case x => Js.Number(x.toString)
+      case x => Js.Number(implicitly[Numeric[T]].toDouble(x))
     },
-    numericReaderFunc[T](func)
+    numericReaderFunc[T](func, func2)
   )
   private[this] val stringReaderFunc: JPF[String] = validate("String"){
     case x: Js.String => x.value
@@ -68,12 +68,12 @@ trait Implicits extends Types{
   implicit val StringRW = RW[String](Js.String, stringReaderFunc)
 
   implicit val CharRW = NumericStringReadWriter[Char](_(0))
-  implicit val ByteRW = NumericReadWriter(_.toByte)
-  implicit val ShortRW = NumericReadWriter(_.toShort)
-  implicit val IntRW = NumericReadWriter(_.toInt)
+  implicit val ByteRW = NumericReadWriter(_.toByte, _.toByte)
+  implicit val ShortRW = NumericReadWriter(_.toShort, _.toShort)
+  implicit val IntRW = NumericReadWriter(_.toInt, _.toInt)
   implicit val LongRW = NumericStringReadWriter[Long](_.toLong)
-  implicit val FloatRW = NumericReadWriter(_.toFloat)
-  implicit val DoubleRW = NumericReadWriter(_.toDouble)
+  implicit val FloatRW = NumericReadWriter(_.toFloat, _.toFloat)
+  implicit val DoubleRW = NumericReadWriter(_.toDouble, _.toDouble)
 
   private[this] def SeqLikeW[T: W, V[_]](g: V[T] => Option[Seq[T]]): W[V[T]] = W[V[T]](
     x => Js.Array(g(x).get.map(x => writeJs(x)))
@@ -114,10 +114,10 @@ trait Implicits extends Types{
     RightR[A, B].read orElse LeftR[A, B].read
   )
   implicit def RightR[A: R, B: R]: R[Right[A, B]] = R[Right[A, B]] {
-    case Js.Array(Seq(Js.Number("1"), x)) => Right(readJs[B](x))
+    case Js.Array(Seq(Js.Number(1), x)) => Right(readJs[B](x))
   }
   implicit def LeftR[A: R, B: R]: R[Left[A, B]] = R[Left[A, B]] {
-    case Js.Array(Seq(Js.Number("0"), x)) => Left(readJs[A](x))
+    case Js.Array(Seq(Js.Number(0), x)) => Left(readJs[A](x))
   }
 
   implicit def RightW[A: W, B: W]: W[Right[A, B]] = W[Right[A, B]](EitherW[A, B].write)
@@ -125,8 +125,8 @@ trait Implicits extends Types{
   implicit def LeftW[A: W, B: W]: W[Left[A, B]] = W[Left[A, B]](EitherW[A, B].write)
 
   implicit def EitherW[A: W, B: W]: W[Either[A, B]] = W[Either[A, B]]{
-    case Left(t) => Js.Array(Seq(Js.Number("0"), writeJs(t)))
-    case Right(t) => Js.Array(Seq(Js.Number("1"), writeJs(t)))
+    case Left(t) => Js.Array(Seq(Js.Number(0), writeJs(t)))
+    case Right(t) => Js.Array(Seq(Js.Number(1), writeJs(t)))
   }
   implicit val DurationW: W[Duration] = W[Duration]{
     case Duration.Inf => writeJs("inf")

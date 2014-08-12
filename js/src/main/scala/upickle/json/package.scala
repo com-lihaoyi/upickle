@@ -8,7 +8,7 @@ package object json {
   def read(s: String): Js.Value = {
     def walk(value: Any): Js.Value = value match{
       case s: js.String => Js.String(s)
-      case n: js.Number => Js.Number(n.toString)
+      case n: js.Number => Js.Number(n)
       case true => Js.True
       case false => Js.False
       case null => Js.Null
@@ -25,7 +25,7 @@ package object json {
   def write(v: Js.Value): String = {
     def walk(value: Js.Value): Any = value match{
       case Js.String(s) => s
-      case Js.Number(n) => n.toDouble
+      case Js.Number(n) => n
       case Js.True => true
       case Js.False => false
       case Js.Null => null

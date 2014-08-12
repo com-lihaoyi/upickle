@@ -36,18 +36,20 @@ object Invalid{
 
 /**
  * A very small, very simple JSON AST that uPickle uses as part of its
- * serialization process.
+ * serialization process. A common standard between the Jawn AST (which
+ * we don't use so we don't pull in the bulk of Spire) and the Javascript
+ * JSON AST.
  */
 object Js {
-  sealed trait Value{
+  sealed trait Value extends Any {
     def value: Any
     def apply(i: Int): Value = this.asInstanceOf[Array].value(i)
     def apply(s: java.lang.String): Value = this.asInstanceOf[Object].value.find(_._1 == s).get._2
   }
-  case class String(value: java.lang.String) extends Value
-  case class Object(value: Seq[(java.lang.String, Value)]) extends Value
-  case class Array(value: Seq[Value]) extends Value
-  case class Number(value: java.lang.String) extends Value
+  case class String(value: java.lang.String) extends AnyVal with Value
+  case class Object(value: Seq[(java.lang.String, Value)]) extends AnyVal with Value
+  case class Array(value: Seq[Value]) extends AnyVal with Value
+  case class Number(value: Double) extends AnyVal with Value
   case object False extends Value{
     def value = false
   }

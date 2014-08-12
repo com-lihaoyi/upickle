@@ -15,7 +15,7 @@ object JsonTests extends TestSuite{
         |    null,
         |    {
         |        "integer": 1234567890,
-        |        "real": -9876.54321,
+        |        "real": -9876.543210,
         |        "e": 0.123456789e-12,
         |        "E": 1.234567890E+34,
         |        "":  23456789012E66,
@@ -71,7 +71,7 @@ object JsonTests extends TestSuite{
       for (json <- Seq(parsed, reparsed)){
         assert(
           json(0).value == "JSON Test Pattern pass1",
-          json(8)("real").value == "-9876.54321",
+          json(8)("real").value == -9876.54321,
           json(8)("comment").value == "// /* <!-- --",
           json(8)("jsontext").value == "{\"object with 1 member\":[\"array with 1 element\"]}",
           json(19).value == "rosebud"
