@@ -112,7 +112,7 @@ trait Types{
   /**
    * Serialize an object of type [[T]] to a `String`
    */
-  def write[T: Writer](expr: T): String = Json.write(writeJs(expr))
+  def write[T: Writer](expr: T): String = json.write(writeJs(expr))
   /**
    * Serialize an object of type [[T]] to a `Js.Value`
    */
@@ -120,7 +120,7 @@ trait Types{
   /**
    * Deserialize a `String` object of type [[T]]
    */
-  def read[T: Reader](expr: String): T = readJs[T](Json.read(expr))
+  def read[T: Reader](expr: String): T = readJs[T](json.read(expr))
   /**
    * Deserialize a `Js.Value` object of type [[T]]
    */

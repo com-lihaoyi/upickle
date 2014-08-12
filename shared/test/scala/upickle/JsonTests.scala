@@ -15,7 +15,7 @@ object JsonTests extends TestSuite{
         |    null,
         |    {
         |        "integer": 1234567890,
-        |        "real": -9876.543210,
+        |        "real": -9876.54321,
         |        "e": 0.123456789e-12,
         |        "E": 1.234567890E+34,
         |        "":  23456789012E66,
@@ -63,15 +63,15 @@ object JsonTests extends TestSuite{
         |1e00,2e+00,2e-00
         |,"rosebud"]
       """.stripMargin
-    val parsed = Json.read(ugly)
+    val parsed = json.read(ugly)
 
     "correctness" - {
-      val unparsed = Json.write(parsed)
-      val reparsed = Json.read(unparsed)
+      val unparsed = json.write(parsed)
+      val reparsed = json.read(unparsed)
       for (json <- Seq(parsed, reparsed)){
         assert(
           json(0).value == "JSON Test Pattern pass1",
-          json(8)("real").value == "-9876.543210",
+          json(8)("real").value == "-9876.54321",
           json(8)("comment").value == "// /* <!-- --",
           json(8)("jsontext").value == "{\"object with 1 member\":[\"array with 1 element\"]}",
           json(19).value == "rosebud"
@@ -86,7 +86,7 @@ object JsonTests extends TestSuite{
         var parsed: Js.Value = Js.Null
         while(System.currentTimeMillis() < start + 5000){
           parsed = Js.Null
-          parsed = Json.read(ugly)
+          parsed = json.read(ugly)
           n += 1
         }
         n
@@ -96,7 +96,7 @@ object JsonTests extends TestSuite{
         val start = System.currentTimeMillis()
         var output = ""
         while(System.currentTimeMillis() < start + 5000){
-          output = Json.write(parsed)
+          output = json.write(parsed)
           output = ""
           n += 1
         }

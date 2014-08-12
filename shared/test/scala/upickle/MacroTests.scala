@@ -85,30 +85,30 @@ object MacroTests extends TestSuite{
       'simpleAdt {
 
         rw(ADTs.ADT0(), """{}""")
-        rw(ADTs.ADTa(1), """{"i": 1}""")
-        rw(ADTs.ADTb(1, "lol"), """{"i": 1, "s": "lol"}""")
+        rw(ADTs.ADTa(1), """{"i":1}""")
+        rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
 
-        rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i": 1, "s": "lol", "t": [1.1, 1.2]}""")
+        rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
         rw(
           ADTs.ADTd(1, "lol", (1.1, 1.2), ADTs.ADTa(1)),
-          """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}}"""
+          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1}}"""
         )
 
         rw(
           ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
-          """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}, "q": [1.2, 2.1, 3.14]}"""
+          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14]}"""
         )
         rw(
           ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
-          """{"i": 1, "s": "lol", "t": [1.1, 1.2], "a": {"i": 1}, "q": [1.2, 2.1, 3.14], "o": [[]]}"""
+          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
         )
         val chunks = for (i <- 1 to 18) yield {
           val rhs = if (i % 2 == 1) "1" else "\"1\""
           val lhs = '"' + s"t$i" + '"'
-          s"$lhs: $rhs"
+          s"$lhs:$rhs"
         }
 
-        val expected = s"""{${chunks.mkString(", ")}}"""
+        val expected = s"""{${chunks.mkString(",")}}"""
 
         rw(
           ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
@@ -123,23 +123,23 @@ object MacroTests extends TestSuite{
         // class the instance belongs to.
         import Hierarchy._
         'shallow {
-          rw(B(1), """["upickle.Hierarchy.B", {"i": 1}]""")
-          rw(C("a", "b"), """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+          rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
+          rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
 
-          rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i": 1}]""")
-          rw(C("a", "b"): A, """["upickle.Hierarchy.C", {"s1": "a", "s2": "b"}]""")
+          rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B",{"i":1}]""")
+          rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
         }
         'deep{
           import DeepHierarchy._
 
-          rw(B(1), """["upickle.DeepHierarchy.B", {"i": 1}]""")
-          rw(B(1): A, """["upickle.DeepHierarchy.B", {"i": 1}]""")
-          rw(D("1"), """["upickle.DeepHierarchy.D", {"s": "1"}]""")
-          rw(D("1"): C, """["upickle.DeepHierarchy.D", {"s": "1"}]""")
-          rw(D("1"): A, """["upickle.DeepHierarchy.D", {"s": "1"}]""")
-          rw(E(true), """["upickle.DeepHierarchy.E", {"b": true}]""")
-          rw(E(true): C, """["upickle.DeepHierarchy.E", {"b": true}]""")
-          rw(E(true): A, """["upickle.DeepHierarchy.E", {"b": true}]""")
+          rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
+          rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
+          rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
+          rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
+          rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
         }
       }
       'singleton {
@@ -147,52 +147,52 @@ object MacroTests extends TestSuite{
 
         //        rw(BB, """[0, []]""")
         //        rw(BC, """[1, []]""")
-        rw(BB: AA, """["upickle.Singletons.BB", {}]""")
-        rw(CC: AA, """["upickle.Singletons.CC", {}]""")
+        rw(BB: AA, """["upickle.Singletons.BB",{}]""")
+        rw(CC: AA, """["upickle.Singletons.CC",{}]""")
       }
     }
     'robustnessAgainstVaryingSchemas {
       'renameKeysViaAnnotations {
         import Annotated._
 
-        rw(B(1), """["0", {"omg": 1}]""")
-        rw(C("a", "b"), """["1", {"lol": "a", "wtf": "b"}]""")
+        rw(B(1), """["0",{"omg":1}]""")
+        rw(C("a", "b"), """["1",{"lol":"a","wtf":"b"}]""")
 
-        rw(B(1): A, """["0", {"omg": 1}]""")
-        rw(C("a", "b"): A, """["1", {"lol": "a", "wtf": "b"}]""")
+        rw(B(1): A, """["0",{"omg":1}]""")
+        rw(C("a", "b"): A, """["1",{"lol":"a","wtf":"b"}]""")
       }
       'useDefaults {
         // Ignore the values which match the default when writing and
         // substitute in defaults when reading if the key is missing
         import Defaults._
         rw(ADTa(), "{}")
-        rw(ADTa(321), """{"i": 321}""")
-        rw(ADTb(s = "123"), """{"s": "123"}""")
-        rw(ADTb(i = 234, s = "567"), """{"i": 234, "s": "567"}""")
-        rw(ADTc(s = "123"), """{"s": "123"}""")
-        rw(ADTc(i = 234, s = "567"), """{"i": 234, "s": "567"}""")
-        rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s": "789", "t": [12.3, 45.6]}""")
-        rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i": 31337, "s": "789", "t": [12.3, 45.6]}""")
+        rw(ADTa(321), """{"i":321}""")
+        rw(ADTb(s = "123"), """{"s":"123"}""")
+        rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        rw(ADTc(s = "123"), """{"s":"123"}""")
+        rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
+        rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
       }
       'ignoreExtraFieldsWhenDeserializing {
         import ADTs._
-        val r1 = read[ADTa]( """{i: 123, j: false, k: "haha"}""")
+        val r1 = read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
         assert(r1 == ADTa(123))
-        val r2 = read[ADTb]( """{i: 123, j: false, k: "haha", s: "kk", l: true, z: [1, 2, 3]}""")
+        val r2 = read[ADTb]( """{"i":123, "j":false, "k":"haha", "s":"kk", "l":true, "z":[1, 2, 3]}""")
         assert(r2 == ADTb(123, "kk"))
       }
     }
     'GenericDataTypes{
       'simple {
         import Generic.A
-        rw(A(1), """{"t": 1}""")
-        rw(A("1"), """{"t": "1"}""")
-        rw(A(Seq("1", "2", "3")), """{"t": ["1", "2", "3"]}""")
-        rw(A(A(A(A(A(A(A(1))))))), """{"t": {"t": {"t": {"t": {"t": {"t": {"t": 1}}}}}}}""")
+        rw(A(1), """{"t":1}""")
+        rw(A("1"), """{"t":"1"}""")
+        rw(A(Seq("1", "2", "3")), """{"t":["1","2","3"]}""")
+        rw(A(A(A(A(A(A(A(1))))))), """{"t":{"t":{"t":{"t":{"t":{"t":{"t":1}}}}}}}""")
       }
       'large{
         import Generic.ADT
-        rw(ADT(1, 2, 3, 4, 5, 6), """{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}""")
+        rw(ADT(1, 2, 3, 4, 5, 6), """{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6}""")
         rw(
           ADT(
             ADT(1, 2, 3, 4, 5, 6),
@@ -202,7 +202,7 @@ object MacroTests extends TestSuite{
             ADT(1, 2, 3, 4, 5, 6),
             ADT(1, 2, 3, 4, 5, 6)
           ),
-          """{"a": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "b": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "c": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "d": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "e": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}, "f": {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}}"""
+          """{"a":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"b":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"c":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"d":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"e":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"f":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6}}"""
         )
       }
     }
@@ -210,9 +210,9 @@ object MacroTests extends TestSuite{
     'recursiveDataTypes{
       import Recursive._
 
-      rw(End: LL, """["upickle.Recursive.End", {}]""")
-      rw(Node(3, End): LL, """["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", {}]}]""")
-      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node", {"c": 6, "next": ["upickle.Recursive.Node", {"c": 3, "next": ["upickle.Recursive.End", {}]}]}]""")
+      rw(End: LL, """["upickle.Recursive.End",{}]""")
+      rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
+      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
     }
     'performance{
       import Generic.ADT

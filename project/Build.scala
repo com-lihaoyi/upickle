@@ -120,6 +120,9 @@ object Build extends sbt.Build{
     (jsEnv in Test) := new NodeJSEnv
   )
 
-  lazy val jvm = cross.jvm
+  lazy val jvm = cross.jvm.settings(
+    resolvers += "bintray/non" at "http://dl.bintray.com/non/maven",
+    libraryDependencies += "org.jsawn" %% "jawn-parser" % "0.5.4"
+  )
 }
 
