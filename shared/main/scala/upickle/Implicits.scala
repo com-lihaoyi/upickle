@@ -71,7 +71,7 @@ trait Implicits extends Types{
   implicit val ByteRW = NumericReadWriter(_.toByte)
   implicit val ShortRW = NumericReadWriter(_.toShort)
   implicit val IntRW = NumericReadWriter(_.toInt)
-  implicit val LongRW = NumericReadWriter[Long](_.toLong)
+  implicit val LongRW = NumericStringReadWriter[Long](_.toLong)
   implicit val FloatRW = NumericReadWriter(_.toFloat)
   implicit val DoubleRW = NumericReadWriter(_.toDouble)
 
@@ -144,7 +144,7 @@ trait Implicits extends Types{
 
   implicit val FiniteW = W[FiniteDuration](DurationW.write)
   implicit val FiniteR = R[FiniteDuration]{
-    case x: Js.Number => Duration.fromNanos(x.value.toLong)
+    case x: Js.String => Duration.fromNanos(x.value.toLong)
   }
 
   implicit val DurationR= R[Duration](validate("DurationString"){FiniteR.read orElse InfiniteR.read})
