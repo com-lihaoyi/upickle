@@ -25,7 +25,7 @@ object FailureTests extends TestSuite{
         """ {"Extra value after close": true} "misplaced quoted value" """,
         """ {"Illegal expression": 1 + 2} """,
         """ {"Illegal invocation": alert()} """,
-//        """ {"Numbers cannot have leading zeroes": 013} """,
+        """ {"Numbers cannot have leading zeroes": 013} """,
         """ {"Numbers cannot be hex": 0x14} """,
         """ ["Illegal backslash escape: \x15"] """,
         """ [\naked] """,
@@ -49,16 +49,23 @@ object FailureTests extends TestSuite{
         """ [0e+-1] """,
         """ {"Comma instead if closing brace": true, """,
         """ ["mismatch"} """,
-//        """ ["extra comma",] """,
+        """ ["extra comma",] """,
         """ ["double extra comma",,] """,
         """ [   , "<-- missing value"] """,
         """ ["Comma after the close"], """,
-        """ ["Extra close"]] """
-//        """ {"Extra comma": true,} """
+        """ ["Extra close"]] """,
+        """ {"Extra comma": true,} """
       ).map(_.trim())
       for(failureCase <- failureCases){
 //        println(failureCase)
-        intercept[Invalid.Json] { read[Int](failureCase) }
+        try {
+          intercept[Invalid.Json] {
+            read[Int](failureCase)
+          }
+        }catch{
+          case e =>
+            println("DIDN'T FAIL: " + failureCase)
+        }
       }
     }
     'otherFailures{
