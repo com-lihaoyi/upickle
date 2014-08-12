@@ -3,10 +3,10 @@
 
 uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
 
-- [Less than 1000 lines of code](https://github.com/lihaoyi/upickle/graphs/contributors)
-- [Zero-reflection 100% static serialization and deserialization](#supported-types)
+- Less than 1000 lines of code
+- Zero-reflection 100% static serialization and deserialization
 - [Human-readable JSON encoding](#getting-started)
-- [A large, well-defined set of supported types](#supported-types)
+- [A large, well-defined set of supported types, with well-defined semantics](#supported-types)
 - Handling of [default values](#defaults) and [custom keys](#custom-keys), for maintaining backwards compatiblity while schemas change
 - [Zero dependencies](https://github.com/lihaoyi/upickle/blob/master/project/Build.scala)
 - [Works in ScalaJS, allowing transfer of structured data between the JVM and Javascript](#scalajs)
