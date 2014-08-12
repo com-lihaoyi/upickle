@@ -147,7 +147,7 @@ trait Implicits extends Types{
     case x: Js.String => Duration.fromNanos(x.value.toLong)
   }
 
-  implicit val DurationR= R[Duration](validate("DurationString"){FiniteR.read orElse InfiniteR.read})
+  implicit val DurationR = R[Duration](validate("DurationString"){FiniteR.read orElse InfiniteR.read})
 
   private[this] object InternalUtils extends InternalUtils
   import InternalUtils._

@@ -17,6 +17,15 @@ object PrimitiveTests extends TestSuite{
       'unicode-rw("叉烧包")
     }
 
+    'Long{
+      'small-rw(1: Long, """ "1" """)
+      'med-rw(125123: Long, """ "125123" """)
+      'min-rw(Int.MinValue.toLong - 1, """ "-2147483649" """)
+      'max-rw(Int.MaxValue.toLong + 1, """ "2147483648" """)
+      'min-rw(Long.MinValue, """ "-9223372036854775808" """)
+      'max-rw(Long.MaxValue, """ "9223372036854775807" """)
+    }
+
     'Int{
       'small-rw(1, "1")
       'med-rw(125123, "125123")
