@@ -9,11 +9,11 @@ private[json] object JawnFacade extends MutableFacade[Js.Value] {
   def jnull() = Js.Null
   def jfalse() = Js.False
   def jtrue() = Js.True
-  def jnum(s: String) = Js.Number(s.toDouble)
-  def jint(s: String) = Js.Number(s.toDouble)
-  def jstring(s: String) = Js.String(s)
-  def jarray(vs: mutable.ArrayBuffer[Js.Value]) = Js.Array(vs)
-  def jobject(vs: mutable.ArrayBuffer[(String, Js.Value)]) = Js.Object(vs)
+  def jnum(s: String) = Js.Num(s.toDouble)
+  def jint(s: String) = Js.Num(s.toDouble)
+  def jstring(s: String) = Js.Str(s)
+  def jarray(vs: mutable.ArrayBuffer[Js.Value]) = Js.Arr(vs:_*)
+  def jobject(vs: mutable.ArrayBuffer[(String, Js.Value)]) = Js.Obj(vs:_*)
 }
 
 private[json] trait MutableFacade[J] extends Facade[J] {
@@ -59,10 +59,10 @@ sealed trait Renderer {
       case Js.Null => sb.append("null")
       case Js.True => sb.append("true")
       case Js.False => sb.append("false")
-      case Js.Number(n) => sb.append(if (n == n.toInt) n.toInt.toString else n.toString)
-      case Js.String(s) => renderString(sb, s)
-      case Js.Array(vs) => renderArray(sb, depth, vs)
-      case Js.Object(vs) => renderObject(sb, depth, canonicalizeObject(vs))
+      case Js.Num(n) => sb.append(if (n == n.toInt) n.toInt.toString else n.toString)
+      case Js.Str(s) => renderString(sb, s)
+      case Js.Arr(vs@_*) => renderArray(sb, depth, vs)
+      case Js.Obj(vs@_*) => renderObject(sb, depth, canonicalizeObject(vs))
     }
 
   def canonicalizeObject(vs: Seq[(String, Js.Value)]): Iterator[(String, Js.Value)]

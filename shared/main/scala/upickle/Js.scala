@@ -43,13 +43,13 @@ object Invalid{
 object Js {
   sealed trait Value extends Any {
     def value: Any
-    def apply(i: Int): Value = this.asInstanceOf[Array].value(i)
-    def apply(s: java.lang.String): Value = this.asInstanceOf[Object].value.find(_._1 == s).get._2
+    def apply(i: Int): Value = this.asInstanceOf[Arr].value(i)
+    def apply(s: java.lang.String): Value = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
   }
-  case class String(value: java.lang.String) extends AnyVal with Value
-  case class Object(value: Seq[(java.lang.String, Value)]) extends AnyVal with Value
-  case class Array(value: Seq[Value]) extends AnyVal with Value
-  case class Number(value: Double) extends AnyVal with Value
+  case class Str(value: java.lang.String) extends AnyVal with Value
+  case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
+  case class Arr(value: Value*) extends AnyVal with Value
+  case class Num(value: Double) extends AnyVal with Value
   case object False extends Value{
     def value = false
   }

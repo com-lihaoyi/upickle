@@ -46,10 +46,10 @@ object Build extends sbt.Build{
 
         (s"""
         implicit def Tuple${i}W[$writerTypes] = W[Tuple${i}[$typeTuple]](
-          x => Js.Array(Seq($written))
+          x => Js.Arr($written)
         )
         implicit def Tuple${i}R[$readerTypes] = R[Tuple${i}[$typeTuple]](
-          validate("Array(${i})"){case Js.Array(Seq($pattern)) => Tuple${i}($read)}
+          validate("Array(${i})"){case Js.Arr($pattern) => Tuple${i}($read)}
         )
         """, s"""
         def Case${i}R[$readerTypes, V]

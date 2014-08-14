@@ -38,34 +38,30 @@ trait Implicits extends Types{
     booleanReaderFunc
   )
 
-  private[this] implicit class Pipeable[T](t: T){
-    def |[K](f: T => K): K = f(t)
-  }
-
   private[this] def numericStringReaderFunc[T](func: String => T): JPF[T] = validate("Number"){
-    case x: Js.String => func(x.value)
+    case x: Js.Str => func(x.value)
   }
   private[this] def NumericStringReadWriter[T](func: String => T) = RW[T](
-    x => Js.String(x.toString),
+    x => Js.Str(x.toString),
     numericStringReaderFunc[T](func)
   )
   private[this] def numericReaderFunc[T: Numeric](func: Double => T, func2: String => T): JPF[T] = validate("Number"){
-    case n @ Js.Number(x) => try{func(x) } catch {case e: NumberFormatException => throw Invalid.Data(n, "Number")}
-    case s @ Js.String(x) => try{func2(x) } catch {case e: NumberFormatException => throw Invalid.Data(s, "Number")}
+    case n @ Js.Num(x) => try{func(x) } catch {case e: NumberFormatException => throw Invalid.Data(n, "Number")}
+    case s @ Js.Str(x) => try{func2(x) } catch {case e: NumberFormatException => throw Invalid.Data(s, "Number")}
   }
 
   private[this] def NumericReadWriter[T: Numeric](func: Double => T, func2: String => T): RW[T] = RW[T](
     {
-      case x @ Double.PositiveInfinity => Js.String(x.toString)
-      case x @ Double.NegativeInfinity => Js.String(x.toString)
-      case x => Js.Number(implicitly[Numeric[T]].toDouble(x))
+      case x @ Double.PositiveInfinity => Js.Str(x.toString)
+      case x @ Double.NegativeInfinity => Js.Str(x.toString)
+      case x => Js.Num(implicitly[Numeric[T]].toDouble(x))
     },
     numericReaderFunc[T](func, func2)
   )
   private[this] val stringReaderFunc: JPF[String] = validate("String"){
-    case x: Js.String => x.value
+    case x: Js.Str => x.value
   }
-  implicit val StringRW = RW[String](Js.String, stringReaderFunc)
+  implicit val StringRW = RW[String](Js.Str, stringReaderFunc)
 
   implicit val CharRW = NumericStringReadWriter[Char](_(0))
   implicit val ByteRW = NumericReadWriter(_.toByte, _.toByte)
@@ -76,10 +72,10 @@ trait Implicits extends Types{
   implicit val DoubleRW = NumericReadWriter(_.toDouble, _.toDouble)
 
   private[this] def SeqLikeW[T: W, V[_]](g: V[T] => Option[Seq[T]]): W[V[T]] = W[V[T]](
-    x => Js.Array(g(x).get.map(x => writeJs(x)))
+    x => Js.Arr(g(x).get.map(x => writeJs(x)):_*)
   )
   private[this] def SeqLikeR[T: R, V[_]](f: Seq[T] => V[T]): R[V[T]] = R[V[T]](
-    validate("Array(n)"){case Js.Array(x) => f(x.map(readJs[T]))}
+    validate("Array(n)"){case Js.Arr(x@_*) => f(x.map(readJs[T]))}
   )
 
   implicit def SeqW[T: W] = SeqLikeW[T, Seq](Seq.unapplySeq)
@@ -90,10 +86,10 @@ trait Implicits extends Types{
   implicit def VectorR[T: R] = SeqLikeR[T, Vector](Vector(_:_*))
   implicit def SetW[T: W] = SeqLikeW[T, Set](x => Some(x.toSeq))
   implicit def SetR[T: R] = SeqLikeR[T, Set](Set(_:_*))
-  implicit def SortedSetW[T: W] = SeqLikeW[T, SortedSet](_.toSeq | Some.apply)
+  implicit def SortedSetW[T: W] = SeqLikeW[T, SortedSet](x => Some(x.toSeq ))
   implicit def SortedSetR[T: R: Ordering] = SeqLikeR[T, SortedSet](SortedSet(_:_*))
 
-  implicit def OptionW[T: W]: W[Option[T]] = SeqLikeW[T, Option](_.toSeq | Some.apply)
+  implicit def OptionW[T: W]: W[Option[T]] = SeqLikeW[T, Option](x => Some(x.toSeq))
   implicit def SomeW[T: W] = W[Some[T]](OptionW[T].write)
   implicit def NoneW: W[None.type] = W[None.type](OptionW[Int].write)
   implicit def OptionR[T: R]: R[Option[T]] = SeqLikeR[T, Option](_.headOption)
@@ -104,20 +100,20 @@ trait Implicits extends Types{
   implicit def ArrayR[T: R: ClassTag] = SeqLikeR[T, Array](x => Array.apply(x:_*))
 
   implicit def MapW[K: W, V: W] =  W[Map[K, V]](
-    x => Js.Array(x.toSeq.map(writeJs[(K, V)]))
+    x => Js.Arr(x.toSeq.map(writeJs[(K, V)]):_*)
   )
   implicit def MapR[K: R, V: R] = R[Map[K, V]](
-    validate("Array(n)"){case x: Js.Array => x.value.map(readJs[(K, V)]).toMap}
+    validate("Array(n)"){case x: Js.Arr => x.value.map(readJs[(K, V)]).toMap}
   )
 
   implicit def EitherR[A: R, B: R]: R[Either[A, B]] = R[Either[A, B]](
     RightR[A, B].read orElse LeftR[A, B].read
   )
   implicit def RightR[A: R, B: R]: R[Right[A, B]] = R[Right[A, B]] {
-    case Js.Array(Seq(Js.Number(1), x)) => Right(readJs[B](x))
+    case Js.Arr(Js.Num(1), x) => Right(readJs[B](x))
   }
   implicit def LeftR[A: R, B: R]: R[Left[A, B]] = R[Left[A, B]] {
-    case Js.Array(Seq(Js.Number(0), x)) => Left(readJs[A](x))
+    case Js.Arr(Js.Num(0), x) => Left(readJs[A](x))
   }
 
   implicit def RightW[A: W, B: W]: W[Right[A, B]] = W[Right[A, B]](EitherW[A, B].write)
@@ -125,8 +121,8 @@ trait Implicits extends Types{
   implicit def LeftW[A: W, B: W]: W[Left[A, B]] = W[Left[A, B]](EitherW[A, B].write)
 
   implicit def EitherW[A: W, B: W]: W[Either[A, B]] = W[Either[A, B]]{
-    case Left(t) => Js.Array(Seq(Js.Number(0), writeJs(t)))
-    case Right(t) => Js.Array(Seq(Js.Number(1), writeJs(t)))
+    case Left(t) => Js.Arr(Js.Num(0), writeJs(t))
+    case Right(t) => Js.Arr(Js.Num(1), writeJs(t))
   }
   implicit val DurationW: W[Duration] = W[Duration]{
     case Duration.Inf => writeJs("inf")
@@ -137,14 +133,14 @@ trait Implicits extends Types{
 
   implicit val InfiniteW = W[Duration.Infinite](DurationW.write)
   implicit val InfiniteR = R[Duration.Infinite]{
-    case Js.String("inf") => Duration.Inf
-    case Js.String("-inf") => Duration.MinusInf
-    case Js.String("undef") => Duration.Undefined
+    case Js.Str("inf") => Duration.Inf
+    case Js.Str("-inf") => Duration.MinusInf
+    case Js.Str("undef") => Duration.Undefined
   }
 
   implicit val FiniteW = W[FiniteDuration](DurationW.write)
   implicit val FiniteR = R[FiniteDuration]{
-    case x: Js.String => Duration.fromNanos(x.value.toLong)
+    case x: Js.Str => Duration.fromNanos(x.value.toLong)
   }
 
   implicit val DurationR = R[Duration](validate("DurationString"){FiniteR.read orElse InfiniteR.read})
@@ -158,24 +154,23 @@ trait Implicits extends Types{
    * but really shouldn't be called directly.
    */
   trait InternalUtils {
-    implicit class mergeable[T: ClassTag, R](f: T => R){
-      def merge[V: ClassTag, U](g: V => R): U => R = {
-        case v: V => g(v)
-        case t: T => f(t)
-      }
+    def merge[T: ClassTag, R, V: ClassTag, U](f: T => R, g: V => R): U => R = {
+      case v: V => g(v)
+      case t: T => f(t)
     }
+
 
     def knotRW[T, V](f: Knot.RW[T] => V): V = f(new Knot.RW(null, null))
     def knotR[T, V](f: Knot.R[T] => V): V = f(new Knot.R(null))
     def knotW[T, V](f: Knot.W[T] => V): V = f(new Knot.W(null))
 
     def annotate[V: ClassTag](rw: R[V], n: String) = R[V](
-      {case Js.Array(Seq(Js.String(`n`), x)) => rw.read(x)}
+      {case Js.Arr(Js.Str(`n`), x) => rw.read(x)}
     )
     def annotate[V: ClassTag](rw: W[V], n: String) = W[V](
-      {case x: V => Js.Array(Seq(Js.String(n), rw.write(x)))}
+      {case x: V => Js.Arr(Js.Str(n), rw.write(x))}
     )
     def Case0R[T](t: T) = R[T]({case x => t})
-    def Case0W[T](t: T) = W[T](x => Js.Object(Nil))
+    def Case0W[T](t: T) = W[T](x => Js.Obj())
   }
 }

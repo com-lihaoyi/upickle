@@ -44,7 +44,7 @@ object Macros {
     c.Expr[Writer[T]]{
       picklerFor(c)(tpe, RW.W)(
         _.map(p => q"$p.write": Tree)
-         .reduce((a, b) => q"upickle.Internal.mergeable($a) merge $b")
+         .reduce((a, b) => q"upickle.Internal.merge($a, $b)")
       )
     }
   }

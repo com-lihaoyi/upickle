@@ -5,7 +5,7 @@ uPickle (pronounced micro-pickle) is a lightweight serialization library for Sca
 
 - Less than 1000 lines of code
 - Zero-reflection 100% static serialization and deserialization
-- [Human-readable JSON encoding](#getting-started)
+- [Human-readable JSON encoding](#getting-started), with a fast [JSON API](#json-api)
 - [A large, well-defined set of supported types, with well-defined semantics](#supported-types)
 - Handling of [default values](#defaults) and [custom keys](#custom-keys), for maintaining backwards compatiblity while schemas change
 - Minimal dependencies: Only depends on [Jawn](https://github.com/non/jawn) on the JVM, and on the Javascript standard library in Scala.js
@@ -262,6 +262,54 @@ uPickle is a work in progress, and doesn't currently support:
 
 Most of these limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away. In general, uPickle is designed to serialize statically-typed, tree-shaped, immutable data structures. Anything more complex is out of scope.
 
+JSON API
+========
+
+Although uPickle's object read/writing API makes does not expose you to it, under the hood it uses a nice JSON serialization format. Despite being less-compact than binary formats, this allows for very-fast serializing and deserializing from Strings on both Scala-JVM (which has other alternatives) and ScalaJS, where JSON is really your only choice. The JSON API is minimal but nonetheless very convenient, and can be used directly.  
+
+uPickle bundles two very-fast JSON parsers, which it uses for parsing strings into structured-trees, before then marshalling them into typed objects.
+ 
+- [Jawn](https://github.com/non/jawn) on the JVM
+- [JSON.parse](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse) on Scala.js
+
+That makes uPickle's JSON library competitive with the highest performance JSON libraries both on the JVM (GSON, Jackson, etc.) as well as in Javascript. 
+
+uPickle's JSON API is exposed in two places: in our `upickle.Js.*` AST:
+
+```scala
+object Js {
+  sealed trait Value extends Any {
+    def value: Any
+    def apply(i: Int): Value = this.asInstanceOf[Arr].value(i)
+    def apply(s: java.lang.String): Value = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
+  }
+  case class Str(value: java.lang.String) extends AnyVal with Value
+  case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
+  case class Arr(value: Value*) extends AnyVal with Value
+  case class Num(value: Double) extends AnyVal with Value
+  case object False extends Value{
+    def value = false
+  }
+  case object True extends Value{
+    def value = true
+  }
+  case object Null extends Value{
+    def value = null
+  }
+}
+```
+
+As well as in the `upickle.json.read` and `upickle.json.write` functions:
+
+```scala
+def read(s: String): Js.Value
+def write(v: Js.Value): String
+```
+
+Which you use to convert between structured `Js.*` trees and unstructured `String`s. As described earlier, the implementation of these functions differs between ScalaJVM/ScalaJS.
+
+uPickle does not provide any other utilities are JSON that other libraries do (zippers, lenses, combinators, ...). If you're looking for a compact JSON AST to construct or pattern match on, together with fast serializing and deserializing, it may do the trick. 
+
 Why uPickle
 ===========
 
@@ -280,6 +328,8 @@ Version History
 -----
 
 - Swapped over from the hand-rolled parser to using `Jawn`/`JSON.parse` on the two platforms, resulting in a 10-15x speedup for JSON handling.
+- Renamed `Js.{String, Object, Array, Number}` into `Js.{Str, Obj, Arr, Num}`, and made `Js.Arr` and `Js.Obj` use varargs, to allow for better direct-use.
+- Documented and exposed JSON API for direct use by users of the library.
 
 0.2.1
 -----
