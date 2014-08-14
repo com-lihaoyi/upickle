@@ -14,31 +14,30 @@ private[upickle] trait GeneratedUtil {
                                             read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
     validate("Object"){case x: Js.Object => read(mapToArray(x, names, defaults))}
   }
-  protected[this] def arrayToMap(a: Js.Array, names: Array[String], defaults: Array[Js.Value]) = {
+  private[this] def arrayToMap(a: Js.Array, names: Array[String], defaults: Array[Js.Value]) = {
     Js.Object {
-      val accumulated = mutable.Buffer.empty[(String, Js.Value)]
+      val accumulated = new Array[(String, Js.Value)](names.length)
       var i = 0
       val l = a.value.length
       while(i < l){
         if (defaults(i) != a.value(i)){
-          accumulated += (names(i) -> a.value(i))
+          accumulated(i) = (names(i) -> a.value(i))
         }
         i += 1
       }
-      accumulated
+      accumulated.filter(_ != null)
     }
   }
-  protected[this] def mapToArray(o: Js.Object, names: Array[String], defaults: Array[Js.Value]) = {
+  private[this] def mapToArray(o: Js.Object, names: Array[String], defaults: Array[Js.Value]) = {
     Js.Array {
-      val accumulated = mutable.Buffer.empty[Js.Value]
+      val accumulated = new Array[Js.Value](names.length)
       val map = o.value.toMap
       var i = 0
       val l = names.length
       while(i < l){
-        if (map.contains(names(i))) accumulated += map(names(i))
-        else if (defaults(i) != null) accumulated += defaults(i)
+        if (map.contains(names(i))) accumulated(i) = map(names(i))
+        else if (defaults(i) != null) accumulated(i) = defaults(i)
         else throw new Invalid.Data(o, "Key Missing: " + names(i))
-
         i += 1
       }
       accumulated

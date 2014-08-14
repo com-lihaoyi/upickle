@@ -1,4 +1,4 @@
-µPickle 0.2.1
+µPickle 0.2.2
 =============
 
 uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
@@ -8,7 +8,7 @@ uPickle (pronounced micro-pickle) is a lightweight serialization library for Sca
 - [Human-readable JSON encoding](#getting-started)
 - [A large, well-defined set of supported types, with well-defined semantics](#supported-types)
 - Handling of [default values](#defaults) and [custom keys](#custom-keys), for maintaining backwards compatiblity while schemas change
-- [Zero dependencies](https://github.com/lihaoyi/upickle/blob/master/project/Build.scala)
+- Minimal dependencies: Only depends on [Jawn](https://github.com/non/jawn) on the JVM, and on the Javascript standard library in Scala.js
 - [Works in ScalaJS, allowing transfer of structured data between the JVM and Javascript](#scalajs)
 
 Getting Started
@@ -17,7 +17,7 @@ Getting Started
 Add the following to your SBT config:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %% "upickle" % "0.2.1"
+libraryDependencies += "com.lihaoyi" %% "upickle" % "0.2.2"
 ```
 
 And then you can immediately start writing and reading common Scala objects to strings:
@@ -47,10 +47,10 @@ ScalaJS
 For ScalaJS applications, use this dependencies instead:
 
 ```scala
-libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.2.1"
+libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.2.2"
 ```
 
-Other than that, everything is used the same way. upickle-0.2.1 is only compatible with ScalaJS 0.5.3+.
+Other than that, everything is used the same way. upickle-0.2.2 is only compatible with ScalaJS 0.5.3+.
 
 Supported Types
 ===============
@@ -275,6 +275,11 @@ uPickle on the other hand aims much lower: by limiting the scope of the problem 
 
 Version History
 ===============
+
+0.2.2
+-----
+
+- Swapped over from the hand-rolled parser to using `Jawn`/`JSON.parse` on the two platforms, resulting in a 10-15x speedup for JSON handling.
 
 0.2.1
 -----
