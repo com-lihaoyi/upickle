@@ -92,18 +92,19 @@ Numbers are serialized as JSON numbers
 write(12: Int)                   // res1: String = 12
 write(12: Short)                 // res2: String = 12
 write(12: Byte)                  // res3: String = 12
-write(12: Long)                  // res4: String = 12
+
 write(12.3f: Float)              // res6: String = 12.3
 write(12.3: Double)              // res7: String = 12.3
 ```
 
-Even numbers too large for Javascript are serialized as JSON numbers, since JSON doesn't specify an upper bound. uPickle can handle it just fine, even in Scala.js, because it uses its own JSON parser rather than relying on Javascript's.
+Except for `Long`s, which too large for Javascript. These are serialized as JSON Strings, keeping the interchange format compatible with the browser's own JSON parser, which provides the best performance in Scala.js  
 
 ```scala
-write(4000000000000L: Long)      // res8: String = 4000000000000
+write(12: Long)                  // res4: String = "12"
+write(4000000000000L: Long)      // res8: String = "4000000000000"
 ```
 
-Special values of `Double`s and `Float`s are serialized as Strings
+Special values of `Double`s and `Float`s are also serialized as Strings
 
 ```scala
 write(1.0/0: Double)             // res9: String = "Infinity"
