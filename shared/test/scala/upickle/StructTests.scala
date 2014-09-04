@@ -1,6 +1,7 @@
 package upickle
 import utest._
 import scala.concurrent.duration._
+import scala.collection.immutable.{Seq => ImSeq}
 import TestUtil._
 
 import scala.reflect.ClassTag
@@ -31,6 +32,10 @@ object StructTests extends TestSuite{
       'Seq{
         rw(Seq(true, false), "[true,false]")
         rw(Seq(): Seq[Int], "[]")
+      }
+      'ImSeq{
+        rw(ImSeq(true, false), "[true,false]")
+        rw(ImSeq(): Seq[Int], "[]")
       }
       'Vector{
         rw(Vector(1, 2, 3, 4, 5), "[1,2,3,4,5]")

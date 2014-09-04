@@ -2,6 +2,7 @@ package upickle
 
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success}
+import scala.collection.immutable.{Seq => ImSeq}
 import scala.collection.SortedSet
 import scala.concurrent.duration.{FiniteDuration, Duration}
 import scala.reflect.macros.Context
@@ -82,6 +83,8 @@ trait Implicits extends Types{
   implicit def SeqR[T: R] = SeqLikeR[T, Seq](Seq(_:_*))
   implicit def ListW[T: W] = SeqLikeW[T, List](List.unapplySeq)
   implicit def ListR[T: R] = SeqLikeR[T, List](List(_:_*))
+  implicit def ImSeqW[T: W] = SeqLikeW[T, ImSeq](ImSeq.unapplySeq)
+  implicit def ImSeqR[T: R] = SeqLikeR[T, ImSeq](ImSeq(_:_*))
   implicit def VectorW[T: W] = SeqLikeW[T, Vector](Vector.unapplySeq)
   implicit def VectorR[T: R] = SeqLikeR[T, Vector](Vector(_:_*))
   implicit def SetW[T: W] = SeqLikeW[T, Set](x => Some(x.toSeq))
