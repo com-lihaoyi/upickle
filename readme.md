@@ -327,6 +327,11 @@ uPickle on the other hand aims much lower: by limiting the scope of the problem 
 Version History
 ===============
 
+0.2.3-SNAPSHOT
+--------------
+
+- Added a pickler for `Unit`/`()`
+
 0.2.2
 -----
 

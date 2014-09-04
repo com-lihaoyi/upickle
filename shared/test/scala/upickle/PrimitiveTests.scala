@@ -7,6 +7,9 @@ import TestUtil._
 object PrimitiveTests extends TestSuite{
 
   def tests = TestSuite{
+    'Unit{
+      rw((), "{}")
+    }
     'Boolean{
       'true-rw(true, "true")
       'false-rw(false, "false")

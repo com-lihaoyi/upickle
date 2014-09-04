@@ -37,6 +37,10 @@ trait Implicits extends Types{
     if (_) Js.True else Js.False,
     booleanReaderFunc
   )
+  implicit val UnitRW = RW[Unit](
+    _ => Js.Obj(),
+    {case _ => ()}
+  )
 
   private[this] def numericStringReaderFunc[T](func: String => T): JPF[T] = validate("Number"){
     case x: Js.Str => func(x.value)
