@@ -61,7 +61,7 @@ Out of the box, uPickle supports writing and reading the following types:
 
 - `Boolean`, `Byte`, `Char`, `Short`, `Int`, `Long`, `Float`, `Double`
 - `Tuple`s from 1 to 22
-- Immutable `Seq`, `List`, `Vector`, `Set`, `SortedSet`, `Option`, `Array`, `Map`s
+- Immutable `Seq`, `List`, `Vector`, `Set`, `SortedSet`, `Option`, `Array`, `Map`s, and all other collections with a reasonable `CanBuildFrom` implementation
 - `Duration`, `Either`
 - Stand-alone `case class`es and `case object`s, and their generic equivalents,
 - Non-generic `case class`es and `case object`s that are part of a `sealed trait` or `sealed class` hierarchy
@@ -339,6 +339,7 @@ Version History
 
 - Support reading and writing `null`
 - Fixed Reader/Writer macros for single-class sealed hierarchies
+- Used `CanBuildFrom` to serialize a broader range of collections
 
 0.2.3
 -----
