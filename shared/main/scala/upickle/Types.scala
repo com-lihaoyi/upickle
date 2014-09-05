@@ -29,8 +29,17 @@ object Writer{
  */
 @implicitNotFound(
   "uPickle does not know how to read [${T}]s; define an implicit Reader[${T}] to teach it how"
-)
-trait Reader[T]{def read: PF[Js.Value, T]}
+) trait Reader[T]{
+  def read: PF[Js.Value, T]
+  def readOption(v: Js.Value): Option[T] = {
+    try {
+      Some(read(v))
+    } catch {
+      case e: Throwable => None
+    }
+  }
+}
+
 object Reader{
   implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T]
 
@@ -121,8 +130,37 @@ trait Types{
    * Deserialize a `String` object of type [[T]]
    */
   def read[T: Reader](expr: String): T = readJs[T](json.read(expr))
+
+  /**
+   * Attempts to deserialize a `String` object of type [[T]]
+   */
+  def readOption[T: Reader](expr: String): Option[T] = {
+    for {
+      expr <- json.readOption(expr)
+      parsed <- readJsOption[T](expr)
+    } yield parsed
+  }
+
   /**
    * Deserialize a `Js.Value` object of type [[T]]
    */
-  def readJs[T: Reader](expr: Js.Value): T = implicitly[Reader[T]].read(expr)
+  def readJs[T: Reader](expr: Js.Value): T = {
+    try {
+      implicitly[Reader[T]].read(expr)
+    } catch {
+      case e: Invalid.Data => throw e
+
+      case e: Throwable =>
+        val wrapped = Invalid.Data(expr, "Reader could not parse json")
+
+        wrapped.addSuppressed(e)
+
+        throw wrapped
+    }
+  }
+
+  /**
+   * Attempts to deserialize a `Js.Value` object of type [[T]]
+   */
+  def readJsOption[T: Reader](expr: Js.Value): Option[T] = implicitly[Reader[T]].readOption(expr)
 }
