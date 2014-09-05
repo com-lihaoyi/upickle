@@ -63,7 +63,7 @@ object FailureTests extends TestSuite{
             read[Int](failureCase)
           }
         }catch{
-          case e =>
+          case e: Throwable =>
             println("DIDN'T FAIL: " + failureCase)
         }
       }
@@ -75,6 +75,7 @@ object FailureTests extends TestSuite{
         intercept[Invalid.Data] { read[Seq[Int]]("\"lol\"") }
         intercept[Invalid.Data] { read[Seq[String]]("[1, 2, 3]") }
         intercept[Invalid.Data] { read[Seq[(Int, String)]]("[[1, \"1\"], [2, \"2\"], []]") }
+        assert(readOption[Int]("\"lol\"") == None)
       }
       'macroFailures{
         // Separate this guy out because the read macro and

@@ -11,6 +11,15 @@ package object json {
       case util.Failure(e) => throw Invalid.Json(e.toString, s)
     }
   }
+
+  def readOption(s: String): Option[Js.Value] = {
+    try {
+      Some(read(s))
+    } catch {
+      case e: Throwable => None
+    }
+  }
+
   def write(v: Js.Value): String = {
     FastRenderer.render(v)
   }
