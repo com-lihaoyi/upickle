@@ -71,6 +71,10 @@ object Defaults {
   case class ADTb(i: Int = 1, s: String)
   case class ADTc(i: Int = 2, s: String, t: (Double, Double) = (1, 2))
 }
+trait Trt{
+  case class Cls(i: Int)
+}
+object Obj extends Trt
 object MacroTests extends TestSuite{
   import Generic.ADT
   import Hierarchy._
@@ -92,6 +96,10 @@ object MacroTests extends TestSuite{
   )
 
   val tests = TestSuite{
+    'mixedIn{
+//      doesn't work
+//      read[Obj.Cls]("{i:1}")(Reader.macroR)
+    }
     'commonCustomStructures{
       'simpleAdt {
 

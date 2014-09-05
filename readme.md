@@ -66,6 +66,7 @@ Out of the box, uPickle supports writing and reading the following types:
 - Stand-alone `case class`es and `case object`s, and their generic equivalents,
 - Non-generic `case class`es and `case object`s that are part of a `sealed trait` or `sealed class` hierarchy
 - `sealed trait` and `sealed class`es themselves, assuming that all subclasses are picklable
+- `null`
 
 Readability/writability is recursive: a container such as a `Tuple` or `case class` is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a `List[Any]`, since uPickle doesn't provide a generic way of serializing `Any`. Case classes are only serializable up to 22 fields.
 
@@ -187,6 +188,13 @@ write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3))))
 // res29: String = {"name": "bearrr", "foos": [{"i": 1}, {"i": 2}, {"i": 3}]}
 ```
 
+Nulls serialize into JSON nulls, as you would expect
+
+```scala
+write(Bar(null, Seq(Foo(1), null, Foo(3))))
+// res29: String = {"name": null, "foos": [{"i": 1}, null, {"i": 3}]}
+```
+
 Exceptions
 ==========
 
@@ -257,7 +265,6 @@ Limitations
 uPickle is a work in progress, and doesn't currently support:
 
 - Circular object graphs
-- Nulls
 - Reflective reading and writing
 - Read/writing of untyped values e.g. `Any`
 - Generic sealed hierarchies
@@ -327,8 +334,14 @@ uPickle on the other hand aims much lower: by limiting the scope of the problem 
 Version History
 ===============
 
+0.2.4
+-----
+
+- Support reading and writing `null`
+- Fixed Reader/Writer macros for single-class sealed hierarchies
+
 0.2.3
---------------
+-----
 
 - Added a pickler for `Unit`/`()`
 

@@ -28,8 +28,8 @@ object Macros {
   def macroRImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
-//    println("macroRImpl " + tpe + " " + weakTypeTag[T])
-    c.Expr[Reader[T]]{
+    println("macroRImpl " + tpe + " " + weakTypeTag[T])
+    val res = c.Expr[Reader[T]]{
       val x = picklerFor(c)(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
          .reduce((a, b) => q"$a orElse $b")
@@ -38,6 +38,8 @@ object Macros {
       val msg = "Tagged Object " + tpe.typeSymbol.fullName
       q"""upickle.validateReader($msg){$x}"""
     }
+    println(res)
+    res
   }
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
@@ -52,7 +54,7 @@ object Macros {
         }
       }
     }
-//    println(res)
+    println(res)
     res
   }
 
@@ -119,6 +121,7 @@ object Macros {
       case x => // I'm a class
 
         val pickler = {
+
           val companion =
             tpe.typeSymbol
                .companionSymbol
