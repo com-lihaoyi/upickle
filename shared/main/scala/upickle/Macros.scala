@@ -28,6 +28,7 @@ object Macros {
   def macroRImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
+//    println("macroRImpl " + tpe + " " + weakTypeTag[T])
     c.Expr[Reader[T]]{
       val x = picklerFor(c)(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
@@ -41,12 +42,18 @@ object Macros {
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
-    c.Expr[Writer[T]]{
-      picklerFor(c)(tpe, RW.W)(
-        _.map(p => q"$p.write": Tree)
-         .reduce((a, b) => q"upickle.Internal.merge($a, $b)")
-      )
+    val res = c.Expr[Writer[T]]{
+      picklerFor(c)(tpe, RW.W) { things =>
+        if (things.length == 1){
+          q"upickle.Internal.merge0(${things(0)}.write)"
+        }else{
+          things.map(p => q"$p.write": Tree)
+                .reduce((a, b) => q"upickle.Internal.merge($a, $b)")
+        }
+      }
     }
+//    println(res)
+    res
   }
 
   /**
@@ -76,6 +83,7 @@ object Macros {
                 (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
 
     import c.universe._
+//    println("picklerFor " + tpe)
     val clsSymbol = tpe.typeSymbol.asClass
 
     def annotate(pickler: Tree) = {

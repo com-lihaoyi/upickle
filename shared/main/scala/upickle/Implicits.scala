@@ -158,6 +158,10 @@ trait Implicits extends Types{
    * but really shouldn't be called directly.
    */
   trait InternalUtils {
+    def merge0[T: ClassTag, R, U](f: T => R): U => R = {
+      case t: T => f(t)
+    }
+
     def merge[T: ClassTag, R, V: ClassTag, U](f: T => R, g: V => R): U => R = {
       case v: V => g(v)
       case t: T => f(t)

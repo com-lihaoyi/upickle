@@ -28,13 +28,24 @@ object Hierarchy {
   sealed trait A
   case class B(i: Int) extends A
   case class C(s1: String, s2: String) extends A
+
+  sealed trait Z //new line
+  case object AnZ extends Z //new line
 }
 object DeepHierarchy {
   sealed trait A
   case class B(i: Int) extends A
+
   sealed trait C extends A
   case class D(s: String) extends C
   case class E(b: Boolean) extends C
+
+  sealed trait Q //new line
+  case class AnQ(i: Int) extends Q //new line
+
+  case class F(q: Q) extends C //new line
+
+
 }
 object Singletons{
   sealed trait AA
@@ -84,21 +95,21 @@ object MacroTests extends TestSuite{
     'commonCustomStructures{
       'simpleAdt {
 
-        rw(ADTs.ADT0(), """{}""")
-        rw(ADTs.ADTa(1), """{"i":1}""")
-        rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
+        * - rw(ADTs.ADT0(), """{}""")
+        * - rw(ADTs.ADTa(1), """{"i":1}""")
+        * - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
 
-        rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
-        rw(
+        * - rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
+        * - rw(
           ADTs.ADTd(1, "lol", (1.1, 1.2), ADTs.ADTa(1)),
           """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1}}"""
         )
 
-        rw(
+        * - rw(
           ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
           """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14]}"""
         )
-        rw(
+        * - rw(
           ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
           """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
         )
@@ -110,7 +121,7 @@ object MacroTests extends TestSuite{
 
         val expected = s"""{${chunks.mkString(",")}}"""
 
-        rw(
+        * - rw(
           ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
           expected
         )
@@ -123,23 +134,32 @@ object MacroTests extends TestSuite{
         // class the instance belongs to.
         import Hierarchy._
         'shallow {
-          rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
-          rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+          * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
+          * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+// Doesn't work in 2.10.4
+//          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
+//          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
 
-          rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B",{"i":1}]""")
-          rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+          * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B",{"i":1}]""")
+          * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
         }
         'deep{
           import DeepHierarchy._
 
-          rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
-          rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
-          rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-          rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-          rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-          rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
-          rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
-          rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
+          * - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
+          * - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
+          * - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+          * - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+
+          * - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
+          * - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
+          * - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
+          * - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          * - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          * - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          * - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
+          * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
+          * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
         }
       }
       'singleton {
@@ -155,24 +175,24 @@ object MacroTests extends TestSuite{
       'renameKeysViaAnnotations {
         import Annotated._
 
-        rw(B(1), """["0",{"omg":1}]""")
-        rw(C("a", "b"), """["1",{"lol":"a","wtf":"b"}]""")
+        * - rw(B(1), """["0",{"omg":1}]""")
+        * - rw(C("a", "b"), """["1",{"lol":"a","wtf":"b"}]""")
 
-        rw(B(1): A, """["0",{"omg":1}]""")
-        rw(C("a", "b"): A, """["1",{"lol":"a","wtf":"b"}]""")
+        * - rw(B(1): A, """["0",{"omg":1}]""")
+        * - rw(C("a", "b"): A, """["1",{"lol":"a","wtf":"b"}]""")
       }
       'useDefaults {
         // Ignore the values which match the default when writing and
         // substitute in defaults when reading if the key is missing
         import Defaults._
-        rw(ADTa(), "{}")
-        rw(ADTa(321), """{"i":321}""")
-        rw(ADTb(s = "123"), """{"s":"123"}""")
-        rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-        rw(ADTc(s = "123"), """{"s":"123"}""")
-        rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-        rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
-        rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
+        * - rw(ADTa(), "{}")
+        * - rw(ADTa(321), """{"i":321}""")
+        * - rw(ADTb(s = "123"), """{"s":"123"}""")
+        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        * - rw(ADTc(s = "123"), """{"s":"123"}""")
+        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
+        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
       }
       'ignoreExtraFieldsWhenDeserializing {
         import ADTs._
@@ -185,10 +205,10 @@ object MacroTests extends TestSuite{
     'GenericDataTypes{
       'simple {
         import Generic.A
-        rw(A(1), """{"t":1}""")
-        rw(A("1"), """{"t":"1"}""")
-        rw(A(Seq("1", "2", "3")), """{"t":["1","2","3"]}""")
-        rw(A(A(A(A(A(A(A(1))))))), """{"t":{"t":{"t":{"t":{"t":{"t":{"t":1}}}}}}}""")
+        * - rw(A(1), """{"t":1}""")
+        * - rw(A("1"), """{"t":"1"}""")
+        * - rw(A(Seq("1", "2", "3")), """{"t":["1","2","3"]}""")
+        * - rw(A(A(A(A(A(A(A(1))))))), """{"t":{"t":{"t":{"t":{"t":{"t":{"t":1}}}}}}}""")
       }
       'large{
         import Generic.ADT
