@@ -75,23 +75,22 @@ trait Implicits extends Types{
   implicit val FloatRW = NumericReadWriter(_.toFloat, _.toFloat)
   implicit val DoubleRW = NumericReadWriter(_.toDouble, _.toDouble)
 
+  import collection.generic.CanBuildFrom
+  implicit def SeqishR[T: R, V[_] <: Iterable[_]]
+                       (implicit cbf: CanBuildFrom[Nothing, T, V[T]]): R[V[T]] = R[V[T]](
+    validate("Array(n)"){case Js.Arr(x@_*) => x.map(readJs[T]).to[V]}
+  )
+
+  implicit def SeqishW[T: W, V[_] <: Iterable[_]]: W[V[T]] = W[V[T]]{
+    (x: V[T]) => Js.Arr(x.iterator.asInstanceOf[Iterator[T]].map(writeJs(_)).toArray:_*)
+  }
+
   private[this] def SeqLikeW[T: W, V[_]](g: V[T] => Option[Seq[T]]): W[V[T]] = W[V[T]](
     x => Js.Arr(g(x).get.map(x => writeJs(x)):_*)
   )
   private[this] def SeqLikeR[T: R, V[_]](f: Seq[T] => V[T]): R[V[T]] = R[V[T]](
     validate("Array(n)"){case Js.Arr(x@_*) => f(x.map(readJs[T]))}
   )
-
-  implicit def SeqW[T: W] = SeqLikeW[T, Seq](Seq.unapplySeq)
-  implicit def SeqR[T: R] = SeqLikeR[T, Seq](Seq(_:_*))
-  implicit def ListW[T: W] = SeqLikeW[T, List](List.unapplySeq)
-  implicit def ListR[T: R] = SeqLikeR[T, List](List(_:_*))
-  implicit def VectorW[T: W] = SeqLikeW[T, Vector](Vector.unapplySeq)
-  implicit def VectorR[T: R] = SeqLikeR[T, Vector](Vector(_:_*))
-  implicit def SetW[T: W] = SeqLikeW[T, Set](x => Some(x.toSeq))
-  implicit def SetR[T: R] = SeqLikeR[T, Set](Set(_:_*))
-  implicit def SortedSetW[T: W] = SeqLikeW[T, SortedSet](x => Some(x.toSeq ))
-  implicit def SortedSetR[T: R: Ordering] = SeqLikeR[T, SortedSet](SortedSet(_:_*))
 
   implicit def OptionW[T: W]: W[Option[T]] = SeqLikeW[T, Option](x => Some(x.toSeq))
   implicit def SomeW[T: W] = W[Some[T]](OptionW[T].write)

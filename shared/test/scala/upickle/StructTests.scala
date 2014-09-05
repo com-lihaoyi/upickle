@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 
 
 object StructTests extends TestSuite{
-
+  Seq(1).to[Vector]
   val tests = TestSuite{
     'arrays{
       'empty-rwk(Array[Int](), "[]")(_.toSeq)
@@ -45,6 +45,18 @@ object StructTests extends TestSuite{
       }
       'Set-rw(Set("omg", "i am", "cow"), """["omg","i am","cow"]""")
       'SortedSet-rw(collection.SortedSet("omg", "i am", "cow"), """["cow","i am","omg"]""")
+      'immutable {
+        'Set - rw(collection.immutable.Set("omg", "i am", "cow"), """["omg","i am","cow"]""")
+        'Seq - rw(collection.immutable.Seq("omg", "i am", "cow"), """["omg","i am","cow"]""")
+        'List - rw(collection.immutable.List("omg", "i am", "cow"), """["omg","i am","cow"]""")
+        'Queue - rw(collection.immutable.Queue("omg", "i am", "cow"), """["omg","i am","cow"]""")
+      }
+      'mutable {
+        'Seq - rw(collection.mutable.Seq("omg", "i am", "cow"), """["omg","i am","cow"]""")
+        'Buffer - rw(collection.mutable.Buffer("omg", "i am", "cow"), """["omg","i am","cow"]""")
+        'SortedSet - rw(collection.mutable.SortedSet("omg", "i am", "cow"), """["cow","i am","omg"]""")
+        'LinkedList - rw(collection.mutable.LinkedList("omg", "i am", "cow"), """["omg","i am","cow"]""")
+      }
       'Map-rw(Map(Nil -> List(1), List(1) -> List(1, 2, 3)), "[[[],[1]],[[1],[1,2,3]]]")
     }
 
@@ -103,7 +115,7 @@ object StructTests extends TestSuite{
       'vectorToList{
         val vectorToList = read[Seq[Double]](write(Vector(1.1, 2.2, 3.3)))
         assert(
-          vectorToList.isInstanceOf[List[Double]],
+          vectorToList.isInstanceOf[Vector[Double]],
           vectorToList == List(1.1, 2.2, 3.3)
         )
 
