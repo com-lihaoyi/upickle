@@ -28,7 +28,6 @@ object Macros {
   def macroRImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
-//    println("macroRImpl " + tpe + " " + weakTypeTag[T])
     val res = c.Expr[Reader[T]]{
       val x = picklerFor(c)(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
@@ -44,6 +43,7 @@ object Macros {
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
+    println("macroWImpl " + tpe)
     val res = c.Expr[Writer[T]]{
       picklerFor(c)(tpe, RW.W) { things =>
         if (things.length == 1){
