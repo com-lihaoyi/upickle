@@ -54,6 +54,17 @@ libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.2.4"
 
 Other than that, everything is used the same way. upickle-0.2.4 is only compatible with ScalaJS 0.5.3+.
 
+Scala 2.10
+==========
+
+If you are using Scala 2.10 (instead of 2.11) be sure to add this dependency as well:
+
+```scala
+libraryDependencies += "org.scalamacros" %% s"quasiquotes" % "2.0.0" % "provided"
+```
+
+This applies both for ScalaJVM and ScalaJS.
+
 Supported Types
 ===============
 
