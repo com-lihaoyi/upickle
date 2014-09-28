@@ -120,8 +120,7 @@ object Build extends sbt.Build{
   )
 
   lazy val jvm = cross.jvm.settings(
-    resolvers += "bintray/non" at "http://dl.bintray.com/non/maven",
-    libraryDependencies += "org.jsawn" %% "jawn-parser" % "0.5.4"
+    libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.6.0"
   )
 }
 

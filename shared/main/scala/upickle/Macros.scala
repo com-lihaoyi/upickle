@@ -43,7 +43,7 @@ object Macros {
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
-    println("macroWImpl " + tpe)
+//    println("macroWImpl " + tpe)
     val res = c.Expr[Writer[T]]{
       picklerFor(c)(tpe, RW.W) { things =>
         if (things.length == 1){
@@ -70,6 +70,12 @@ object Macros {
        .map{case Literal(Constant(s)) => s.toString}
   }
 
+  def getCompanion(c: Context)(tpe: c.Type) = {
+    import c.universe._
+    val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
+    val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
+    c.universe.treeBuild.mkAttributedRef(pre, tpe.typeSymbol.companionSymbol)
+  }
   /**
    * Generates a pickler for a particuler Type
    *
@@ -122,12 +128,10 @@ object Macros {
 
         val pickler = {
 
-          val companion =
-            tpe.typeSymbol
-               .companionSymbol
+          val companion = getCompanion(c)(tpe)
+
           val argSyms =
-            companion
-               .typeSignature
+            companion.tpe
                .member(newTermName("apply"))
                .asMethod
                .paramss
@@ -142,7 +146,7 @@ object Macros {
           val actionName = newTermName(rw.actionName)
           val defaults = argSyms.zipWithIndex.map{ case (s, i) =>
             val defaultName = newTermName("apply$default$" + (i + 1))
-            companion.typeSignature.member(defaultName) match{
+            companion.tpe.member(defaultName) match{
               case NoSymbol => q"null"
               case x => q"upickle.writeJs($companion.$defaultName)"
             }
