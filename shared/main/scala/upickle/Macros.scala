@@ -102,7 +102,7 @@ object Macros {
       }
     }
 
-    tpe.declaration(nme.CONSTRUCTOR) match {
+    val pick = tpe.declaration(nme.CONSTRUCTOR) match {
       case NoSymbol if clsSymbol.isSealed => // I'm a sealed trait/class!
         val subPicklers =
           for(subCls <- clsSymbol.knownDirectSubclasses.toSeq) yield {
@@ -110,19 +110,12 @@ object Macros {
           }
 
         val combined = treeMaker(subPicklers)
-        val knotName = newTermName("knot"+rw.short)
-        q"""
-          upickle.Internal.$knotName{implicit i: upickle.Knot.${newTypeName(rw.short)}[$tpe] =>
-            val x = upickle.${newTermName(rw.long)}[$tpe]($combined)
-            i.copyFrom(x)
-            x
-          }
-        """
 
+        q"""upickle.${newTermName(rw.long)}[$tpe]($combined)"""
 
       case x if tpe.typeSymbol.isModuleClass =>
         val mod = tpe.typeSymbol.asClass.module
-        annotate(q"upickle.Internal.${newTermName("Case0"+rw.short)}($mod)")
+        annotate(q"upickle.Internal.${newTermName("Case0"+rw.short)}[${tpe}]($mod)")
 
       case x => // I'm a class
 
@@ -161,6 +154,16 @@ object Macros {
 
         annotate(pickler)
     }
+    val knotName = newTermName("knot"+rw.short)
+    val i = c.fresh[TermName]("i")
+    val x = c.fresh[TermName]("x")
+    q"""
+       upickle.Internal.$knotName{implicit $i: upickle.Knot.${newTypeName(rw.short)}[$tpe] =>
+          val $x = $pick
+          $i.copyFrom($x)
+          $x
+        }
+     """
   }
 }
  

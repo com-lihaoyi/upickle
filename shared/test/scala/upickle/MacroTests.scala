@@ -60,9 +60,9 @@ object Recursive{
   sealed trait LL
   case object End  extends LL
   case class Node(c: Int, next: LL) extends LL
-
-//  sealed trait Ttt
-//  case class IntTree(value: Int, children: List[Ttt]) extends Ttt
+  case class IntTree(value: Int, children: List[IntTree])
+  sealed trait SingleTree
+  case class SingleNode(value: Int, children: List[SingleTree]) extends SingleTree
 }
 object Annotated {
   sealed trait A
@@ -186,8 +186,8 @@ object MacroTests extends TestSuite{
 
         //        rw(BB, """[0, []]""")
         //        rw(BC, """[1, []]""")
-        rw(BB: AA, """["upickle.Singletons.BB",{}]""")
-        rw(CC: AA, """["upickle.Singletons.CC",{}]""")
+        rw(BB: AA, """["upickle.Singletons.BB",{}]""")(Reader.macroR, Writer.macroW)
+        rw(CC: AA, """["upickle.Singletons.CC",{}]""")(Reader.macroR, Writer.macroW)
       }
     }
     'robustnessAgainstVaryingSchemas {
@@ -248,7 +248,19 @@ object MacroTests extends TestSuite{
 
     'recursiveDataTypes{
       import Recursive._
-
+      rw(
+        IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
+        """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
+      )
+//      DOESN'T WORK =(
+//      rw(
+//        SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))),
+//        """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
+//      )
+      rw(
+        SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))): SingleTree,
+        """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
+      )
       rw(End: LL, """["upickle.Recursive.End",{}]""")
       rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
       rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
