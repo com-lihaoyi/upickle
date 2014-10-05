@@ -130,7 +130,9 @@ object MacroTests extends TestSuite{
 //        )
         //[Int, String, (Int, Int), ADTs.ADTa, Seq[Double], Option[Option[Boolean]]]]
 
-        implicitly[Reader[ADTs.ADTd]]
+        implicitly[Reader[ADTs.ADTa]]
+
+        implicitly[Reader[List[Double]]]
 
 //        * - rw(
 //          ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
