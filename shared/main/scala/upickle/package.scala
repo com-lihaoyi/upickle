@@ -7,7 +7,4 @@ import acyclic.file
  * - Is there an implicit pickler for that type?
  * - Does the companion have matching apply/unapply?
  */
-package object upickle extends Types {
-
-
-}
+package object upickle extends Types

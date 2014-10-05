@@ -84,7 +84,7 @@ object Build extends sbt.Build{
       Seq(file)
     },
     autoCompilerPlugins := true,
-    scalacOptions += "-Xlog-implicits",
+//    scalacOptions += "-Xlog-implicits",
     addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
     pomExtra :=
       <url>https://github.com/lihaoyi/upickle</url>

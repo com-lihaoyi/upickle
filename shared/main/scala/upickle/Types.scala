@@ -19,7 +19,7 @@ trait Writer[T]{
   }
 }
 object Writer{
-
+  implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T]
   /**
    * Helper class to make it convenient to create instances of [[Writer]]
    * from the equivalent function
@@ -45,6 +45,7 @@ trait Reader[T]{
 }
 object Reader{
 
+  implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T]
   /**
    * Helper class to make it convenient to create instances of [[Reader]]
    * from the equivalent function

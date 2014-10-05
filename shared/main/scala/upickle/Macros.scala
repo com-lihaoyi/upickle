@@ -14,9 +14,10 @@ import scala.language.experimental.macros
 class key(s: String) extends StaticAnnotation
 
 trait Macros{
-  implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T]
 
-  implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T]
+
+
+
 }
 /**
  * Implementation of macros used by uPickle to serialize and deserialize
@@ -34,6 +35,7 @@ object Macros {
   def macroRImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
+    assert(!tpe.typeSymbol.fullName.startsWith("scala."))
     val res = c.Expr[Reader[T]]{
       val x = picklerFor(c)(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
@@ -43,12 +45,13 @@ object Macros {
       val msg = "Tagged Object " + tpe.typeSymbol.fullName
       q"""upickle.Internal.validateReader($msg){$x}"""
     }
-    println(res)
+//    println(res)
     res
   }
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
+    assert(!tpe.typeSymbol.fullName.startsWith("scala."))
 //    println("macroWImpl " + tpe)
     val res = c.Expr[Writer[T]]{
       picklerFor(c)(tpe, RW.W) { things =>
