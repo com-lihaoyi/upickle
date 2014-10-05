@@ -3,6 +3,7 @@ package upickle
 import scala.reflect.macros._
 import scala.reflect._
 import scala.annotation.{ClassfileAnnotation, StaticAnnotation}
+import scala.language.experimental.macros
 
 //import acyclic.file
 /**
@@ -12,6 +13,11 @@ import scala.annotation.{ClassfileAnnotation, StaticAnnotation}
  */
 class key(s: String) extends StaticAnnotation
 
+trait Macros{
+  implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T]
+
+  implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T]
+}
 /**
  * Implementation of macros used by uPickle to serialize and deserialize
  * case classes automatically. You probably shouldn't need to use these
@@ -35,9 +41,9 @@ object Macros {
       )
 
       val msg = "Tagged Object " + tpe.typeSymbol.fullName
-      q"""upickle.validateReader($msg){$x}"""
+      q"""upickle.Internal.validateReader($msg){$x}"""
     }
-//    println(res)
+    println(res)
     res
   }
   def macroWImpl[T: c.WeakTypeTag](c: Context) = {
@@ -108,7 +114,6 @@ object Macros {
           for(subCls <- clsSymbol.knownDirectSubclasses.toSeq) yield {
             picklerFor(c)(subCls.asType.toType, rw)(treeMaker)
           }
-
         val combined = treeMaker(subPicklers)
 
         q"""upickle.${newTermName(rw.long)}[$tpe]($combined)"""

@@ -76,20 +76,15 @@ object Build extends sbt.Build{
           import Aliases._
 
           ${tuples.mkString("\n")}
-          /**
-           * Contains the 22 case-class picklers, since although they are not
-           * part of the public API, you probably shouldn't be handling them
-           * directly.
-           */
-           trait InternalGenerated{
-            ${cases.mkString("\n")}
-          }
+        }
+        trait GeneratedInternal extends Generated{
+          ${cases.mkString("\n")}
         }
       """)
       Seq(file)
     },
     autoCompilerPlugins := true,
-
+    scalacOptions += "-Xlog-implicits",
     addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
     pomExtra :=
       <url>https://github.com/lihaoyi/upickle</url>

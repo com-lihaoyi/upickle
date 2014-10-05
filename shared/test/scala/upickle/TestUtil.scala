@@ -2,8 +2,8 @@ package upickle
 import utest._
 
 /**
- * Created by haoyi on 4/22/14.
- */
+* Created by haoyi on 4/22/14.
+*/
 object TestUtil {
   def rw[T: Reader: Writer](t: T, s: String*) = {
     rwk[T, T](t, s:_*)(t => t)
