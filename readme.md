@@ -270,6 +270,45 @@ read[B]("""["Bee", {"i": 10}]""") // res11: B = B(10)
 
 This is useful in cases where you wish to rename the class within your Scala code, or move it to a different package, but want to preserve backwards compatibility with previously pickled instances of that class.
 
+Custom Picklers
+===============
+
+Apart from customizing the keys used to store the fields of a class, uPickle also allows you to completely replace the default `Reader`/`Writer` used to write that class. For classes you control, for example this one:
+
+```scala
+class Thing(val i: Int, val s: String) 
+```
+
+You can customize the pickling process partially by providing a custom pair of `apply`/`unapply` methods in the companion object:
+
+```scala
+object Thing{
+  def apply(i: Int) = new Thing(i + 10, "s" * (i + 10))
+  def unapply(t: Thing) = Some(t.i - 10)
+}
+```
+
+In this example, we store `Thing` instances as a single number, and regenerate both the `i` and `s` fields from that number.
+
+Another alternative, which gives even more customizability, is to provide an implicit `Reader`/`Writer` pair in the companion object:
+
+```scala
+object Thing{
+  implicit val thing2Writer = upickle.Writer[T]{
+    case t => Js.Str(t.i + " " + t.s)
+  }
+  implicit val thing2Reader = upickle.Reader[T]{
+    case Js.Str(str) =>
+      val Array(i, s) = str.split(" ")
+      new Thing(i.toInt, s)
+  }
+}
+```
+
+This allows even greater customizability. Rather than simply changing the shape of the class's pickled object, you can entirely replace it! In this example, instead of pickling to a normal `Js.Obj`, we pickle to a `Js.Str`, storing both `i` and `s` as part of that single string.
+
+Note that when writing custom picklers, it is entirely up to you to get it right, e.g. making sure that an object that gets round-trip pickled/unpickled comes out the same as when it started.
+
 Limitations
 ===========
 

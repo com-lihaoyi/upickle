@@ -85,6 +85,44 @@ trait MixedIn{
 }
 
 object MixedIn extends MixedIn
+
+object Custom {
+  trait ThingBase{
+    val i: Int
+    val s: String
+    override def equals(o: Any) = {
+      o.toString == this.toString
+    }
+
+    override def toString() = {
+      s"Thing($i, $s)"
+    }
+  }
+  class Thing(val i: Int, val s: String) extends ThingBase
+
+  object Thing{
+    def apply(i: Int) = new Thing(i + 10, "s" * (i + 10))
+    def unapply(t: Thing) = Some(t.i - 10)
+  }
+
+  class Thing2(val i: Int, val s: String) extends ThingBase
+
+  abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
+    implicit val thing2Writer = upickle.Writer[T]{
+      case t => Js.Str(t.i + " " + t.s)
+    }
+    implicit val thing2Reader = upickle.Reader[T]{
+      case Js.Str(str) =>
+        val Array(i, s) = str.split(" ")
+        f(i.toInt, s)
+    }
+  }
+  object Thing2 extends ThingBaseCompanion[Thing2](new Thing2(_, _))
+
+  case class Thing3(i: Int, s: String) extends ThingBase
+
+  object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
+}
 object MacroTests extends TestSuite{
   import Generic.ADT
   import Hierarchy._
@@ -274,6 +312,26 @@ object MacroTests extends TestSuite{
       rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
       rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
 
+    }
+
+    'custom{
+      'clsApplyUnapply{
+        rw(new Custom.Thing(1, "s"), """{"i":-9}""")
+        rw(Custom.Thing(10), """{"i":10}""")
+      }
+      'clsReaderWriter{
+        rw(new Custom.Thing2(1, "s"), """ "1 s" """)
+        rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
+      }
+      'caseClsReaderWriter{
+        rw(new Custom.Thing3(1, "s"), """ "1 s" """)
+        rw(new Custom.Thing3(10, "sss"), """ "10 sss" """)
+      }
+      'caseClass{
+//                rw(new Custom.CaseThing(1, "s"), """{"i":-99}""")(Reader.macroR, Writer.macroW)
+//                rw(Custom.CaseThing(100), """{"i":0}""")(Reader.macroR, Writer.macroW)
+//        read[Custom.CaseThing]("""{"i":0}""")(Reader.macroR)
+      }
     }
     'performance{
       import Generic.ADT
