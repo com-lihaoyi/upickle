@@ -2,7 +2,7 @@ package upickle
 
 import utest._
 import upickle.TestUtil._
-import upickle.Implicits._
+
 // These guys all have to be out here because uPickle doesn't
 // support pickling local classes and objects
 object ADTs {

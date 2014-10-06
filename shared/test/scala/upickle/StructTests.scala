@@ -2,7 +2,7 @@ package upickle
 import utest._
 import scala.concurrent.duration._
 import TestUtil._
-import upickle.Implicits._
+
 import scala.reflect.ClassTag
 
 

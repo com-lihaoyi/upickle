@@ -1,6 +1,6 @@
 package upickle
 import utest._
-import upickle.Implicits._
+
 object JsonTests extends TestSuite{
   val tests = TestSuite{
     val ugly =

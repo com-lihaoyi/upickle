@@ -3,7 +3,7 @@ import utest._
 import scala.collection.SortedSet
 import scala.concurrent.duration._
 import TestUtil._
-import upickle.Implicits._
+
 object PrimitiveTests extends TestSuite{
 
   def tests = TestSuite{

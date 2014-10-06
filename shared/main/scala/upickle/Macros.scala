@@ -13,12 +13,6 @@ import scala.language.experimental.macros
  */
 class key(s: String) extends StaticAnnotation
 
-trait Macros{
-
-
-
-
-}
 /**
  * Implementation of macros used by uPickle to serialize and deserialize
  * case classes automatically. You probably shouldn't need to use these
