@@ -125,6 +125,6 @@ object Build extends sbt.Build{
 
   lazy val jvm = cross.jvm.settings(
     libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.6.0"
-  ).configure(sourceMapsToGithub)
+  )
 }
 
