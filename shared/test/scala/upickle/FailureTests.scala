@@ -63,7 +63,7 @@ object FailureTests extends TestSuite{
             read[Int](failureCase)
           }
         }catch{
-          case e =>
+          case _:Throwable =>
             println("DIDN'T FAIL: " + failureCase)
         }
       }
