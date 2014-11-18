@@ -59,5 +59,9 @@ object Js {
   case object Null extends Value{
     def value = null
   }
+  // Indicates that the value should be ignored during writing (and is unexpected during reading)
+  case object None extends Value{
+    def value = throw new IllegalStateException("value of Js.None accessed")
+  }
 }
 

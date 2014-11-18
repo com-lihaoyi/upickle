@@ -32,6 +32,9 @@ package object json {
     case Js.Null => null
     case Js.Arr(children@_*) => js.Array(children.map(writeJs(_)):_*)
     case Js.Obj(kvs@_*) => js.Dictionary(kvs.map{case (k, v) => (k, writeJs(v))}:_*)
+    case Js.None =>
+      // Cannot happen, since we are filtering it out in GeneratedUtil.arrayToMap()
+      throw new IllegalStateException("Js.None value cannot be rendered")
   }
 
   def write(v: Js.Value): String =

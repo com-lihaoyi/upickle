@@ -122,6 +122,20 @@ object Custom {
   case class Thing3(i: Int, s: String) extends ThingBase
 
   object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
+
+  case class Thing4(id: Option[Long] = None)
+
+  object Thing4 {
+    implicit val option2Writer = upickle.Writer[Option[Long]]{
+      case None => Js.None
+      case Some(value) => Js.Str(value.toString)
+    }
+
+    implicit val option2Reader = upickle.Reader[Option[Long]]{
+      case Js.None => None
+      case Js.Str(num) => Some(num.toLong)
+    }
+  }
 }
 object MacroTests extends TestSuite{
   import Generic.ADT
@@ -331,6 +345,11 @@ object MacroTests extends TestSuite{
 //                rw(new Custom.CaseThing(1, "s"), """{"i":-99}""")(Reader.macroR, Writer.macroW)
 //                rw(Custom.CaseThing(100), """{"i":0}""")(Reader.macroR, Writer.macroW)
 //        read[Custom.CaseThing]("""{"i":0}""")(Reader.macroR)
+      }
+      'customNestedWithDefault {
+        import Custom.Thing4._ // bring in the implicits defined to override Reader/Writer for Option[Long]
+        rw(Custom.Thing4(None), """{}""")
+        rw(Custom.Thing4(Some(123)), """{"id":"123"}""")
       }
     }
     'performance{
