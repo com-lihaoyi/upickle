@@ -14,6 +14,11 @@ object Build extends sbt.Build{
     scalaVersion := "2.10.4",
     name := "upickle",
 
+    scalacOptions := Seq("-unchecked",
+                         "-deprecation",
+                         "-encoding", "utf8",
+                         "-feature"),
+
     // Sonatype
     publishArtifact in Test := false,
     publishTo <<= version { (v: String) =>
@@ -24,7 +29,7 @@ object Build extends sbt.Build{
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
     ) ++ (
       if (scalaVersion.value startsWith "2.11.") Nil
-      else Seq( 
+      else Seq(
         "org.scalamacros" %% s"quasiquotes" % "2.0.0" % "provided",
         compilerPlugin("org.scalamacros" % s"paradise" % "2.0.0" cross CrossVersion.full)
       )
@@ -118,4 +123,3 @@ object Build extends sbt.Build{
     libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.6.0"
   )
 }
-
