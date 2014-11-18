@@ -113,11 +113,20 @@ object Build extends sbt.Build{
 
   )
 
+  def sourceMapsToGithub: Project => Project =
+    p => p.settings(
+      scalacOptions ++= (if (isSnapshot.value) Seq.empty else Seq({
+        val a = p.base.toURI.toString.replaceFirst("[^/]+/?$", "")
+        val g = "https://raw.githubusercontent.com/lihaoyi/upickle"
+        s"-P:scalajs:mapSourceURI:$a->$g/v${version.value}/"
+      }))
+    )
+
   lazy val root = cross.root
 
   lazy val js = cross.js.settings(
     (jsEnv in Test) := new NodeJSEnv
-  )
+  ).configure(sourceMapsToGithub)
 
   lazy val jvm = cross.jvm.settings(
     libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.6.0"
