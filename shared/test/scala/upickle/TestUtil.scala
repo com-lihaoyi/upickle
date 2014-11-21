@@ -17,7 +17,7 @@ object TestUtil {
 
     for (s <- strings) {
       val readS = read[T](s)
-      k(readS) == k(t)
+      assert(k(readS) == k(t))
     }
 
     assert(k(read[T](writtenT)) == k(t))
