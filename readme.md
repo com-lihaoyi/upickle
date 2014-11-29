@@ -181,6 +181,11 @@ write(IntThing(1))
 
 write(TupleThing("naeem", (1, 2)))
 // res26: String = ["TupleThing", {"name": "naeem", "t": [1, 2]}]
+
+// this way you can read tagged value without knowing its type in advance, just use type of the sealed trait
+read[IntOrTuple]("""["IntThing", {"i": 1}]""")
+// res27: IntThing = IntThing(1)
+
 ```
 
 Serializability is recursive; you can serialize a type only if all its members are serializable. That means that collections, tuples and case-classes made only of serializable members are themselves serializable
@@ -268,7 +273,10 @@ write(B(10))                      // res9: String = ["Bee", {"i": 10}]
 read[B]("""["Bee", {"i": 10}]""") // res11: B = B(10)
 ```
 
-This is useful in cases where you wish to rename the class within your Scala code, or move it to a different package, but want to preserve backwards compatibility with previously pickled instances of that class.
+This is useful in cases where :
+* you wish to rename the class within your Scala code, or move it to a different package, but want to preserve backwards compatibility with previously pickled instances of that class
+* you try to tackle the resource issue (bandwidth, storage, CPU) because FQNs might get quite long
+
 
 Custom Picklers
 ===============
