@@ -1,16 +1,15 @@
 import sbt._
 import Keys._
 
-import scala.scalajs.sbtplugin.env.nodejs.NodeJSEnv
-import scala.scalajs.sbtplugin.ScalaJSPlugin._
-
-import scala.scalajs.sbtplugin.ScalaJSPlugin.ScalaJSKeys._
+import org.scalajs.sbtplugin.ScalaJSPlugin
+import org.scalajs.sbtplugin.ScalaJSPlugin._
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
 object Build extends sbt.Build{
   val cross = new utest.jsrunner.JsCrossBuild(
     organization := "com.lihaoyi",
 
-    version := "0.2.5",
+    version := "0.2.6-M1",
     scalaVersion := "2.10.4",
     name := "upickle",
 
@@ -125,10 +124,10 @@ object Build extends sbt.Build{
   lazy val root = cross.root
 
   lazy val js = cross.js.settings(
-    (jsEnv in Test) := new NodeJSEnv
+    scalaJSStage in Test := FullOptStage
   ).configure(sourceMapsToGithub)
 
   lazy val jvm = cross.jvm.settings(
-    libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.6.0"
+    libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.7.0"
   )
 }
