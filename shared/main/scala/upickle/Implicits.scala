@@ -104,12 +104,23 @@ trait Implicits extends Types {
   implicit def ArrayW[T: W: ClassTag] = SeqLikeW[T, Array](Array.unapplySeq)
   implicit def ArrayR[T: R: ClassTag] = SeqLikeR[T, Array](x => Array.apply(x:_*))
 
-  implicit def MapW[K: W, V: W] =  W[Map[K, V]](
-    x => Js.Arr(x.toSeq.map(writeJs[(K, V)]):_*)
-  )
-  implicit def MapR[K: R, V: R] = R[Map[K, V]](
-    Internal.validate("Array(n)"){case x: Js.Arr => x.value.map(readJs[(K, V)]).toMap}
-  )
+  def CT[T: ClassTag] = implicitly[ClassTag[T]]
+  implicit def MapW[K: W: ClassTag, V: W]: W[Map[K, V]] =
+    if (CT[K] == CT[String])
+      W[Map[K, V]](x => Js.Obj(x.toSeq.map{ case (k, v) => (k.asInstanceOf[String], writeJs[V](v))}: _*))
+    else
+      W[Map[K, V]](x => Js.Arr(x.toSeq.map(writeJs[(K, V)]): _*))
+
+
+  implicit def MapR[K: R: ClassTag, V: R]: R[Map[K, V]] =
+    if (CT[K] == CT[String])
+      R[Map[K, V]](Internal.validate("Object"){
+        case x: Js.Obj => x.value.map{case (k, v) => (k.asInstanceOf[K], readJs[V](v))}.toMap
+      })
+    else
+      R[Map[K, V]](Internal.validate("Array(n)"){
+        case x: Js.Arr => x.value.map(readJs[(K, V)]).toMap
+      })
 
   implicit def EitherR[A: R, B: R]: R[Either[A, B]] = R[Either[A, B]](
     RightR[A, B].read orElse LeftR[A, B].read

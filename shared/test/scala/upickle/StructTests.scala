@@ -57,7 +57,24 @@ object StructTests extends TestSuite{
         'SortedSet - rw(collection.mutable.SortedSet("omg", "i am", "cow"), """["cow","i am","omg"]""")
         'LinkedList - rw(collection.mutable.LinkedList("omg", "i am", "cow"), """["omg","i am","cow"]""")
       }
-      'Map-rw(Map(Nil -> List(1), List(1) -> List(1, 2, 3)), "[[[],[1]],[[1],[1,2,3]]]")
+      'Map {
+        'Structured-rw(
+          Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
+          "[[[],[1]],[[1],[1,2,3]]]"
+        )
+        'StructuredEmpty-rw(
+          Map[List[Int], List[Int]](),
+          "[]"
+        )
+        'String-rw(
+          Map("Hello" -> List(1), "World" -> List(1, 2, 3)),
+          """{"Hello":[1],"World":[1,2,3]}"""
+        )
+        'StringEmpty-rw(
+          Map[String, List[Int]](),
+          "{}"
+        )
+      }
     }
 
     'option{
