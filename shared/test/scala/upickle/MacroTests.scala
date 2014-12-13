@@ -123,6 +123,12 @@ object Custom {
 
   object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
 }
+object Varargs{
+  case class Sentence(a: String, bs: String*)
+}
+object Covariant{
+  case class Tree[+T](value: T)
+}
 object MacroTests extends TestSuite{
   import Generic.ADT
   import Hierarchy._
@@ -332,6 +338,10 @@ object MacroTests extends TestSuite{
 //                rw(Custom.CaseThing(100), """{"i":0}""")(Reader.macroR, Writer.macroW)
 //        read[Custom.CaseThing]("""{"i":0}""")(Reader.macroR)
       }
+    }
+    'varargs{
+      rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
+      rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
     }
     'performance{
       import Generic.ADT

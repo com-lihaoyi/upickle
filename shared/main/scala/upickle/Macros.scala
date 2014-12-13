@@ -21,10 +21,10 @@ class key(s: String) extends StaticAnnotation
  */
 object Macros {
 
-  class RW(val short: String, val long: String, val actionName: String)
+  class RW(val short: String, val long: String, val actionNames: Seq[String])
   object RW{
-    object R extends RW("R", "Reader", "apply")
-    object W extends RW("W", "Writer", "unapply")
+    object R extends RW("R", "Reader", Seq("apply"))
+    object W extends RW("W", "Writer", Seq("unapply", "unapplySeq"))
   }
   def macroRImpl[T: c.WeakTypeTag](c: Context) = {
     import c.universe._
@@ -138,7 +138,11 @@ object Macros {
 
           val rwName = newTermName(s"Case${args.length}${rw.short}")
           val className = newTermName(tpe.typeSymbol.name.toString)
-          val actionName = newTermName(rw.actionName)
+          val actionName = rw.actionNames
+                             .map(newTermName(_))
+                             .find(companion.tpe.member(_) != NoSymbol)
+                             .getOrElse(c.abort(c.enclosingPosition, "None of the following methods were defined: " + rw.actionNames.mkString(" ")))
+
           val defaults = argSyms.zipWithIndex.map{ case (s, i) =>
             val defaultName = newTermName("apply$default$" + (i + 1))
             companion.tpe.member(defaultName) match{
@@ -146,12 +150,17 @@ object Macros {
               case x => q"upickle.writeJs($companion.$defaultName)"
             }
           }
+          val typeArgs = tpe match{
+            case TypeRef(pre, sym, args) => args
+            case _ => c.abort(c.enclosingPosition, "Don't know how to handle " + tpe)
+          }
+
           if (args.length == 0) // 0-arg case classes are treated like `object`s
             q"upickle.Internal.${newTermName("Case0"+rw.short)}($companion())"
           else if (args.length == 1 && rw == RW.W) // 1-arg case classes need their output wrapped in a Tuple1
-            q"upickle.Internal.$rwName(x => $companion.$actionName(x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
+            q"upickle.Internal.$rwName(x => $companion.$actionName[..$typeArgs](x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
           else // Otherwise, reading and writing are kinda identical
-            q"upickle.Internal.$rwName($companion.$actionName, Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
+            q"upickle.Internal.$rwName($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
         }
 
         annotate(pickler)
