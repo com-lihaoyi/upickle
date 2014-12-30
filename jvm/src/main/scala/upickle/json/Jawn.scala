@@ -63,6 +63,9 @@ sealed trait Renderer {
       case Js.Str(s) => renderString(sb, s)
       case Js.Arr(vs@_*) => renderArray(sb, depth, vs)
       case Js.Obj(vs@_*) => renderObject(sb, depth, canonicalizeObject(vs))
+      case Js.None =>
+        // Cannot happen, since we are filtering it out in GeneratedUtil.arrayToMap()
+        throw new IllegalStateException("Js.None value cannot be rendered")
     }
 
   def canonicalizeObject(vs: Seq[(String, Js.Value)]): Iterator[(String, Js.Value)]

@@ -20,7 +20,8 @@ private[upickle] trait GeneratedUtil {
     var i = 0
     val l = a.value.length
     while(i < l){
-      if (defaults(i) != a.value(i)){
+      val value = a.value(i)
+      if (value != defaults(i) && value != Js.None) {
         accumulated(i) = (names(i) -> a.value(i))
       }
       i += 1
