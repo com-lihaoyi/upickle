@@ -6,8 +6,8 @@ import scalajs.js
 package object json {
 
   def readJs(value: Any): Js.Value = value match{
-    case s: js.String => Js.Str(s)
-    case n: js.Number => Js.Num(n)
+    case s: String => Js.Str(s)
+    case n: Double => Js.Num(n)
     case true => Js.True
     case false => Js.False
     case null => Js.Null
