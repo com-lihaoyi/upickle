@@ -104,16 +104,15 @@ trait Implicits extends Types {
   implicit def ArrayW[T: W: ClassTag] = SeqLikeW[T, Array](Array.unapplySeq)
   implicit def ArrayR[T: R: ClassTag] = SeqLikeR[T, Array](x => Array.apply(x:_*))
 
-  def CT[T: ClassTag] = implicitly[ClassTag[T]]
-  implicit def MapW[K: W: ClassTag, V: W]: W[Map[K, V]] =
-    if (CT[K] == CT[String])
+  implicit def MapW[K: W, V: W]: W[Map[K, V]] =
+    if (implicitly[W[K]] == implicitly[W[String]])
       W[Map[K, V]](x => Js.Obj(x.toSeq.map{ case (k, v) => (k.asInstanceOf[String], writeJs[V](v))}: _*))
     else
       W[Map[K, V]](x => Js.Arr(x.toSeq.map(writeJs[(K, V)]): _*))
 
 
-  implicit def MapR[K: R: ClassTag, V: R]: R[Map[K, V]] =
-    if (CT[K] == CT[String])
+  implicit def MapR[K: R, V: R]: R[Map[K, V]] =
+    if (implicitly[R[K]] == implicitly[R[String]])
       R[Map[K, V]](Internal.validate("Object"){
         case x: Js.Obj => x.value.map{case (k, v) => (k.asInstanceOf[K], readJs[V](v))}.toMap
       })
