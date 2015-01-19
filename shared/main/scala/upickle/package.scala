@@ -2,7 +2,7 @@ import scala.reflect.ClassTag
 import acyclic.file
 
 /**
- * Picklite tries the following mechanisms for pickling a type
+ * uPickle tries the following mechanisms for pickling a type
  *
  * - Is there an implicit pickler for that type?
  * - Does the companion have matching apply/unapply?
