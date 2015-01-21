@@ -168,9 +168,19 @@ object Macros {
 
     val companion = companionTree(c)(tpe)
 
-    val argSyms =
+    val apply =
       companion.tpe
         .member(newTermName("apply"))
+
+    if (apply == NoSymbol){
+      c.abort(
+        c.enclosingPosition,
+        s"Don't know how to pickle $tpe; it's companion has no `apply` method"
+      )
+    }
+
+    val argSyms =
+      apply
         .asMethod
         .paramss
         .flatten
@@ -197,7 +207,10 @@ object Macros {
 
     val typeArgs = tpe match {
       case TypeRef(_, _, args) => args
-      case _ => c.abort(c.enclosingPosition, s"Don't know how to handle $tpe")
+      case _ => c.abort(
+        c.enclosingPosition,
+        s"Don't know how to pickle type $tpe"
+      )
     }
 
     val pickler =
@@ -214,7 +227,7 @@ object Macros {
   def companionTree(c: Context)(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol
 
-    if (companionSymbol.toString == "<none>") {
+    if (companionSymbol == NoSymbol) {
       val clsSymbol = tpe.typeSymbol.asClass
       val msg = "[error] The companion symbol could not be determined for " +
         s"[[${clsSymbol.name}]]. This may be due to a bug in scalac (SI-7567) " +

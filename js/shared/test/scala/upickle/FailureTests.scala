@@ -126,3 +126,4 @@ object FailureTests extends TestSuite{
     }
   }
 }
+class C
