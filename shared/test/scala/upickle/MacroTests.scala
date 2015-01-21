@@ -155,6 +155,21 @@ object MacroTests extends TestSuite{
       * - rw(Obj.ClsB(1), """{"i":1}""")
       * - rw(Obj.ClsA("omg"), """{"s":"omg"}""")
      }
+
+    /*
+    // TODO Currently not supported
+    'declarationWithinFunction {
+      sealed trait Base
+      case object Child extends Base
+      case class Wrapper(base: Base)
+      * - upickle.write(Wrapper(Child))
+    }
+
+    'traitFromOtherPackage {
+      * - upickle.write(subpackage.Wrapper(subpackage.Base.Child))
+    }
+    */
+
     'commonCustomStructures{
       'simpleAdt {
 
