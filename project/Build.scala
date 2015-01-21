@@ -33,7 +33,10 @@ object Build extends sbt.Build{
         compilerPlugin("org.scalamacros" % s"paradise" % "2.0.0" cross CrossVersion.full)
       )
     ),
-
+    unmanagedSourceDirectories in Compile ++= {
+      if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / "shared" / "main" / "scala-2.10")
+      else Seq(baseDirectory.value / "shared" / "main" / "scala-2.11")
+    },
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
       val file = dir / "upickle" / "Generated.scala"
       val tuplesAndCases = (1 to 22).map{ i =>
