@@ -69,6 +69,14 @@ trait Implicits extends Types {
   }
   implicit val StringRW = RW[String](Js.Str, stringReaderFunc)
 
+  private[this] val symbolReaderFunc: JPF[Symbol] = Internal.validate("Symbol"){
+    case x: Js.Str => Symbol(x.value)
+  }
+  implicit val SymbolRW = RW[Symbol](
+    x => Js.Str(x.toString()), 
+    symbolReaderFunc
+  )
+
   implicit val CharRW = NumericStringReadWriter[Char](_(0))
   implicit val ByteRW = NumericReadWriter(_.toByte, _.toByte)
   implicit val ShortRW = NumericReadWriter(_.toShort, _.toShort)

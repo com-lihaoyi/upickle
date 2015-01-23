@@ -21,7 +21,11 @@ object PrimitiveTests extends TestSuite{
       'unicode-rw("叉烧包")
       'null-rw(null: String, "null")
     }
-
+    'Symbol{
+      'plain-rw('i_am_a_cow, """ "i_am_a_cow" """)
+      'unicode-rw('叉烧包)
+      'null-rw(null: Symbol, "null")
+    }
     'Long{
       'small-rw(1: Long, """ "1" """)
       'med-rw(125123: Long, """ "125123" """)
