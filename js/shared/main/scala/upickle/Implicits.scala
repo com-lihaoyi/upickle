@@ -73,7 +73,7 @@ trait Implicits extends Types {
     case x: Js.Str => Symbol(x.value)
   }
   implicit val SymbolRW = RW[Symbol](
-    x => Js.Str(x.toString()), 
+    x => Js.Str(x.toString().substring(1)),
     symbolReaderFunc
   )
 

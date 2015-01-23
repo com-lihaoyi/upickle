@@ -23,7 +23,7 @@ object PrimitiveTests extends TestSuite{
     }
     'Symbol{
       'plain-rw('i_am_a_cow, """ "i_am_a_cow" """)
-      'unicode-rw('叉烧包)
+      'unicode-rw('叉烧包, """ "叉烧包" """)
       'null-rw(null: Symbol, "null")
     }
     'Long{
