@@ -145,7 +145,7 @@ object Macros {
     val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
     sealedParent.fold(pickler) { parent =>
       val index = customKey(c)(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
-      q"upickle.Internal.annotate($pickler, $index)"
+      q"implicitly[upickle.annotator.Annotator].annotate($pickler, $index)"
     }
   }
 

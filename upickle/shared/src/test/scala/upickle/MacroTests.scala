@@ -94,7 +94,7 @@ object Custom {
       o.toString == this.toString
     }
 
-    override def toString() = {
+    override def toString = {
       s"Thing($i, $s)"
     }
   }
@@ -247,6 +247,24 @@ object MacroTests extends TestSuite{
           * - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
           * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
           * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
+        }
+        'defaultKeyAnnotator {
+          import Hierarchy._
+          import annotator.key._
+
+          * - rw(B(1), """{"$variant":"upickle.Hierarchy.B","i":1}""")
+          * - rw(C("a", "b"), """{"$variant":"upickle.Hierarchy.C","s1":"a","s2":"b"}""")
+          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$variant":"upickle.Hierarchy.B","i":1}""")
+          * - rw(C("a", "b"): A, """{"$variant":"upickle.Hierarchy.C","s1":"a","s2":"b"}""")
+        }
+        'customKeyAnnotator {
+          import Hierarchy._
+          implicit val keyAnnotator = annotator.key.keyAnnotator("$custom$")
+
+          * - rw(B(1), """{"$custom$":"upickle.Hierarchy.B","i":1}""")
+          * - rw(C("a", "b"), """{"$custom$":"upickle.Hierarchy.C","s1":"a","s2":"b"}""")
+          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$custom$":"upickle.Hierarchy.B","i":1}""")
+          * - rw(C("a", "b"): A, """{"$custom$":"upickle.Hierarchy.C","s1":"a","s2":"b"}""")
         }
       }
       'singleton {
