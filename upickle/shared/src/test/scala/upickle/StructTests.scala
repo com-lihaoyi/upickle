@@ -3,9 +3,6 @@ import utest._
 import scala.concurrent.duration._
 import TestUtil._
 
-import scala.reflect.ClassTag
-
-
 object StructTests extends TestSuite{
   Seq(1).to[Vector]
   val tests = TestSuite{
@@ -121,10 +118,10 @@ object StructTests extends TestSuite{
       )
 
       'EitherDurationOptionDuration{
-        rw(Left(10 seconds): Either[Duration, Int], """[0,"10000000000"]""")
-        rw(Right(Some(0.33 millis)): Either[Int, Option[Duration]], """[1,["330000"]]""")
-        rw(Left(10 seconds): Either[Duration, Option[Duration]], """[0,"10000000000"]""")
-        rw(Right(Some(0.33 millis)): Either[Duration, Option[Duration]], """[1,["330000"]]""")
+        rw(Left(10.seconds): Either[Duration, Int], """[0,"10000000000"]""")
+        rw(Right(Some(0.33.millis)): Either[Int, Option[Duration]], """[1,["330000"]]""")
+        rw(Left(10.seconds): Either[Duration, Option[Duration]], """[0,"10000000000"]""")
+        rw(Right(Some(0.33.millis)): Either[Duration, Option[Duration]], """[1,["330000"]]""")
       }
     }
 
