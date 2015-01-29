@@ -6,7 +6,7 @@ import org.scalajs.sbtplugin.ScalaJSPlugin._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
 object Build extends sbt.Build{
-  val cross = new utest.jsrunner.JsCrossBuild(
+  val upickle = crossProject.settings(
     organization := "com.lihaoyi",
 
     version := "0.2.6-RC1",
@@ -23,8 +23,10 @@ object Build extends sbt.Build{
     publishTo <<= version { (v: String) =>
       Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
     },
+    testFrameworks += new TestFramework("utest.runner.Framework"),
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
+      "com.lihaoyi" %%% "utest" % "0.2.5-RC1" % "test",
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
     ) ++ (
       if (scalaVersion.value startsWith "2.11.") Nil
@@ -34,8 +36,8 @@ object Build extends sbt.Build{
       )
     ),
     unmanagedSourceDirectories in Compile ++= {
-      if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / "shared" / "main" / "scala-2.10")
-      else Seq(baseDirectory.value / "shared" / "main" / "scala-2.11")
+      if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
+      else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
     },
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
       val file = dir / "upickle" / "Generated.scala"
@@ -112,7 +114,10 @@ object Build extends sbt.Build{
           <url>https://github.com/lihaoyi</url>
         </developer>
       </developers>
-
+  ).jsSettings(
+      scalaJSStage in Test := FullOptStage
+  ).jvmSettings(
+    libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.7.0"
   )
 
   def sourceMapsToGithub: Project => Project =
@@ -124,13 +129,6 @@ object Build extends sbt.Build{
       }))
     )
 
-  lazy val root = cross.root
-
-  lazy val js = cross.js.settings(
-    scalaJSStage in Test := FullOptStage
-  ).configure(sourceMapsToGithub)
-
-  lazy val jvm = cross.jvm.settings(
-    libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.7.0"
-  )
+  lazy val upickleJS = upickle.js
+  lazy val upickleJVM = upickle.jvm
 }
