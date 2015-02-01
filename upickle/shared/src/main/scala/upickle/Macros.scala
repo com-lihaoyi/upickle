@@ -183,7 +183,7 @@ object Macros {
     val argSyms =
       tpe.member(newTermName("<init>"))
          .typeSignatureIn(tpe) match {case MethodType(params, result) => params }
-
+    import compat._
     val argSymTypes = argSyms.map(_.typeSignature).map{
       case TypeRef(a, b, c)  if b.toString == "class <repeated>" =>
         typeOf[Seq[String]] match{
