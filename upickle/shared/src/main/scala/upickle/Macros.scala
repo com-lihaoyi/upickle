@@ -225,6 +225,7 @@ object Macros {
   }
 
   def companionTree(c: Context)(tpe: c.Type) = {
+    import c.universe._
     val companionSymbol = tpe.typeSymbol.companionSymbol
 
     if (companionSymbol == NoSymbol) {
@@ -237,7 +238,6 @@ object Macros {
       c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
     }
 
-    import c.universe._
     val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
     val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
     c.universe.treeBuild.mkAttributedRef(pre, companionSymbol)
