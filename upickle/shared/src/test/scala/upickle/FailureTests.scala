@@ -80,7 +80,7 @@ object FailureTests extends TestSuite{
         // Separate this guy out because the read macro and
         // the intercept macro play badly with each other
         'missingKey {
-          val readFoo = () => read[Fee]( """{"i": 123}""")(Reader.macroR[Fee])
+          val readFoo = () => read[Fee]( """{"i": 123}""")
           val err = intercept[Invalid.Data]{ readFoo() }
           assert(err.msg.contains("Key Missing: s"))
         }

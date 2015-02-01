@@ -179,18 +179,11 @@ object Macros {
       )
     }
 
-
     val argSyms =
-      tpe.member(newTermName("<init>"))
-         .typeSignatureIn(tpe) match {case MethodType(params, result) => params }
-    import compat._
-    val argSymTypes = argSyms.map(_.typeSignature).map{
-      case TypeRef(a, b, c)  if b.toString == "class <repeated>" =>
-        typeOf[Seq[String]] match{
-          case TypeRef(_, b2, _) => TypeRef(a, b2, c)
-        }
-      case t => t
-    }
+      apply
+        .asMethod
+        .paramss
+        .flatten
 
     val args = argSyms.map { p =>
       customKey(c)(p).getOrElse(p.name.toString)
@@ -220,40 +213,21 @@ object Macros {
       )
     }
 
-    val (typeArgNames, typeArgAssigns) = argSymTypes.map{t =>
-
-//      if (t.typeSignature.toString == "")
-      val name = newTermName(c.fresh())
-      val tpeTree = tq"${newTypeName(rw.long)}[$t]"
-      (name, Seq(q"val $name = implicitly[$tpeTree]", q"implicit val ${newTermName(c.fresh())} = $name"))
-    }.unzip
-
     val pickler =
       if (args.length == 0) // 0-arg case classes are treated like `object`s
         q"upickle.Internal.${newTermName("Case0"+rw.short)}($companion())"
       else if (args.length == 1 && rw == RW.W) // 1-arg case classes need their output wrapped in a Tuple1
         q"upickle.Internal.$rwName(x => $companion.$actionName[..$typeArgs](x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
       else // Otherwise, reading and writing are kinda identical
-        q"""{
-          ..${typeArgAssigns.flatten}
+        q"upickle.Internal.$rwName($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
 
-          {
-            upickle.Internal.$rwName[..$argSymTypes, $tpe](
-              $companion.$actionName[..$typeArgs],
-              Array(..$args),
-              Array(..$defaults)
-            )(..$typeArgNames): upickle.${newTypeName(rw.long)}[$tpe]
-          }
-        }"""
-    val x = annotate(c)(tpe)(pickler)
-//    println(x)
-    x
+    annotate(c)(tpe)(pickler)
   }
 
   def companionTree(c: Context)(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol
 
-    if (companionSymbol == c.universe.NoSymbol) {
+    if (companionSymbol == NoSymbol) {
       val clsSymbol = tpe.typeSymbol.asClass
       val msg = "[error] The companion symbol could not be determined for " +
         s"[[${clsSymbol.name}]]. This may be due to a bug in scalac (SI-7567) " +

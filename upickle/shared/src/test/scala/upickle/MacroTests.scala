@@ -125,7 +125,6 @@ object Custom {
 }
 object Varargs{
   case class Sentence(a: String, bs: String*)
-
 }
 object Covariant{
   case class Tree[+T](value: T)
@@ -337,10 +336,10 @@ object MacroTests extends TestSuite{
     }
 
     'custom{
-//      'clsApplyUnapply{
-//        rw(new Custom.Thing(1, "s"), """{"i":-9}""")
-//        rw(Custom.Thing(10), """{"i":10}""")
-//      }
+      'clsApplyUnapply{
+        rw(new Custom.Thing(1, "s"), """{"i":-9}""")
+        rw(Custom.Thing(10), """{"i":10}""")
+      }
       'clsReaderWriter{
         rw(new Custom.Thing2(1, "s"), """ "1 s" """)
         rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
