@@ -1,11 +1,10 @@
 crossScalaVersions := Seq("2.10.4", "2.11.4")
+
 val upickle = crossProject.settings(
   organization := "com.lihaoyi",
-
   version := "0.2.6",
   scalaVersion := "2.10.4",
   name := "upickle",
-
   scalacOptions := Seq("-unchecked",
     "-deprecation",
     "-encoding", "utf8",
@@ -108,19 +107,15 @@ val upickle = crossProject.settings(
         </developer>
       </developers>
 ).jsSettings(
-    scalaJSStage in Test := FullOptStage
-  ).jvmSettings(
-    libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.7.0"
-  )
-
-def sourceMapsToGithub: Project => Project =
-  p => p.settings(
+  scalaJSStage in Test := FullOptStage,
     scalacOptions ++= (if (isSnapshot.value) Seq.empty else Seq({
-      val a = p.base.toURI.toString.replaceFirst("[^/]+/?$", "")
+      val a = baseDirectory.value.toURI.toString.replaceFirst("[^/]+/?$", "")
       val g = "https://raw.githubusercontent.com/lihaoyi/upickle"
       s"-P:scalajs:mapSourceURI:$a->$g/v${version.value}/"
     }))
-  )
+).jvmSettings(
+  libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.7.0"
+)
 
 lazy val upickleJS = upickle.js
 lazy val upickleJVM = upickle.jvm
