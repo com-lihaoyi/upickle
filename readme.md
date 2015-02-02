@@ -392,6 +392,14 @@ uPickle on the other hand aims much lower: by limiting the scope of the problem 
 Version History
 ===============
 
+0.2.6
+-----
+
+- `'Symbol`s are now read/write-able by default
+- Added lots of warnings for common issues
+- `Map[String, V]` now pickles to a JSON dictionary `{"key": "value", ...}`. `Map[K, V]` for all other `K != String` are unchanged
+- Source maps now point towards a reasonabel place on Github
+
 0.2.5
 -----
 
