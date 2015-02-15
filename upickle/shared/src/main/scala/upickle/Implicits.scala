@@ -204,7 +204,4 @@ object Internal extends GeneratedInternal{
   def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
     pf.orElse { case x => throw Invalid.Data(x, name) }
   }
-  def validateReader[T](name: String)(r: Reader[T]): Reader[T] = Reader{
-    r.read.orElse { case x => throw Invalid.Data(x, name) }
-  }
 }

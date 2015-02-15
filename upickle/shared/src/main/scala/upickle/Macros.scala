@@ -32,13 +32,10 @@ object Macros {
     assert(!tpe.typeSymbol.fullName.startsWith("scala."))
 
     c.Expr[Reader[T]] {
-      val x = picklerFor(c)(tpe, RW.R)(
+      picklerFor(c)(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
          .reduce((a, b) => q"$a orElse $b")
       )
-
-      val msg = "Tagged Object " + tpe.typeSymbol.fullName
-      q"""upickle.Internal.validateReader($msg){$x}"""
     }
   }
 
