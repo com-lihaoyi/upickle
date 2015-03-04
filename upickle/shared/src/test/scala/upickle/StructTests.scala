@@ -2,6 +2,7 @@ package upickle
 import utest._
 import scala.concurrent.duration._
 import TestUtil._
+import java.util.UUID
 
 import scala.reflect.ClassTag
 
@@ -144,7 +145,14 @@ object StructTests extends TestSuite{
           listToMap == Map(1 -> "1", 2 -> "2")
         )
       }
+    }
 
+    'extra{
+      val uuidString = "01020304-0506-0708-0901-020304050607"
+      val uuid = UUID.fromString(uuidString)
+      'UUID{
+        rw(uuid, s""" "$uuidString" """)
+      }
     }
   }
 }
