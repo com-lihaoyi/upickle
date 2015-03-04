@@ -77,6 +77,7 @@ Out of the box, uPickle supports writing and reading the following types:
 - Stand-alone `case class`es and `case object`s, and their generic equivalents,
 - Non-generic `case class`es and `case object`s that are part of a `sealed trait` or `sealed class` hierarchy
 - `sealed trait` and `sealed class`es themselves, assuming that all subclasses are picklable
+- `UUID`s
 - `null`
 
 Readability/writability is recursive: a container such as a `Tuple` or `case class` is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a `List[Any]`, since uPickle doesn't provide a generic way of serializing `Any`. Case classes are only serializable up to 22 fields.
