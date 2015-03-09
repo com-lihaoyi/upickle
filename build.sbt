@@ -2,7 +2,7 @@ crossScalaVersions := Seq("2.10.4", "2.11.4")
 
 val upickle = crossProject.settings(
   organization := "com.lihaoyi",
-  version := "0.2.6",
+  version := "0.2.7",
   scalaVersion := "2.10.4",
   name := "upickle",
   scalacOptions := Seq("-unchecked",
@@ -18,7 +18,7 @@ val upickle = crossProject.settings(
   testFrameworks += new TestFramework("utest.runner.Framework"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
-    "com.lihaoyi" %%% "utest" % "0.2.5" % "test",
+    "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
   ) ++ (
     if (scalaVersion.value startsWith "2.11.") Nil
