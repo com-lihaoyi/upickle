@@ -11,7 +11,7 @@ import scala.reflect.macros.Context
 import acyclic.file
 import scala.language.higherKinds
 import scala.language.experimental.macros
-
+import java.util.UUID
 
 
 /**
@@ -168,7 +168,8 @@ trait Implicits extends Types {
 
   implicit val DurationR = R[Duration](Internal.validate("DurationString"){FiniteR.read orElse InfiniteR.read})
 
-
+  implicit val UuidR = R[UUID]{case Js.Str(s) => UUID.fromString(s)}
+  implicit val UuidW = W[UUID]{case t: UUID => Js.Str(t.toString)}
 }
 
 /**
