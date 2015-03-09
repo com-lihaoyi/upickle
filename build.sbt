@@ -2,7 +2,7 @@ crossScalaVersions := Seq("2.10.4", "2.11.4")
 
 val upickle = crossProject.settings(
   organization := "com.lihaoyi",
-  version := "0.2.7",
+  version := "0.2.8",
   scalaVersion := "2.10.4",
   name := "upickle",
   scalacOptions := Seq("-unchecked",
