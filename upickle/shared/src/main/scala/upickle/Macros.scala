@@ -45,7 +45,7 @@ object Macros {
     val tpe = weakTypeTag[T].tpe
 
 	  if (tpe.typeSymbol.fullName.startsWith("scala."))
-		  throw new Throwable(s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
+		  throw new Throwable(s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]")
 
     c.Expr[Writer[T]] {
       picklerFor(c)(tpe, RW.W) { things =>
