@@ -29,8 +29,8 @@ object Macros {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
 
-	if (tpe.typeSymbol.fullName.startsWith("scala."))
-		throw new Throwable(s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
+    if (tpe.typeSymbol.fullName.startsWith("scala."))
+        c.abort(c.enclosingPosition,s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
 
     c.Expr[Reader[T]] {
       picklerFor(c)(tpe, RW.R)(
@@ -44,8 +44,8 @@ object Macros {
     import c.universe._
     val tpe = weakTypeTag[T].tpe
 
-	  if (tpe.typeSymbol.fullName.startsWith("scala."))
-		  throw new Throwable(s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]")
+    if (tpe.typeSymbol.fullName.startsWith("scala."))
+        c.abort(c.enclosingPosition,s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]")
 
     c.Expr[Writer[T]] {
       picklerFor(c)(tpe, RW.W) { things =>
