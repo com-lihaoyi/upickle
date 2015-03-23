@@ -17,8 +17,6 @@ Getting Started
 Add the following to your SBT config:
 
 ```scala
-resolvers += "bintray/non" at "http://dl.bintray.com/non/maven"
-
 libraryDependencies += "com.lihaoyi" %% "upickle" % "0.2.8"
 ```
 
