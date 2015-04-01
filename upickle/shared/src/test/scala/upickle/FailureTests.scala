@@ -1,12 +1,15 @@
 package upickle
 
 import utest._
+import config.default._
+
 case class Fee(i: Int, s: String)
 sealed trait Fi
 object Fi{
   case class Fo(i: Int) extends Fi
   case class Fum(s: String) extends Fi
 }
+
 /**
 * Generally, every failure should be a Invalid.Json or a
 * InvalidData. If any assertion errors, match errors, number

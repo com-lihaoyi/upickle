@@ -94,7 +94,7 @@ object Custom {
       o.toString == this.toString
     }
 
-    override def toString() = {
+    override def toString = {
       s"Thing($i, $s)"
     }
   }
@@ -219,8 +219,10 @@ object MacroTests extends TestSuite{
         // written. This is feasible because sealed hierarchies can only have a
         // finite number of cases, so we can just check them all and decide which
         // class the instance belongs to.
-        import Hierarchy._
-        'shallow {
+        'shallowOld {
+          import Hierarchy._
+          import config.old._
+
           * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
           * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
 //Doesn't work in 2.10.4
@@ -230,8 +232,10 @@ object MacroTests extends TestSuite{
           * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B",{"i":1}]""")
           * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
         }
-        'deep{
+
+        'deepOld {
           import DeepHierarchy._
+          import config.old._
 
           * - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
           * - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
@@ -248,19 +252,52 @@ object MacroTests extends TestSuite{
           * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
           * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
         }
+
+        'shallowDefault {
+          import Hierarchy._
+          import config.default._
+
+          * - rw(B(1), """{"$variant":"upickle.Hierarchy.B","i":1}""")
+          * - rw(C("a", "b"), """{"$variant":"upickle.Hierarchy.C","s1":"a","s2":"b"}""")
+          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$variant":"upickle.Hierarchy.B","i":1}""")
+          * - rw(C("a", "b"): A, """{"$variant":"upickle.Hierarchy.C","s1":"a","s2":"b"}""")
+        }
+
+        'shallowCustom {
+          import Hierarchy._
+          implicit val keyAnnotator = Annotator.keyAnnotator("$custom$")
+
+          Reader.macroR[B]
+
+          * - rw(B(1), """{"$custom$":"upickle.Hierarchy.B","i":1}""")
+          * - rw(C("a", "b"), """{"$custom$":"upickle.Hierarchy.C","s1":"a","s2":"b"}""")
+          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$custom$":"upickle.Hierarchy.B","i":1}""")
+          * - rw(C("a", "b"): A, """{"$custom$":"upickle.Hierarchy.C","s1":"a","s2":"b"}""")
+        }
       }
-      'singleton {
+      'singletonOld {
         import Singletons._
+        import config.old._
 
         //        rw(BB, """[0, []]""")
         //        rw(BC, """[1, []]""")
         rw(BB: AA, """["upickle.Singletons.BB",{}]""")
         rw(CC: AA, """["upickle.Singletons.CC",{}]""")
       }
+      'singletonDefault {
+        import Singletons._
+        import config.default._
+
+        //        rw(BB, """[0, []]""")
+        //        rw(BC, """[1, []]""")
+        rw(BB: AA, """{"$variant":"upickle.Singletons.BB"}""")
+        rw(CC: AA, """{"$variant":"upickle.Singletons.CC"}""")
+      }
     }
     'robustnessAgainstVaryingSchemas {
       'renameKeysViaAnnotations {
         import Annotated._
+        import config.old._
 
         * - rw(B(1), """["0",{"omg":1}]""")
         * - rw(C("a", "b"), """["1",{"lol":"a","wtf":"b"}]""")
@@ -316,6 +353,7 @@ object MacroTests extends TestSuite{
 
     'recursiveDataTypes{
       import Recursive._
+      import config.old._
       rw(
         IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
         """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
@@ -364,6 +402,7 @@ object MacroTests extends TestSuite{
       import Recursive._
       import Defaults._
       import ADTs.ADT0
+      import config.default._
 
       // Some arbitrary data that represents a mix of all the different
       // ways things can be pickled and unpickled
