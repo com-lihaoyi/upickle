@@ -81,7 +81,13 @@ trait Implicits extends Types {
   implicit val ByteRW = NumericReadWriter(_.toByte, _.toByte)
   implicit val ShortRW = NumericReadWriter(_.toShort, _.toShort)
   implicit val IntRW = NumericReadWriter(_.toInt, _.toInt)
-  implicit val LongRW = NumericStringReadWriter[Long](_.toLong)
+  implicit val LongRW = RW[Long](
+    x => Js.Str(x.toString),
+    {
+      case n@Js.Num(x) => try { x.toLong } catch { case e: NumberFormatException => throw Invalid.Data(n, "Number") }
+      case s@Js.Str(x) => try { x.toLong } catch { case e: NumberFormatException => throw Invalid.Data(s, "Number") }
+    }
+  )
   implicit val FloatRW = NumericReadWriter(_.toFloat, _.toFloat)
   implicit val DoubleRW = NumericReadWriter(_.toDouble, _.toDouble)
 
