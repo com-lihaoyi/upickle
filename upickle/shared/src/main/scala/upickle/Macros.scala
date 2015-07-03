@@ -18,44 +18,58 @@ class key(s: String) extends StaticAnnotation
  * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
+
   class RW(val short: String, val long: String, val actionNames: Seq[String])
 
   object RW {
+
     object R extends RW("R", "Reader", Seq("apply"))
+
     object W extends RW("W", "Writer", Seq("unapply", "unapplySeq"))
+
   }
 
-  def macroRImpl[T: c.WeakTypeTag](c: Context) = {
-    import c.universe._
+  def macroRImpl[T: c0.WeakTypeTag](c0: Context): c0.Expr[Reader[T]] = {
+    new Macros{val c: c0.type = c0}.read[T](implicitly[c0.WeakTypeTag[T]])
+  }
+
+  def macroWImpl[T: c0.WeakTypeTag](c0: Context): c0.Expr[Writer[T]] = {
+    new Macros{val c: c0.type = c0}.write[T](implicitly[c0.WeakTypeTag[T]])
+  }
+
+}
+abstract class Macros{
+  val c: Context
+  import Macros._
+  import c.universe._
+  def read[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
-
     if (tpe.typeSymbol.fullName.startsWith("scala."))
-        c.abort(c.enclosingPosition,s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
-
+      c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
     c.Expr[Reader[T]] {
-      picklerFor(c)(tpe, RW.R)(
+      picklerFor(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
-         .reduce((a, b) => q"$a orElse $b")
+          .reduce((a, b) => q"$a orElse $b")
       )
     }
   }
 
-  def macroWImpl[T: c.WeakTypeTag](c: Context) = {
-    import c.universe._
+  def write[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
-
+    println(Console.RED + "WRITE " + Console.RESET + tpe)
     if (tpe.typeSymbol.fullName.startsWith("scala."))
-        c.abort(c.enclosingPosition,s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]")
+      c.abort(c.enclosingPosition, s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]")
 
-    c.Expr[Writer[T]] {
-      picklerFor(c)(tpe, RW.W) { things =>
-        if (things.length == 1) q"upickle.Internal.merge0(${things(0)}.write)"
-        else things.map(p => q"$p.write": Tree)
-                   .reduce((a, b) => q"upickle.Internal.merge($a, $b)")
-      }
+    val res = picklerFor(tpe, RW.W) { things =>
+      if (things.length == 1) q"upickle.Internal.merge0(${things(0)}.write)"
+      else things.map(p => q"$p.write": Tree)
+        .reduce((a, b) => q"upickle.Internal.merge($a, $b)")
     }
+    println(Console.GREEN + "TYPECHECK" + Console.RESET)
+//    println(c.typeCheck(res))
+    println(Console.BLUE + "END " + Console.RESET + c.enclosingPosition)
+    c.Expr[Writer[T]](res)
   }
-
   /**
    * Generates a pickler for a particular type
    *
@@ -66,35 +80,57 @@ object Macros {
    * @param treeMaker How to merge the trees of the multiple subpicklers
    *                  into one larger tree
    */
-  def picklerFor(c: Context)
-                (tpe: c.Type, rw: RW)
-                (treeMaker: Seq[c.Tree] => c.Tree): c.Tree =
-  {
-    val pick =
-      if (tpe.typeSymbol.asClass.isTrait) pickleTrait(c)(tpe, rw)(treeMaker)
-      else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(c)(tpe, rw)(treeMaker)
-      else pickleClass(c)(tpe, rw)(treeMaker)
+  def picklerFor(tpe: c.Type, rw: RW)
+                (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
+    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
 
-    import c.universe._
 
+    val memo = collection.mutable.Map.empty[c.Type, Set[(c.Type, TermName)]]
+    def rec(tpe: c.Type, name: TermName): Set[(c.Type, TermName)] = memo.getOrElseUpdate(tpe, {
+      println(memo.size)
+      val rtpe = typeOf[Reader[Int]] match {
+        case TypeRef(a, b, _) => TypeRef(a, b, List(tpe))
+      }
+      c.inferImplicitValue(rtpe, withMacrosDisabled = true) match {
+        case EmptyTree =>
+          if (tpe.typeSymbol.asClass.isTrait) getArgSyms(tpe)._2.map(_.typeSignature).flatMap(rec(_, c.fresh[TermName]("t"))).toSet
+          else if (tpe.typeSymbol.isModuleClass) Set()
+          else Set((tpe, name)) ++ getArgSyms(tpe)._2.map(_.typeSignature).flatMap(rec(_, c.fresh[TermName]("t"))).toSet
+        case _ =>
+          Set()
+      }
+
+    })
+    val first = c.fresh[TermName]("t")
+    val recTypes = rec(tpe, first)
     val knotName = newTermName("knot" + rw.short)
 
-    val i = c.fresh[TermName]("i")
-    val x = c.fresh[TermName]("x")
 
-    q"""
-       upickle.Internal.$knotName{implicit $i: upickle.Knot.${newTypeName(rw.short)}[$tpe] =>
-          val $x = $pick
-          $i.copyFrom($x)
-          $x
-        }
-     """
+    val things = recTypes.map{case (tpe, name) =>
+      val pick =
+        if (tpe.typeSymbol.asClass.isTrait) pickleTrait(tpe, rw)(treeMaker)
+        else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(tpe, rw)(treeMaker)
+        else pickleClass(tpe, rw)(treeMaker)
+      val i = c.fresh[TermName]("i")
+      val x = c.fresh[TermName]("x")
+      val tree = q"""
+         implicit lazy val $name: upickle.${newTypeName(rw.long)}[$tpe] = $pick
+      """
+      (i, tree)
+    }
+    println("THINGS")
+    val res =  q"""
+      ..${things.map(_._2)}
+
+      $first
+    """
+    println(res)
+//    ???
+    res
   }
 
-  def pickleTrait(c: Context)
-                 (tpe: c.Type, rw: RW)
-                 (treeMaker: Seq[c.Tree] => c.Tree): c.universe.Tree =
-  {
+  def pickleTrait(tpe: c.Type, rw: RW)
+                 (treeMaker: Seq[c.Tree] => c.Tree): c.universe.Tree = {
     val clsSymbol = tpe.typeSymbol.asClass
 
     if (!clsSymbol.isSealed) {
@@ -112,38 +148,33 @@ object Macros {
       c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
     }
 
+    ???
     val subPicklers =
-      clsSymbol.knownDirectSubclasses.map(subCls =>
-        picklerFor(c)(subCls.asType.toType, rw)(treeMaker)
-      ).toSeq
+      clsSymbol.knownDirectSubclasses
+               .map(subCls => picklerFor(subCls.asType.toType, rw)(treeMaker))
+               .toSeq
 
     val combined = treeMaker(subPicklers)
 
-    import c.universe._
     q"""upickle.${newTermName(rw.long)}[$tpe]($combined)"""
   }
 
-  def pickleCaseObject(c: Context)
-                      (tpe: c.Type, rw: RW)
+  def pickleCaseObject(tpe: c.Type, rw: RW)
                       (treeMaker: Seq[c.Tree] => c.Tree) =
   {
     val mod = tpe.typeSymbol.asClass.module
 
-    import c.universe._
-    annotate(c)(tpe)(q"upickle.Internal.${newTermName("Case0"+rw.short)}[$tpe]($mod)")
+    annotate(tpe)(q"upickle.Internal.${newTermName("Case0"+rw.short)}[$tpe]($mod)")
   }
 
   /** If there is a sealed base class, annotate the pickled tree in the JSON
     * representation with a class label.
     */
-  def annotate(c: Context)
-              (tpe: c.Type)
-              (pickler: c.universe.Tree) =
-  {
-    import c.universe._
+  def annotate(tpe: c.Type)
+              (pickler: c.universe.Tree) = {
     val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
     sealedParent.fold(pickler) { parent =>
-      val index = customKey(c)(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
+      val index = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
       q"upickle.Internal.annotate($pickler, $index)"
     }
   }
@@ -151,26 +182,19 @@ object Macros {
   /**
    * Get the custom @key annotation from the parameter Symbol if it exists
    */
-  def customKey(c: Context)(sym: c.Symbol): Option[String] = {
-    import c.universe._
+  def customKey(sym: c.Symbol): Option[String] = {
     sym.annotations
       .find(_.tpe == typeOf[key])
       .flatMap(_.scalaArgs.headOption)
       .map{case Literal(Constant(s)) => s.toString}
   }
 
-  def pickleClass(c: Context)
-                 (tpe: c.Type, rw: RW)
-                 (treeMaker: Seq[c.Tree] => c.Tree) =
-  {
-    import c.universe._
-
-    val companion = companionTree(c)(tpe)
+  def getArgSyms(tpe: c.Type) = {
+    val companion = companionTree(tpe)
 
     val apply =
       companion.tpe
         .member(newTermName("apply"))
-
     if (apply == NoSymbol){
       c.abort(
         c.enclosingPosition,
@@ -179,13 +203,18 @@ object Macros {
     }
 
     val argSyms =
-      apply
-        .asMethod
+      apply.asMethod
         .paramss
         .flatten
+    (companion, argSyms)
+  }
+  def pickleClass(tpe: c.Type, rw: RW)(treeMaker: Seq[c.Tree] => c.Tree) = {
 
-    val args = argSyms.map { p =>
-      customKey(c)(p).getOrElse(p.name.toString)
+    val (companion, argSyms) = getArgSyms(tpe)
+
+    println("argSyms " + argSyms.map(_.typeSignature))
+    val args = argSyms.map{ p =>
+      customKey(p).getOrElse(p.name.toString)
     }
 
     val rwName = newTermName(s"Case${args.length}${rw.short}")
@@ -220,11 +249,10 @@ object Macros {
       else // Otherwise, reading and writing are kinda identical
         q"upickle.Internal.$rwName($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
 
-    annotate(c)(tpe)(pickler)
+    annotate(tpe)(pickler)
   }
 
-  def companionTree(c: Context)(tpe: c.Type) = {
-    import c.universe._
+  def companionTree(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol
 
     if (companionSymbol == NoSymbol) {
