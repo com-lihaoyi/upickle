@@ -93,7 +93,10 @@ abstract class Macros{
       }
       c.inferImplicitValue(rtpe, withMacrosDisabled = true) match {
         case EmptyTree =>
-          if (tpe.typeSymbol.asClass.isTrait) getArgSyms(tpe)._2.map(_.typeSignature).flatMap(rec(_, c.fresh[TermName]("t"))).toSet
+          if (tpe.typeSymbol.asClass.isTrait)
+            Set((tpe, name)) ++ tpe.typeSymbol.asClass.knownDirectSubclasses.flatMap{x =>
+              rec(x.asType.toType, c.fresh[TermName]("t"))
+            }
           else if (tpe.typeSymbol.isModuleClass) Set()
           else Set((tpe, name)) ++ getArgSyms(tpe)._2.map(_.typeSignature).flatMap(rec(_, c.fresh[TermName]("t"))).toSet
         case _ =>
@@ -148,7 +151,6 @@ abstract class Macros{
       c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
     }
 
-    ???
     val subPicklers =
       clsSymbol.knownDirectSubclasses
                .map(subCls => picklerFor(subCls.asType.toType, rw)(treeMaker))
