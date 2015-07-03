@@ -72,20 +72,12 @@ object Knot {
     }
   }
 
-  class R[T](var _read: PF[Js.Value, T]) extends Reader[T] {
-    def read0 = _read
-
-    def copyFrom(rw: Reader[T]) = {
-      _read = rw.read
-    }
+  class R[T](reader: => Reader[T]) extends Reader[T] {
+    def read0 = reader.read0
   }
 
-  class W[T](var _write: T => Js.Value) extends Writer[T] {
-    def write0 = _write
-
-    def copyFrom(rw: Writer[T]) = {
-      _write = rw.write
-    }
+  class W[T](writer: => Writer[T]) extends Writer[T] {
+    def write0 = writer.write0
   }
 }
 

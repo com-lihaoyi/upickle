@@ -86,34 +86,54 @@ abstract class Macros{
    */
   def picklerFor(tpe: c.Type, rw: RW)
                 (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
-//    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
+    //    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
 
 
-    val memo = collection.mutable.Map.empty[c.Type, Map[c.Type, TermName]]
-    def rec(tpe: c.Type, name: TermName): Map[c.Type, TermName] = memo.getOrElseUpdate(tpe, {
-//      println(memo.size)
-      val rtpe = typeOf[Reader[Int]] match {
-        case TypeRef(a, b, _) => TypeRef(a, b, List(tpe))
+    val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
+    case class TypeKey(t: c.Type) {
+      override def equals(o: Any) = t =:= o.asInstanceOf[TypeKey].t
+    }
+    def rec(tpe: c.Type, name: TermName, seen: Set[TypeKey]): Map[TypeKey, TermName] = {
+
+      println("rec " + tpe + " " + seen)
+      if (seen(TypeKey(tpe))) Map()
+      else {
+        memo.getOrElseUpdate(TypeKey(tpe), {
+          //      println(memo.size)
+          val rtpe = typeOf[Reader[Int]] match {
+            case TypeRef(a, b, _) => TypeRef(a, b, List(tpe))
+          }
+          c.inferImplicitValue(rtpe, withMacrosDisabled = true) match {
+            case EmptyTree =>
+              tpe match{
+                case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
+                  rec(args(0), c.fresh[TermName]("t"), seen ++ Set(TypeKey(tpe)))
+                case tpe if tpe.typeSymbol.asClass.isTrait =>
+                  Map(TypeKey(tpe) -> name) ++ tpe.typeSymbol.asClass.knownDirectSubclasses.flatMap { x =>
+                    rec(x.asType.toType, c.fresh[TermName]("t"), seen ++ Set(TypeKey(tpe)))
+                  }
+                case tpe if tpe.typeSymbol.isModuleClass =>
+                  Map(TypeKey(tpe) -> name)
+                case _ =>
+                  Map(TypeKey(tpe) -> name) ++ getArgSyms(tpe)._2.map(_.typeSignature).flatMap(rec(_, c.fresh[TermName]("t"), seen ++ Set(TypeKey(tpe)))).toSet
+              }
+
+            case _ =>
+              Map()
+          }
+
+        })
       }
-      c.inferImplicitValue(rtpe, withMacrosDisabled = true) match {
-        case EmptyTree =>
-          if (tpe.typeSymbol.asClass.isTrait)
-            Map(tpe -> name) ++ tpe.typeSymbol.asClass.knownDirectSubclasses.flatMap{x =>
-              rec(x.asType.toType, c.fresh[TermName]("t"))
-            }
-          else if (tpe.typeSymbol.isModuleClass) Map(tpe -> name)
-          else Map(tpe -> name) ++ getArgSyms(tpe)._2.map(_.typeSignature).flatMap(rec(_, c.fresh[TermName]("t"))).toSet
-        case _ =>
-          Map()
-      }
-
-    })
+    }
+    println("A")
     val first = c.fresh[TermName]("t")
-    val recTypes = rec(tpe, first)
+    println("B")
+    val recTypes = rec(tpe, first, Set())
+    println("C")
     val knotName = newTermName("knot" + rw.short)
-//    println("recTypes " + recTypes)
+    println("recTypes " + recTypes)
 
-    val things = recTypes.map{case (tpe, name) =>
+    val things = recTypes.map { case (TypeKey(tpe), name) =>
       val pick =
         if (tpe.typeSymbol.asClass.isTrait) pickleTrait(tpe, rw)(treeMaker)
         else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(tpe, rw)(treeMaker)
@@ -121,20 +141,18 @@ abstract class Macros{
       val i = c.fresh[TermName]("i")
       val x = c.fresh[TermName]("x")
       val tree = q"""
-         implicit lazy val $name: upickle.${newTypeName(rw.long)}[$tpe] = $pick
+        implicit lazy val $name: upickle.${newTypeName(rw.long)}[$tpe] = {
+          new upickle.Knot.${newTypeName(rw.short)}[$tpe]($pick)
+        }
       """
       (i, tree)
     }
-    println(Console.CYAN)
-    println("RECTYPES")
-    recTypes.foreach(println)
-    println(Console.RESET)
-    val res =  q"""
+    val res = q"""
       ..${things.map(_._2)}
 
       $first
     """
-//    println("RES " + res)
+    println("RES " + res)
     res
   }
 

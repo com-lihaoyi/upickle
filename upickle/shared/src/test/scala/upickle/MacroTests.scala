@@ -170,7 +170,7 @@ object MacroTests extends TestSuite{
     ADTc(i = 1234567890, s = "i am a strange loop"),
     ADT0()
   )
-
+  implicitly[Reader[Varargs.Sentence]]
   val tests = TestSuite{
     'mixedIn{
       import MixedIn._
@@ -340,8 +340,8 @@ object MacroTests extends TestSuite{
 //      }
 //    }
 
-//    'recursiveDataTypes{
-//      import Recursive._
+    'recursiveDataTypes{
+      import Recursive._
 //      rw(
 //        IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
 //        """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
@@ -355,11 +355,11 @@ object MacroTests extends TestSuite{
 //        SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))): SingleTree,
 //        """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
 //      )
-//      rw(End: LL, """["upickle.Recursive.End",{}]""")
-//      rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
-//      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
-//
-//    }
+      rw(End: LL, """["upickle.Recursive.End",{}]""")
+      rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
+      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
+
+    }
 
     'custom{
       'clsApplyUnapply{
@@ -380,10 +380,10 @@ object MacroTests extends TestSuite{
 //        read[Custom.CaseThing]("""{"i":0}""")(Reader.macroR)
       }
     }
-//    'varargs{
-//      rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
-//      rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
-//    }
+    'varargs{
+      rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
+      rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
+    }
 //    'performance{
 //      import Generic.ADT
 //      import Hierarchy._
