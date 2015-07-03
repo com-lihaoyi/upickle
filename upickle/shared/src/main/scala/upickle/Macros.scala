@@ -44,19 +44,23 @@ abstract class Macros{
   import c.universe._
   def read[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
+    println(Console.BLUE + "START " + Console.RESET + tpe)
     if (tpe.typeSymbol.fullName.startsWith("scala."))
       c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
-    c.Expr[Reader[T]] {
+    val res = c.Expr[Reader[T]] {
       picklerFor(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
           .reduce((a, b) => q"$a orElse $b")
       )
     }
+    println(Console.BLUE + "END " + Console.RESET + tpe)
+    res
   }
 
   def write[T: c.WeakTypeTag] = {
+    println(Console.BLUE + "START " + Console.RESET + c.enclosingPosition)
     val tpe = weakTypeTag[T].tpe
-    println(Console.RED + "WRITE " + Console.RESET + tpe)
+//    println(Console.RED + "WRITE " + Console.RESET + tpe)
     if (tpe.typeSymbol.fullName.startsWith("scala."))
       c.abort(c.enclosingPosition, s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]")
 
@@ -65,8 +69,8 @@ abstract class Macros{
       else things.map(p => q"$p.write": Tree)
         .reduce((a, b) => q"upickle.Internal.merge($a, $b)")
     }
-    println(Console.GREEN + "TYPECHECK" + Console.RESET)
-//    println(c.typeCheck(res))
+//    println(Console.GREEN + "TYPECHECK" + Console.RESET)
+//    println(res)
     println(Console.BLUE + "END " + Console.RESET + c.enclosingPosition)
     c.Expr[Writer[T]](res)
   }
@@ -82,32 +86,32 @@ abstract class Macros{
    */
   def picklerFor(tpe: c.Type, rw: RW)
                 (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
-    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
+//    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
 
 
-    val memo = collection.mutable.Map.empty[c.Type, Set[(c.Type, TermName)]]
-    def rec(tpe: c.Type, name: TermName): Set[(c.Type, TermName)] = memo.getOrElseUpdate(tpe, {
-      println(memo.size)
+    val memo = collection.mutable.Map.empty[c.Type, Map[c.Type, TermName]]
+    def rec(tpe: c.Type, name: TermName): Map[c.Type, TermName] = memo.getOrElseUpdate(tpe, {
+//      println(memo.size)
       val rtpe = typeOf[Reader[Int]] match {
         case TypeRef(a, b, _) => TypeRef(a, b, List(tpe))
       }
       c.inferImplicitValue(rtpe, withMacrosDisabled = true) match {
         case EmptyTree =>
           if (tpe.typeSymbol.asClass.isTrait)
-            Set((tpe, name)) ++ tpe.typeSymbol.asClass.knownDirectSubclasses.flatMap{x =>
+            Map(tpe -> name) ++ tpe.typeSymbol.asClass.knownDirectSubclasses.flatMap{x =>
               rec(x.asType.toType, c.fresh[TermName]("t"))
             }
-          else if (tpe.typeSymbol.isModuleClass) Set()
-          else Set((tpe, name)) ++ getArgSyms(tpe)._2.map(_.typeSignature).flatMap(rec(_, c.fresh[TermName]("t"))).toSet
+          else if (tpe.typeSymbol.isModuleClass) Map(tpe -> name)
+          else Map(tpe -> name) ++ getArgSyms(tpe)._2.map(_.typeSignature).flatMap(rec(_, c.fresh[TermName]("t"))).toSet
         case _ =>
-          Set()
+          Map()
       }
 
     })
     val first = c.fresh[TermName]("t")
     val recTypes = rec(tpe, first)
     val knotName = newTermName("knot" + rw.short)
-
+//    println("recTypes " + recTypes)
 
     val things = recTypes.map{case (tpe, name) =>
       val pick =
@@ -121,14 +125,16 @@ abstract class Macros{
       """
       (i, tree)
     }
-    println("THINGS")
+    println(Console.CYAN)
+    println("RECTYPES")
+    recTypes.foreach(println)
+    println(Console.RESET)
     val res =  q"""
       ..${things.map(_._2)}
 
       $first
     """
-    println(res)
-//    ???
+//    println("RES " + res)
     res
   }
 
@@ -153,7 +159,7 @@ abstract class Macros{
 
     val subPicklers =
       clsSymbol.knownDirectSubclasses
-               .map(subCls => picklerFor(subCls.asType.toType, rw)(treeMaker))
+               .map(subCls => q"implicitly[upickle.${newTypeName(rw.long)}[$subCls]]")
                .toSeq
 
     val combined = treeMaker(subPicklers)
@@ -214,7 +220,7 @@ abstract class Macros{
 
     val (companion, argSyms) = getArgSyms(tpe)
 
-    println("argSyms " + argSyms.map(_.typeSignature))
+//    println("argSyms " + argSyms.map(_.typeSignature))
     val args = argSyms.map{ p =>
       customKey(p).getOrElse(p.name.toString)
     }

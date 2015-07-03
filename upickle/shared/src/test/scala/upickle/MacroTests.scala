@@ -192,6 +192,8 @@ object MacroTests extends TestSuite{
     }
     */
     'exponential{
+
+      // Doesn't even need to execute, as long as it can compile
       val ww1 = implicitly[upickle.Writer[Exponential.A1]]
     }
     'commonCustomStructures{
@@ -237,42 +239,42 @@ object MacroTests extends TestSuite{
 //          expected
 //        )
       }
-//      'sealedHierarchy {
-//        // objects in sealed case class hierarchies should always read and write
-//        // the same way (with a tag) regardless of what their static type is when
-//        // written. This is feasible because sealed hierarchies can only have a
-//        // finite number of cases, so we can just check them all and decide which
-//        // class the instance belongs to.
-//        import Hierarchy._
-//        'shallow {
-//          * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
-//          * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
-////Doesn't work in 2.10.4
-////          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
-////          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
-//
-//          * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B",{"i":1}]""")
-//          * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
-//        }
-//        'deep{
-//          import DeepHierarchy._
-//
-//          * - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
-//          * - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
-//          * - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
-//          * - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
-//
-//          * - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
-//          * - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
-//          * - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
-//          * - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-//          * - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-//          * - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-//          * - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
-//          * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
-//          * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
-//        }
-//      }
+      'sealedHierarchy {
+        // objects in sealed case class hierarchies should always read and write
+        // the same way (with a tag) regardless of what their static type is when
+        // written. This is feasible because sealed hierarchies can only have a
+        // finite number of cases, so we can just check them all and decide which
+        // class the instance belongs to.
+        import Hierarchy._
+        'shallow {
+          * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
+          * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+//Doesn't work in 2.10.4
+//          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
+//          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
+
+          * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B",{"i":1}]""")
+          * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+        }
+        'deep{
+          import DeepHierarchy._
+
+          * - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
+          * - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
+          * - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+          * - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+
+          * - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
+          * - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
+          * - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
+          * - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          * - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          * - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+          * - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
+          * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
+          * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
+        }
+      }
 //      'singleton {
 //        import Singletons._
 //
@@ -282,37 +284,37 @@ object MacroTests extends TestSuite{
 //        rw(CC: AA, """["upickle.Singletons.CC",{}]""")
 //      }
     }
-//    'robustnessAgainstVaryingSchemas {
-//      'renameKeysViaAnnotations {
-//        import Annotated._
-//
-//        * - rw(B(1), """["0",{"omg":1}]""")
-//        * - rw(C("a", "b"), """["1",{"lol":"a","wtf":"b"}]""")
-//
-//        * - rw(B(1): A, """["0",{"omg":1}]""")
-//        * - rw(C("a", "b"): A, """["1",{"lol":"a","wtf":"b"}]""")
-//      }
-//      'useDefaults {
-//        // Ignore the values which match the default when writing and
-//        // substitute in defaults when reading if the key is missing
-//        import Defaults._
-//        * - rw(ADTa(), "{}")
-//        * - rw(ADTa(321), """{"i":321}""")
-//        * - rw(ADTb(s = "123"), """{"s":"123"}""")
-//        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-//        * - rw(ADTc(s = "123"), """{"s":"123"}""")
-//        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-//        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
-//        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
-//      }
-//      'ignoreExtraFieldsWhenDeserializing {
-//        import ADTs._
-//        val r1 = read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
-//        assert(r1 == ADTa(123))
-//        val r2 = read[ADTb]( """{"i":123, "j":false, "k":"haha", "s":"kk", "l":true, "z":[1, 2, 3]}""")
-//        assert(r2 == ADTb(123, "kk"))
-//      }
-//    }
+    'robustnessAgainstVaryingSchemas {
+      'renameKeysViaAnnotations {
+        import Annotated._
+
+        * - rw(B(1), """["0",{"omg":1}]""")
+        * - rw(C("a", "b"), """["1",{"lol":"a","wtf":"b"}]""")
+
+        * - rw(B(1): A, """["0",{"omg":1}]""")
+        * - rw(C("a", "b"): A, """["1",{"lol":"a","wtf":"b"}]""")
+      }
+      'useDefaults {
+        // Ignore the values which match the default when writing and
+        // substitute in defaults when reading if the key is missing
+        import Defaults._
+        * - rw(ADTa(), "{}")
+        * - rw(ADTa(321), """{"i":321}""")
+        * - rw(ADTb(s = "123"), """{"s":"123"}""")
+        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        * - rw(ADTc(s = "123"), """{"s":"123"}""")
+        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
+        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
+      }
+      'ignoreExtraFieldsWhenDeserializing {
+        import ADTs._
+        val r1 = read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
+        assert(r1 == ADTa(123))
+        val r2 = read[ADTb]( """{"i":123, "j":false, "k":"haha", "s":"kk", "l":true, "z":[1, 2, 3]}""")
+        assert(r2 == ADTb(123, "kk"))
+      }
+    }
 //    'GenericDataTypes{
 //      'simple {
 //        import Generic.A
@@ -337,7 +339,7 @@ object MacroTests extends TestSuite{
 ////        )
 //      }
 //    }
-//
+
 //    'recursiveDataTypes{
 //      import Recursive._
 //      rw(
@@ -358,26 +360,26 @@ object MacroTests extends TestSuite{
 //      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
 //
 //    }
-//
-//    'custom{
-//      'clsApplyUnapply{
-//        rw(new Custom.Thing(1, "s"), """{"i":-9}""")
-//        rw(Custom.Thing(10), """{"i":10}""")
-//      }
-//      'clsReaderWriter{
-//        rw(new Custom.Thing2(1, "s"), """ "1 s" """)
-//        rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
-//      }
-//      'caseClsReaderWriter{
-//        rw(new Custom.Thing3(1, "s"), """ "1 s" """)
-//        rw(new Custom.Thing3(10, "sss"), """ "10 sss" """)
-//      }
-//      'caseClass{
-////                rw(new Custom.CaseThing(1, "s"), """{"i":-99}""")(Reader.macroR, Writer.macroW)
-////                rw(Custom.CaseThing(100), """{"i":0}""")(Reader.macroR, Writer.macroW)
-////        read[Custom.CaseThing]("""{"i":0}""")(Reader.macroR)
-//      }
-//    }
+
+    'custom{
+      'clsApplyUnapply{
+        rw(new Custom.Thing(1, "s"), """{"i":-9}""")
+        rw(Custom.Thing(10), """{"i":10}""")
+      }
+      'clsReaderWriter{
+        rw(new Custom.Thing2(1, "s"), """ "1 s" """)
+        rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
+      }
+      'caseClsReaderWriter{
+        rw(new Custom.Thing3(1, "s"), """ "1 s" """)
+        rw(new Custom.Thing3(10, "sss"), """ "10 sss" """)
+      }
+      'caseClass{
+//                rw(new Custom.CaseThing(1, "s"), """{"i":-99}""")(Reader.macroR, Writer.macroW)
+//                rw(Custom.CaseThing(100), """{"i":0}""")(Reader.macroR, Writer.macroW)
+//        read[Custom.CaseThing]("""{"i":0}""")(Reader.macroR)
+      }
+    }
 //    'varargs{
 //      rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
 //      rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
