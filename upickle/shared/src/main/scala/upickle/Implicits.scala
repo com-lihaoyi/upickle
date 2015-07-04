@@ -185,7 +185,7 @@ object Internal extends GeneratedInternal{
     case v: V => g(v)
     case t: T => f(t)
   }
-
+  def identity[T](t: T): T = t
 
   def knotRW[T, V](f: Knot.RW[T] => V): V = f(new Knot.RW(null, null))
   def knotR[T, V](f: Knot.R[T] => V): V = f(new Knot.R(null))
