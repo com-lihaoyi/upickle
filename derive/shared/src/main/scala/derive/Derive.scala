@@ -11,12 +11,7 @@ import scala.language.experimental.macros
  */
 class key(s: String) extends StaticAnnotation
 object Derive{
-  class Config(val short: String,
-               val long: String,
-               val actionNames: Seq[String],
-               val oneTupled: Boolean,
-               val banScala: Boolean,
-               val caseName: String)
+  class Config(val long: String)
 }
 
 abstract class Derive(rw: Derive.Config){
@@ -28,8 +23,8 @@ abstract class Derive(rw: Derive.Config){
     if (tpe == typeOf[Nothing]){
       c.echo(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
     }
-    if (rw.banScala && tpe.typeSymbol.fullName.startsWith("scala."))
-      c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
+//    if (rw.banScala && tpe.typeSymbol.fullName.startsWith("scala."))
+//      c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
 
   }
   def derive[T: c.WeakTypeTag](treeMaker: Seq[c.Tree] => c.Tree) = {
@@ -147,7 +142,6 @@ abstract class Derive(rw: Derive.Config){
           case e => e.printStackTrace(); throw e
         }
         //    println("c")
-        val knotName = newTermName("knot" + rw.short)
         //        println("recTypes " + recTypes)
 
         val things = recTypes.map { case (TypeKey(tpe), name) =>
@@ -158,7 +152,7 @@ abstract class Derive(rw: Derive.Config){
 
           q"""
             implicit lazy val $name: ${c.prefix}.${newTypeName(rw.long)}[$tpe] = {
-              ${c.prefix}.Knot.${newTermName(rw.short)}[$tpe](() => $pick)
+              ${c.prefix}.Knot.${newTermName(rw.long)}[$tpe](() => $pick)
             }
           """
         }

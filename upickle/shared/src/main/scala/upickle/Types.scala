@@ -14,30 +14,30 @@ trait MacroImplicits {this: Types =>
 * other internal files can use it, while also mixing it into the `upickle`
 * package to form the public API
 */
-trait Types{
+trait Types{ types =>
   /**
    * Classes that provides a mutable version of [[ReadWriter]], used to
    * allow serialization and deserialization of recursive data structure
    */
   object Knot {
 
-    class RW[T](var _write: T => Js.Value, var _read: PF[Js.Value, T]) extends Reader[T] with Writer[T] {
+    class RW[T](var _write: T => Js.Value, var _read: PF[Js.Value, T]) extends types.Reader[T] with types.Writer[T] {
       def read0 = _read
 
       def write0 = _write
 
-      def copyFrom(rw: Reader[T] with Writer[T]) = {
+      def copyFrom(rw: types.Reader[T] with types.Writer[T]) = {
         _write = rw.write
         _read = rw.read
       }
     }
 
-    case class R[T](reader0: () => Reader[T]) extends Reader[T] {
+    case class Reader[T](reader0: () => types.Reader[T]) extends types.Reader[T] {
       lazy val reader = reader0()
       def read0 = reader.read0
     }
 
-    case class W[T](writer0: () => Writer[T]) extends Writer[T] {
+    case class Writer[T](writer0: () => types.Writer[T]) extends types.Writer[T] {
       lazy val writer = writer0()
       def write0 = writer.write0
     }

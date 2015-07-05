@@ -15,25 +15,12 @@ import acyclic.file
  * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
-
-
-
   object R extends Derive.Config(
-    "R",
-    "Reader",
-    Seq("tupled", "apply"),
-    false,
-    true,
-    "CaseR"
+    "Reader"
   )
 
   object W extends Derive.Config(
-    "W",
-    "Writer",
-    Seq("unapply", "unapplySeq"),
-    true,
-    true,
-    "CaseW"
+    "Writer"
   )
 
   abstract class Reading extends Derive(R){
