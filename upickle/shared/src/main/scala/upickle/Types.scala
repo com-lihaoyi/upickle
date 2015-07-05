@@ -10,10 +10,10 @@ trait MacroImplicits {this: Types =>
   implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T, Writer]
 }
 /**
- * Basic functionality to be able to read and write objects. Kept as a trait so
- * other internal files can use it, while also mixing it into the `upickle`
- * package to form the public API
- */
+* Basic functionality to be able to read and write objects. Kept as a trait so
+* other internal files can use it, while also mixing it into the `upickle`
+* package to form the public API
+*/
 trait Types{
   /**
    * Classes that provides a mutable version of [[ReadWriter]], used to

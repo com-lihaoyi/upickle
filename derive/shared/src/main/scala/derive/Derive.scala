@@ -1,8 +1,9 @@
-package upickle
+package derive
 import ScalaVersionStubs._
 import acyclic.file
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
+
 /**
  * Used to annotate either case classes or their fields, telling uPickle
  * to use a custom string as the key for that class/field rather than the
@@ -15,7 +16,8 @@ object Derive{
                val actionNames: Seq[String],
                val oneTupled: Boolean)
 }
-abstract class Derive[M[_]](rw: Derive.Config){
+
+abstract class Derive(rw: Derive.Config){
   val c: Context
   import c.universe._
   def internal = q"${c.prefix}.Internal"
@@ -31,10 +33,7 @@ abstract class Derive[M[_]](rw: Derive.Config){
   def derive[T: c.WeakTypeTag](treeMaker: Seq[c.Tree] => c.Tree) = {
     val tpe = weakTypeTag[T].tpe
     checkType(tpe)
-    val res = c.Expr[M[T]] {
-      picklerFor(tpe)(treeMaker)
-    }
-    res
+    picklerFor(tpe)(treeMaker)
   }
 
   def fleshedOutSubtypes(tpe: TypeRef) = {
@@ -53,6 +52,7 @@ abstract class Derive[M[_]](rw: Derive.Config){
     impl
     impl
   }
+
   /**
    * Generates a pickler for a particular type
    *
@@ -68,6 +68,7 @@ abstract class Derive[M[_]](rw: Derive.Config){
     //    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
 
     def implicited(tpe: Type) = q"implicitly[${c.prefix}.${newTypeName(rw.long)}[$tpe]]"
+
     c.typeCheck(implicited(tpe), withMacrosDisabled = true, silent = true) match {
       case EmptyTree =>
 

@@ -14,10 +14,10 @@ import java.util.UUID
 
 
 /**
- * Typeclasses to allow read/writing of all the common
- * data-types and data-structures in the standard library
- */
-trait Implicits extends Types { this: Generated =>
+* Typeclasses to allow read/writing of all the common
+* data-types and data-structures in the standard library
+*/
+trait Implicits extends Types { imp: Generated =>
 
 
 
@@ -34,10 +34,11 @@ trait Implicits extends Types { this: Generated =>
   object Internal extends GeneratedInternal{
     type Reader[T] = Implicits.this.Reader[T]
     type Writer[T] = Implicits.this.Writer[T]
-    def makeReader[T](pf: PartialFunction[Js.Value, T]) = Implicits.this.Reader(pf)
-    def makeWriter[T](f: T => Js.Value) = Implicits.this.Writer(f)
-    def readJs[T: Reader](expr: Js.Value) = Implicits.this.readJs(expr)
-    def writeJs[T: Writer](expr: T) = Implicits.this.writeJs(expr)
+    def makeReader[T](pf: PartialFunction[Js.Value, T]) = imp.Reader(pf)
+    def makeWriter[T](f: T => Js.Value) = imp.Writer(f)
+    // Have to manually spell out the implicit here otherwise compiler crashes
+    def readJs[T](expr: Js.Value)(implicit ev: Reader[T]): T = imp.readJs(expr)(ev)
+    def writeJs[T](expr: T)(implicit ev: Writer[T]): Js.Value = imp.writeJs(expr)(ev)
 
     def merge0[T: ClassTag, R, U](f: T => R): U => R = {
       case t: T => f(t)
@@ -209,7 +210,7 @@ trait Implicits extends Types { this: Generated =>
     case x: V => Js.Arr(Js.Str(n), rw.write(x))
   }
 
-  protected[this] def makeReader[T](pf: PartialFunction[Js.Value, T]) = Reader.apply(pf)
-  protected[this] def makeWriter[T](f: T => Js.Value): Writer[T] = Writer.apply(f)
+  def makeReader[T](pf: PartialFunction[Js.Value, T]) = Reader.apply(pf)
+  def makeWriter[T](f: T => Js.Value): Writer[T] = Writer.apply(f)
 
 }

@@ -4,42 +4,42 @@ import scala.annotation.switch
 import scala.collection.mutable.StringBuilder
 
 /**
- * Exceptions that can be thrown by upickle; placed in the same file
- * as JSON parser due to circular dependencies between exception types
- * and JSON types
- */
+* Exceptions that can be thrown by upickle; placed in the same file
+* as JSON parser due to circular dependencies between exception types
+* and JSON types
+*/
 sealed trait Invalid extends Exception
 object Invalid{
 
   /**
    * Thrown when the JSON parser finds itself trying to parse invalid JSON.
-   * 
+   *
    * @param msg Human-readable text saying what went wrong
    * @param input The `String` it was trying to parse
    */
   case class Json(msg: String, input: String)
-    extends scala.Exception(s"JsonParse Error: $msg in $input")
+    extends scala.Exception()
     with Invalid
 
   /**
-   * Thrown when uPickle tries to convert a JSON blob into a given data 
-   * structure but fails because part the blob is invalid 
-   * 
+   * Thrown when uPickle tries to convert a JSON blob into a given data
+   * structure but fails because part the blob is invalid
+   *
    * @param data The section of the JSON blob that uPickle tried to convert.
    *             This could be the entire blob, or it could be some subtree.
    * @param msg Human-readable text saying what went wrong
    */
   case class Data(data: Js.Value, msg: String)
-    extends Exception(s"data: $data msg: $msg")
+    extends Exception()
     with Invalid
 }
 
 /**
- * A very small, very simple JSON AST that uPickle uses as part of its
- * serialization process. A common standard between the Jawn AST (which
- * we don't use so we don't pull in the bulk of Spire) and the Javascript
- * JSON AST.
- */
+* A very small, very simple JSON AST that uPickle uses as part of its
+* serialization process. A common standard between the Jawn AST (which
+* we don't use so we don't pull in the bulk of Spire) and the Javascript
+* JSON AST.
+*/
 object Js {
   sealed trait Value extends Any {
     def value: Any

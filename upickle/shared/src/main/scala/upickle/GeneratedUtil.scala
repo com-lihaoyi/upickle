@@ -1,16 +1,16 @@
 package upickle
 import acyclic.file
 /**
- * Stuff that generated code depends on but I don't want
- * to put in the stringly typed code-generator
- */
+* Stuff that generated code depends on but I don't want
+* to put in the stringly typed code-generator
+*/
 private[upickle] trait GeneratedUtil {
-  protected[this] type Reader[T]
-  protected[this] type Writer[T]
-  protected[this] def makeReader[T](pf: PartialFunction[Js.Value, T]): Reader[T]
-  protected[this] def makeWriter[T](f: T => Js.Value): Writer[T]
-  protected[this] def readJs[T: Reader](js: Js.Value): T
-  protected[this] def writeJs[T: Writer](t: T): Js.Value
+  type Reader[T]
+  type Writer[T]
+  def makeReader[T](pf: PartialFunction[Js.Value, T]): Reader[T]
+  def makeWriter[T](f: T => Js.Value): Writer[T]
+  def readJs[T: Reader](js: Js.Value): T
+  def writeJs[T: Writer](t: T): Js.Value
   protected[this] def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T]
 
   protected[this] def readerCaseFunction[T](names: Array[String],

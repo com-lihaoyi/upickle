@@ -1,10 +1,10 @@
 crossScalaVersions := Seq("2.10.4", "2.11.4")
 
-val upickle = crossProject.settings(
+val settings = Seq(
   organization := "com.lihaoyi",
   version := repo.version,
   scalaVersion := "2.10.4",
-  name := "upickle",
+
   scalacOptions := Seq("-unchecked",
     "-deprecation",
     "-encoding", "utf8",
@@ -31,6 +31,37 @@ val upickle = crossProject.settings(
     if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
     else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
   },
+  autoCompilerPlugins := true,
+  //      scalacOptions += "-Xlog-implicits",
+  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
+  pomExtra :=
+    <url>https://github.com/lihaoyi/upickle</url>
+      <licenses>
+        <license>
+          <name>MIT license</name>
+          <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+      </licenses>
+      <scm>
+        <url>git://github.com/lihaoyi/upickle.git</url>
+        <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>lihaoyi</id>
+          <name>Li Haoyi</name>
+          <url>https://github.com/lihaoyi</url>
+        </developer>
+      </developers>
+)
+
+val derive = crossProject.settings(settings:_*).settings(
+  name := "derive"
+)
+val deriveJS = derive.js
+val deriveJVM = derive.jvm
+val upickle = crossProject.dependsOn(derive).settings(settings:_*).settings(
+  name := "upickle",
   sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
     val file = dir / "upickle" / "Generated.scala"
     val tuplesAndCases = (1 to 22).map{ i =>
@@ -77,29 +108,7 @@ val upickle = crossProject.settings(
         }
       """)
     Seq(file)
-  },
-  autoCompilerPlugins := true,
-//      scalacOptions += "-Xlog-implicits",
-  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
-  pomExtra :=
-    <url>https://github.com/lihaoyi/upickle</url>
-      <licenses>
-        <license>
-          <name>MIT license</name>
-          <url>http://www.opensource.org/licenses/mit-license.php</url>
-        </license>
-      </licenses>
-      <scm>
-        <url>git://github.com/lihaoyi/upickle.git</url>
-        <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
-      </scm>
-      <developers>
-        <developer>
-          <id>lihaoyi</id>
-          <name>Li Haoyi</name>
-          <url>https://github.com/lihaoyi</url>
-        </developer>
-      </developers>
+  }
 ).jsSettings(
   scalaJSStage in Test := FullOptStage,
     scalacOptions ++= (if (isSnapshot.value) Seq.empty else Seq({
