@@ -31,7 +31,6 @@ object MacroTests extends TestSuite{
 //  println(write(ADTs.ADTc(1, "lol", (1.1, 1.2))))
 //  implicitly[upickle.old.Writer[ADTs.ADTc]]
 
-
   val tests = TestSuite{
     'mixedIn{
       import MixedIn._

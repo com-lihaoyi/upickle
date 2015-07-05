@@ -31,11 +31,24 @@ object Macros {
   }
 
   def macroRImpl[T, R[_]](c0: Context)(implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
-    new Macros[R](RW.R){val c: c0.type = c0}.read[T](implicitly[c0.WeakTypeTag[T]])
+    import c0._
+    import c0.universe._
+    new Macros[R](RW.R){val c: c0.type = c0}.derive[T](
+      _.map(p => q"$p.read": Tree)
+      .reduce((a, b) => q"$a orElse $b")
+    )(implicitly[c0.WeakTypeTag[T]])
   }
 
   def macroWImpl[T, W[_]](c0: Context)(implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
-    new Macros[W](RW.W){val c: c0.type = c0}.write[T](implicitly[c0.WeakTypeTag[T]])
+    import c0._
+    import c0.universe._
+    def internal = q"${c0.prefix}.Internal"
+    new Macros[W](RW.W){val c: c0.type = c0}.derive[T](
+      things =>
+        if (things.length == 1) q"$internal.merge0(${things(0)}.write)"
+        else things.map(p => q"$p.write": Tree)
+          .reduce((a, b) => q"$internal.merge($a, $b)")
+    )(implicitly[c0.WeakTypeTag[T]])
   }
 }
 
@@ -53,38 +66,13 @@ abstract class Macros[M[_]](rw: RW){
       c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
 
   }
-  def read[T: c.WeakTypeTag] = {
+  def derive[T: c.WeakTypeTag](treeMaker: Seq[c.Tree] => c.Tree) = {
     val tpe = weakTypeTag[T].tpe
-    //    println(Console.BLUE + "START " + Console.RESET + c.enclosingPosition)
     checkType(tpe)
     val res = c.Expr[M[T]] {
-      picklerFor(tpe)(
-        _.map(p => q"$p.read": Tree)
-          .reduce((a, b) => q"$a orElse $b")
-      )
+      picklerFor(tpe)(treeMaker)
     }
-    //    cas.callsiteTyper.context1.openImplicits = o//pen
-    //    println(Console.BLUE + "END " + Console.RESET + tpe)
-//        println(Console.BLUE + res + Console.RESET + tpe)
     res
-  }
-
-  def write[T: c.WeakTypeTag] = {
-    val tpe = weakTypeTag[T].tpe
-//    println(Console.BLUE + "START " + Console.RESET + tpe)
-    checkType(tpe)
-//        println(Console.CYAN + "WRITE" + Console.RESET)
-
-
-    val res = picklerFor(tpe) { things =>
-      if (things.length == 1) q"$internal.merge0(${things(0)}.write)"
-      else things.map(p => q"$p.write": Tree)
-        .reduce((a, b) => q"$internal.merge($a, $b)")
-    }
-    //    println(Console.GREEN + "TYPECHECK" + Console.RESET)
-//            println(res)
-//        println(Console.BLUE + "END " + Console.RESET )
-    c.Expr[M[T]](res)
   }
 
   def fleshedOutSubtypes(tpe: TypeRef) = {
@@ -199,17 +187,16 @@ abstract class Macros[M[_]](rw: RW){
         val things = recTypes.map { case (TypeKey(tpe), name) =>
           val pick =
             if (tpe.typeSymbol.asClass.isTrait) pickleTrait(tpe)(treeMaker)
-            else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(tpe)(treeMaker)
-            else pickleClass(tpe)(treeMaker)
-          val i = freshName
-          val x = freshName
-          val tree = q"""
-          implicit lazy val $name: ${c.prefix}.${newTypeName(rw.long)}[$tpe] = {
-            new ${c.prefix}.Knot.${newTypeName(rw.short)}[$tpe]($pick)
-          }
-        """
-          (i, tree)
+            else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(tpe)
+            else pickleClass(tpe)
+
+          q"""
+            implicit lazy val $name: ${c.prefix}.${newTypeName(rw.long)}[$tpe] = {
+              new ${c.prefix}.Knot.${newTypeName(rw.short)}[$tpe]($pick)
+            }
+          """
         }
+
         val returnName = freshName
         // Do this weird immediately-called-method dance to avoid weird crash
         // in 2.11.x:
@@ -220,7 +207,7 @@ abstract class Macros[M[_]](rw: RW){
         // """
         val res = q"""{
         def $returnName = {
-          ..${things.map(_._2)}
+          ..$things
 
           ${recTypes(TypeKey(tpe))}
         }
@@ -262,8 +249,7 @@ abstract class Macros[M[_]](rw: RW){
     q"""${c.prefix}.${newTermName(rw.long)}[$tpe]($combined)"""
   }
 
-  def pickleCaseObject(tpe: c.Type)
-                      (treeMaker: Seq[c.Tree] => c.Tree) = {
+  def pickleCaseObject(tpe: c.Type) = {
     val mod = tpe.typeSymbol.asClass.module
     val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
     val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
@@ -313,7 +299,7 @@ abstract class Macros[M[_]](rw: RW){
 
     (companion, apply.asMethod.typeParams, argSyms)
   }
-  def pickleClass(tpe: c.Type)(treeMaker: Seq[c.Tree] => c.Tree) = {
+  def pickleClass(tpe: c.Type) = {
 
     val (companion, _, argSyms) = getArgSyms(tpe)
 
