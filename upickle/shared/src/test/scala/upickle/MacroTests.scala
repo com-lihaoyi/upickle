@@ -1,8 +1,8 @@
 package upickle
-
+import acyclic.file
 import utest._
 import upickle.TestUtil._
-import upickle.old._
+import upickle.old.{read, write}
 
 object MacroTests extends TestSuite{
   import Generic.ADT
@@ -27,8 +27,9 @@ object MacroTests extends TestSuite{
 //  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
 
 //  implicitly[Reader[A_]]
-
-//    implicitly[Writer[MixedIn.Obj.ClsB]]
+//  implicitly[upickle.old.Writer[upickle.MixedIn.Obj.ClsB]]
+//  println(write(ADTs.ADTc(1, "lol", (1.1, 1.2))))
+//  implicitly[upickle.old.Writer[ADTs.ADTc]]
 
 
   val tests = TestSuite{
@@ -54,8 +55,9 @@ object MacroTests extends TestSuite{
     'exponential{
 
       // Doesn't even need to execute, as long as it can compile
-      val ww1 = implicitly[upickle.Writer[Exponential.A1]]
+      val ww1 = implicitly[upickle.old.Writer[Exponential.A1]]
     }
+
     'commonCustomStructures{
       'simpleAdt {
 

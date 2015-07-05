@@ -45,10 +45,10 @@ val upickle = crossProject.settings(
         if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
         else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
       (s"""
-        implicit def Tuple${i}W[$writerTypes] = W[Tuple${i}[$typeTuple]](
+        implicit def Tuple${i}W[$writerTypes] = makeWriter[Tuple${i}[$typeTuple]](
           x => Js.Arr($written)
         )
-        implicit def Tuple${i}R[$readerTypes] = R[Tuple${i}[$typeTuple]](
+        implicit def Tuple${i}R[$readerTypes] = makeReader[Tuple${i}[$typeTuple]](
           validate("Array(${i})"){case Js.Arr($pattern) => Tuple${i}($read)}
         )
         """, s"""
@@ -69,8 +69,7 @@ val upickle = crossProject.settings(
          * Auto-generated picklers and unpicklers, used for creating the 22
          * versions of tuple-picklers and case-class picklers
          */
-        trait Generated extends Types with GeneratedUtil{
-          import Aliases._
+        trait Generated extends GeneratedUtil{
           ${tuples.mkString("\n")}
         }
         trait GeneratedInternal extends Generated{

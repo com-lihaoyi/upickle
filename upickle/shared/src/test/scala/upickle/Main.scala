@@ -1,9 +1,7 @@
 package example
 
-import upickle._
-
 
 
 object TestUPickle extends App {
-
+  upickle.old.write(Seq(1, 2, 3))
 }

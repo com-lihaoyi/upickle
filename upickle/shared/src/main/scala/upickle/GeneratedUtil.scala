@@ -1,12 +1,16 @@
 package upickle
 import acyclic.file
-import collection.mutable
 /**
  * Stuff that generated code depends on but I don't want
  * to put in the stringly typed code-generator
  */
 private[upickle] trait GeneratedUtil {
-
+  protected[this] type Reader[T]
+  protected[this] type Writer[T]
+  protected[this] def makeReader[T](pf: PartialFunction[Js.Value, T]): Reader[T]
+  protected[this] def makeWriter[T](f: T => Js.Value): Writer[T]
+  protected[this] def readJs[T: Reader](js: Js.Value): T
+  protected[this] def writeJs[T: Writer](t: T): Js.Value
   protected[this] def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T]
 
   protected[this] def readerCaseFunction[T](names: Array[String],
@@ -44,12 +48,12 @@ private[upickle] trait GeneratedUtil {
   protected[this] def RCase[T](names: Array[String],
                              defaults: Array[Js.Value],
                              read: PartialFunction[Js.Value, T]) = {
-    Reader[T](readerCaseFunction(names, defaults, read))
+    makeReader[T](readerCaseFunction(names, defaults, read))
   }
 
   protected[this] def WCase[T](names: Array[String],
                                defaults: Array[Js.Value],
                                write: T => Js.Value) = {
-    Writer[T](x => arrayToMap(write(x).asInstanceOf[Js.Arr], names, defaults))
+    makeWriter[T](x => arrayToMap(write(x).asInstanceOf[Js.Arr], names, defaults))
   }
 }

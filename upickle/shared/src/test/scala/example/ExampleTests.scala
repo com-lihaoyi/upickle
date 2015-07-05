@@ -1,7 +1,7 @@
 //package example
-//
+//import acyclic.file
 //import upickle.TestUtil
-//import upickle.old._
+//import upickle.old.{read, write, _}
 //import utest._
 //object Simple {
 //  case class Thing(a: Int, b: String)
@@ -40,10 +40,10 @@
 //  import upickle.Js
 //  class CustomThing2(val i: Int, val s: String)
 //  object CustomThing2{
-//    implicit val thing2Writer = upickle.Writer[CustomThing2]{
+//    implicit val thing2Writer = upickle.old.Writer[CustomThing2]{
 //      case t => Js.Str(t.i + " " + t.s)
 //    }
-//    implicit val thing2Reader = upickle.Reader[CustomThing2]{
+//    implicit val thing2Reader = upickle.old.Reader[CustomThing2]{
 //      case Js.Str(str) =>
 //        val Array(i, s) = str.split(" ")
 //        new CustomThing2(i.toInt, s)
@@ -63,7 +63,7 @@
 //  import TestUtil._
 //  val tests = TestSuite{
 //    'simple{
-//      import upickle._
+//      import upickle.old._
 //
 //      write(1)                          --> "1"
 //
@@ -78,7 +78,7 @@
 //      read[Tup]("""[1, "omg", true]""") --> (1, "omg", true)
 //    }
 //    'more{
-//      import upickle._
+//      import upickle.old._
 //      'booleans{
 //        write(true: Boolean)              --> "true"
 //        write(false: Boolean)             --> "false"
@@ -123,7 +123,7 @@
 //      'caseClass{
 //        import upickle._
 //        write(Thing(1, "gg"))                     --> """{"a":1,"b":"gg"}"""
-//        write(Big(1, true, "lol", 'Z', Thing(7, "")))(Writer.macroW)    -->
+//        write(Big(1, true, "lol", 'Z', Thing(7, ""))) -->
 //          """{"i":1,"b":true,"str":"lol","c":"Z","t":{"a":7,"b":""}}"""
 //
 //      }
@@ -156,7 +156,7 @@
 //      }
 //    }
 //    'defaults{
-//      import upickle._
+//      import upickle.old._
 //      'reading{
 //
 //        read[FooDefault]("{}")                --> FooDefault(10, "lol")
@@ -170,7 +170,7 @@
 //      }
 //    }
 //    'keyed{
-//      import upickle._
+//      import upickle.old._
 //      'attrs{
 //        write(KeyBar(10))                     --> """{"hehehe":10}"""
 //        read[KeyBar]("""{"hehehe": 10}""")    --> KeyBar(10)

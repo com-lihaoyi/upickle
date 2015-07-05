@@ -1,5 +1,5 @@
 package upickle
-
+import acyclic.file
 // These guys all have to be out here because uPickle doesn't
 // support pickling local classes and objects
 object ADTs {
@@ -107,10 +107,10 @@ object Custom {
   class Thing2(val i: Int, val s: String) extends ThingBase
 
   abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
-    implicit val thing2Writer = upickle.Writer[T]{
+    implicit val thing2Writer = upickle.old.Writer[T]{
       case t => Js.Str(t.i + " " + t.s)
     }
-    implicit val thing2Reader = upickle.Reader[T]{
+    implicit val thing2Reader = upickle.old.Reader[T]{
       case Js.Str(str) =>
         val Array(i, s) = str.split(" ")
         f(i.toInt, s)

@@ -30,20 +30,21 @@ object Macros {
 
   }
 
-  def macroRImpl[T: c0.WeakTypeTag](c0: Context): c0.Expr[Reader[T]] = {
-    new Macros{val c: c0.type = c0}.read[T](implicitly[c0.WeakTypeTag[T]])
+  def macroRImpl[T, R[_]](c0: Context)(implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
+    new Macros[R]{val c: c0.type = c0}.read[T](implicitly[c0.WeakTypeTag[T]])
   }
 
-  def macroWImpl[T: c0.WeakTypeTag](c0: Context): c0.Expr[Writer[T]] = {
-    new Macros{val c: c0.type = c0}.write[T](implicitly[c0.WeakTypeTag[T]])
+  def macroWImpl[T, W[_]](c0: Context)(implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
+    new Macros[W]{val c: c0.type = c0}.write[T](implicitly[c0.WeakTypeTag[T]])
   }
 }
 
-abstract class Macros{
+abstract class Macros[M[_]]{
   val c: Context
   import Macros._
   import c.universe._
   def internal = q"${c.prefix}.Internal"
+  def freshName = c.fresh[TermName]("upickle")
   def checkType(tpe: Type) = {
     if (tpe == typeOf[Nothing]){
       c.echo(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
@@ -56,7 +57,7 @@ abstract class Macros{
     val tpe = weakTypeTag[T].tpe
     //    println(Console.BLUE + "START " + Console.RESET + c.enclosingPosition)
     checkType(tpe)
-    val res = c.Expr[Reader[T]] {
+    val res = c.Expr[M[T]] {
       picklerFor(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
           .reduce((a, b) => q"$a orElse $b")
@@ -82,8 +83,8 @@ abstract class Macros{
     }
     //    println(Console.GREEN + "TYPECHECK" + Console.RESET)
 //            println(res)
-//        println(Console.BLUE + "END " + Console.RESET + c.enclosingPosition)
-    c.Expr[Writer[T]](res)
+//        println(Console.BLUE + "END " + Console.RESET )
+    c.Expr[M[T]](res)
   }
 
   def fleshedOutSubtypes(tpe: TypeRef) = {
@@ -125,16 +126,20 @@ abstract class Macros{
           override def equals(o: Any) = t =:= o.asInstanceOf[TypeKey].t
         }
         val seen = collection.mutable.Set.empty[TypeKey]
-        def rec(tpe: c.Type, name: TermName = c.fresh[TermName]("t")): Map[TypeKey, TermName] = {
+        def rec(tpe: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
           val key = TypeKey(tpe)
-                println("rec " + tpe + " " + seen)
+//                println("rec " + tpe + " " + seen)
           if (seen(TypeKey(tpe))) Map()
           else {
             memo.getOrElseUpdate(TypeKey(tpe), {
 
               // If it can't find any non-macro implicits, try to recurse into the type
               val dummies = tpe match {
-                case TypeRef(_, _, args) => args.map(tpe => q"implicit def ${c.fresh[TermName]("t")}: ${c.prefix}.${newTypeName(rw.long)}[${tpe}] = ???")
+                case TypeRef(_, _, args) =>
+                  args.map(TypeKey)
+                    .distinct
+                    .map(_.t)
+                    .map(tpe => q"implicit def ${freshName}: ${c.prefix}.${newTypeName(rw.long)}[${tpe}] = ???")
                 case _ => Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
@@ -182,30 +187,30 @@ abstract class Macros{
         }
 
         //    println("a")
-        val first = c.fresh[TermName]("t")
+        val first = freshName
         //    println("b")
         val recTypes = try rec(tpe, first) catch {
           case e => e.printStackTrace(); throw e
         }
         //    println("c")
         val knotName = newTermName("knot" + rw.short)
-        println("recTypes " + recTypes)
+//        println("recTypes " + recTypes)
 
         val things = recTypes.map { case (TypeKey(tpe), name) =>
           val pick =
             if (tpe.typeSymbol.asClass.isTrait) pickleTrait(tpe, rw)(treeMaker)
             else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(tpe, rw)(treeMaker)
             else pickleClass(tpe, rw)(treeMaker)
-          val i = c.fresh[TermName]("i")
-          val x = c.fresh[TermName]("x")
+          val i = freshName
+          val x = freshName
           val tree = q"""
           implicit lazy val $name: ${c.prefix}.${newTypeName(rw.long)}[$tpe] = {
-            new upickle.Knot.${newTypeName(rw.short)}[$tpe]($pick)
+            new ${c.prefix}.Knot.${newTypeName(rw.short)}[$tpe]($pick)
           }
         """
           (i, tree)
         }
-        val returnName = c.fresh[TermName]("ret")
+        val returnName = freshName
         // Do this weird immediately-called-method dance to avoid weird crash
         // in 2.11.x:
         //
@@ -249,7 +254,7 @@ abstract class Macros{
     //    println("pickleTrait")
     val subPicklers =
       fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
-        .map(subCls => q"implicitly[upickle.${newTypeName(rw.long)}[$subCls]]")
+        .map(subCls => q"implicitly[${c.prefix}.${newTypeName(rw.long)}[$subCls]]")
         .toSeq
     //    println(Console.GREEN + "subPicklers " + Console.RESET + subPicklerss)
     val combined = treeMaker(subPicklers)
@@ -345,12 +350,13 @@ abstract class Macros{
       if (args.length == 0) // 0-arg case classes are treated like `object`s
         q"$internal.${newTermName("Case0"+rw.short)}($companion())"
       else if (args.length == 1 && rw == RW.W) // 1-arg case classes need their output wrapped in a Tuple1
-        q"$internal.$rwName(x => $companion.$actionName[..$typeArgs](x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
+        q"$internal.$rwName($companion.$actionName[..$typeArgs](_: $tpe).map(Tuple1.apply), Array(..$args), Array(..$defaults)): ${c.prefix}.${newTypeName(rw.long)}[$tpe]"
       else // Otherwise, reading and writing are kinda identical
-        q"$internal.$rwName($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
+        q"$internal.$rwName($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): ${c.prefix}.${newTypeName(rw.long)}[$tpe]"
 
     annotate(tpe)(pickler)
   }
+
 
   def companionTree(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol
