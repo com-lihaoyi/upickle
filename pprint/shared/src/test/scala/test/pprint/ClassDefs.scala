@@ -7,6 +7,7 @@ object Nested{
   object CDef extends CDef
 
 }
+case object FooSingleton
 case class Foo(integer: Int, sequence: Seq[String])
 
 case class FooG[T](t: T, sequence: Seq[String])

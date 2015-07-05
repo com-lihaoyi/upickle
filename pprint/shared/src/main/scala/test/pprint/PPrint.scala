@@ -362,7 +362,7 @@ object Internals {
 
 
   trait LowPriPPrint {
-//    implicit def FinalRepr[T]: PPrint[T] = macro LowerPriPPrint.FinalRepr[T]
+    implicit def FinalRepr[T]: PPrint[T] = macro LowerPriPPrint.FinalRepr[T]
   }
 
   def fromUnpacker[T](prefix: T => String)(f: Internals.Unpacker[T]): PPrinter[T] = PPrinter[T]{
@@ -370,40 +370,77 @@ object Internals {
   }
 
   object LowerPriPPrint {
-//    def fromUnpackerTwo[T <: Product](f: (T, Config) => Iter[Iter[String]])(implicit cfg: ammonite.pprint.Config) = {
-//      ammonite.pprint.PPrint[T](
-//        ammonite.pprint.Internals.fromUnpacker[T](_.productPrefix){
-//          f
-//        },
-//        implicitly[Config]
-//      )
-//    }
-//    def FinalRepr[T: c0.WeakTypeTag](c0: derive.ScalaVersionStubs.Context) = c0.Expr[PPrint[T]] {
-//      import c0.universe._
-//      println("FinalRepr " + weakTypeOf[T])
-//      val R = new Derive{
-//        def typeclassName = "PPrint"
-//        def wrapObject(t: Tree): Tree
-//        def wrapCase0(t: Tree, targetType: c.Type): Tree
-//        def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
-//        def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
-//      }
-//      Config(
-//        "PPrint",
-//        "PPrint",
-//        Seq("unapply", "unapplySeq"),
-//        false,
-//        false,
-//        n => s"Unpacker.Product${n}Unpacker"
-//      )
-//
-//      val res = new Derive(R){val c: c0.type = c0}.derive[T](
-//        _.map(p => q"$p.read": Tree)
-//          .reduce((a, b) => q"$a orElse $b")
-//      )(implicitly[c0.WeakTypeTag[T]])
-//      println(res)
-//      res
-//    }
+    def FinalRepr[T: c0.WeakTypeTag](c0: derive.ScalaVersionStubs.Context) = c0.Expr[PPrint[T]] {
+      import c0.universe._
+      println("FinalRepr " + weakTypeOf[T])
+      val res = new Deriver {
+        val c: c0.type = c0
+        def typeclass = c.weakTypeTag[pprint.PPrint[_]]
+      }.derive[T]
+      println(res)
+      res
+    }
   }
+  abstract class Deriver extends Derive[pprint.PPrint]{
+    import c._
+    import c.universe._
 
+
+    def wrapObject(t: Tree) = {
+
+      q"""
+      pprint.PPrint[$t.type](
+        pprint.PPrinter.Literal,
+        implicitly[pprint.Config]
+      )
+      """
+    }
+    def thingy(n: Int, targetType: Type) = {
+      val (companion, paramTypes, argSyms) = getArgSyms(targetType)
+      val actionName =
+        Seq("unapply", "unapplySeq")
+          .map(newTermName(_))
+          .find(companion.tpe.member(_) != NoSymbol)
+          .getOrElse(c.abort(c.enclosingPosition, "None of the following methods " +
+          "were defined: unapply, unapplySeq"))
+      def get = q"$companion.$actionName(t).get"
+      val w = n match {
+        case 0 => q"()"
+        case 1 => q"Tuple1($get)"
+        case n => get
+      }
+      q"""
+      pprint.PPrint[$targetType](
+        pprint.PPrinter[$targetType]((x, cfg) =>
+          pprint.Internals.handleChunks(
+            x.productPrefix,
+            cfg,
+            c => Iterator(pprint.PPrinter.render(x, c)
+          ))
+        ),
+        implicitly[pprint.Config]
+      )
+      """
+    }
+    def knot(t: Tree) = t
+    def mergeTrait(ts: Seq[Tree], targetType: c.Type) = ts(0)
+
+    def wrapCase0(t: Tree, targetType: c.Type) = thingy(0, targetType)
+    def wrapCase1(t: Tree,
+                  arg: String,
+                  default: Tree,
+                  typeArgs: Seq[c.Type],
+                  argTypes: Type,
+                  targetType: c.Type) = {
+      thingy(1, targetType)
+    }
+    def wrapCaseN(t: Tree,
+                  args: Seq[String],
+                  defaults: Seq[Tree],
+                  typeArgs: Seq[c.Type],
+                  argTypes: Seq[Type],
+                  targetType: c.Type): Tree = {
+      thingy(args.length, targetType)
+    }
+  }
 }
