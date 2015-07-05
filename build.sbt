@@ -32,7 +32,7 @@ val settings = Seq(
     else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
   },
   autoCompilerPlugins := true,
-  //      scalacOptions += "-Xlog-implicits",
+  //scalacOptions += "-Xlog-implicits",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
   pomExtra :=
     <url>https://github.com/lihaoyi/upickle</url>

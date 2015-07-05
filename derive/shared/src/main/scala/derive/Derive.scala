@@ -10,19 +10,35 @@ import scala.language.experimental.macros
  * default string which is the full-name of that class/field.
  */
 class key(s: String) extends StaticAnnotation
-trait DeriveApi{
+trait DeriveApi[M[_]]{
   val c: Context
   import c.universe._
+  def typeclass: c.WeakTypeTag[M[_]]
   def typeclassName: String
   def wrapObject(t: Tree): Tree
   def wrapCase0(t: Tree, targetType: c.Type): Tree
   def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
   def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
+  def knot(t: Tree): Tree
+  def mergeTrait(ts: Seq[Tree], targetType: c.Type): Tree
 }
-abstract class Derive extends DeriveApi{
+abstract class Derive[M[_]] extends DeriveApi[M]{
 
   import c.universe._
-  def internal = q"${c.prefix}.Internal"
+  import compat._
+  def typeclassFor(t: Type) = {
+//    println("typeclassFor " + weakTypeOf[M[_]](typeclass))
+
+    weakTypeOf[M[_]](typeclass) match {
+      case TypeRef(a, b, _) =>
+        TypeRef(a, b, List(t))
+      case x =>
+        println("???")
+        println(x)
+        println(x.getClass)
+        ???
+    }
+  }
   def freshName = c.fresh[TermName]("upickle")
 
 
@@ -34,14 +50,18 @@ abstract class Derive extends DeriveApi{
 //      c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
 
   }
-  def derive[T: c.WeakTypeTag](treeMaker: Seq[c.Tree] => c.Tree) = {
+  def derive[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
     checkType(tpe)
-    picklerFor(tpe)(treeMaker)
+    picklerFor(tpe)
   }
 
+  /**
+   * If a super-type is generic, find all the subtypes, but at the same time
+   * fill in all the generic type parameters that are based on the super-type's
+   * concrete type
+   */
   def fleshedOutSubtypes(tpe: TypeRef) = {
-    //    println(Console.CYAN + "fleshedOutSubTypes " + Console.RESET + tpe)
     // Get ready to run this twice because for some reason scalac always
     // drops the type arguments from the subclasses the first time we
     // run this in 2.10.x
@@ -59,19 +79,11 @@ abstract class Derive extends DeriveApi{
 
   /**
    * Generates a pickler for a particular type
-   *
-   * @param tpe The type we are generating the pickler for
-   * @param rw Configuration that determines whether it's a Reader or
-   *           a Writer, together with the various names which vary
-   *           between those two choices
-   * @param treeMaker How to merge the trees of the multiple subpicklers
-   *                  into one larger tree
    */
-  def picklerFor(tpe: c.Type)
-                (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
+  def picklerFor(tpe: c.Type): c.Tree = {
 //    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
 
-    def implicited(tpe: Type) = q"implicitly[${c.prefix}.${newTypeName(typeclassName)}[$tpe]]"
+    def implicited(tpe: Type) = q"implicitly[${typeclassFor(tpe)}]"
 
     c.typeCheck(implicited(tpe), withMacrosDisabled = true, silent = true) match {
       case EmptyTree =>
@@ -95,14 +107,14 @@ abstract class Derive extends DeriveApi{
                   args.map(TypeKey)
                     .distinct
                     .map(_.t)
-                    .map(tpe => q"implicit def ${freshName}: ${c.prefix}.${newTypeName(typeclassName)}[${tpe}] = ???")
+                    .map(tpe => q"implicit def $freshName: ${typeclassFor(tpe)} = ???")
                 case _ => Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
-//                            println("TC " + name + " " + probe)
+              println("TC " + name + " " + probe)
               c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
                 case EmptyTree =>
-//                                    println("Empty")
+                  println("Empty")
                   seen.add(key)
                   tpe.normalize match {
                     case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
@@ -134,7 +146,7 @@ abstract class Derive extends DeriveApi{
                   }
 
                 case t =>
-//                                    println("Present " + t)
+                  println("Present")
                   Map()
               }
 
@@ -153,16 +165,16 @@ abstract class Derive extends DeriveApi{
 
         val things = recTypes.map { case (TypeKey(tpe), name) =>
           val pick =
-            if (tpe.typeSymbol.asClass.isTrait) pickleTrait(tpe)(treeMaker)
-            else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(tpe)
-            else pickleClass(tpe)
+            if (tpe.typeSymbol.asClass.isTrait) deriveTrait(tpe)
+            else if (tpe.typeSymbol.isModuleClass) deriveObject(tpe)
+            else deriveClass(tpe)
 
           q"""
-            implicit lazy val $name: ${c.prefix}.${newTypeName(typeclassName)}[$tpe] = {
-              ${c.prefix}.Knot.${newTermName(typeclassName)}[$tpe](() => $pick)
-            }
+            implicit lazy val $name: ${typeclassFor(tpe)} = ${knot(pick)}
           """
+
         }
+
 
         val returnName = freshName
         // Do this weird immediately-called-method dance to avoid weird crash
@@ -186,8 +198,7 @@ abstract class Derive extends DeriveApi{
     }
   }
 
-  def pickleTrait(tpe: c.Type)
-                 (treeMaker: Seq[c.Tree] => c.Tree): c.universe.Tree = {
+  def deriveTrait(tpe: c.Type): c.universe.Tree = {
     val clsSymbol = tpe.typeSymbol.asClass
 
     if (!clsSymbol.isSealed) {
@@ -208,15 +219,66 @@ abstract class Derive extends DeriveApi{
     //    println("pickleTrait")
     val subPicklers =
       fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
-        .map(subCls => q"implicitly[${c.prefix}.${newTypeName(typeclassName)}[$subCls]]")
+        .map(subCls => q"implicitly[${typeclassFor(subCls)}]")
         .toSeq
     //    println(Console.GREEN + "subPicklers " + Console.RESET + subPicklerss)
-    val combined = treeMaker(subPicklers)
+    mergeTrait(subPicklers, tpe)
 
-    q"""${c.prefix}.${newTermName(typeclassName)}[$tpe]($combined)"""
   }
 
-  def pickleCaseObject(tpe: c.Type) = {
+  def deriveClass(tpe: c.Type) = {
+
+    val (companion, paramTypes, argSyms) = getArgSyms(tpe)
+
+    //    println("argSyms " + argSyms.map(_.typeSignature))
+    val args = argSyms.map{ p =>
+      customKey(p).getOrElse(p.name.toString)
+    }
+
+    val defaults = argSyms.zipWithIndex.map { case (s, i) =>
+      val defaultName = newTermName("apply$default$" + (i + 1))
+      companion.tpe.member(defaultName) match{
+        case NoSymbol => q"null"
+        case _ => q"${c.prefix}.writeJs($companion.$defaultName)"
+      }
+    }
+
+    val typeArgs = tpe match {
+      case TypeRef(_, _, args) => args
+      case _ => c.abort(
+        c.enclosingPosition,
+        s"Don't know how to pickle type $tpe"
+      )
+    }
+
+
+    def func(t: Type) = {
+
+      if (argSyms.length == 0) t
+      else {
+        val base = argSyms.map(_.typeSignature.typeSymbol)
+        val concrete = tpe.normalize.asInstanceOf[TypeRef].args
+        if (t.typeSymbol != definitions.RepeatedParamClass) t.substituteTypes(base, concrete)
+        else {
+          val TypeRef(pref, sym, args) = typeOf[Seq[Int]]
+          import compat._
+          TypeRef(pref, sym, t.asInstanceOf[TypeRef].args)
+        }
+      }
+    }
+    val pickler =
+      if (args.length == 0) // 0-arg case classes are treated like `object`s
+        wrapCase0(companion, tpe)
+      else if (args.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
+        wrapCase1(companion, args(0), defaults(0), typeArgs, func(argSyms(0).typeSignature), tpe)
+      else // Otherwise, reading and writing are kinda identical
+        wrapCaseN(companion, args, defaults, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
+
+    annotate(tpe)(q"$pickler")
+  }
+
+
+  def deriveObject(tpe: c.Type) = {
     val mod = tpe.typeSymbol.asClass.module
     val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
     val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
@@ -268,57 +330,11 @@ abstract class Derive extends DeriveApi{
 
     (companion, apply.asMethod.typeParams, argSyms)
   }
-  def pickleClass(tpe: c.Type) = {
 
-    val (companion, paramTypes, argSyms) = getArgSyms(tpe)
-
-    //    println("argSyms " + argSyms.map(_.typeSignature))
-    val args = argSyms.map{ p =>
-      customKey(p).getOrElse(p.name.toString)
-    }
-
-    val defaults = argSyms.zipWithIndex.map { case (s, i) =>
-      val defaultName = newTermName("apply$default$" + (i + 1))
-      companion.tpe.member(defaultName) match{
-        case NoSymbol => q"null"
-        case _ => q"${c.prefix}.writeJs($companion.$defaultName)"
-      }
-    }
-
-    val typeArgs = tpe match {
-      case TypeRef(_, _, args) => args
-      case _ => c.abort(
-        c.enclosingPosition,
-        s"Don't know how to pickle type $tpe"
-      )
-    }
-
-
-    def func(t: Type) = {
-
-      if (argSyms.length == 0) t
-      else {
-        val base = argSyms.map(_.typeSignature.typeSymbol)
-        val concrete = tpe.normalize.asInstanceOf[TypeRef].args
-        if (t.typeSymbol != definitions.RepeatedParamClass) t.substituteTypes(base, concrete)
-        else {
-          val TypeRef(pref, sym, args) = typeOf[Seq[Int]]
-          import compat._
-          TypeRef(pref, sym, t.asInstanceOf[TypeRef].args)
-        }
-      }
-    }
-    val pickler =
-      if (args.length == 0) // 0-arg case classes are treated like `object`s
-        wrapCase0(companion, tpe)
-      else if (args.length == 1) // 1-arg case classes need their output wrapped in a Tuple1
-        wrapCase1(companion, args(0), defaults(0), typeArgs, func(argSyms(0).typeSignature), tpe)
-      else // Otherwise, reading and writing are kinda identical
-        wrapCaseN(companion, args, defaults, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
-
-    annotate(tpe)(q"$pickler")
-  }
-
+  /**
+   * Special haxx0rs to get us the real companion symbol using the
+   * compiler internals, which isn't possible just using the public API
+   */
   def companionTree(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol
 

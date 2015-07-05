@@ -15,7 +15,7 @@ import acyclic.file
  * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
-  abstract class Reading extends Derive{
+  abstract class Reading[M[_]] extends Derive[M]{
     val c: Context
     import c.universe._
     def typeclassName = "Reader"
@@ -51,8 +51,16 @@ object Macros {
         )
       """
     }
+    def mergeTrait(ts: Seq[Tree], targetType: c.Type): Tree = {
+      val merged =
+        ts.map(p => q"$p.read": Tree)
+          .reduce((a, b) => q"$a orElse $b")
+      q"${c.prefix}.Reader[$targetType]($merged)"
+    }
+    def knot(t: Tree) = q"${c.prefix}.Knot.Reader(() => $t)"
+
   }
-  abstract class Writing extends Derive{
+  abstract class Writing[M[_]] extends Derive[M]{
     val c: Context
     import c.universe._
     def typeclassName = "Writer"
@@ -60,7 +68,6 @@ object Macros {
     def wrapCase0(t: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($t.unapply)"
     def findUnapply(tpe: Type) = {
       val (companion, paramTypes, argSyms) = getArgSyms(tpe)
-      println("findUnapply " + tpe)
       Seq("unapply", "unapplySeq")
         .map(newTermName(_))
         .find(companion.tpe.member(_) != NoSymbol)
@@ -79,6 +86,7 @@ object Macros {
           Array($default)
         )
         """
+    def internal = q"${c.prefix}.Internal"
     def wrapCaseN(t: c.Tree,
                   args: Seq[String],
                   defaults: Seq[c.Tree],
@@ -91,33 +99,47 @@ object Macros {
           Array(..$defaults)
         )
       """
-
+    def mergeTrait(ts: Seq[Tree], targetType: c.Type) = {
+      val merged =
+        if (ts.length == 1) q"$internal.merge0(${ts(0)}.write)"
+        else ts.map(p => q"$p.write": Tree)
+          .reduce((a, b) => q"$internal.merge($a, $b)")
+      q"${c.prefix}.Writer[$targetType]($merged)"
+    }
+    def knot(t: Tree) = q"${c.prefix}.Knot.Writer(() => $t)"
   }
-  def macroRImpl[T, R[_]](c0: Context)(implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
+  def macroRImpl[T, R[_]](c0: Context)
+                         (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
     import c0._
     import c0.universe._
 
-    val res = new Reading{val c: c0.type = c0}.derive[T](
-      _.map(p => q"$p.read": Tree)
-        .reduce((a, b) => q"$a orElse $b")
-    )(implicitly[c0.WeakTypeTag[T]])
+    val res = new Reading[R]{
+      val c: c0.type = c0
+      def typeclass = e2
+    }.derive[T]
 //    println(res)
     c0.Expr[R[T]](res)
   }
 
-  def macroWImpl[T, W[_]](c0: Context)(implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
+  def macroWImpl[T, W[_]](c0: Context)
+                            (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
     import c0._
     import c0.universe._
-    def internal = q"${c0.prefix}.Internal"
-    val res = new Writing{val c: c0.type = c0}.derive[T](
-      things =>
-        if (things.length == 1) q"$internal.merge0(${things(0)}.write)"
-        else things.map(p => q"$p.write": Tree)
-          .reduce((a, b) => q"$internal.merge($a, $b)")
-    )(implicitly[c0.WeakTypeTag[T]])
+
+    val res = new Writing[W]{
+      val c: c0.type = c0
+      def typeclass = e2
+    }.derive[T]
 //    println(res)
     c0.Expr[W[T]](res)
   }
+  import language.experimental._
+  import reflect.macros.blackbox.Context
+  def macroImpl[T](c: Context)(implicit e: c.WeakTypeTag[T]): c.Expr[String] = {
+    import c.universe._
+    c.Expr[String](q"${e.toString}")
+  }
+  def m = macro macroImpl[Seq[Int]]
 }
 
 

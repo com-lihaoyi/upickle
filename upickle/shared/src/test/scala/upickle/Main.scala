@@ -9,9 +9,11 @@ object Main extends App {
     import ADTs.ADT0
   type Data = ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]
 
-//  old.write[Data](???)
-//  old.write[ADTs.ADTb](???)
-//  old.write[Varargs.Sentence](???)
-//  old.write[MixedIn.Obj.ClsB](???)
-
+  old.write[Data](???)
+  old.write[Int](???)
+  old.write[ADTs.ADTa](???)
+  old.read[ADTs.ADTa](???)
+  old.write[Varargs.Sentence](???)
+  (implicitly[old.Writer[MixedIn.Obj.ClsB]])
+  implicitly[old.Writer[MixedIn.Obj.ClsB]]
 }

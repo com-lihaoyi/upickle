@@ -32,6 +32,7 @@ object MacroTests extends TestSuite{
 //  implicitly[upickle.old.Writer[ADTs.ADTc]]
 
   val tests = TestSuite{
+
     'mixedIn{
       import MixedIn._
       * - rw(Obj.ClsB(1), """{"i":1}""")
@@ -56,6 +57,7 @@ object MacroTests extends TestSuite{
       // Doesn't even need to execute, as long as it can compile
       val ww1 = implicitly[upickle.old.Writer[Exponential.A1]]
     }
+
 
     'commonCustomStructures{
       'simpleAdt {

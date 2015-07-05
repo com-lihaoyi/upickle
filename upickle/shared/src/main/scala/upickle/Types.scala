@@ -5,10 +5,9 @@ import language.experimental.macros
 import scala.annotation.implicitNotFound
 
 import acyclic.file
-trait MacroImplicits {this: Types =>
-  implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T, Reader]
-  implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T, Writer]
-}
+class ReaderPicker[M[_]]
+class WriterPicker[M[_]]
+
 /**
 * Basic functionality to be able to read and write objects. Kept as a trait so
 * other internal files can use it, while also mixing it into the `upickle`
