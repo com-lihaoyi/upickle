@@ -3,9 +3,6 @@ package upickle
 import utest._
 import upickle.TestUtil._
 
-object X{
-  Reader.macroR[GenericADTs.Small[Int]]
-}
 
 object MacroTests extends TestSuite{
   import Generic.ADT
@@ -27,9 +24,9 @@ object MacroTests extends TestSuite{
     ADT0()
   )
   // Doesn't work :(
-//  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
+  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
 
-
+//  implicitly[Reader[Seq[Nothing]]]
 
 
   val tests = TestSuite{

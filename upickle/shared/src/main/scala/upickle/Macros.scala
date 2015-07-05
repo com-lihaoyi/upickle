@@ -45,8 +45,9 @@ abstract class Macros{
   import c.universe._
   def read[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
-//    println(Console.BLUE + "START " + Console.RESET + tpe)
-
+    if (tpe == typeOf[Nothing]){
+      c.warning(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
+    }
     if (tpe.typeSymbol.fullName.startsWith("scala."))
       c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
 
@@ -57,7 +58,7 @@ abstract class Macros{
       )
     }
 //    cas.callsiteTyper.context1.openImplicits = o//pen
-//    println(Console.BLUE + "END " + Console.RESET + t//pe)
+//    println(Console.BLUE + "END " + Console.RESET + tpe)
 //    println(Console.BLUE + res + Console.RESET + tpe)
     res
   }
