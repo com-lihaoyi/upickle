@@ -1,10 +1,10 @@
 package upickle
 import utest._
-
+import upickle.old._
 /**
 * Created by haoyi on 4/22/14.
 */
-object TestUtil {
+object TestUtil{
   implicit class -->[T](x: T){
     def -->(y: T) = {
       val lhs = x

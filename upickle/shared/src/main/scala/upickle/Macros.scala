@@ -43,6 +43,7 @@ abstract class Macros{
   val c: Context
   import Macros._
   import c.universe._
+  def internal = q"${c.prefix}.Internal"
   def checkType(tpe: Type) = {
     if (tpe == typeOf[Nothing]){
       c.echo(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
@@ -53,7 +54,7 @@ abstract class Macros{
   }
   def read[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
-//    println(Console.BLUE + "START " + Console.RESET + c.enclosingPosition)
+    //    println(Console.BLUE + "START " + Console.RESET + c.enclosingPosition)
     checkType(tpe)
     val res = c.Expr[Reader[T]] {
       picklerFor(tpe, RW.R)(
@@ -61,32 +62,32 @@ abstract class Macros{
           .reduce((a, b) => q"$a orElse $b")
       )
     }
-//    cas.callsiteTyper.context1.openImplicits = o//pen
-//    println(Console.BLUE + "END " + Console.RESET + tpe)
-//    println(Console.BLUE + res + Console.RESET + tpe)
+    //    cas.callsiteTyper.context1.openImplicits = o//pen
+    //    println(Console.BLUE + "END " + Console.RESET + tpe)
+//        println(Console.BLUE + res + Console.RESET + tpe)
     res
   }
 
   def write[T: c.WeakTypeTag] = {
-//    println(Console.BLUE + "START " + Console.RESET + c.enclosingPosition)
     val tpe = weakTypeTag[T].tpe
+//    println(Console.BLUE + "START " + Console.RESET + tpe)
     checkType(tpe)
-//    println(Console.CYAN + "WRITE" + Console.RESET)
+//        println(Console.CYAN + "WRITE" + Console.RESET)
 
 
     val res = picklerFor(tpe, RW.W) { things =>
-      if (things.length == 1) q"upickle.Internal.merge0(${things(0)}.write)"
+      if (things.length == 1) q"$internal.merge0(${things(0)}.write)"
       else things.map(p => q"$p.write": Tree)
-        .reduce((a, b) => q"upickle.Internal.merge($a, $b)")
+        .reduce((a, b) => q"$internal.merge($a, $b)")
     }
     //    println(Console.GREEN + "TYPECHECK" + Console.RESET)
-//        println(res)
-//    println(Console.BLUE + "END " + Console.RESET + c.enclosingPosition)
+//            println(res)
+//        println(Console.BLUE + "END " + Console.RESET + c.enclosingPosition)
     c.Expr[Writer[T]](res)
   }
 
   def fleshedOutSubtypes(tpe: TypeRef) = {
-//    println(Console.CYAN + "fleshedOutSubTypes " + Console.RESET + tpe)
+    //    println(Console.CYAN + "fleshedOutSubTypes " + Console.RESET + tpe)
     // Get ready to run this twice because for some reason scalac always
     // drops the type arguments from the subclasses the first time we
     // run this in 2.10.x
@@ -95,7 +96,7 @@ abstract class Macros{
         val st = subtypeSym.asType.toType
         val baseClsArgs = st.baseType(tpe.typeSymbol).asInstanceOf[TypeRef].args
         val sub2 = st.substituteTypes(baseClsArgs.map(_.typeSymbol), tpe.args)
-//        println(Console.YELLOW + "sub2 " + Console.RESET + sub2)
+        //        println(Console.YELLOW + "sub2 " + Console.RESET + sub2)
         sub2
       }
     impl
@@ -115,116 +116,115 @@ abstract class Macros{
                 (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
     //    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
 
+    def implicited(tpe: Type) = q"implicitly[${c.prefix}.${newTypeName(rw.long)}[$tpe]]"
+    c.typeCheck(implicited(tpe), withMacrosDisabled = true, silent = true) match {
+      case EmptyTree =>
 
-    val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
-    case class TypeKey(t: c.Type) {
-      override def equals(o: Any) = t =:= o.asInstanceOf[TypeKey].t
-    }
-    val seen = collection.mutable.Set.empty[TypeKey]
-    def rec(tpe: c.Type, name: TermName): Map[TypeKey, TermName] = {
-      val key = TypeKey(tpe)
-//      println("rec " + tpe + " " + seen)
-      if (seen(TypeKey(tpe))) Map()
-      else {
-        memo.getOrElseUpdate(TypeKey(tpe), {
-          //      println(memo.size)
+        val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
+        case class TypeKey(t: c.Type) {
+          override def equals(o: Any) = t =:= o.asInstanceOf[TypeKey].t
+        }
+        val seen = collection.mutable.Set.empty[TypeKey]
+        def rec(tpe: c.Type, name: TermName = c.fresh[TermName]("t")): Map[TypeKey, TermName] = {
+          val key = TypeKey(tpe)
+                println("rec " + tpe + " " + seen)
+          if (seen(TypeKey(tpe))) Map()
+          else {
+            memo.getOrElseUpdate(TypeKey(tpe), {
 
-          // If it can't find any non-macro implicits, try to recurse into the type
-          val dummies = tpe match {
-            case TypeRef(_, _, args) => args.map(tpe => q"implicit def ${c.fresh[TermName]("t")}: upickle.${newTypeName(rw.long)}[${tpe}] = ???")
-            case _ => Seq.empty[Tree]
-          }
-          val probe = q"{..$dummies; implicitly[upickle.${newTypeName(rw.long)}[$tpe]]}"
-//          println("TC " + name + " " + probe)
-          c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
-            case EmptyTree =>
-//              println("Empty")
-              seen.add(key)
-              tpe.normalize match{
-                case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
-//                  println("A")
-                  rec(args(0), c.fresh[TermName]("t"))
-                case TypeRef(pref, cls, args)
-                  if tpe.typeSymbol.isClass
-                  && tpe.typeSymbol.asClass.isTrait =>
-//                  println(Console.YELLOW + "=" * 64 + Console.RESET)
-//                  println("B " + name)
-//                  println("rec")
+              // If it can't find any non-macro implicits, try to recurse into the type
+              val dummies = tpe match {
+                case TypeRef(_, _, args) => args.map(tpe => q"implicit def ${c.fresh[TermName]("t")}: ${c.prefix}.${newTypeName(rw.long)}[${tpe}] = ???")
+                case _ => Seq.empty[Tree]
+              }
+              val probe = q"{..$dummies; ${implicited(tpe)}}"
+              println("TC " + name + " " + probe)
+              c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
+                case EmptyTree =>
+                  println("Empty")
+                  seen.add(key)
+                  tpe.normalize match {
+                    case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
+                      rec(args(0))
+                    case TypeRef(pref, cls, args)
+                      if tpe.typeSymbol.isClass
+                        && tpe.typeSymbol.asClass.isTrait =>
 
-                  val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
+                      val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
 
-//                  println(Console.YELLOW + "subTypes " + Console.RESET + subTypes)
-                  val lol =
-                    Map(key -> name) ++
-                    subTypes.flatMap(rec(_, c.fresh[TermName]("t"))) ++
-                    args.flatMap(rec(_, c.fresh[TermName]("t")))
-                  lol
-                case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
-//                  println("C")
-                  Map(key -> name)
-                case TypeRef(_, cls, args) =>
-//                  println("D " + cls + " " + args)
-                  val (companion, typeParams, argSyms) = getArgSyms(tpe)
-                  val x =
-                    argSyms
-                      .map(_.typeSignature.substituteTypes(typeParams, args))
-                      .flatMap(rec(_, c.fresh[TermName]("t")))
-                      .toSet
+                      val lol =
+                        Map(key -> name) ++
+                          subTypes.flatMap(rec(_)) ++
+                          args.flatMap(rec(_))
+                      lol
+                    case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
+                      Map(key -> name)
+                    case TypeRef(_, cls, args) =>
+                      val (companion, typeParams, argSyms) = getArgSyms(tpe)
+                      val x =
+                        argSyms
+                          .map(_.typeSignature.substituteTypes(typeParams, args))
+                          .flatMap(rec(_))
+                          .toSet
 
-                  Map(key -> name) ++ x
-                case x =>
-                  Map(key -> name)
+                      Map(key -> name) ++ x
+                    case x =>
+                      Map(key -> name)
+                  }
+
+                case t =>
+                  println("Present " + t)
+                  Map()
               }
 
-            case _ =>
-//              println("Present")
-              Map()
+            })
           }
-
-        })
-      }
-    }
-
-//    println("a")
-    val first = c.fresh[TermName]("t")
-//    println("b")
-    val recTypes = try rec(tpe, first) catch{case e => e.printStackTrace(); throw e}
-//    println("c")
-    val knotName = newTermName("knot" + rw.short)
-//    println("recTypes " + recTypes)
-
-    val things = recTypes.map { case (TypeKey(tpe), name) =>
-      val pick =
-        if (tpe.typeSymbol.asClass.isTrait) pickleTrait(tpe, rw)(treeMaker)
-        else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(tpe, rw)(treeMaker)
-        else pickleClass(tpe, rw)(treeMaker)
-      val i = c.fresh[TermName]("i")
-      val x = c.fresh[TermName]("x")
-      val tree = q"""
-        implicit lazy val $name: upickle.${newTypeName(rw.long)}[$tpe] = {
-          new upickle.Knot.${newTypeName(rw.short)}[$tpe]($pick)
         }
-      """
-      (i, tree)
-    }
-    val returnName = c.fresh[TermName]("ret")
-    // Do this weird immediately-called-method dance to avoid weird crash
-    // in 2.11.x:
-    //
-    // """
-    // symbol variable bitmap$0 does not exist in upickle.X.<init>
-    // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in upickle.X.<init>
-    // """
-    val res = q"""{
-      def $returnName = {
-        ..${things.map(_._2)}
 
-        ${recTypes(TypeKey(tpe))}
-      }
-      $returnName
-    }"""
-//    println("RES " + res)
-    res
+        //    println("a")
+        val first = c.fresh[TermName]("t")
+        //    println("b")
+        val recTypes = try rec(tpe, first) catch {
+          case e => e.printStackTrace(); throw e
+        }
+        //    println("c")
+        val knotName = newTermName("knot" + rw.short)
+        println("recTypes " + recTypes)
+
+        val things = recTypes.map { case (TypeKey(tpe), name) =>
+          val pick =
+            if (tpe.typeSymbol.asClass.isTrait) pickleTrait(tpe, rw)(treeMaker)
+            else if (tpe.typeSymbol.isModuleClass) pickleCaseObject(tpe, rw)(treeMaker)
+            else pickleClass(tpe, rw)(treeMaker)
+          val i = c.fresh[TermName]("i")
+          val x = c.fresh[TermName]("x")
+          val tree = q"""
+          implicit lazy val $name: ${c.prefix}.${newTypeName(rw.long)}[$tpe] = {
+            new upickle.Knot.${newTypeName(rw.short)}[$tpe]($pick)
+          }
+        """
+          (i, tree)
+        }
+        val returnName = c.fresh[TermName]("ret")
+        // Do this weird immediately-called-method dance to avoid weird crash
+        // in 2.11.x:
+        //
+        // """
+        // symbol variable bitmap$0 does not exist in upickle.X.<init>
+        // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in upickle.X.<init>
+        // """
+        val res = q"""{
+        def $returnName = {
+          ..${things.map(_._2)}
+
+          ${recTypes(TypeKey(tpe))}
+        }
+        $returnName
+      }"""
+        //    println("RES " + res)
+        res
+      case t => t
+    }
   }
 
   def pickleTrait(tpe: c.Type, rw: RW)
@@ -246,15 +246,15 @@ abstract class Macros{
       c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
     }
 
-//    println("pickleTrait")
+    //    println("pickleTrait")
     val subPicklers =
       fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
         .map(subCls => q"implicitly[upickle.${newTypeName(rw.long)}[$subCls]]")
         .toSeq
-//    println(Console.GREEN + "subPicklers " + Console.RESET + subPicklerss)
+    //    println(Console.GREEN + "subPicklers " + Console.RESET + subPicklerss)
     val combined = treeMaker(subPicklers)
 
-    q"""upickle.${newTermName(rw.long)}[$tpe]($combined)"""
+    q"""${c.prefix}.${newTermName(rw.long)}[$tpe]($combined)"""
   }
 
   def pickleCaseObject(tpe: c.Type, rw: RW)
@@ -263,7 +263,7 @@ abstract class Macros{
     val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
     val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
     val mod2 = c.universe.treeBuild.mkAttributedRef(pre, mod)
-    annotate(tpe)(q"upickle.Internal.${newTermName("Case0"+rw.short)}[$tpe]($mod2)")
+    annotate(tpe)(q"$internal.${newTermName("Case0"+rw.short)}[$tpe]($mod2)")
   }
 
   /** If there is a sealed base class, annotate the pickled tree in the JSON
@@ -274,7 +274,7 @@ abstract class Macros{
     val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
     sealedParent.fold(pickler) { parent =>
       val index = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
-      q"upickle.Internal.annotate($pickler, $index)"
+      q"${c.prefix}.annotate($pickler, $index)"
     }
   }
 
@@ -290,7 +290,7 @@ abstract class Macros{
 
   def getArgSyms(tpe: c.Type) = {
     val companion = companionTree(tpe)
-//    println("companionTree " + companion)
+    //    println("companionTree " + companion)
     val apply =
       companion.tpe
         .member(newTermName("apply"))
@@ -329,7 +329,7 @@ abstract class Macros{
       val defaultName = newTermName("apply$default$" + (i + 1))
       companion.tpe.member(defaultName) match{
         case NoSymbol => q"null"
-        case _ => q"upickle.writeJs($companion.$defaultName)"
+        case _ => q"${c.prefix}.writeJs($companion.$defaultName)"
       }
     }
 
@@ -343,11 +343,11 @@ abstract class Macros{
 
     val pickler =
       if (args.length == 0) // 0-arg case classes are treated like `object`s
-        q"upickle.Internal.${newTermName("Case0"+rw.short)}($companion())"
+        q"$internal.${newTermName("Case0"+rw.short)}($companion())"
       else if (args.length == 1 && rw == RW.W) // 1-arg case classes need their output wrapped in a Tuple1
-        q"upickle.Internal.$rwName(x => $companion.$actionName[..$typeArgs](x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
+        q"$internal.$rwName(x => $companion.$actionName[..$typeArgs](x).map(Tuple1.apply), Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
       else // Otherwise, reading and writing are kinda identical
-        q"upickle.Internal.$rwName($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
+        q"$internal.$rwName($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): upickle.${newTypeName(rw.long)}[$tpe]"
 
     annotate(tpe)(pickler)
   }

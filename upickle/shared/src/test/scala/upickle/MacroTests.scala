@@ -2,7 +2,7 @@ package upickle
 
 import utest._
 import upickle.TestUtil._
-
+import upickle.old._
 
 object MacroTests extends TestSuite{
   import Generic.ADT
@@ -24,9 +24,11 @@ object MacroTests extends TestSuite{
     ADT0()
   )
   // Doesn't work :(
-  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
+//  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
 
-//  implicitly[Reader[Seq[Nothing]]]
+//  implicitly[Reader[A_]]
+
+//    implicitly[Writer[MixedIn.Obj.ClsB]]
 
 
   val tests = TestSuite{

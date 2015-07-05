@@ -19,7 +19,7 @@ trait Writer[T]{
   }
 }
 object Writer{
-  implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T]
+
   /**
    * Helper class to make it convenient to create instances of [[Writer]]
    * from the equivalent function
@@ -44,8 +44,6 @@ trait Reader[T]{
   }: PF[Js.Value, T]) orElse read0
 }
 object Reader{
-
-  implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T]
   /**
    * Helper class to make it convenient to create instances of [[Reader]]
    * from the equivalent function
@@ -53,6 +51,10 @@ object Reader{
   def apply[T](_read: PF[Js.Value, T]): Reader[T] = new Reader[T]{
     def read0 = _read
   }
+}
+trait MacroImplicits{
+  implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T]
+  implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T]
 }
 
 /**
