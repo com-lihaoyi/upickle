@@ -134,7 +134,7 @@ lazy val pprint = crossProject
 //      "com.chuusai" %% "shapeless" % "2.1.0" % "test"
     ),
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
-      val file = dir/"ammonite"/"pprint"/"PPrintGen.scala"
+      val file = dir/"pprint"/"PPrintGen.scala"
       val tuples = (1 to 22).map{ i =>
         val ts = (1 to i) map ("T" + _)
         val chunks = 1 to i map { n =>
@@ -164,7 +164,7 @@ lazy val pprint = crossProject
         """
       }
       val output = s"""
-        package ammonite.pprint
+        package pprint
         trait PPrinterGen extends GenUtils{
           ${tuples.mkString("\n")}
         }

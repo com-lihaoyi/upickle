@@ -1,4 +1,5 @@
-package ammonite.pprint
+package pprint
+
 import acyclic.file
 
 /**

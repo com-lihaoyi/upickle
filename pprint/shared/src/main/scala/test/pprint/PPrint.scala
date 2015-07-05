@@ -1,4 +1,4 @@
-package ammonite.pprint
+package pprint
 
 import derive.Derive
 
@@ -30,10 +30,10 @@ object PPrint extends Internals.LowPriPPrint{
   }
 
 
-  type PPrint[A] = ammonite.pprint.PPrint[A]
+  type PPrint[A] = pprint.PPrint[A]
   object Knot {
 
-    case class PPrint[A](f0: () => ammonite.pprint.PPrint[A]) extends ammonite.pprint.PPrint[A] {
+    case class PPrint[A](f0: () => pprint.PPrint[A]) extends pprint.PPrint[A] {
       lazy val f = f0()
 
       def render(t: A) = f.render(t)
@@ -83,7 +83,7 @@ object PPrinter extends PPrinterGen with LowPriPPrinter{
   type UP[T] = Internals.Unpacker[T]
   type PP[T] = PPrint[T]
   type C = Config
-  type PPrinter[T] = ammonite.pprint.PPrinter[T]
+  type PPrinter[T] = pprint.PPrinter[T]
   /**
    * Special, because `Product0` doesn't exist
    */

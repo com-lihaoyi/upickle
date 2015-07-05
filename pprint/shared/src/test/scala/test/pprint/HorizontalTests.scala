@@ -1,25 +1,20 @@
-package test.ammonite.pprint
+package test.pprint
 
 import utest._
-
-import scala.annotation.tailrec
+import pprint.Config.Defaults._
 import scala.collection.{immutable => imm, mutable}
-import scala.util.matching.Regex
-import ammonite.pprint._
 case class FooStar(integer: Int, sequence: String*)
 object HorizontalTests extends TestSuite{
 
-  def check[T: PPrint](t: T, expected: String) = {
-    val pprinted = PPrint(t).mkString
+  def check[T: pprint.PPrint](t: T, expected: String) = {
+    val pprinted = pprint.PPrint(t).mkString
     assert(pprinted == expected.trim)
   }
-  import ammonite.pprint.Config.Defaults._
 //    implicitly[PPrint[(String, String)]]
 //  pprintln((1, "lol", "lol"))
 
   val tests = TestSuite{
     'Horizontal {
-      import ammonite.pprint.Config.Defaults._
 
       'primitives {
         'Unit {
@@ -168,10 +163,10 @@ object HorizontalTests extends TestSuite{
 
 //        check(Tuple1("123"), """Tuple1("123")""")
         check((1, 2, "123"), """(1, 2, "123")""")
-//        check(
-//          (1, 2, "123", (100L, 200L), 1.5F, 0.1),
-//          """(1, 2, "123", (100L, 200L), 1.5F, 0.1)"""
-//        )
+        check(
+          (1, 2, "123", (100L, 200L), 1.5F, 0.1),
+          """(1, 2, "123", (100L, 200L), 1.5F, 0.1)"""
+        )
       }
 //      'products {
 //

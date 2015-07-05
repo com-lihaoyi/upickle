@@ -1,5 +1,4 @@
-package ammonite.pprint
-
+package pprint
 
 import language.experimental.macros
 import reflect.macros.blackbox.Context
@@ -110,7 +109,7 @@ object TPrintLowPri{
         // Make sure the type isn't higher-kinded or some other weird
         // thing, and actually can fit inside the square brackets
         c.typecheck(q"null.asInstanceOf[$tpe]")
-        q""" ammonite.pprint.TPrint.implicitly[$tpe].render($cfgSym) """
+        q""" pprint.TPrint.implicitly[$tpe].render($cfgSym) """
       }catch{case e: TypecheckException =>
         rec0(tpe)
       }
@@ -187,8 +186,8 @@ object TPrintLowPri{
         }"
     }
     lazy val cfgSym = c.freshName[TermName]("cfg")
-    val res = c.Expr[TPrint[T]](q"""ammonite.pprint.TPrint.lambda{
-      ($cfgSym: ammonite.pprint.Config) =>
+    val res = c.Expr[TPrint[T]](q"""pprint.TPrint.lambda{
+      ($cfgSym: pprint.Config) =>
         ${rec0(tpe, end = true)}
     }""")
 //    println("RES " + res)
