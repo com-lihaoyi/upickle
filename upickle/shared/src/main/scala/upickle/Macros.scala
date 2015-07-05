@@ -3,6 +3,7 @@ package upickle
 import ScalaVersionStubs._
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
+import compat._
 
 /**
  * Used to annotate either case classes or their fields, telling uPickle
@@ -55,7 +56,9 @@ abstract class Macros{
           .reduce((a, b) => q"$a orElse $b")
       )
     }
-//    println(Console.BLUE + "END " + Console.RESET + tpe)
+//    cas.callsiteTyper.context1.openImplicits = o//pen
+//    println(Console.BLUE + "END " + Console.RESET + t//pe)
+//    println(Console.BLUE + res + Console.RESET + tpe)
     res
   }
 
@@ -64,7 +67,10 @@ abstract class Macros{
     val tpe = weakTypeTag[T].tpe
     //    println(Console.RED + "WRITE " + Console.RESET + tpe)
     if (tpe.typeSymbol.fullName.startsWith("scala."))
-      c.abort(c.enclosingPosition, s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]")
+      c.abort(c.enclosingPosition, s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]//")
+
+//    println(Console.CYAN + "WRITE" + Console.RESET)
+
 
     val res = picklerFor(tpe, RW.W) { things =>
       if (things.length == 1) q"upickle.Internal.merge0(${things(0)}.write)"
@@ -77,6 +83,22 @@ abstract class Macros{
     c.Expr[Writer[T]](res)
   }
 
+  def fleshedOutSubtypes(tpe: TypeRef) = {
+//    println(Console.CYAN + "fleshedOutSubTypes " + Console.RESET + tpe)
+    // Get ready to run this twice because for some reason scalac always
+    // drops the type arguments from the subclasses the first time we
+    // run this in 2.10.x
+    def impl =
+      for(subtypeSym <- tpe.typeSymbol.asClass.knownDirectSubclasses) yield {
+        val st = subtypeSym.asType.toType
+        val baseClsArgs = st.baseType(tpe.typeSymbol).asInstanceOf[TypeRef].args
+        val sub2 = st.substituteTypes(baseClsArgs.map(_.typeSymbol), tpe.args)
+//        println(Console.YELLOW + "sub2 " + Console.RESET + sub2)
+        sub2
+      }
+    impl
+    impl
+  }
   /**
    * Generates a pickler for a particular type
    *
@@ -120,11 +142,21 @@ abstract class Macros{
                 case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
 //                  println("A")
                   rec(args(0), c.fresh[TermName]("t"))
-                case TypeRef(_, cls, args) if tpe.typeSymbol.asClass.isTrait =>
+                case TypeRef(pref, cls, args)
+                  if tpe.typeSymbol.isClass
+                  && tpe.typeSymbol.asClass.isTrait =>
+//                  println(Console.YELLOW + "=" * 64 + Console.RESET)
 //                  println("B " + name)
-                  Map(key -> name) ++ tpe.typeSymbol.asClass.knownDirectSubclasses.flatMap { x =>
-                    rec(x.asType.toType, c.fresh[TermName]("t"))
-                  } ++ args.flatMap(rec(_, c.fresh[TermName]("t")))
+//                  println("rec")
+
+                  val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
+
+//                  println(Console.YELLOW + "subTypes " + Console.RESET + subTypes)
+                  val lol =
+                    Map(key -> name) ++
+                    subTypes.flatMap(rec(_, c.fresh[TermName]("t"))) ++
+                    args.flatMap(rec(_, c.fresh[TermName]("t")))
+                  lol
                 case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
 //                  println("C")
                   Map(key -> name)
@@ -173,11 +205,22 @@ abstract class Macros{
       """
       (i, tree)
     }
-    val res = q"""
-      ..${things.map(_._2)}
+    val returnName = c.fresh[TermName]("ret")
+    // Do this weird immediately-called-method dance to avoid weird crash
+    // in 2.11.x:
+    //
+    // """
+    // symbol variable bitmap$0 does not exist in upickle.X.<init>
+    // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in upickle.X.<init>
+    // """
+    val res = q"""{
+      def $returnName = {
+        ..${things.map(_._2)}
 
-      ${recTypes(TypeKey(tpe))}
-    """
+        ${recTypes(TypeKey(tpe))}
+      }
+      $returnName
+    }"""
 //    println("RES " + res)
     res
   }
@@ -201,19 +244,19 @@ abstract class Macros{
       c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
     }
 
+//    println("pickleTrait")
     val subPicklers =
-      clsSymbol.knownDirectSubclasses
+      fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
         .map(subCls => q"implicitly[upickle.${newTypeName(rw.long)}[$subCls]]")
         .toSeq
-
+//    println(Console.GREEN + "subPicklers " + Console.RESET + subPicklerss)
     val combined = treeMaker(subPicklers)
 
     q"""upickle.${newTermName(rw.long)}[$tpe]($combined)"""
   }
 
   def pickleCaseObject(tpe: c.Type, rw: RW)
-                      (treeMaker: Seq[c.Tree] => c.Tree) =
-  {
+                      (treeMaker: Seq[c.Tree] => c.Tree) = {
     val mod = tpe.typeSymbol.asClass.module
     val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
     val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
@@ -310,7 +353,7 @@ abstract class Macros{
   def companionTree(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol
 
-    if (companionSymbol == NoSymbol) {
+    if (companionSymbol == NoSymbol && tpe.typeSymbol.isClass) {
       val clsSymbol = tpe.typeSymbol.asClass
       val msg = "[error] The companion symbol could not be determined for " +
         s"[[${clsSymbol.name}]]. This may be due to a bug in scalac (SI-7567) " +
