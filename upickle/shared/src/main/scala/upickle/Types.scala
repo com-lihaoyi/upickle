@@ -32,11 +32,13 @@ trait Types{
       }
     }
 
-    class R[T](reader: => Reader[T]) extends Reader[T] {
+    case class R[T](reader0: () => Reader[T]) extends Reader[T] {
+      lazy val reader = reader0()
       def read0 = reader.read0
     }
 
-    class W[T](writer: => Writer[T]) extends Writer[T] {
+    case class W[T](writer0: () => Writer[T]) extends Writer[T] {
+      lazy val writer = writer0()
       def write0 = writer.write0
     }
   }
