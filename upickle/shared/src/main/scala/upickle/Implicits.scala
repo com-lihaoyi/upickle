@@ -31,7 +31,7 @@ trait Implicits extends Types { imp: Generated =>
    * APIs that need to be exposed to the outside world to support Macros
    * which depend on them, but probably should not get used directly.
    */
-  object Internal extends GeneratedInternal{
+  object Internal {
     type Reader[T] = Implicits.this.Reader[T]
     type Writer[T] = Implicits.this.Writer[T]
     def makeReader[T](pf: PartialFunction[Js.Value, T]) = imp.Reader(pf)
@@ -50,8 +50,6 @@ trait Implicits extends Types { imp: Generated =>
     }
 
 
-    def Case0R[T](t: T) = R[T]({case x => t})
-    def Case0W[T](t: T) = W[T](x => Js.Obj())
 
     def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
       pf.orElse { case x => throw Invalid.Data(x, name) }
@@ -60,6 +58,10 @@ trait Implicits extends Types { imp: Generated =>
 
   import Internal._
 
+  def Case0R[T](t: () => T) = R[T]({case x => t()})
+  def Case0W[T](f: T => Boolean) = W[T](x => Js.Obj())
+  def SingletonR[T](t: T) = R[T]({case x => t})
+  def SingletonW[T](f: T) = W[T](x => Js.Obj())
 
   private[this] type JPF[T] = PartialFunction[Js.Value, T]
   private[this] val booleanReaderFunc: JPF[Boolean] = Internal.validate("Boolean"){
@@ -74,6 +76,26 @@ trait Implicits extends Types { imp: Generated =>
     _ => Js.Obj(),
     {case _ => ()}
   )
+  """
+  def Case${i}R[$readerTypes, V]
+               (f: ($typeTuple) => V, names: Array[String], defaults: Array[Js.Value])
+    = RCase[V](names, defaults, {case x => $caseReader})
+  def Case${i}W[$writerTypes, V]
+               (g: V => Option[Tuple${i}[$typeTuple]], names: Array[String], defaults: Array[Js.Value])
+    = WCase[V](names, defaults, x => writeJs(g(x).get))
+  """
+
+  def CaseR[T: R, V](f: T => V, names: Array[String], defaults: Array[Js.Value]): Reader[V] = {
+    Reader {
+      case js: Js.Obj => f(implicitly[R[T]].read(this.mapToArray(js, names, defaults)))
+    }
+  }
+  def CaseW[T: W, V](f: V => Option[T], names: Array[String], defaults: Array[Js.Value]): Writer[V] = {
+    Writer{
+      t: V =>
+        this.arrayToMap(implicitly[W[T]].write(f(t).get).asInstanceOf[Js.Arr], names, defaults)
+    }
+  }
 
   private[this] def numericStringReaderFunc[T](func: String => T): JPF[T] = Internal.validate("Number"){
     case x: Js.Str => func(x.value)

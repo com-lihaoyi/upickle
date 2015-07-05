@@ -18,7 +18,7 @@ private[upickle] trait GeneratedUtil {
                                             read: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
     validate("Object"){case x: Js.Obj => read(mapToArray(x, names, defaults))}
   }
-  private[this] def arrayToMap(a: Js.Arr, names: Array[String], defaults: Array[Js.Value]) = {
+  protected[this] def arrayToMap(a: Js.Arr, names: Array[String], defaults: Array[Js.Value]) = {
 
     val accumulated = new Array[(String, Js.Value)](names.length)
     var i = 0
@@ -32,7 +32,7 @@ private[upickle] trait GeneratedUtil {
     Js.Obj(accumulated.filter(_ != null):_*)
 
   }
-  private[this] def mapToArray(o: Js.Obj, names: Array[String], defaults: Array[Js.Value]) = {
+  protected[this] def mapToArray(o: Js.Obj, names: Array[String], defaults: Array[Js.Value]) = {
     val accumulated = new Array[Js.Value](names.length)
     val map = o.value.toMap
     var i = 0

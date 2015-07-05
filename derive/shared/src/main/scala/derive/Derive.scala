@@ -16,7 +16,7 @@ object Derive{
                val actionNames: Seq[String],
                val oneTupled: Boolean,
                val banScala: Boolean,
-               val rwName: Int => String)
+               val caseName: String)
 }
 
 abstract class Derive(rw: Derive.Config){
@@ -38,11 +38,6 @@ abstract class Derive(rw: Derive.Config){
     picklerFor(tpe)(treeMaker)
   }
 
-  def rwName(n: Int) =
-    rw.rwName(n)
-      .split('.')
-      .map(newTermName)
-      .foldLeft(c.prefix.tree){(p, n) => q"$p.$n"}
   def fleshedOutSubtypes(tpe: TypeRef) = {
     //    println(Console.CYAN + "fleshedOutSubTypes " + Console.RESET + tpe)
     // Get ready to run this twice because for some reason scalac always
@@ -225,7 +220,9 @@ abstract class Derive(rw: Derive.Config){
     val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
     val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
     val mod2 = c.universe.treeBuild.mkAttributedRef(pre, mod)
-    annotate(tpe)(q"$internal.${newTermName("Case0"+rw.short)}[$tpe]($mod2)")
+
+    annotate(tpe)(wrapObject(mod2))
+
   }
 
   /** If there is a sealed base class, annotate the pickled tree in the JSON
@@ -279,14 +276,6 @@ abstract class Derive(rw: Derive.Config){
       customKey(p).getOrElse(p.name.toString)
     }
 
-    val rwName1 = rwName(args.length)
-
-    val actionName = rw.actionNames
-      .map(newTermName(_))
-      .find(companion.tpe.member(_) != NoSymbol)
-      .getOrElse(c.abort(c.enclosingPosition, "None of the following methods " +
-      "were defined: " + rw.actionNames.mkString(" ")))
-
     val defaults = argSyms.zipWithIndex.map { case (s, i) =>
       val defaultName = newTermName("apply$default$" + (i + 1))
       companion.tpe.member(defaultName) match{
@@ -305,15 +294,18 @@ abstract class Derive(rw: Derive.Config){
 
     val pickler =
       if (args.length == 0) // 0-arg case classes are treated like `object`s
-        q"$rwName1($companion())"
-      else if (args.length == 1 && rw.oneTupled) // 1-arg case classes need their output wrapped in a Tuple1
-        q"$rwName1($companion.$actionName[..$typeArgs](_: $tpe).map(Tuple1.apply), Array(..$args), Array(..$defaults)): ${c.prefix}.${newTypeName(rw.long)}[$tpe]"
+        wrapCase0(companion)
+      else if (args.length == 1) // 1-arg case classes need their output wrapped in a Tuple1
+        wrapCase1(companion, args(0), defaults(0), typeArgs, companion.tpe)
       else // Otherwise, reading and writing are kinda identical
-        q"$rwName1($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): ${c.prefix}.${newTypeName(rw.long)}[$tpe]"
+        wrapCaseN(companion, args, defaults, typeArgs, companion.tpe)
 
-    annotate(tpe)(pickler)
+    annotate(tpe)(q"$pickler")
   }
-
+  def wrapObject(t: Tree): Tree
+  def wrapCase0(t: Tree): Tree
+  def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], targetType: c.Type): Tree
+  def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], targetType: c.Type): Tree
 
   def companionTree(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol

@@ -93,7 +93,7 @@ val upickle = crossProject
                        (g: V => Option[Tuple${i}[$typeTuple]], names: Array[String], defaults: Array[Js.Value])
             = WCase[V](names, defaults, x => writeJs(g(x).get))
           """)
-      }1
+      }
       val (tuples, cases) = tuplesAndCases.unzip
       IO.write(file, s"""
           package upickle
@@ -105,9 +105,6 @@ val upickle = crossProject
            */
           trait Generated extends GeneratedUtil{
             ${tuples.mkString("\n")}
-          }
-          trait GeneratedInternal extends Generated{
-            ${cases.mkString("\n")}
           }
         """)
       Seq(file)
