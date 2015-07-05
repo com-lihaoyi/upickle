@@ -144,7 +144,7 @@ lazy val pprint = crossProject
         val tupleType = s"Tuple$i[$commaTs]"
         val boundedTypes = ts.map(_ + ": PP").mkString(",")
         s"""
-        implicit def Tuple${i}PPrinter[$boundedTypes]: PPrinter[$tupleType] = makePPrinter{
+        implicit def Tuple${i}PPrinter[$boundedTypes]: Chunker[$tupleType] = makeChunker{
           (t: $tupleType, cfg: C) => Iterator(${chunks.mkString(",")})
         }
         """

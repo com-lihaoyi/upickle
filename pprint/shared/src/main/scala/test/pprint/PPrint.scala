@@ -2,13 +2,52 @@ package pprint
 
 import derive.Derive
 
-import scala.annotation.unchecked.uncheckedVariance
-import scala.collection.generic.CanBuildFrom
 import scala.language.experimental.macros
 import annotation.tailrec
 import acyclic.file
 import scala.{Iterator => Iter}
 import compat._
+
+/**
+ * There are a few main classes involved here:
+ *
+ * - [[PPrint]]: an all-encompassing typeclass that contains
+ *   all you need to pretty-print a value T => Iter[String]
+ *
+ * - [[PPrinter]]: a typeclass that takes a configuration
+ *   object and pretty-prints a value (T, Config) => Iter[String]
+ *
+ * - [[Config]]: controls various metadata about the pprint, e.g. how
+ *   wide to go before we start wrapping, or what colors to use
+ *
+ * - [[Chunker]]: (T, Config) => Iter[ Iter[String] ]. Implements the
+ *   very common comma-separated-values pattern, where each sub-iter
+ *   is one of the comma separated blocks, but it's up to the caller
+ *   to decide what to do with them
+ */
+
+trait Chunker[T]{
+  def chunk(t: T, c: Config): Iter[Iter[String]]
+}
+object Chunker extends PPrinterGen {
+  def chunk[T: Chunker](t: T, c: Config): Iter[Iter[String]] = implicitly[Chunker[T]].chunk(t, c)
+  def apply[T](f: (T, Config) => Iter[Iter[String]]) = new Chunker[T]{
+    def chunk(t: T, c: Config) = f(t, c)
+  }
+  type UP[T] = Internals.Unpacker[T]
+  type PP[T] = PPrint[T]
+  type C = Config
+  type Chunker[T] = pprint.Chunker[T]
+
+  /**
+   * Special, because `Product0` doesn't exist
+   */
+
+  implicit def Product0Unpacker = Chunker((t: Unit, cfg: Config) => Iter[Iter[String]]())
+  def makeChunker[T](f: (T, Config) => Iter[Iter[String]]) = Chunker(f)
+  def render[T: PP](t: T, c: Config) = implicitly[PPrint[T]].pprinter.render(t, c)
+
+}
 object PPrint extends Internals.LowPriPPrint{
 
   /**
@@ -78,22 +117,8 @@ trait PPrinter[-A] {
   }  
 }
 
-object PPrinter extends PPrinterGen with LowPriPPrinter{
+object PPrinter extends LowPriPPrinter{
   // Things being injected into PPrinterGen to keep it acyclic
-  type UP[T] = Internals.Unpacker[T]
-  type PP[T] = PPrint[T]
-  type C = Config
-  type PPrinter[T] = pprint.PPrinter[T]
-  /**
-   * Special, because `Product0` doesn't exist
-   */
-  implicit def Product0Unpacker = (t: Unit) => Iter[Iter[String]]()
-  def makePPrinter[T](f: (T, Config) => Iter[Iter[String]]) = apply(
-    (t: T, c: Config) =>
-      Internals.handleChunks("", c, c => f(t, c))
-
-  )
-  def render[T: PP](t: T, c: Config) = implicitly[PPrint[T]].pprinter.render(t, c)
 
   def apply[T](r: (T, Config) => Iter[String]): PPrinter[T] = {
     new PPrinter[T]{ 
@@ -131,7 +156,9 @@ object PPrinter extends PPrinterGen with LowPriPPrinter{
     if (c.literalColor == null) body
     else Iter(c.literalColor) ++ body ++ Iter(Console.RESET)
   }
-
+  implicit def ChunkedRepr[T <: Product: Chunker] = PPrinter[T]{ (t, c) =>
+    Internals.handleChunks(t.productPrefix, c, implicitly[Chunker[T]].chunk(t, _))
+  }
   val escapeSet = "\"\n\r\t\\".toSet
 
   implicit val StringRepr = PPrinter[String] { (x, c) =>
@@ -411,12 +438,10 @@ object Internals {
       }
       q"""
       pprint.PPrint[$targetType](
-        pprint.PPrinter[$targetType]((x, cfg) =>
-          pprint.Internals.handleChunks(
-            x.productPrefix,
-            cfg,
-            c => Iterator(pprint.PPrinter.render(x, c)
-          ))
+        pprint.PPrinter.ChunkedRepr[$targetType](
+          pprint.Chunker[$targetType]( (t, cfg) =>
+            pprint.Chunker.chunk($w, cfg)
+          )
         ),
         implicitly[pprint.Config]
       )
