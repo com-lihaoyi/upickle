@@ -18,7 +18,8 @@ val upickle = crossProject.settings(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
     "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"/*,
+    "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"*/
   ) ++ (
     if (scalaVersion.value startsWith "2.11.") Nil
     else Seq(
@@ -79,7 +80,7 @@ val upickle = crossProject.settings(
     Seq(file)
   },
   autoCompilerPlugins := true,
-  //    scalacOptions += "-Xlog-implicits",
+//      scalacOptions += "-Xlog-implicits",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
   pomExtra :=
     <url>https://github.com/lihaoyi/upickle</url>

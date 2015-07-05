@@ -2,3 +2,6 @@ language: scala
 scala:
   - 2.10.4
   - 2.11.2
+
+script:
+- sbt ++$TRAVIS_SCALA_VERSION upickleJVM/test upickleJS/test

@@ -5,7 +5,7 @@ import utest._
 
 object Simple {
   case class Thing(a: Int, b: String)
-  case class Big(i: Int, b: Boolean, str: String, c: Char, d: Double)
+  case class Big(i: Int, b: Boolean, str: String, c: Char, t: Thing)
 }
 object Sealed{
   sealed trait IntOrTuple
@@ -50,12 +50,15 @@ object Custom2{
     }
   }
 }
+
+
 import KeyedTag._
 import Keyed._
 import Sealed._
 import Simple._
 import Recursive._
 import Defaults._
+
 object ExampleTests extends TestSuite{
   import TestUtil._
   val tests = TestSuite{
@@ -116,11 +119,16 @@ object ExampleTests extends TestSuite{
         write((1, "omg"))                 --> """[1,"omg"]"""
         write((1, "omg", true))           --> """[1,"omg",true]"""
       }
+
       'caseClass{
+        import upickle._
         write(Thing(1, "gg"))                     --> """{"a":1,"b":"gg"}"""
-        write(Big(1, true, "lol", 'Z', 0.01))     -->
-          """{"i":1,"b":true,"str":"lol","c":"Z","d":0.01}"""
+        write(Big(1, true, "lol", 'Z', Thing(7, "")))(Writer.macroW)    -->
+          """{"i":1,"b":true,"str":"lol","c":"Z","t":{"a":7,"b":""}}"""
+
       }
+
+
       'sealed{
         write(IntThing(1)) --> """["example.Sealed.IntThing",{"i":1}]"""
 
@@ -174,3 +182,5 @@ object ExampleTests extends TestSuite{
     }
   }
 }
+
+

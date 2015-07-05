@@ -26,8 +26,6 @@ trait Implicits extends Types {
   implicit def Tuple2R[T1: R, T2: R]: R[Tuple2[T1, T2]]
   implicit def Tuple2W[T1: W, T2: W]: W[Tuple2[T1, T2]]
 
-  implicit val NothingR = R[Nothing]{case x => ???}
-  implicit val NothingW = W[Nothing](x => ???)
 
 
   private[this] type JPF[T] = PartialFunction[Js.Value, T]
@@ -86,7 +84,7 @@ trait Implicits extends Types {
   implicit val DoubleRW = NumericReadWriter(_.toDouble, _.toDouble)
 
   import collection.generic.CanBuildFrom
-  implicit def SeqishR[T: R, V[_]]
+  implicit def SeqishR[V[_], T: R]
                        (implicit cbf: CanBuildFrom[Nothing, T, V[T]]): R[V[T]] = R[V[T]](
     Internal.validate("Array(n)"){case Js.Arr(x@_*) => x.map(readJs[T]).to[V]}
   )
@@ -185,7 +183,7 @@ object Internal extends GeneratedInternal{
     case v: V => g(v)
     case t: T => f(t)
   }
-
+  def identity[T](t: T): T = t
 
   def knotRW[T, V](f: Knot.RW[T] => V): V = f(new Knot.RW(null, null))
   def knotR[T, V](f: Knot.R[T] => V): V = f(new Knot.R(null))

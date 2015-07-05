@@ -3,132 +3,7 @@ package upickle
 import utest._
 import upickle.TestUtil._
 
-// These guys all have to be out here because uPickle doesn't
-// support pickling local classes and objects
-object ADTs {
-  case class ADT0()
-  case class ADTa(i: Int)
-  case class ADTb(i: Int, s: String)
-  case class ADTc(i: Int, s: String, t: (Double, Double))
-  case class ADTd(i: Int, s: String, t: (Double, Double), a: ADTa)
-  case class ADTe(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double])
-  case class ADTf(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double], o: Option[Option[Boolean]])
-  case class ADTz(t1: Int, t2: String,
-                  t3: Int, t4: String,
-                  t5: Int, t6: String,
-                  t7: Int, t8: String,
-                  t9: Int, t10: String,
-                  t11: Int, t12: String,
-                  t13: Int, t14: String,
-                  t15: Int, t16: String,
-                  t17: Int, t18: String
-                   )
-}
-object Hierarchy {
-  sealed trait A
-  case class B(i: Int) extends A
-  case class C(s1: String, s2: String) extends A
 
-  sealed trait Z //new line
-  case object AnZ extends Z //new line
-}
-object DeepHierarchy {
-  sealed trait A
-  case class B(i: Int) extends A
-
-  sealed trait C extends A
-  case class D(s: String) extends C
-  case class E(b: Boolean) extends C
-
-  sealed trait Q //new line
-  case class AnQ(i: Int) extends Q //new line
-
-  case class F(q: Q) extends C //new line
-
-
-}
-object Singletons{
-  sealed trait AA
-  case object BB extends AA
-  case object CC extends AA
-}
-object Generic{
-  case class A[T](t: T)
-  case class ADT[A, B, C, D, E, F](a: A, b: B, c: C, d: D, e: E, f: F)
-}
-object Recursive{
-  sealed trait LL
-  case object End  extends LL
-  case class Node(c: Int, next: LL) extends LL
-  case class IntTree(value: Int, children: List[IntTree])
-  sealed trait SingleTree
-  case class SingleNode(value: Int, children: List[SingleTree]) extends SingleTree
-}
-object Annotated {
-  sealed trait A
-  @key("0") case class B(@key("omg") i: Int) extends A
-  @key("1") case class C(@key("lol") s1: String, @key("wtf") s2: String) extends A
-}
-object Defaults {
-  case class ADTa(i: Int = 0)
-  case class ADTb(i: Int = 1, s: String)
-  case class ADTc(i: Int = 2, s: String, t: (Double, Double) = (1, 2))
-}
-trait MixedIn{
-  trait Trt1{
-    case class ClsA(s: String)
-  }
-  trait Trt2 extends Trt1{
-    case class ClsB(i: Int)
-  }
-  object Obj extends Trt2
-}
-
-object MixedIn extends MixedIn
-
-object Custom {
-  trait ThingBase{
-    val i: Int
-    val s: String
-    override def equals(o: Any) = {
-      o.toString == this.toString
-    }
-
-    override def toString() = {
-      s"Thing($i, $s)"
-    }
-  }
-  class Thing(val i: Int, val s: String) extends ThingBase
-
-  object Thing{
-    def apply(i: Int) = new Thing(i + 10, "s" * (i + 10))
-    def unapply(t: Thing) = Some(t.i - 10)
-  }
-
-  class Thing2(val i: Int, val s: String) extends ThingBase
-
-  abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
-    implicit val thing2Writer = upickle.Writer[T]{
-      case t => Js.Str(t.i + " " + t.s)
-    }
-    implicit val thing2Reader = upickle.Reader[T]{
-      case Js.Str(str) =>
-        val Array(i, s) = str.split(" ")
-        f(i.toInt, s)
-    }
-  }
-  object Thing2 extends ThingBaseCompanion[Thing2](new Thing2(_, _))
-
-  case class Thing3(i: Int, s: String) extends ThingBase
-
-  object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
-}
-object Varargs{
-  case class Sentence(a: String, bs: String*)
-}
-object Covariant{
-  case class Tree[+T](value: T)
-}
 object MacroTests extends TestSuite{
   import Generic.ADT
   import Hierarchy._
@@ -148,6 +23,11 @@ object MacroTests extends TestSuite{
     ADTc(i = 1234567890, s = "i am a strange loop"),
     ADT0()
   )
+  // Doesn't work :(
+  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
+
+//  implicitly[Reader[Seq[Nothing]]]
+
 
   val tests = TestSuite{
     'mixedIn{
@@ -169,7 +49,11 @@ object MacroTests extends TestSuite{
       * - upickle.write(subpackage.Wrapper(subpackage.Base.Child))
     }
     */
+    'exponential{
 
+      // Doesn't even need to execute, as long as it can compile
+      val ww1 = implicitly[upickle.Writer[Exponential.A1]]
+    }
     'commonCustomStructures{
       'simpleAdt {
 
@@ -187,15 +71,7 @@ object MacroTests extends TestSuite{
           ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
           """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14]}"""
         )
-        //[Int, String, (Int, Int), ADTs.ADTa, Seq[Double], Option[Option[Boolean]]]]
 
-//        implicitly[Reader[List[Double]]]
-
-        implicitly[Reader[ADTs.ADTa]]
-
-        implicitly[Reader[List[Double]]]
-
-        implicitly[Reader[ADTs.ADTa]]
         * - rw(
           ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
           """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
@@ -207,7 +83,6 @@ object MacroTests extends TestSuite{
         }
 
         val expected = s"""{${chunks.mkString(",")}}"""
-
         * - rw(
           ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
           expected
@@ -252,8 +127,8 @@ object MacroTests extends TestSuite{
       'singleton {
         import Singletons._
 
-        //        rw(BB, """[0, []]""")
-        //        rw(BC, """[1, []]""")
+        rw(BB, """["upickle.Singletons.BB",{}]""")
+        rw(CC, """["upickle.Singletons.CC",{}]""")
         rw(BB: AA, """["upickle.Singletons.BB",{}]""")
         rw(CC: AA, """["upickle.Singletons.CC",{}]""")
       }
@@ -289,6 +164,7 @@ object MacroTests extends TestSuite{
         assert(r2 == ADTb(123, "kk"))
       }
     }
+
     'GenericDataTypes{
       'simple {
         import Generic.A
@@ -312,6 +188,42 @@ object MacroTests extends TestSuite{
           """{"a":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"b":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"c":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"d":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"e":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"f":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6}}"""
         )
       }
+      'ADT{
+        import GenericADTs._
+        * - {
+          val pref1 = "upickle.GenericADTs.Delta"
+          val D1 = Delta
+          type D1[+A, +B] = Delta[A, B]
+          rw(D1.Insert(1, 1), s"""["$pref1.Insert",{"key":1,"value":1}]""")
+          rw(D1.Insert(1, 1): D1[Int, Int], s"""["$pref1.Insert",{"key":1,"value":1}]""")
+          rw(D1.Remove(1), s"""["$pref1.Remove",{"key":1}]""")
+          rw(D1.Remove(1): D1[Int, Int], s"""["$pref1.Remove",{"key":1}]""")
+          rw(D1.Clear(), s"""["$pref1.Clear",{}]""")
+          rw(D1.Clear(): D1[Int, Int], s"""["$pref1.Clear",{}]""")
+        }
+        * - {
+          val pref2 = "upickle.GenericADTs.DeltaInvariant"
+          val D2 = DeltaInvariant
+          type D2[A, B] = DeltaInvariant[A, B]
+          rw(D2.Insert(1, 1), s"""["$pref2.Insert",{"key":1,"value":1}]""")
+          rw(D2.Insert(1, 1): D2[Int, Int], s"""["$pref2.Insert",{"key":1,"value":1}]""")
+          rw(D2.Remove(1), s"""["$pref2.Remove",{"key":1}]""")
+          rw(D2.Remove(1): D2[Int, Int], s"""["$pref2.Remove",{"key":1}]""")
+          rw(D2.Clear(), s"""["$pref2.Clear",{}]""")
+          rw(D2.Clear(): D2[Int, Int], s"""["$pref2.Clear",{}]""")
+        }
+        * - {
+          val pref2 = "upickle.GenericADTs.DeltaHardcoded"
+          val D3 = DeltaHardcoded
+          type D3[A, B] = DeltaHardcoded[A, B]
+          rw(D3.Insert(Seq(1), "1"), s"""["$pref2.Insert",{"key":[1],"value":"1"}]""")
+          rw(D3.Insert(Seq(1), "1"): D3[Seq[Int], String], s"""["$pref2.Insert",{"key":[1],"value":"1"}]""")
+          rw(D3.Remove(Seq(1)), s"""["$pref2.Remove",{"key":[1]}]""")
+          rw(D3.Remove(Seq(1)): D3[Seq[Int], String], s"""["$pref2.Remove",{"key":[1]}]""")
+          rw(D3.Clear(), s"""["$pref2.Clear",{}]""")
+          rw(D3.Clear(): D3[Seq[Int], String], s"""["$pref2.Clear",{}]""")
+        }
+      }
     }
 
     'recursiveDataTypes{
@@ -320,11 +232,10 @@ object MacroTests extends TestSuite{
         IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
         """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
       )
-//      DOESN'T WORK =(
-//      rw(
-//        SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))),
-//        """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
-//      )
+      rw(
+        SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))),
+        """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
+      )
       rw(
         SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))): SingleTree,
         """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
@@ -335,23 +246,18 @@ object MacroTests extends TestSuite{
 
     }
 
-    'custom{
-      'clsApplyUnapply{
+    'custom {
+      'clsApplyUnapply {
         rw(new Custom.Thing(1, "s"), """{"i":-9}""")
         rw(Custom.Thing(10), """{"i":10}""")
       }
-      'clsReaderWriter{
+      'clsReaderWriter {
         rw(new Custom.Thing2(1, "s"), """ "1 s" """)
         rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
       }
-      'caseClsReaderWriter{
+      'caseClsReaderWriter {
         rw(new Custom.Thing3(1, "s"), """ "1 s" """)
         rw(new Custom.Thing3(10, "sss"), """ "10 sss" """)
-      }
-      'caseClass{
-//                rw(new Custom.CaseThing(1, "s"), """{"i":-99}""")(Reader.macroR, Writer.macroW)
-//                rw(Custom.CaseThing(100), """{"i":0}""")(Reader.macroR, Writer.macroW)
-//        read[Custom.CaseThing]("""{"i":0}""")(Reader.macroR)
       }
     }
     'varargs{
