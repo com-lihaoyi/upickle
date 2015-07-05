@@ -61,7 +61,7 @@ val derive = crossProject.settings(settings:_*).settings(
 val deriveJS = derive.js
 val deriveJVM = derive.jvm
 val upickle = crossProject
-  .dependsOn(derive)
+  .dependsOn(derive % "compile->compile;test->test")
   .settings(settings:_*)
   .settings(
     name := "upickle",
@@ -125,7 +125,7 @@ lazy val upickleJVM = upickle.jvm
 
 
 lazy val pprint = crossProject
-  .dependsOn(derive)
+  .dependsOn(derive % "compile->compile;test->test")
   .settings(settings:_*)
   .settings(
     name := "pprint",

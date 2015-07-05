@@ -1,5 +1,7 @@
 package upickle
 
+import derive._
+
 
 object Main extends App {
     import Generic.ADT

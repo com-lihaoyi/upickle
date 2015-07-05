@@ -83,7 +83,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
    * derive the typeclass for a particular type
    */
   def drive(tpe: c.Type): c.Tree = {
-    println(Console.CYAN + "derive " + Console.RESET + tpe)
+//    println(Console.CYAN + "derive " + Console.RESET + tpe)
 
     def implicited(tpe: Type) = q"implicitly[${typeclassFor(tpe)}]"
 
@@ -96,7 +96,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         }
         val seen = collection.mutable.Set.empty[TypeKey]
         def rec(tpe: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
-          println(Console.CYAN + "REC " + Console.RESET + tpe)
+//          println(Console.CYAN + "REC " + Console.RESET + tpe)
           val key = TypeKey(tpe)
           //                println("rec " + tpe + " " + seen)
           if (seen(TypeKey(tpe))) Map()
@@ -113,10 +113,10 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 case _ => Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
-              println("TC " + name + " " + probe)
+//              println("TC " + name + " " + probe)
               c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
                 case EmptyTree =>
-                  println("Empty")
+//                  println("Empty")
                   seen.add(key)
                   tpe.normalize match {
                     case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
@@ -148,7 +148,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                   }
 
                 case t =>
-                  println("Present")
+//                  println("Present")
                   Map()
               }
 

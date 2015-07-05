@@ -1,9 +1,11 @@
-package upickle
-import acyclic.file
-import derive.key
+package derive
 
-// These guys all have to be out here because uPickle doesn't
-// support pickling local classes and objects
+/*
+ * A whole bunch of test data that can be used by client libraries to try out
+ * their typeclass derivation to make sure it's doing the right thing. Contains
+ * roughly the  whole range of interesting shapes of types supported by derive.
+ */
+
 object ADTs {
   case class ADT0()
   case class ADTa(i: Int)
@@ -87,43 +89,7 @@ trait MixedIn{
 
 object MixedIn extends MixedIn
 
-object Custom {
-  trait ThingBase{
-    val i: Int
-    val s: String
-    override def equals(o: Any) = {
-      o.toString == this.toString
-    }
 
-    override def toString() = {
-      s"Thing($i, $s)"
-    }
-  }
-  class Thing(val i: Int, val s: String) extends ThingBase
-
-  object Thing{
-    def apply(i: Int) = new Thing(i + 10, "s" * (i + 10))
-    def unapply(t: Thing) = Some(t.i - 10)
-  }
-
-  class Thing2(val i: Int, val s: String) extends ThingBase
-
-  abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
-    implicit val thing2Writer = upickle.old.Writer[T]{
-      case t => Js.Str(t.i + " " + t.s)
-    }
-    implicit val thing2Reader = upickle.old.Reader[T]{
-      case Js.Str(str) =>
-        val Array(i, s) = str.split(" ")
-        f(i.toInt, s)
-    }
-  }
-  object Thing2 extends ThingBaseCompanion[Thing2](new Thing2(_, _))
-
-  case class Thing3(i: Int, s: String) extends ThingBase
-
-  object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
-}
 object Varargs{
   case class Sentence(a: String, bs: String*)
 }
