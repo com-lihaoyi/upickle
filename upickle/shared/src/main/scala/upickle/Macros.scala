@@ -43,14 +43,18 @@ abstract class Macros{
   val c: Context
   import Macros._
   import c.universe._
-  def read[T: c.WeakTypeTag] = {
-    val tpe = weakTypeTag[T].tpe
+  def checkType(tpe: Type) = {
     if (tpe == typeOf[Nothing]){
-      c.warning(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
+      c.echo(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
     }
     if (tpe.typeSymbol.fullName.startsWith("scala."))
       c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
 
+  }
+  def read[T: c.WeakTypeTag] = {
+    val tpe = weakTypeTag[T].tpe
+//    println(Console.BLUE + "START " + Console.RESET + c.enclosingPosition)
+    checkType(tpe)
     val res = c.Expr[Reader[T]] {
       picklerFor(tpe, RW.R)(
         _.map(p => q"$p.read": Tree)
@@ -66,10 +70,7 @@ abstract class Macros{
   def write[T: c.WeakTypeTag] = {
 //    println(Console.BLUE + "START " + Console.RESET + c.enclosingPosition)
     val tpe = weakTypeTag[T].tpe
-    //    println(Console.RED + "WRITE " + Console.RESET + tpe)
-    if (tpe.typeSymbol.fullName.startsWith("scala."))
-      c.abort(c.enclosingPosition, s"this may be an error, can not generate Writer[$tpe <: ${tpe.typeSymbol.fullName}]//")
-
+    checkType(tpe)
 //    println(Console.CYAN + "WRITE" + Console.RESET)
 
 
