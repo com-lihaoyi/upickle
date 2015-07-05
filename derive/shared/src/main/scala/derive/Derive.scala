@@ -263,7 +263,7 @@ abstract class Derive(rw: Derive.Config){
   }
   def pickleClass(tpe: c.Type) = {
 
-    val (companion, _, argSyms) = getArgSyms(tpe)
+    val (companion, paramTypes, argSyms) = getArgSyms(tpe)
 
     //    println("argSyms " + argSyms.map(_.typeSignature))
     val args = argSyms.map{ p =>
@@ -286,20 +286,35 @@ abstract class Derive(rw: Derive.Config){
       )
     }
 
+
+    def func(t: Type) = {
+
+      if (argSyms.length == 0) t
+      else {
+        val base = argSyms.map(_.typeSignature.typeSymbol)
+        val concrete = tpe.normalize.asInstanceOf[TypeRef].args
+        if (t.typeSymbol != definitions.RepeatedParamClass) t.substituteTypes(base, concrete)
+        else {
+          val TypeRef(pref, sym, args) = typeOf[Seq[Int]]
+          import compat._
+          TypeRef(pref, sym, t.asInstanceOf[TypeRef].args)
+        }
+      }
+    }
     val pickler =
       if (args.length == 0) // 0-arg case classes are treated like `object`s
-        wrapCase0(companion)
+        wrapCase0(companion, tpe)
       else if (args.length == 1) // 1-arg case classes need their output wrapped in a Tuple1
-        wrapCase1(companion, args(0), defaults(0), typeArgs, companion.tpe)
+        wrapCase1(companion, args(0), defaults(0), typeArgs, func(argSyms(0).typeSignature), tpe)
       else // Otherwise, reading and writing are kinda identical
-        wrapCaseN(companion, args, defaults, typeArgs, companion.tpe)
+        wrapCaseN(companion, args, defaults, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
 
     annotate(tpe)(q"$pickler")
   }
   def wrapObject(t: Tree): Tree
-  def wrapCase0(t: Tree): Tree
-  def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], targetType: c.Type): Tree
-  def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], targetType: c.Type): Tree
+  def wrapCase0(t: Tree, targetType: c.Type): Tree
+  def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
+  def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
 
   def companionTree(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol

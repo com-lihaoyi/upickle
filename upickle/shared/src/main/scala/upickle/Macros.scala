@@ -27,22 +27,32 @@ object Macros {
     val c: Context
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.${newTermName("SingletonR")}($t)"
-    def wrapCase0(t: c.Tree) = q"${c.prefix}.${newTermName("Case0R")}($t.apply)"
-    def wrapCase1(t: c.Tree, arg: String, default: c.Tree, typeArgs: Seq[c.Type], targetType: c.Type) = {
-      println("WrapCase1 " + typeArgs)
+    def wrapCase0(t: c.Tree, targetType: c.Type) =
+      q"${c.prefix}.${newTermName("Case0R")}($t.apply _: () => $targetType)"
+    def wrapCase1(t: c.Tree,
+                  arg: String,
+                  default: c.Tree,
+                  typeArgs: Seq[c.Type],
+                  argType: c.Type,
+                  targetType: c.Type) = {
       q"""
-        ${c.prefix}.CaseR(
-          $t.apply[..$typeArgs] _,
+        ${c.prefix}.CaseR[Tuple1[$argType], $targetType](
+          _ match {case Tuple1(x) => $t.apply[..$typeArgs](x)},
           Array($arg),
           Array($default)
         )
         """
     }
-    def wrapCaseN(t: c.Tree, args: Seq[String], defaults: Seq[c.Tree], typeArgs: Seq[c.Type], targetType: c.Type) = {
-      println("WrapCaseN")
+    def wrapCaseN(t: c.Tree,
+                  args: Seq[String],
+                  defaults: Seq[c.Tree],
+                  typeArgs: Seq[c.Type],
+                  argTypes: Seq[Type],
+                  targetType: c.Type) = {
+      val argSyms = (1 to args.length).map(t => q"xyz123.${newTermName("_"+t)}")
       q"""
-        ${c.prefix}.CaseR(
-          $t.apply[..$typeArgs] _ tupled,
+        ${c.prefix}.CaseR[(..$argTypes), $targetType](
+          xyz123 => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
           Array(..$args),
           Array(..$defaults)
         )
@@ -53,23 +63,35 @@ object Macros {
     val c: Context
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.${newTermName("SingletonW")}($t)"
-    def wrapCase0(t: c.Tree) = q"${c.prefix}.${newTermName("Case0W")}($t.unapply)"
+    def wrapCase0(t: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($t.unapply)"
     def findUnapply(tpe: Type) = {
+      val (companion, paramTypes, argSyms) = getArgSyms(tpe)
+      println("findUnapply " + tpe)
       Seq("unapply", "unapplySeq")
         .map(newTermName(_))
-        .find(tpe.member(_) != NoSymbol)
+        .find(companion.tpe.member(_) != NoSymbol)
         .getOrElse(c.abort(c.enclosingPosition, "None of the following methods " +
         "were defined: unapply, unapplySeq"))
     }
-    def wrapCase1(t: c.Tree, arg: String, default: c.Tree, typeArgs: Seq[c.Type], targetType: c.Type) = q"""
-        ${c.prefix}.CaseW(
+    def wrapCase1(t: c.Tree,
+                  arg: String,
+                  default: c.Tree,
+                  typeArgs: Seq[c.Type],
+                  argType: Type,
+                  targetType: c.Type) = q"""
+        ${c.prefix}.CaseW[Tuple1[$argType], $targetType](
           $t.${findUnapply(targetType)}(_).map(Tuple1.apply),
           Array($arg),
           Array($default)
         )
         """
-    def wrapCaseN(t: c.Tree, args: Seq[String], defaults: Seq[c.Tree], typeArgs: Seq[c.Type], targetType: c.Type) = q"""
-        ${c.prefix}.CaseW(
+    def wrapCaseN(t: c.Tree,
+                  args: Seq[String],
+                  defaults: Seq[c.Tree],
+                  typeArgs: Seq[c.Type],
+                  argTypes: Seq[Type],
+                  targetType: c.Type) = q"""
+        ${c.prefix}.CaseW[(..$argTypes), $targetType](
           $t.${findUnapply(targetType)}[..$typeArgs],
           Array(..$args),
           Array(..$defaults)
@@ -85,7 +107,7 @@ object Macros {
       _.map(p => q"$p.read": Tree)
         .reduce((a, b) => q"$a orElse $b")
     )(implicitly[c0.WeakTypeTag[T]])
-    println(res)
+//    println(res)
     c0.Expr[R[T]](res)
   }
 
@@ -99,6 +121,7 @@ object Macros {
         else things.map(p => q"$p.write": Tree)
           .reduce((a, b) => q"$internal.merge($a, $b)")
     )(implicitly[c0.WeakTypeTag[T]])
+//    println(res)
     c0.Expr[W[T]](res)
   }
 }
