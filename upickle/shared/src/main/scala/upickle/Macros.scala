@@ -18,7 +18,6 @@ object Macros {
   abstract class Reading[M[_]] extends Derive[M]{
     val c: Context
     import c.universe._
-    def typeclassName = "Reader"
     def wrapObject(t: c.Tree) = q"${c.prefix}.${newTermName("SingletonR")}($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
       q"${c.prefix}.${newTermName("Case0R")}($t.apply _: () => $targetType)"
@@ -63,7 +62,6 @@ object Macros {
   abstract class Writing[M[_]] extends Derive[M]{
     val c: Context
     import c.universe._
-    def typeclassName = "Writer"
     def wrapObject(t: c.Tree) = q"${c.prefix}.${newTermName("SingletonW")}($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($t.unapply)"
     def findUnapply(tpe: Type) = {

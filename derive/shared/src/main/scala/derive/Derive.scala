@@ -5,7 +5,7 @@ import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 
 /**
- * Used to annotate either case classes or their fields, telling uPickle
+ * Used to annotate either case classes or their fields, telling derive
  * to use a custom string as the key for that class/field rather than the
  * default string which is the full-name of that class/field.
  */
@@ -14,7 +14,6 @@ trait DeriveApi[M[_]]{
   val c: Context
   import c.universe._
   def typeclass: c.WeakTypeTag[M[_]]
-  def typeclassName: String
   def wrapObject(t: Tree): Tree
   def wrapCase0(t: Tree, targetType: c.Type): Tree
   def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
@@ -22,6 +21,7 @@ trait DeriveApi[M[_]]{
   def knot(t: Tree): Tree
   def mergeTrait(ts: Seq[Tree], targetType: c.Type): Tree
 }
+
 abstract class Derive[M[_]] extends DeriveApi[M]{
 
   import c.universe._
@@ -39,7 +39,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         ???
     }
   }
-  def freshName = c.fresh[TermName]("upickle")
+  def freshName = c.fresh[TermName]("derive")
 
 
   def checkType(tpe: Type) = {
@@ -53,7 +53,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   def derive[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
     checkType(tpe)
-    picklerFor(tpe)
+    drive(tpe)
   }
 
   /**
@@ -78,10 +78,10 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   }
 
   /**
-   * Generates a pickler for a particular type
+   * derive the typeclass for a particular type
    */
-  def picklerFor(tpe: c.Type): c.Tree = {
-//    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
+  def drive(tpe: c.Type): c.Tree = {
+//    println(Console.CYAN + "derive " + Console.RESET + tpe)
 
     def implicited(tpe: Type) = q"implicitly[${typeclassFor(tpe)}]"
 
@@ -181,8 +181,8 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         // in 2.11.x:
         //
         // """
-        // symbol variable bitmap$0 does not exist in upickle.X.<init>
-        // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in upickle.X.<init>
+        // symbol variable bitmap$0 does not exist in derive.X.<init>
+        // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in derive.X.<init>
         // """
         val res = q"""{
         def $returnName = {
@@ -216,13 +216,13 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
     }
 
-    //    println("pickleTrait")
-    val subPicklers =
+    //    println("deriveTrait")
+    val subDerives =
       fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
         .map(subCls => q"implicitly[${typeclassFor(subCls)}]")
         .toSeq
-    //    println(Console.GREEN + "subPicklers " + Console.RESET + subPicklerss)
-    mergeTrait(subPicklers, tpe)
+    //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)
+    mergeTrait(subDerives, tpe)
 
   }
 
@@ -247,7 +247,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       case TypeRef(_, _, args) => args
       case _ => c.abort(
         c.enclosingPosition,
-        s"Don't know how to pickle type $tpe"
+        s"Don't know how to derive type $tpe"
       )
     }
 
@@ -266,7 +266,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         }
       }
     }
-    val pickler =
+    val derive =
       if (args.length == 0) // 0-arg case classes are treated like `object`s
         wrapCase0(companion, tpe)
       else if (args.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
@@ -274,7 +274,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       else // Otherwise, reading and writing are kinda identical
         wrapCaseN(companion, args, defaults, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
 
-    annotate(tpe)(q"$pickler")
+    annotate(tpe)(q"$derive")
   }
 
 
@@ -288,15 +288,14 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
   }
 
-  /** If there is a sealed base class, annotate the pickled tree in the JSON
+  /** If there is a sealed base class, annotate the derived tree in the JSON
     * representation with a class label.
     */
-  def annotate(tpe: c.Type)
-              (pickler: c.universe.Tree) = {
+  def annotate(tpe: c.Type)(derived: c.universe.Tree) = {
     val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
-    sealedParent.fold(pickler) { parent =>
+    sealedParent.fold(derived) { parent =>
       val index = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
-      q"${c.prefix}.annotate($pickler, $index)"
+      q"${c.prefix}.annotate($derived, $index)"
     }
   }
 
@@ -319,7 +318,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     if (apply == NoSymbol){
       c.abort(
         c.enclosingPosition,
-        s"Don't know how to pickle $tpe; it's companion has no `apply` method"
+        s"Don't know how to derive $tpe; it's companion has no `apply` method"
       )
     }
 
@@ -342,7 +341,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       val clsSymbol = tpe.typeSymbol.asClass
       val msg = "[error] The companion symbol could not be determined for " +
         s"[[${clsSymbol.name}]]. This may be due to a bug in scalac (SI-7567) " +
-        "that arises when a case class within a function is pickled. As a " +
+        "that arises when a case class within a function is derive. As a " +
         "workaround, move the declaration to the module-level."
       Console.err.println(msg)
       c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
