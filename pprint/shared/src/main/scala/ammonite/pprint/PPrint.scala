@@ -48,20 +48,6 @@ object PPrint extends Internals.LowPriPPrint{
   implicit def Contra[A](implicit ca: PPrinter[A], cfg: Config): PPrint[A] =
     PPrint(ca, cfg)
 
-  object Unpacker extends PPrinterGen {
-    // Things being injected into PPrinterGen to keep it acyclic
-    type UP[T] = Internals.Unpacker[T]
-    type PP[T] = PPrint[T]
-    type C = Config
-
-    /**
-     * Special, because `Product0` doesn't exist
-     */
-    implicit def Product0Unpacker = (t: Unit) => Iter[Iter[String]]()
-
-    def render[T: PP](t: T, c: Config) = implicitly[PPrint[T]].pprinter.render(t, c)
-  }
-
 }
 
 
@@ -92,7 +78,23 @@ trait PPrinter[-A] {
   }  
 }
 
-object PPrinter extends LowPriPPrinter{
+object PPrinter extends PPrinterGen with LowPriPPrinter{
+  // Things being injected into PPrinterGen to keep it acyclic
+  type UP[T] = Internals.Unpacker[T]
+  type PP[T] = PPrint[T]
+  type C = Config
+  type PPrinter[T] = ammonite.pprint.PPrinter[T]
+  /**
+   * Special, because `Product0` doesn't exist
+   */
+  implicit def Product0Unpacker = (t: Unit) => Iter[Iter[String]]()
+  def makePPrinter[T](f: (T, Config) => Iter[Iter[String]]) = apply(
+    (t: T, c: Config) =>
+      Internals.handleChunks("", c, c => f(t, c))
+
+  )
+  def render[T: PP](t: T, c: Config) = implicitly[PPrint[T]].pprinter.render(t, c)
+
   def apply[T](r: (T, Config) => Iter[String]): PPrinter[T] = {
     new PPrinter[T]{ 
       def render(t: T, c: Config) = {
@@ -116,6 +118,8 @@ object PPrinter extends LowPriPPrinter{
     Iter(c.color.literal("" + t))
   }
 
+  implicit val UnitRepr = literalColorPPrinter[Unit]
+//  implicit val NullRepr = literalColorPPrinter[Null]
   implicit val ByteRepr = literalColorPPrinter[Byte]
   implicit val ShortRepr = literalColorPPrinter[Short]
   implicit val IntRepr = literalColorPPrinter[Int]
@@ -358,7 +362,7 @@ object Internals {
 
 
   trait LowPriPPrint {
-    implicit def FinalRepr[T]: PPrint[T] = macro LowerPriPPrint.FinalRepr[T]
+//    implicit def FinalRepr[T]: PPrint[T] = macro LowerPriPPrint.FinalRepr[T]
   }
 
   def fromUnpacker[T](prefix: T => String)(f: Internals.Unpacker[T]): PPrinter[T] = PPrinter[T]{
@@ -366,33 +370,40 @@ object Internals {
   }
 
   object LowerPriPPrint {
-    def fromUnpackerTwo[T <: Product](f: (T, Config) => Iter[Iter[String]])(implicit cfg: ammonite.pprint.Config) = {
-      ammonite.pprint.PPrint[T](
-        ammonite.pprint.Internals.fromUnpacker[T](_.productPrefix){
-          f
-        },
-        implicitly[Config]
-      )
-    }
-    def FinalRepr[T: c0.WeakTypeTag](c0: MacroContext.Context) = c0.Expr[PPrint[T]] {
-      import c0.universe._
-      println("FinalRepr " + weakTypeOf[T])
-      val R = new Derive.Config(
-        "PPrint",
-        "PPrint",
-        Seq("unapply", "unapplySeq"),
-        false,
-        false,
-        n => s"Unpacker.Product${n}Unpacker"
-      )
-
-      val res = new Derive(R){val c: c0.type = c0}.derive[T](
-        _.map(p => q"$p.read": Tree)
-          .reduce((a, b) => q"$a orElse $b")
-      )(implicitly[c0.WeakTypeTag[T]])
-      println(res)
-      res
-    }
+//    def fromUnpackerTwo[T <: Product](f: (T, Config) => Iter[Iter[String]])(implicit cfg: ammonite.pprint.Config) = {
+//      ammonite.pprint.PPrint[T](
+//        ammonite.pprint.Internals.fromUnpacker[T](_.productPrefix){
+//          f
+//        },
+//        implicitly[Config]
+//      )
+//    }
+//    def FinalRepr[T: c0.WeakTypeTag](c0: derive.ScalaVersionStubs.Context) = c0.Expr[PPrint[T]] {
+//      import c0.universe._
+//      println("FinalRepr " + weakTypeOf[T])
+//      val R = new Derive{
+//        def typeclassName = "PPrint"
+//        def wrapObject(t: Tree): Tree
+//        def wrapCase0(t: Tree, targetType: c.Type): Tree
+//        def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
+//        def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
+//      }
+//      Config(
+//        "PPrint",
+//        "PPrint",
+//        Seq("unapply", "unapplySeq"),
+//        false,
+//        false,
+//        n => s"Unpacker.Product${n}Unpacker"
+//      )
+//
+//      val res = new Derive(R){val c: c0.type = c0}.derive[T](
+//        _.map(p => q"$p.read": Tree)
+//          .reduce((a, b) => q"$a orElse $b")
+//      )(implicitly[c0.WeakTypeTag[T]])
+//      println(res)
+//      res
+//    }
   }
 
 }

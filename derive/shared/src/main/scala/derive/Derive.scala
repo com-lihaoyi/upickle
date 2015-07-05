@@ -13,6 +13,7 @@ class key(s: String) extends StaticAnnotation
 trait DeriveApi{
   val c: Context
   import c.universe._
+  def typeclassName: String
   def wrapObject(t: Tree): Tree
   def wrapCase0(t: Tree, targetType: c.Type): Tree
   def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
@@ -23,7 +24,7 @@ abstract class Derive extends DeriveApi{
   import c.universe._
   def internal = q"${c.prefix}.Internal"
   def freshName = c.fresh[TermName]("upickle")
-  def typeclassName: String
+
 
   def checkType(tpe: Type) = {
     if (tpe == typeOf[Nothing]){

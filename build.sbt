@@ -130,8 +130,8 @@ lazy val pprint = crossProject
   .settings(
     name := "pprint",
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-      "com.chuusai" %% "shapeless" % "2.1.0" % "test"
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"//,
+//      "com.chuusai" %% "shapeless" % "2.1.0" % "test"
     ),
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
       val file = dir/"ammonite"/"pprint"/"PPrintGen.scala"
@@ -141,10 +141,10 @@ lazy val pprint = crossProject
           s"render(t._$n, cfg)"
         }
         val commaTs = ts.mkString(", ")
-        val tupleType = s"Product$i[$commaTs]"
+        val tupleType = s"Tuple$i[$commaTs]"
         val boundedTypes = ts.map(_ + ": PP").mkString(",")
         s"""
-        implicit def Product${i}Unpacker[$boundedTypes] = {
+        implicit def Tuple${i}PPrinter[$boundedTypes]: PPrinter[$tupleType] = makePPrinter{
           (t: $tupleType, cfg: C) => Iterator(${chunks.mkString(",")})
         }
         """

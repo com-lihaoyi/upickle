@@ -68,4 +68,6 @@ trait GenUtils{
   type PP[T]
   type C <: GenConfig[C]
   def render[T: PP](t: T, c: C): Iterator[String]
+  type PPrinter[T]
+  def makePPrinter[T](f: (T, C) => Iterator[Iterator[String]]): PPrinter[T]
 }
