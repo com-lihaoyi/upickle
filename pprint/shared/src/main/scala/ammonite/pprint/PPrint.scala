@@ -1,5 +1,7 @@
 package ammonite.pprint
 
+import derive.Derive
+
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.generic.CanBuildFrom
 import scala.language.experimental.macros
@@ -19,13 +21,47 @@ object PPrint extends Internals.LowPriPPrint{
     pprint.render(t)
   }
 
+  def apply[A](pprinter0: PPrinter[A], cfg: Config) = new PPrint[A] {
+    val pprinter = pprinter0
+    def render(t: A): Iter[String] = {
+      if (t == null) Iter("null")
+      else pprinter.render(t, cfg)
+    }
+  }
 
 
+  type PPrint[A] = ammonite.pprint.PPrint[A]
+  object Knot {
+
+    case class PPrint[A](f0: () => ammonite.pprint.PPrint[A]) extends ammonite.pprint.PPrint[A] {
+      lazy val f = f0()
+
+      def render(t: A) = f.render(t)
+
+      def pprinter = f.pprinter
+    }
+
+  }
   /**
    * Helper to make implicit resolution behave right
    */
   implicit def Contra[A](implicit ca: PPrinter[A], cfg: Config): PPrint[A] =
-    new PPrint(ca, cfg)
+    PPrint(ca, cfg)
+
+  object Unpacker extends PPrinterGen {
+    // Things being injected into PPrinterGen to keep it acyclic
+    type UP[T] = Internals.Unpacker[T]
+    type PP[T] = PPrint[T]
+    type C = Config
+
+    /**
+     * Special, because `Product0` doesn't exist
+     */
+    implicit def Product0Unpacker = (t: Unit) => Iter[Iter[String]]()
+
+    def render[T: PP](t: T, c: Config) = implicitly[PPrint[T]].pprinter.render(t, c)
+  }
+
 }
 
 
@@ -33,11 +69,9 @@ object PPrint extends Internals.LowPriPPrint{
  * A typeclass necessary to prettyprint something. Separate from [[PPrinter]]
  * in order to make contravariant implicit resolution behave right.
  */
-case class PPrint[A](pprinter: PPrinter[A], cfg: Config){
-  def render(t: A): Iter[String] = {
-    if (t == null) Iter("null")
-    else pprinter.render(t, cfg)
-  }
+trait PPrint[A]{
+  def render(t: A): Iter[String]
+  def pprinter: PPrinter[A]
   def map(f: String => String) = pprinter.map(f)
 }
 
@@ -222,19 +256,6 @@ trait LowPriPPrinter{
   implicit def SeqRepr[T: PPrint, V[T] <: Traversable[T]]  =
     Internals.collectionRepr[T, V[T]]
 }
-object Unpacker extends PPrinterGen {
-  // Things being injected into PPrinterGen to keep it acyclic
-  type UP[T] = Internals.Unpacker[T]
-  type PP[T] = PPrint[T]
-  type C = Config
-
-  /**
-   * Special, because `Product0` doesn't exist
-   */
-  implicit def Product0Unpacker = (t: Unit) => Iter[Iter[String]]()
-
-  def render[T: PP](t: T, c: Config) = implicitly[PPrint[T]].pprinter.render(t, c)
-}
 
 
 object Internals {
@@ -253,7 +274,7 @@ object Internals {
 
   def collectionRepr[T: PPrint, V <: Traversable[T]]: PPrinter[V] = PPrinter[V] {
     (i: V, c: Config) => {
-      def cFunc = (cfg: Config) => i.toIterator.map(implicitly[PPrint[T]].copy(cfg = cfg).render)
+      def cFunc = (cfg: Config) => i.toIterator.map(implicitly[PPrint[T]].pprinter.render(_, cfg))
 
       // Streams we always print vertically, because they're lazy and
       // we don't know how long they will end up being.
@@ -364,7 +385,7 @@ object Internals {
       c.universe.treeBuild.mkAttributedRef(pre, companionSymbol)
     }
     // Should use blackbox.Context in 2.11, doing this for 2.10 compatibility
-    def FinalRepr[T: c.WeakTypeTag](c: MacroContext.Context) = c.Expr[PPrint[T]] {
+    def FinalReprOld[T: c.WeakTypeTag](c: MacroContext.Context) = c.Expr[PPrint[T]] {
       import c.universe._
       val tpe = c.weakTypeOf[T]
 
@@ -382,8 +403,8 @@ object Internals {
               .asInstanceOf[MethodType]
               .params
               .map(_.typeSignature)
-              .map{
-              case TypeRef(pre, sym, args)  if sym == definitions.RepeatedParamClass =>
+              .map {
+              case TypeRef(pre, sym, args) if sym == definitions.RepeatedParamClass =>
                 val TypeRef(_, b2, _) = typeOf[Seq[String]]
                 internal.typeRef(pre, b2, args)
 
@@ -409,9 +430,9 @@ object Internals {
             .find(companion.tpe.member(_) != NoSymbol)
             .getOrElse(c.abort(c.enclosingPosition, "None of the following methods " +
             "were defined: unapply, unapplySeq))"))
-          val thingy ={
+          val thingy = {
             def get = q"$companion.$actionName(t).get"
-            arity match{
+            arity match {
               case 0 => q"()"
               case 1 => q"Tuple1($get)"
               case n => q"$companion.$actionName(t).get"
@@ -421,18 +442,15 @@ object Internals {
           // scalac along with its implicit search, otherwise it gets
           // confused and explodes
           val res = q"""
-            new ammonite.pprint.PPrint[$tpe](
-              ammonite.pprint.Internals.fromUnpacker[$tpe](_.productPrefix){
-                (t: $tpe, cfg: ammonite.pprint.Config) =>
-                  ammonite.pprint
-                          .Unpacker
-                          .$tupleName[..$paramTypes]
-                          .apply($thingy, cfg)
-              },
-              implicitly[ammonite.pprint.Config]
-            )
+            ammonite.pprint.Internals.fromUnpackerTwo[$tpe]{
+              (t: $tpe, cfg: ammonite.pprint.Config) =>
+                ammonite.pprint
+                        .Unpacker
+                        .$tupleName[..$paramTypes]
+                        .apply($thingy, cfg)
+            }
           """
-//          println(res)
+          //          println(res)
           res
         case _ =>
           q"""new ammonite.pprint.PPrint[$tpe](
@@ -440,6 +458,36 @@ object Internals {
             implicitly[ammonite.pprint.Config]
           )"""
       }
+      res
+    }
+    trait UnpackerTwo{
+      def apply
+    }
+    def fromUnpackerTwo[T <: Product](f: (T, Config) => Iter[Iter[String]])(implicit cfg: ammonite.pprint.Config) = {
+      ammonite.pprint.PPrint[T](
+        ammonite.pprint.Internals.fromUnpacker[T](_.productPrefix){
+          f
+        },
+        implicitly[Config]
+      )
+    }
+    def FinalRepr[T: c0.WeakTypeTag](c0: MacroContext.Context) = c0.Expr[PPrint[T]] {
+      import c0.universe._
+      println("FinalRepr " + weakTypeOf[T])
+      val R = new Derive.Config(
+        "PPrint",
+        "PPrint",
+        Seq("unapply", "unapplySeq"),
+        false,
+        false,
+        n => s"Unpacker.Product${n}Unpacker"
+      )
+
+      val res = new Derive(R){val c: c0.type = c0}.derive[T](
+        _.map(p => q"$p.read": Tree)
+          .reduce((a, b) => q"$a orElse $b")
+      )(implicitly[c0.WeakTypeTag[T]])
+      println(res)
       res
     }
   }

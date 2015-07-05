@@ -14,7 +14,9 @@ object Derive{
   class Config(val short: String,
                val long: String,
                val actionNames: Seq[String],
-               val oneTupled: Boolean)
+               val oneTupled: Boolean,
+               val banScala: Boolean,
+               val rwName: Int => String)
 }
 
 abstract class Derive(rw: Derive.Config){
@@ -26,7 +28,7 @@ abstract class Derive(rw: Derive.Config){
     if (tpe == typeOf[Nothing]){
       c.echo(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
     }
-    if (tpe.typeSymbol.fullName.startsWith("scala."))
+    if (rw.banScala && tpe.typeSymbol.fullName.startsWith("scala."))
       c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
 
   }
@@ -36,6 +38,11 @@ abstract class Derive(rw: Derive.Config){
     picklerFor(tpe)(treeMaker)
   }
 
+  def rwName(n: Int) =
+    rw.rwName(n)
+      .split('.')
+      .map(newTermName)
+      .foldLeft(c.prefix.tree){(p, n) => q"$p.$n"}
   def fleshedOutSubtypes(tpe: TypeRef) = {
     //    println(Console.CYAN + "fleshedOutSubTypes " + Console.RESET + tpe)
     // Get ready to run this twice because for some reason scalac always
@@ -65,7 +72,7 @@ abstract class Derive(rw: Derive.Config){
    */
   def picklerFor(tpe: c.Type)
                 (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
-    //    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
+//    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
 
     def implicited(tpe: Type) = q"implicitly[${c.prefix}.${newTypeName(rw.long)}[$tpe]]"
 
@@ -78,6 +85,7 @@ abstract class Derive(rw: Derive.Config){
         }
         val seen = collection.mutable.Set.empty[TypeKey]
         def rec(tpe: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
+//          println("REC " + tpe)
           val key = TypeKey(tpe)
           //                println("rec " + tpe + " " + seen)
           if (seen(TypeKey(tpe))) Map()
@@ -94,10 +102,10 @@ abstract class Derive(rw: Derive.Config){
                 case _ => Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
-              //              println("TC " + name + " " + probe)
+//                            println("TC " + name + " " + probe)
               c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
                 case EmptyTree =>
-                  //                  println("Empty")
+//                                    println("Empty")
                   seen.add(key)
                   tpe.normalize match {
                     case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
@@ -129,7 +137,7 @@ abstract class Derive(rw: Derive.Config){
                   }
 
                 case t =>
-                  //                  println("Present " + t)
+//                                    println("Present " + t)
                   Map()
               }
 
@@ -271,7 +279,7 @@ abstract class Derive(rw: Derive.Config){
       customKey(p).getOrElse(p.name.toString)
     }
 
-    val rwName = newTermName(s"Case${args.length}${rw.short}")
+    val rwName1 = rwName(args.length)
 
     val actionName = rw.actionNames
       .map(newTermName(_))
@@ -297,11 +305,11 @@ abstract class Derive(rw: Derive.Config){
 
     val pickler =
       if (args.length == 0) // 0-arg case classes are treated like `object`s
-        q"$internal.${newTermName("Case0"+rw.short)}($companion())"
+        q"$rwName1($companion())"
       else if (args.length == 1 && rw.oneTupled) // 1-arg case classes need their output wrapped in a Tuple1
-        q"$internal.$rwName($companion.$actionName[..$typeArgs](_: $tpe).map(Tuple1.apply), Array(..$args), Array(..$defaults)): ${c.prefix}.${newTypeName(rw.long)}[$tpe]"
+        q"$rwName1($companion.$actionName[..$typeArgs](_: $tpe).map(Tuple1.apply), Array(..$args), Array(..$defaults)): ${c.prefix}.${newTypeName(rw.long)}[$tpe]"
       else // Otherwise, reading and writing are kinda identical
-        q"$internal.$rwName($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): ${c.prefix}.${newTypeName(rw.long)}[$tpe]"
+        q"$rwName1($companion.$actionName[..$typeArgs], Array(..$args), Array(..$defaults)): ${c.prefix}.${newTypeName(rw.long)}[$tpe]"
 
     annotate(tpe)(pickler)
   }

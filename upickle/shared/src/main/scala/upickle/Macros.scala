@@ -18,9 +18,23 @@ object Macros {
 
 
 
-  object R extends Derive.Config("R", "Reader", Seq("apply"), false)
+  object R extends Derive.Config(
+    "R",
+    "Reader",
+    Seq("apply"),
+    false,
+    true,
+    n => s"Internal.Case${n}R"
+  )
 
-  object W extends Derive.Config("W", "Writer", Seq("unapply", "unapplySeq"), true)
+  object W extends Derive.Config(
+    "W",
+    "Writer",
+    Seq("unapply", "unapplySeq"),
+    true,
+    true,
+    n => s"Internal.Case${n}W"
+  )
 
 
   def macroRImpl[T, R[_]](c0: Context)(implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
