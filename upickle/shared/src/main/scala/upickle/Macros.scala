@@ -50,7 +50,7 @@ object Macros {
         )
       """
     }
-    def mergeTrait(ts: Seq[Tree], targetType: c.Type): Tree = {
+    def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       val merged =
         ts.map(p => q"$p.read": Tree)
           .reduce((a, b) => q"$a orElse $b")
@@ -97,7 +97,7 @@ object Macros {
           Array(..$defaults)
         )
       """
-    def mergeTrait(ts: Seq[Tree], targetType: c.Type) = {
+    def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       val merged =
         if (ts.length == 1) q"$internal.merge0(${ts(0)}.write)"
         else ts.map(p => q"$p.write": Tree)

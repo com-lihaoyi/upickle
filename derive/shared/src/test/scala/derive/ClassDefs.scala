@@ -52,6 +52,8 @@ object Singletons{
   sealed trait AA
   case object BB extends AA
   case object CC extends AA
+
+  case object Standalone
 }
 object Generic{
   case class A[T](t: T)

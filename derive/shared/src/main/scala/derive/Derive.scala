@@ -19,7 +19,7 @@ trait DeriveApi[M[_]]{
   def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
   def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
   def knot(t: Tree): Tree
-  def mergeTrait(ts: Seq[Tree], targetType: c.Type): Tree
+  def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
 }
 
 abstract class Derive[M[_]] extends DeriveApi[M]{
@@ -96,7 +96,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         }
         val seen = collection.mutable.Set.empty[TypeKey]
         def rec(tpe: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
-//          println(Console.CYAN + "REC " + Console.RESET + tpe)
+          println(Console.CYAN + "REC " + Console.RESET + tpe)
           val key = TypeKey(tpe)
           //                println("rec " + tpe + " " + seen)
           if (seen(TypeKey(tpe))) Map()
@@ -113,10 +113,10 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 case _ => Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
-//              println("TC " + name + " " + probe)
+              println("TC " + name + " " + probe)
               c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
                 case EmptyTree =>
-//                  println("Empty")
+                  println("Empty")
                   seen.add(key)
                   tpe.normalize match {
                     case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
@@ -148,7 +148,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                   }
 
                 case t =>
-//                  println("Present")
+                  println("Present")
                   Map()
               }
 
@@ -218,13 +218,11 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
     }
 
+    val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef]).toSeq
     //    println("deriveTrait")
-    val subDerives =
-      fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
-        .map(subCls => q"implicitly[${typeclassFor(subCls)}]")
-        .toSeq
+    val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
     //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)
-    mergeTrait(subDerives, tpe)
+    mergeTrait(subDerives, subTypes, tpe)
 
   }
 

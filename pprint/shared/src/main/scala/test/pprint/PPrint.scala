@@ -145,6 +145,7 @@ object PPrinter extends LowPriPPrinter{
 
   implicit val UnitRepr = literalColorPPrinter[Unit]
 //  implicit val NullRepr = literalColorPPrinter[Null]
+  implicit val BooleanRepr = literalColorPPrinter[Boolean]
   implicit val ByteRepr = literalColorPPrinter[Byte]
   implicit val ShortRepr = literalColorPPrinter[Short]
   implicit val IntRepr = literalColorPPrinter[Int]
@@ -157,7 +158,8 @@ object PPrinter extends LowPriPPrinter{
     else Iter(c.literalColor) ++ body ++ Iter(Console.RESET)
   }
   implicit def ChunkedRepr[T <: Product: Chunker] = PPrinter[T]{ (t, c) =>
-    Internals.handleChunks(t.productPrefix, c, implicitly[Chunker[T]].chunk(t, _))
+    if (t == null) Iterator("null")
+    else Internals.handleChunks(t.productPrefix, c, implicitly[Chunker[T]].chunk(t, _))
   }
   val escapeSet = "\"\n\r\t\\".toSet
 
@@ -286,6 +288,7 @@ object PPrinter extends LowPriPPrinter{
 trait LowPriPPrinter{
   implicit def SeqRepr[T: PPrint, V[T] <: Traversable[T]]  =
     Internals.collectionRepr[T, V[T]]
+
 }
 
 
@@ -390,6 +393,7 @@ object Internals {
 
   trait LowPriPPrint {
     implicit def FinalRepr[T]: PPrint[T] = macro LowerPriPPrint.FinalRepr[T]
+    def annotate[V](pp: PPrint[V], n: String) = pp
   }
 
   def fromUnpacker[T](prefix: T => String)(f: Internals.Unpacker[T]): PPrinter[T] = PPrinter[T]{
@@ -448,7 +452,18 @@ object Internals {
       """
     }
     def knot(t: Tree) = t
-    def mergeTrait(ts: Seq[Tree], targetType: c.Type) = ts(0)
+    def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[c.Type], targetType: c.Type) = {
+
+      val cases = subtrees.zip(subtypes).map{case (tree, tpe) => cq"x: $tpe => $tree.render(x)" }
+      q"""
+        pprint.PPrint[$targetType](
+          pprint.PPrinter[$targetType]{(t, cfg) =>
+            t match {case ..$cases}
+          },
+          implicitly[pprint.Config]
+        )
+      """
+    }
 
     def wrapCase0(t: Tree, targetType: c.Type) = thingy(0, targetType)
     def wrapCase1(t: Tree,
