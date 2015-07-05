@@ -15,17 +15,10 @@ import acyclic.file
  * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
-  object R extends Derive.Config(
-    "Reader"
-  )
-
-  object W extends Derive.Config(
-    "Writer"
-  )
-
-  abstract class Reading extends Derive(R){
+  abstract class Reading extends Derive{
     val c: Context
     import c.universe._
+    def typeclassName = "Reader"
     def wrapObject(t: c.Tree) = q"${c.prefix}.${newTermName("SingletonR")}($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
       q"${c.prefix}.${newTermName("Case0R")}($t.apply _: () => $targetType)"
@@ -59,9 +52,10 @@ object Macros {
       """
     }
   }
-  abstract class Writing extends Derive(W){
+  abstract class Writing extends Derive{
     val c: Context
     import c.universe._
+    def typeclassName = "Writer"
     def wrapObject(t: c.Tree) = q"${c.prefix}.${newTermName("SingletonW")}($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($t.unapply)"
     def findUnapply(tpe: Type) = {

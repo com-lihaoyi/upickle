@@ -10,15 +10,21 @@ import scala.language.experimental.macros
  * default string which is the full-name of that class/field.
  */
 class key(s: String) extends StaticAnnotation
-object Derive{
-  class Config(val long: String)
-}
-
-abstract class Derive(rw: Derive.Config){
+trait DeriveApi{
   val c: Context
+  import c.universe._
+  def wrapObject(t: Tree): Tree
+  def wrapCase0(t: Tree, targetType: c.Type): Tree
+  def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
+  def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
+}
+abstract class Derive extends DeriveApi{
+
   import c.universe._
   def internal = q"${c.prefix}.Internal"
   def freshName = c.fresh[TermName]("upickle")
+  def typeclassName: String
+
   def checkType(tpe: Type) = {
     if (tpe == typeOf[Nothing]){
       c.echo(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
@@ -64,7 +70,7 @@ abstract class Derive(rw: Derive.Config){
                 (treeMaker: Seq[c.Tree] => c.Tree): c.Tree = {
 //    println(Console.CYAN + "picklerFor " + Console.RESET + tpe)
 
-    def implicited(tpe: Type) = q"implicitly[${c.prefix}.${newTypeName(rw.long)}[$tpe]]"
+    def implicited(tpe: Type) = q"implicitly[${c.prefix}.${newTypeName(typeclassName)}[$tpe]]"
 
     c.typeCheck(implicited(tpe), withMacrosDisabled = true, silent = true) match {
       case EmptyTree =>
@@ -88,7 +94,7 @@ abstract class Derive(rw: Derive.Config){
                   args.map(TypeKey)
                     .distinct
                     .map(_.t)
-                    .map(tpe => q"implicit def ${freshName}: ${c.prefix}.${newTypeName(rw.long)}[${tpe}] = ???")
+                    .map(tpe => q"implicit def ${freshName}: ${c.prefix}.${newTypeName(typeclassName)}[${tpe}] = ???")
                 case _ => Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
@@ -151,8 +157,8 @@ abstract class Derive(rw: Derive.Config){
             else pickleClass(tpe)
 
           q"""
-            implicit lazy val $name: ${c.prefix}.${newTypeName(rw.long)}[$tpe] = {
-              ${c.prefix}.Knot.${newTermName(rw.long)}[$tpe](() => $pick)
+            implicit lazy val $name: ${c.prefix}.${newTypeName(typeclassName)}[$tpe] = {
+              ${c.prefix}.Knot.${newTermName(typeclassName)}[$tpe](() => $pick)
             }
           """
         }
@@ -201,12 +207,12 @@ abstract class Derive(rw: Derive.Config){
     //    println("pickleTrait")
     val subPicklers =
       fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
-        .map(subCls => q"implicitly[${c.prefix}.${newTypeName(rw.long)}[$subCls]]")
+        .map(subCls => q"implicitly[${c.prefix}.${newTypeName(typeclassName)}[$subCls]]")
         .toSeq
     //    println(Console.GREEN + "subPicklers " + Console.RESET + subPicklerss)
     val combined = treeMaker(subPicklers)
 
-    q"""${c.prefix}.${newTermName(rw.long)}[$tpe]($combined)"""
+    q"""${c.prefix}.${newTermName(typeclassName)}[$tpe]($combined)"""
   }
 
   def pickleCaseObject(tpe: c.Type) = {
@@ -311,10 +317,6 @@ abstract class Derive(rw: Derive.Config){
 
     annotate(tpe)(q"$pickler")
   }
-  def wrapObject(t: Tree): Tree
-  def wrapCase0(t: Tree, targetType: c.Type): Tree
-  def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
-  def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
 
   def companionTree(tpe: c.Type) = {
     val companionSymbol = tpe.typeSymbol.companionSymbol
