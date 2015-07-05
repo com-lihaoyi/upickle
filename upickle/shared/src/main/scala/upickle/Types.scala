@@ -4,8 +4,7 @@ import scala.{PartialFunction => PF}
 import language.experimental.macros
 import scala.annotation.implicitNotFound
 
-
-
+import acyclic.file
 trait MacroImplicits {this: Types =>
   implicit def macroR[T]: Reader[T] = macro Macros.macroRImpl[T, Reader]
   implicit def macroW[T]: Writer[T] = macro Macros.macroWImpl[T, Writer]
