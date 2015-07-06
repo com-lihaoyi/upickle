@@ -1,6 +1,9 @@
 package test.pprint
 
 
+import java.util
+import java.util.UUID
+
 import utest._
 import pprint.Config.Defaults._
 import scala.collection.{immutable => imm, mutable}
@@ -117,12 +120,20 @@ object DerivationTests extends TestSuite{
       check(a: Any, a.toString)
       check(Seq("lol", 1, 'c'), "List(lol, 1, c)")
       check(("lol", 1, 'c'): AnyRef, "(lol,1,c)")
+
+      // Even random non-Scala stuff should work
+      val x = new util.HashMap[Int, String]()
+      x.put(1, "i am")
+      x.put(2, "cow")
+      check(x, "{1=i am, 2=cow}")
+      val z = new UUID(0, -1)
+      check(z, "00000000-0000-0000-ffff-ffffffffffff")
       // Make sure when dealing with composite data structures, we continue
       // to use the static versions as deep as we can go before falling back
       // to toString
       check(
-        derive.Generic.ADT('a', 'a':Any, "lol", "lol": Any, (1.5, 2.5), (1.5, 2.5): AnyRef),
-        """ADT('a', a, "lol", lol, (1.5, 2.5), (1.5,2.5))"""
+        derive.Generic.ADT(x, z: java.io.Serializable, "lol", "lol": Any, (1.5, 2.5), (1.5, 2.5): AnyRef),
+        """ADT({1=i am, 2=cow}, 00000000-0000-0000-ffff-ffffffffffff, "lol", lol, (1.5, 2.5), (1.5,2.5))"""
       )
     }
   }
