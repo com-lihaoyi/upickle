@@ -2,7 +2,8 @@ package test.pprint
 
 import utest._
 import pprint.TPrint
-
+import language.higherKinds
+import language.existentials
 object TPrintTests extends TestSuite{
 
   class M
@@ -148,7 +149,7 @@ object TPrintTests extends TestSuite{
       }
       'annotated{
         // Can't use the normal implicit method, because of SI-8079
-        assert(TPrint.default[M@deprecated].render == "M @deprecated")
+        assert(TPrint.default[M@deprecated("", "")].render == "M @deprecated")
       }
 
       class Custom

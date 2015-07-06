@@ -126,6 +126,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
               println(Console.CYAN + "<Class>" + Console.RESET + tpe)
               getArgSyms(tpe) match {
                 case Left(errMsg) =>
+                  println(errMsg)
                   Map.empty[TypeKey, TermName]
                 case Right((companion, typeParams, argSyms)) =>
                   val x =
@@ -214,7 +215,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         def $returnName = {
           ..$things
 
-          ${recTypes(TypeKey(tpe))}
+          ${recTypes.mapValues(x => q"$x").getOrElse(TypeKey(tpe), fail(tpe, "Couldn't drive type"))}
         }
         $returnName
       }"""

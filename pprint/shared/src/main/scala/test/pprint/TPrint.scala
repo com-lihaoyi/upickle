@@ -65,7 +65,6 @@ object TPrintLowPri{
            .lookupSymbol(n, _ => true)
            .symbol
       }
-      println(lookedUps.toList)
       if (!s.isType) lookedUps.contains(s)
       else {
 

@@ -143,3 +143,9 @@ object GenericADTs{
     case class Clear() extends DeltaHardcoded[Seq[Int], String]
   }
 }
+object Amorphous{
+  class A()
+  class B(i: Int){
+    val x = "lol"
+  }
+}

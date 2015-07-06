@@ -12,7 +12,8 @@ object DerivationTests extends TestSuite{
     assert(pprinted == expected.trim)
   }
 
-  implicitly[pprint.PPrint[derive.Exponential.A1]]
+
+
 
   val tests = TestSuite{
     'singletons {
@@ -107,6 +108,22 @@ object DerivationTests extends TestSuite{
         "A1(A2(A3(null, null), null), A2(null, A3(A4(null, null), null)))"
       )
     }
-
+    'fallback{
+      // make sure we can pprint stuff that looks nothing like a case class
+      // by falling back to good old toString
+      import derive.Amorphous._
+      val a =  new A()
+      check(a, a.toString)
+      check(a: Any, a.toString)
+      check(Seq("lol", 1, 'c'), "List(lol, 1, c)")
+      check(("lol", 1, 'c'): AnyRef, "(lol,1,c)")
+      // Make sure when dealing with composite data structures, we continue
+      // to use the static versions as deep as we can go before falling back
+      // to toString
+      check(
+        derive.Generic.ADT('a', 'a':Any, "lol", "lol": Any, (1.5, 2.5), (1.5, 2.5): AnyRef),
+        """ADT('a', a, "lol", lol, (1.5, 2.5), (1.5,2.5))"""
+      )
+    }
   }
 }
