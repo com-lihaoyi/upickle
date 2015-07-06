@@ -1,7 +1,6 @@
 package test.pprint
 
 import utest._
-import pprint.TPrint
 import language.higherKinds
 import language.existentials
 object TPrintTests extends TestSuite{
@@ -14,9 +13,9 @@ object TPrintTests extends TestSuite{
     val x = ""
     'plain{
       import pprint.Config.Defaults._
-      def checkVal[T](expected: String, expr: => T)(implicit tprint: TPrint[T]) = check[T](expected)(tprint)
+      def checkVal[T](expected: String, expr: => T)(implicit tprint: pprint.TPrint[T]) = check[T](expected)(tprint)
 
-      def check[T](expected: String)(implicit tprint: TPrint[T]) = {
+      def check[T](expected: String)(implicit tprint: pprint.TPrint[T]) = {
         val tprinted = tprint.render
         assert(tprinted == expected)
       }
@@ -149,19 +148,19 @@ object TPrintTests extends TestSuite{
       }
       'annotated{
         // Can't use the normal implicit method, because of SI-8079
-        assert(TPrint.default[M@deprecated("", "")].render == "M @deprecated")
+        assert(pprint.TPrint.default[M@deprecated("", "")].render == "M @deprecated")
       }
 
       class Custom
       'custom{
         // Maybe we want to add some extra decoration
-        implicit def customTPrint: TPrint[Custom] = TPrint.lambda(cfg => "+++Custom+++")
+        implicit def customTPrint: pprint.TPrint[Custom] = pprint.TPrint.lambda(cfg => "+++Custom+++")
         check[Custom]("+++Custom+++")
         check[List[Custom]]("List[+++Custom+++]")
 
         // Or make it look like F#
-        implicit def StreamTPrint[T: TPrint]: TPrint[Stream[T]] = TPrint.lambda(
-          c => implicitly[TPrint[T]].render(c) + " Stream"
+        implicit def StreamTPrint[T: pprint.TPrint]: pprint.TPrint[Stream[T]] = pprint.TPrint.lambda(
+          c => implicitly[pprint.TPrint[T]].render(c) + " Stream"
         )
         check[Stream[Int]]("Int Stream")
 
@@ -176,7 +175,7 @@ object TPrintTests extends TestSuite{
         }
         check[(A with B)#C]("(A with B)#C")
         check[({type T = Int})#T]("Int")
-        implicit def customTPrint: TPrint[Custom] = TPrint.lambda(cfg => "+++Custom+++")
+        implicit def customTPrint: pprint.TPrint[Custom] = pprint.TPrint.lambda(cfg => "+++Custom+++")
         check[(Custom with B)#C]("(+++Custom+++ with B)#C")
 
       }
@@ -187,7 +186,7 @@ object TPrintTests extends TestSuite{
     }
     'colored{
       import pprint.Config.Colors._
-      def checkColor[T](expected: String)(implicit tprint: TPrint[T]) = {
+      def checkColor[T](expected: String)(implicit tprint: pprint.TPrint[T]) = {
         val tprinted = tprint.render.replace(
           implicitly[pprint.Config].literalColor, "<"
         ).replace(

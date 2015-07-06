@@ -5,9 +5,8 @@ import java.util
 import java.util.UUID
 
 import utest._
-import pprint.Config.Defaults._
 import scala.collection.{immutable => imm, mutable}
-
+import pprint.Config.Defaults._
 object DerivationTests extends TestSuite{
 
   def check[T: pprint.PPrint](t: T, expected: String) = {

@@ -63,7 +63,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     val tpe = weakTypeTag[T].tpe
     checkType(tpe)
     val x = deriveType(tpe)
-    println(x)
+//    println(x)
     x
   }
 
@@ -92,7 +92,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
    * derive the typeclass for a particular type
    */
   def deriveType(tpe: c.Type): c.Tree = {
-    println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
+//    println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
     val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
 
     val seen = collection.mutable.Set.empty[TypeKey]
@@ -106,12 +106,12 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
           tpe.normalize match {
             case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
-              println(Console.CYAN + "<Repeat>" + Console.RESET + tpe)
+//              println(Console.CYAN + "<Repeat>" + Console.RESET + tpe)
               rec(args(0))
             case TypeRef(pref, cls, args)
               if tpe.typeSymbol.isClass
                 && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstractClass) =>
-              println(Console.CYAN + "<Traitish>" + Console.RESET + tpe)
+//              println(Console.CYAN + "<Traitish>" + Console.RESET + tpe)
               val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
 
               val lol =
@@ -120,10 +120,10 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 args.flatMap(rec(_))
               lol
             case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
-              println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
+//              println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
               Map(key -> name)
             case TypeRef(_, cls, args) =>
-              println(Console.CYAN + "<Class>" + Console.RESET + tpe)
+//              println(Console.CYAN + "<Class>" + Console.RESET + tpe)
               getArgSyms(tpe) match {
                 case Left(errMsg) =>
                   println(errMsg)
@@ -139,17 +139,17 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
               }
 
             case x =>
-              println("<???>")
+//              println("<???>")
               Map(key -> name)
           }
 
         }
         def rec(tpe0: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
           val tpe = removeRepeats(tpe0)
-          println(Console.CYAN + "REC " + Console.RESET + tpe)
+//          println(Console.CYAN + "REC " + Console.RESET + tpe)
           val key = TypeKey(tpe)
-          println(Console.CYAN + seen + Console.RESET + " " + System.identityHashCode(seen))
-          println(Console.CYAN + memo + Console.RESET + " " + System.identityHashCode(memo))
+//          println(Console.CYAN + seen + Console.RESET + " " + System.identityHashCode(seen))
+//          println(Console.CYAN + memo + Console.RESET + " " + System.identityHashCode(memo))
           if (seen(TypeKey(tpe))) Map()
           else {
             seen.add(key)
@@ -165,14 +165,14 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                   Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
-              println("TC " + name + " " + probe)
+//              println("TC " + name + " " + probe)
               c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
                 case EmptyTree =>
-                  println("Empty")
+//                  println("Empty")
                   seen.add(key)
                   onFail(tpe, key, name)
                 case t =>
-                  println("Present")
+//                  println("Present")
                   Map()
               }
 
@@ -201,7 +201,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
           """
 
         }
-        println(things)
+//        println(things)
 
         val returnName = freshName
         // Do this weird immediately-called-method dance to avoid weird crash
@@ -223,7 +223,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         res
       case t => t
     }
-    println(Console.CYAN + "end derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
+//    println(Console.CYAN + "end derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
     res
   }
 

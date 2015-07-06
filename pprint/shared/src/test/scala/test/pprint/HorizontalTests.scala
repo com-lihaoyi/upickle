@@ -2,8 +2,8 @@ package test.pprint
 
 
 import utest._
-import pprint.Config.Defaults._
 import scala.collection.{immutable => imm, mutable}
+import pprint.Config.Defaults._
 object HorizontalTests extends TestSuite{
 
   def check[T: pprint.PPrint](t: T, expected: String) = {
@@ -12,12 +12,12 @@ object HorizontalTests extends TestSuite{
   }
 
 //  check(FooNoArgs(), "FooNoArgs()")
-//  pprint.PPrint(Foo(123, Seq("hello world", "moo")))
+//  PPrint(Foo(123, Seq("hello world", "moo")))
 //  check(FooSingleton, "FooSingleton")
-//  implicitly[pprint.PPrint[FooSingleton.type]]
+//  implicitly[PPrint[FooSingleton.type]]
 //
-//  implicitly[pprint.PPrint[Some[Nothing]]]
-//  implicitly[pprint.PPrint[Right[String, (Int, String, Int)]]]
+//  implicitly[PPrint[Some[Nothing]]]
+//  implicitly[PPrint[Right[String, (Int, String, Int)]]]
 
 
   val tests = TestSuite{

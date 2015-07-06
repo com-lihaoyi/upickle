@@ -3,6 +3,7 @@ package pprint
 import derive.Derive
 
 import scala.language.experimental.macros
+import language.higherKinds
 import annotation.tailrec
 import acyclic.file
 import scala.{Iterator => Iter}
@@ -44,8 +45,8 @@ object Chunker extends PPrinterGen {
    */
 
   implicit def Tuple0Chunker = Chunker((t: Unit, cfg: Config) => Iter[Iter[String]]())
-//  implicit def TupleNothing1Chunker[T1: pprint.Chunker.PP]: pprint.Chunker[Tuple1[Nothing]] = pprint.Chunker.makeChunker{
-//    (t: Tuple1[T1], cfg: pprint.Config) => Iterator()
+//  implicit def TupleNothing1Chunker[T1: Chunker.PP]: Chunker[Tuple1[Nothing]] = Chunker.makeChunker{
+//    (t: Tuple1[T1], cfg: Config) => Iterator()
 //  }
   def makeChunker[T](f: (T, Config) => Iter[Iter[String]]) = Chunker(f)
   def render[T: PP](t: T, c: Config) = implicitly[PPrint[T]].pprinter.render(t, c)
@@ -416,7 +417,7 @@ object Internals {
         val c: c0.type = c0
         def typeclass = c.weakTypeTag[pprint.PPrint[_]]
       }.derive[T]
-      println(res)
+//      println(res)
       res
     }
   }
@@ -489,8 +490,7 @@ object Internals {
                   typeArgs: Seq[c.Type],
                   argTypes: Type,
                   targetType: c.Type) = {
-      println("wrapCase1 " + argTypes)
-      println("wrapCase1 " + typeArgs)
+//      println("wrapCase1 " + typeArgs)
       thingy(1, targetType, Seq(argTypes))
     }
     def wrapCaseN(t: Tree,
@@ -499,12 +499,12 @@ object Internals {
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type): Tree = {
-      println("wrapCaseN " + argTypes)
+//      println("wrapCaseN " + argTypes)
       thingy(args.length, targetType, argTypes)
     }
     override def fallbackDerivation(t: Type): Option[Tree] = Some(q"""
-      pprint.PPrint[$t](
-        pprint.PPrinter.Literal,
+    pprint.PPrint[$t](
+      pprint.PPrinter.Literal,
         implicitly[pprint.Config]
       )
     """)

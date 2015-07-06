@@ -19,6 +19,7 @@ object VerticalTests extends TestSuite{
       "C"
     }
   }
+
   val tests = TestSuite{
     'Laziness{
       implicit def default = pprint.Config(maxWidth = () => 20, lines = () => 5)
