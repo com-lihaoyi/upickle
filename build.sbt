@@ -24,7 +24,7 @@ val settings = Seq(
     if (scalaVersion.value startsWith "2.11.") Nil
     else Seq(
       "org.scalamacros" %% s"quasiquotes" % "2.0.0" % "provided",
-      compilerPlugin("org.scalamacros" % s"paradise" % "2.0.0" cross CrossVersion.full)
+      compilerPlugin("org.scalamacros" % s"paradise" % "2.1.0-M5" cross CrossVersion.full)
     )
     ),
   unmanagedSourceDirectories in Compile ++= {

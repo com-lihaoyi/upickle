@@ -19,6 +19,7 @@ object HorizontalTests extends TestSuite{
 //  implicitly[pprint.PPrint[Some[Nothing]]]
 //  implicitly[pprint.PPrint[Right[String, (Int, String, Int)]]]
 
+
   val tests = TestSuite{
     'Horizontal {
 
@@ -93,9 +94,9 @@ object HorizontalTests extends TestSuite{
       'misc {
         //        'Nothing - intercept[NotImplementedError](check(???, ""))
         'Null {
-//          check(null, "null")
-//          check(null: String, "null")
-//          check(Seq("look!", null: String, "hi"), """List("look!", null, "hi")""")
+          check(null, "null")
+          check(null: String, "null")
+          check(Seq("look!", null: String, "hi"), """List("look!", null, "hi")""")
         }
         'Either {
           check(Left(123): Either[Int, Int], "Left(123)")

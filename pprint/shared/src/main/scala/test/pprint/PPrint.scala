@@ -113,19 +113,23 @@ case class Show[A](value: A, lines: Int)
  * A typeclass you define to prettyprint values of type [[A]]
  */
 trait PPrinter[-A] {
-  def render(t: A, c: Config): Iter[String]
+  def render(t: A, c: Config): Iter[String] = {
+    if (t == null) Iter("null")
+    else render0(t, c)
+  }
+  def render0(t: A, c: Config): Iter[String]
 
   def map(f: String => String): PPrinter[A] = PPrinter {
-    (t: A, c: Config) => render(t, c).map(f)
+    (t: A, c: Config) => render0(t, c).map(f)
   }  
 }
 
 object PPrinter extends LowPriPPrinter{
   // Things being injected into PPrinterGen to keep it acyclic
-
+  
   def apply[T](r: (T, Config) => Iter[String]): PPrinter[T] = {
     new PPrinter[T]{ 
-      def render(t: T, c: Config) = {
+      def render0(t: T, c: Config) = {
         if(c.lines() > 0)
           takeFirstLines(c, r(t, c))
         else r(t, c)
@@ -280,7 +284,7 @@ object PPrinter extends LowPriPPrinter{
 
   implicit def showPPrinter[A: PPrint]: PPrinter[Show[A]] = {
     new PPrinter[Show[A]]{
-      def render(wrapper: Show[A], c: Config) = {
+      def render0(wrapper: Show[A], c: Config) = {
         implicitly[PPrint[A]].pprinter.render(
           wrapper.value,
           c.copy(lines = () => wrapper.lines)

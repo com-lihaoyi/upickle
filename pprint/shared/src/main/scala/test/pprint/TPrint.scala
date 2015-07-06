@@ -61,13 +61,14 @@ object TPrintLowPri{
       val gName = s.name.asInstanceOf[g.Name]
       val lookedUps = for(n <- Stream(gName.toTermName, gName.toTypeName)) yield {
         cas.callsiteTyper
-          .context
-          .lookupSymbol(n, _ => true)
-          .symbol
+           .context
+           .lookupSymbol(n, _ => true)
+           .symbol
       }
-
+      println(lookedUps.toList)
       if (!s.isType) lookedUps.contains(s)
       else {
+
         // Try to resolve aliases for types
         lookedUps.exists(x => x == s || x.tpe.typeSymbol == s.asInstanceOf[g.Symbol].tpe.typeSymbol)
       }

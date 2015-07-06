@@ -102,13 +102,11 @@ object DerivationTests extends TestSuite{
     'exponential{
       import derive.Exponential._
 
-//      check(
-//        A1(A2(A3(null, null), null), A2(null, A3(A4(null, null), null))),
-//        "A1(A2(A3(null, null), null), A2(null, A3(A4(null, null), null)))"
-//      )
+      check(
+        A1(A2(A3(null, null), null), A2(null, A3(A4(null, null), null))),
+        "A1(A2(A3(null, null), null), A2(null, A3(A4(null, null), null)))"
+      )
     }
 
   }
-
-
 }
