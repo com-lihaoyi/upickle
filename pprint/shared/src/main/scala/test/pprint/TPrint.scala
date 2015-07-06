@@ -1,7 +1,7 @@
 package pprint
 
 import language.experimental.macros
-import reflect.macros.blackbox.Context
+import derive.ScalaVersionStubs.Context
 import scala.reflect.macros.TypecheckException
 
 /**
@@ -91,7 +91,7 @@ object TPrintLowPri{
 
     def printArgSyms(args: List[Symbol]): Tree = {
       def added = args.map{x =>
-        val TypeBounds(lo, hi) = x.info
+        val TypeBounds(lo, hi) = x.typeSignature
         q""" ${printSym(x)} +  ${printBounds(lo, hi)}"""
       }.reduceLeft[Tree]((l, r) => q"""$l + ", " + $r""")
       if (args == Nil) q"$s" else q""" "[" + $added + "]" """
@@ -108,7 +108,7 @@ object TPrintLowPri{
       try {
         // Make sure the type isn't higher-kinded or some other weird
         // thing, and actually can fit inside the square brackets
-        c.typecheck(q"null.asInstanceOf[$tpe]")
+        c.typeCheck(q"null.asInstanceOf[$tpe]")
         q""" pprint.TPrint.implicitly[$tpe].render($cfgSym) """
       }catch{case e: TypecheckException =>
         rec0(tpe)
@@ -123,7 +123,7 @@ object TPrintLowPri{
     def showRefinement(quantified: List[Symbol]) = {
       def stmts = for{
         t <- quantified
-        suffix <- t.info match {
+        suffix <- t.typeSignature match {
           case PolyType(typeParams, resultType) =>
             val paramTree = printArgSyms(t.asInstanceOf[TypeSymbol].typeParams)
             val resultBounds = if (resultType =:= typeOf[Any]) q"$s" else q""" " <: " + ${implicitRec(resultType)} """
@@ -135,9 +135,9 @@ object TPrintLowPri{
         }
       } yield {
           if (t.toString.endsWith(".type")) {
-            val TypeBounds(lo, hi) = t.info
+            val TypeBounds(lo, hi) = t.typeSignature
             val RefinedType(parents, defs) = hi
-            val filtered = internal.refinedType(parents.filter(x => !(x =:= typeOf[scala.Singleton])), defs)
+            val filtered = c.internal.refinedType(parents.filter(x => !(x =:= typeOf[scala.Singleton])), defs)
             q""" "val " + $cfgSym.color.literal(${t.name.toString.stripSuffix(".type")}) + ": " + ${implicitRec(filtered)}"""
           }else {
             q""" "type " + ${printSym(t)} + $suffix """
@@ -185,7 +185,7 @@ object TPrintLowPri{
           if (defs.isEmpty) "" else "{" + defs.mkString(";") + "}"
         }"
     }
-    lazy val cfgSym = c.freshName[TermName]("cfg")
+    lazy val cfgSym = c.fresh[TermName]("cfg")
     val res = c.Expr[TPrint[T]](q"""pprint.TPrint.lambda{
       ($cfgSym: pprint.Config) =>
         ${rec0(tpe, end = true)}

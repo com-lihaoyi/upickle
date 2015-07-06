@@ -130,8 +130,8 @@ lazy val pprint = crossProject
   .settings(
     name := "pprint",
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"//,
-//      "com.chuusai" %% "shapeless" % "2.1.0" % "test"
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
+      "com.chuusai" %% "shapeless" % "2.2.3"
     ),
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
       val file = dir/"pprint"/"PPrintGen.scala"

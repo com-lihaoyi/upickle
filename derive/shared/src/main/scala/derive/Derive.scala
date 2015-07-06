@@ -102,14 +102,16 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       case EmptyTree =>
 
 
-        def onFail(key: TypeKey, name: TermName) = {
+        def onFail(tpe: Type, key: TypeKey, name: TermName) = {
 
           tpe.normalize match {
             case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
+              println(Console.CYAN + "<Repeat>" + Console.RESET + tpe)
               rec(args(0))
             case TypeRef(pref, cls, args)
               if tpe.typeSymbol.isClass
                 && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstractClass) =>
+              println(Console.CYAN + "<Traitish>" + Console.RESET + tpe)
               val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
 
               val lol =
@@ -118,8 +120,10 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 args.flatMap(rec(_))
               lol
             case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
+              println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
               Map(key -> name)
             case TypeRef(_, cls, args) =>
+              println(Console.CYAN + "<Class>" + Console.RESET + tpe)
               getArgSyms(tpe) match {
                 case Left(errMsg) =>
                   Map.empty[TypeKey, TermName]
@@ -134,6 +138,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
               }
 
             case x =>
+              println("<???>")
               Map(key -> name)
           }
 
@@ -144,24 +149,18 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
           val key = TypeKey(tpe)
           println(Console.CYAN + seen + Console.RESET + " " + System.identityHashCode(seen))
           println(Console.CYAN + memo + Console.RESET + " " + System.identityHashCode(memo))
-          if (seen(TypeKey(tpe))) {
-            println("Already Seen")
-            Map()
-          } else {
-            println(Console.RED + "ADD KEY " + Console.RESET + key)
+          if (seen(TypeKey(tpe))) Map()
+          else {
             seen.add(key)
             memo.getOrElseUpdate(TypeKey(tpe), {
-
               // If it can't find any non-macro implicits, try to recurse into the type
               val dummies = tpe match {
                 case TypeRef(_, _, args) =>
-                  println("A")
                   args.map(TypeKey)
                     .distinct
                     .map(_.t)
                     .map(tpe => q"implicit def $freshName: ${typeclassFor(tpe)} = ???")
                 case _ =>
-                  println("B")
                   Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
@@ -170,7 +169,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 case EmptyTree =>
                   println("Empty")
                   seen.add(key)
-                  onFail(key, name)
+                  onFail(tpe, key, name)
                 case t =>
                   println("Present")
                   Map()
