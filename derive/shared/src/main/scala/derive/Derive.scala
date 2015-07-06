@@ -20,12 +20,19 @@ trait DeriveApi[M[_]]{
   def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
   def knot(t: Tree): Tree
   def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
+  def fallbackDerivation(t: Type): Option[Tree] = None
 }
 
 abstract class Derive[M[_]] extends DeriveApi[M]{
-
+  case class TypeKey(t: c.Type) {
+    override def equals(o: Any) = t =:= o.asInstanceOf[TypeKey].t
+  }
   import c.universe._
   import compat._
+  def fail(tpe: Type, s: String): Tree = fallbackDerivation(tpe) match{
+    case None => c.abort(c.enclosingPosition, s)
+    case Some(tree) => tree
+  }
   def typeclassFor(t: Type) = {
 //    println("typeclassFor " + weakTypeOf[M[_]](typeclass))
 
@@ -55,7 +62,9 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   def derive[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
     checkType(tpe)
-    drive(tpe)
+    val x = deriveType(tpe)
+    println(x)
+    x
   }
 
   /**
@@ -82,35 +91,78 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   /**
    * derive the typeclass for a particular type
    */
-  def drive(tpe: c.Type): c.Tree = {
-//    println(Console.CYAN + "derive " + Console.RESET + tpe)
+  def deriveType(tpe: c.Type): c.Tree = {
+    println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
+    val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
 
+    val seen = collection.mutable.Set.empty[TypeKey]
     def implicited(tpe: Type) = q"implicitly[${typeclassFor(tpe)}]"
 
-    c.typeCheck(implicited(tpe), withMacrosDisabled = true, silent = true) match {
+    val res = c.typeCheck(implicited(tpe), withMacrosDisabled = true, silent = true) match {
       case EmptyTree =>
 
-        val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
-        case class TypeKey(t: c.Type) {
-          override def equals(o: Any) = t =:= o.asInstanceOf[TypeKey].t
+
+        def onFail(key: TypeKey, name: TermName) = {
+
+          tpe.normalize match {
+            case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
+              rec(args(0))
+            case TypeRef(pref, cls, args)
+              if tpe.typeSymbol.isClass
+                && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstractClass) =>
+              val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
+
+              val lol =
+                Map(key -> name) ++
+                subTypes.flatMap(rec(_)) ++
+                args.flatMap(rec(_))
+              lol
+            case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
+              Map(key -> name)
+            case TypeRef(_, cls, args) =>
+              getArgSyms(tpe) match {
+                case Left(errMsg) =>
+                  Map.empty[TypeKey, TermName]
+                case Right((companion, typeParams, argSyms)) =>
+                  val x =
+                    argSyms
+                      .map(_.typeSignature.substituteTypes(typeParams, args))
+                      .flatMap(rec(_))
+                      .toSet
+
+                  Map(key -> name) ++ x
+              }
+
+            case x =>
+              Map(key -> name)
+          }
+
         }
-        val seen = collection.mutable.Set.empty[TypeKey]
-        def rec(tpe: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
+        def rec(tpe0: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
+          val tpe = removeRepeats(tpe0)
           println(Console.CYAN + "REC " + Console.RESET + tpe)
           val key = TypeKey(tpe)
-          //                println("rec " + tpe + " " + seen)
-          if (seen(TypeKey(tpe))) Map()
-          else {
+          println(Console.CYAN + seen + Console.RESET + " " + System.identityHashCode(seen))
+          println(Console.CYAN + memo + Console.RESET + " " + System.identityHashCode(memo))
+          if (seen(TypeKey(tpe))) {
+            println("Already Seen")
+            Map()
+          } else {
+            println(Console.RED + "ADD KEY " + Console.RESET + key)
+            seen.add(key)
             memo.getOrElseUpdate(TypeKey(tpe), {
 
               // If it can't find any non-macro implicits, try to recurse into the type
               val dummies = tpe match {
                 case TypeRef(_, _, args) =>
+                  println("A")
                   args.map(TypeKey)
                     .distinct
                     .map(_.t)
                     .map(tpe => q"implicit def $freshName: ${typeclassFor(tpe)} = ???")
-                case _ => Seq.empty[Tree]
+                case _ =>
+                  println("B")
+                  Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
               println("TC " + name + " " + probe)
@@ -118,35 +170,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 case EmptyTree =>
                   println("Empty")
                   seen.add(key)
-                  tpe.normalize match {
-                    case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
-                      rec(args(0))
-                    case TypeRef(pref, cls, args)
-                      if tpe.typeSymbol.isClass
-                        && tpe.typeSymbol.asClass.isTrait =>
-
-                      val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
-
-                      val lol =
-                        Map(key -> name) ++
-                          subTypes.flatMap(rec(_)) ++
-                          args.flatMap(rec(_))
-                      lol
-                    case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
-                      Map(key -> name)
-                    case TypeRef(_, cls, args) =>
-                      val (companion, typeParams, argSyms) = getArgSyms(tpe)
-                      val x =
-                        argSyms
-                          .map(_.typeSignature.substituteTypes(typeParams, args))
-                          .flatMap(rec(_))
-                          .toSet
-
-                      Map(key -> name) ++ x
-                    case x =>
-                      Map(key -> name)
-                  }
-
+                  onFail(key, name)
                 case t =>
                   println("Present")
                   Map()
@@ -162,6 +186,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         val recTypes = try rec(tpe, first) catch {
           case e => e.printStackTrace(); throw e
         }
+
         //    println("c")
         //        println("recTypes " + recTypes)
 
@@ -176,7 +201,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
           """
 
         }
-
+        println(things)
 
         val returnName = freshName
         // Do this weird immediately-called-method dance to avoid weird crash
@@ -198,85 +223,90 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         res
       case t => t
     }
+    println(Console.CYAN + "end derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
+    res
   }
 
   def deriveTrait(tpe: c.Type): c.universe.Tree = {
     val clsSymbol = tpe.typeSymbol.asClass
 
     if (!clsSymbol.isSealed) {
-      val msg = s"[error] The referenced trait [[${clsSymbol.name}]] must be sealed."
-      Console.err.println(msg)
-      c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
-    }
-
-    if (clsSymbol.knownDirectSubclasses.isEmpty) {
+      fail(tpe, s"[error] The referenced trait [[${clsSymbol.name}]] must be sealed.")
+    }else if (clsSymbol.knownDirectSubclasses.isEmpty) {
       val msg = s"The referenced trait [[${clsSymbol.name}]] does not have any sub-classes. This may " +
         "happen due to a limitation of scalac (SI-7046) given that the trait is " +
         "not in the same package. If this is the case, the hierarchy may be " +
         "defined using integer constants."
-      Console.err.println(msg)
-      c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
+      fail(tpe, msg)
+    }else{
+      val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef]).toSeq
+      //    println("deriveTrait")
+      val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
+      //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)
+      mergeTrait(subDerives, subTypes, tpe)
     }
-
-    val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef]).toSeq
-    //    println("deriveTrait")
-    val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
-    //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)
-    mergeTrait(subDerives, subTypes, tpe)
-
   }
 
   def deriveClass(tpe: c.Type) = {
-
-    val (companion, paramTypes, argSyms) = getArgSyms(tpe)
-
-    //    println("argSyms " + argSyms.map(_.typeSignature))
-    val args = argSyms.map{ p =>
-      customKey(p).getOrElse(p.name.toString)
-    }
-
-    val defaults = argSyms.zipWithIndex.map { case (s, i) =>
-      val defaultName = newTermName("apply$default$" + (i + 1))
-      companion.tpe.member(defaultName) match{
-        case NoSymbol => q"null"
-        case _ => q"${c.prefix}.writeJs($companion.$defaultName)"
-      }
-    }
-
-    val typeArgs = tpe match {
-      case TypeRef(_, _, args) => args
-      case _ => c.abort(
-        c.enclosingPosition,
-        s"Don't know how to derive type $tpe"
-      )
-    }
+    getArgSyms(tpe) match {
+      case Left(msg) => fail(tpe, msg)
+      case Right((companion, paramTypes, argSyms)) =>
 
 
-    def func(t: Type) = {
-
-      if (argSyms.length == 0) t
-      else {
-        val base = argSyms.map(_.typeSignature.typeSymbol)
-        val concrete = tpe.normalize.asInstanceOf[TypeRef].args
-        if (t.typeSymbol != definitions.RepeatedParamClass) t.substituteTypes(base, concrete)
-        else {
-          val TypeRef(pref, sym, args) = typeOf[Seq[Int]]
-          import compat._
-          TypeRef(pref, sym, t.asInstanceOf[TypeRef].args)
+        //    println("argSyms " + argSyms.map(_.typeSignature))
+        val args = argSyms.map { p =>
+          customKey(p).getOrElse(p.name.toString)
         }
-      }
+
+        val defaults = argSyms.zipWithIndex.map { case (s, i) =>
+          val defaultName = newTermName("apply$default$" + (i + 1))
+          companion.tpe.member(defaultName) match {
+            case NoSymbol => q"null"
+            case _ => q"${c.prefix}.writeJs($companion.$defaultName)"
+          }
+        }
+
+        val typeArgs = tpe match {
+          case TypeRef(_, _, args) => args
+          case _ => c.abort(
+            c.enclosingPosition,
+            s"Don't know how to derive type $tpe"
+          )
+        }
+
+
+        def func(t: Type) = {
+
+          if (argSyms.length == 0) t
+          else {
+            val base = argSyms.map(_.typeSignature.typeSymbol)
+            val concrete = tpe.normalize.asInstanceOf[TypeRef].args
+            if (t.typeSymbol != definitions.RepeatedParamClass) {
+
+              t.substituteTypes(paramTypes, concrete)
+            } else {
+              val TypeRef(pref, sym, args) = typeOf[Seq[Int]]
+              import compat._
+              TypeRef(pref, sym, t.asInstanceOf[TypeRef].args)
+            }
+          }
+        }
+
+        val derive =
+          if (args.length == 0) // 0-arg case classes are treated like `object`s
+            wrapCase0(companion, tpe)
+          else if (args.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
+            wrapCase1(companion, args(0), defaults(0), typeArgs, func(argSyms(0).typeSignature), tpe)
+          else // Otherwise, reading and writing are kinda identical
+            wrapCaseN(companion, args, defaults, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
+
+        annotate(tpe)(q"$derive")
     }
-    val derive =
-      if (args.length == 0) // 0-arg case classes are treated like `object`s
-        wrapCase0(companion, tpe)
-      else if (args.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
-        wrapCase1(companion, args(0), defaults(0), typeArgs, func(argSyms(0).typeSignature), tpe)
-      else // Otherwise, reading and writing are kinda identical
-        wrapCaseN(companion, args, defaults, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
-
-    annotate(tpe)(q"$derive")
   }
-
+  def removeRepeats(t: Type) = {
+    if (t.typeSymbol == definitions.RepeatedParamClass) t.asInstanceOf[TypeRef].args(0)
+    else t
+  }
 
   def deriveObject(tpe: c.Type) = {
     val mod = tpe.typeSymbol.asClass.module
@@ -310,31 +340,25 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   }
 
   def getArgSyms(tpe: c.Type) = {
-    val companion = companionTree(tpe)
-    //    println("companionTree " + companion)
-    val apply =
-      companion.tpe
-        .member(newTermName("apply"))
-    if (apply == NoSymbol){
-      c.abort(
-        c.enclosingPosition,
-        s"Don't know how to derive $tpe; it's companion has no `apply` method"
-      )
+    companionTree(tpe).right.flatMap { companion =>
+      companion.tpe.member(newTermName("apply")) match {
+        case NoSymbol => Left(s"Don't know how to derive $tpe; it's companion has no `apply` method")
+        case apply =>
+          val argSyms =
+            apply.asMethod
+              .paramss
+              .flatten
+
+          Right((companion, apply.asMethod.typeParams, argSyms))
+      }
     }
-
-    val argSyms =
-      apply.asMethod
-        .paramss
-        .flatten
-
-    (companion, apply.asMethod.typeParams, argSyms)
   }
 
   /**
    * Special haxx0rs to get us the real companion symbol using the
    * compiler internals, which isn't possible just using the public API
    */
-  def companionTree(tpe: c.Type) = {
+  def companionTree(tpe: c.Type): Either[String, Tree] = {
     val companionSymbol = tpe.typeSymbol.companionSymbol
 
     if (companionSymbol == NoSymbol && tpe.typeSymbol.isClass) {
@@ -343,12 +367,12 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         s"[[${clsSymbol.name}]]. This may be due to a bug in scalac (SI-7567) " +
         "that arises when a case class within a function is derive. As a " +
         "workaround, move the declaration to the module-level."
-      Console.err.println(msg)
-      c.abort(c.enclosingPosition, msg) /* TODO Does not show message. */
+      Left(msg)
+    }else{
+      val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
+      val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
+      Right(c.universe.treeBuild.mkAttributedRef(pre, companionSymbol))
     }
 
-    val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
-    val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
-    c.universe.treeBuild.mkAttributedRef(pre, companionSymbol)
   }
 }

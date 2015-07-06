@@ -43,7 +43,10 @@ object Chunker extends PPrinterGen {
    * Special, because `Product0` doesn't exist
    */
 
-  implicit def Product0Unpacker = Chunker((t: Unit, cfg: Config) => Iter[Iter[String]]())
+  implicit def Tuple0Chunker = Chunker((t: Unit, cfg: Config) => Iter[Iter[String]]())
+//  implicit def TupleNothing1Chunker[T1: pprint.Chunker.PP]: pprint.Chunker[Tuple1[Nothing]] = pprint.Chunker.makeChunker{
+//    (t: Tuple1[T1], cfg: pprint.Config) => Iterator()
+//  }
   def makeChunker[T](f: (T, Config) => Iter[Iter[String]]) = Chunker(f)
   def render[T: PP](t: T, c: Config) = implicitly[PPrint[T]].pprinter.render(t, c)
 
@@ -144,6 +147,7 @@ object PPrinter extends LowPriPPrinter{
   }
 
   implicit val UnitRepr = literalColorPPrinter[Unit]
+
 //  implicit val NullRepr = literalColorPPrinter[Null]
   implicit val BooleanRepr = literalColorPPrinter[Boolean]
   implicit val ByteRepr = literalColorPPrinter[Byte]
@@ -403,7 +407,7 @@ object Internals {
   object LowerPriPPrint {
     def FinalRepr[T: c0.WeakTypeTag](c0: derive.ScalaVersionStubs.Context) = c0.Expr[PPrint[T]] {
       import c0.universe._
-      println("FinalRepr " + weakTypeOf[T])
+//      println("FinalRepr " + weakTypeOf[T])
       val res = new Deriver {
         val c: c0.type = c0
         def typeclass = c.weakTypeTag[pprint.PPrint[_]]
@@ -426,30 +430,39 @@ object Internals {
       )
       """
     }
-    def thingy(n: Int, targetType: Type) = {
-      val (companion, paramTypes, argSyms) = getArgSyms(targetType)
-      val actionName =
-        Seq("unapply", "unapplySeq")
-          .map(newTermName(_))
-          .find(companion.tpe.member(_) != NoSymbol)
-          .getOrElse(c.abort(c.enclosingPosition, "None of the following methods " +
-          "were defined: unapply, unapplySeq"))
-      def get = q"$companion.$actionName(t).get"
-      val w = n match {
-        case 0 => q"()"
-        case 1 => q"Tuple1($get)"
-        case n => get
+    def thingy(n: Int, targetType: Type, argTypes: Seq[Type]) = {
+      getArgSyms(targetType) match {
+        case Left(msg) => fail(targetType, msg)
+        case Right((companion, paramTypes, argSyms)) =>
+          Seq("unapply", "unapplySeq")
+            .map(newTermName(_))
+            .find(companion.tpe.member(_) != NoSymbol) match {
+            case None =>
+              fail(
+                targetType,
+                "None of the following methods were defined: unapply, unapplySeq"
+              )
+            case Some(actionName) =>
+
+              def get = q"$companion.$actionName(t).get"
+              val w = n match {
+                case 0 => q"()"
+                case 1 => q"Tuple1($get)"
+                case n => get
+              }
+              val tupleChunker = newTermName("Tuple" + argSyms.length + "Chunker")
+              q"""
+              pprint.PPrint[$targetType](
+                pprint.PPrinter.ChunkedRepr[$targetType](
+                  pprint.Chunker[$targetType]( (t, cfg) =>
+                    pprint.Chunker.$tupleChunker[..$argTypes].chunk($w, cfg)
+                  )
+                ),
+                implicitly[pprint.Config]
+              )
+              """
+          }
       }
-      q"""
-      pprint.PPrint[$targetType](
-        pprint.PPrinter.ChunkedRepr[$targetType](
-          pprint.Chunker[$targetType]( (t, cfg) =>
-            pprint.Chunker.chunk($w, cfg)
-          )
-        ),
-        implicitly[pprint.Config]
-      )
-      """
     }
     def knot(t: Tree) = t
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[c.Type], targetType: c.Type) = {
@@ -465,14 +478,16 @@ object Internals {
       """
     }
 
-    def wrapCase0(t: Tree, targetType: c.Type) = thingy(0, targetType)
+    def wrapCase0(t: Tree, targetType: c.Type) = thingy(0, targetType, Nil)
     def wrapCase1(t: Tree,
                   arg: String,
                   default: Tree,
                   typeArgs: Seq[c.Type],
                   argTypes: Type,
                   targetType: c.Type) = {
-      thingy(1, targetType)
+      println("wrapCase1 " + argTypes)
+      println("wrapCase1 " + typeArgs)
+      thingy(1, targetType, Seq(argTypes))
     }
     def wrapCaseN(t: Tree,
                   args: Seq[String],
@@ -480,7 +495,14 @@ object Internals {
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type): Tree = {
-      thingy(args.length, targetType)
+      println("wrapCaseN " + argTypes)
+      thingy(args.length, targetType, argTypes)
     }
+    override def fallbackDerivation(t: Type): Option[Tree] = Some(q"""
+      pprint.PPrint[$t](
+        pprint.PPrinter.Literal,
+        implicitly[pprint.Config]
+      )
+    """)
   }
 }
