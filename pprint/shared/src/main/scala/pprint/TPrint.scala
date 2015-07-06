@@ -59,7 +59,7 @@ object TPrintLowPri{
       val cas = c.asInstanceOf[reflect.macros.runtime.Context]
       val g = cas.global
       val gName = s.name.asInstanceOf[g.Name]
-      val lookedUps = for(n <- Stream(gName.toTermName, gName.toTypeName)) yield {
+      val lookedUps: Stream[g.Symbol] = for(n <- Stream(gName.toTermName, gName.toTypeName)) yield {
         cas.callsiteTyper
            .context
            .lookupSymbol(n, _ => true)
@@ -137,7 +137,7 @@ object TPrintLowPri{
           if (t.toString.endsWith(".type")) {
             val TypeBounds(lo, hi) = t.typeSignature
             val RefinedType(parents, defs) = hi
-            val filtered = c.internal.refinedType(parents.filter(x => !(x =:= typeOf[scala.Singleton])), defs)
+            val filtered: Type = c.internal.refinedType(parents.filter(x => !(x =:= typeOf[scala.Singleton])), defs)
             q""" "val " + $cfgSym.color.literal(${t.name.toString.stripSuffix(".type")}) + ": " + ${implicitRec(filtered)}"""
           }else {
             q""" "type " + ${printSym(t)} + $suffix """
@@ -175,8 +175,9 @@ object TPrintLowPri{
           case None => implicitRec(underlying)
           case Some(block) => q"""${implicitRec(underlying)} + " forSome { " + $block +  " }" """
         }
-      case AnnotatedType(annots, tp)    =>
-        q"${implicitRec(tp)} + ${annots.map(x => q""" " @" + ${implicitRec(x.tpe)}""").reduceLeft((x, y) => q"$x + $y")}"
+      // not using destructuring here because API changed between 2.10.x and 2.11.x
+      case t: AnnotatedType =>
+        q"${implicitRec(t.underlying)} + ${t.annotations.map(x => q""" " @" + ${implicitRec(x.tpe)}""").reduceLeft((x, y) => q"$x + $y")}"
       case RefinedType(parents, defs) =>
         val pre =
           if (parents.forall(_ =:= typeOf[AnyRef])) q""" "" """
