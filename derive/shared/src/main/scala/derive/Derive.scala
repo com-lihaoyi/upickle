@@ -14,10 +14,10 @@ trait DeriveApi[M[_]]{
   val c: Context
   import c.universe._
   def typeclass: c.WeakTypeTag[M[_]]
-  def wrapObject(t: Tree): Tree
-  def wrapCase0(t: Tree, targetType: c.Type): Tree
-  def wrapCase1(t: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
-  def wrapCaseN(t: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
+  def wrapObject(obj: Tree): Tree
+  def wrapCase0(companion: Tree, targetType: c.Type): Tree
+  def wrapCase1(companion: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
+  def wrapCaseN(companion: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
   def knot(t: Tree): Tree
   def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
   def fallbackDerivation(t: Type): Option[Tree] = None
@@ -51,20 +51,10 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   def freshName = c.fresh[TermName]("derive")
 
 
-  def checkType(tpe: Type) = {
-    if (tpe == typeOf[Nothing]){
-      c.echo(c.enclosingPosition, "Inferred `Reader[Nothing]`, something probably went wrong")
-    }
-//    if (rw.banScala && tpe.typeSymbol.fullName.startsWith("scala."))
-//      c.abort(c.enclosingPosition, s"this may be an error, can not generate Reader[$tpe <: ${tpe.typeSymbol.fullName}]")
-
-  }
   def derive[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
-    checkType(tpe)
-    val x = deriveType(tpe)
-//    println(x)
-    x
+    if (tpe != typeOf[Nothing]) deriveType(tpe)
+    else fail(tpe, "Inferred `Reader[Nothing]`, something probably went wrong")
   }
 
   /**
@@ -126,7 +116,6 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 //              println(Console.CYAN + "<Class>" + Console.RESET + tpe)
               getArgSyms(tpe) match {
                 case Left(errMsg) =>
-                  println(errMsg)
                   Map.empty[TypeKey, TermName]
                 case Right((companion, typeParams, argSyms)) =>
                   val x =
@@ -183,9 +172,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         //    println("a")
         val first = freshName
         //    println("b")
-        val recTypes = try rec(tpe, first) catch {
-          case e => e.printStackTrace(); throw e
-        }
+        val recTypes = rec(tpe, first)
 
         //    println("c")
         //        println("recTypes " + recTypes)

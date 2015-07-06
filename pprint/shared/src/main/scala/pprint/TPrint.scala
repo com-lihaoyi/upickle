@@ -137,7 +137,10 @@ object TPrintLowPri{
           if (t.toString.endsWith(".type")) {
             val TypeBounds(lo, hi) = t.typeSignature
             val RefinedType(parents, defs) = hi
-            val filtered: Type = c.internal.refinedType(parents.filter(x => !(x =:= typeOf[scala.Singleton])), defs)
+            val filtered: Type = c.internal.refinedType(
+              parents.filter(x => !(x =:= typeOf[scala.Singleton])),
+              defs
+            )
             q""" "val " + $cfgSym.color.literal(${t.name.toString.stripSuffix(".type")}) + ": " + ${implicitRec(filtered)}"""
           }else {
             q""" "type " + ${printSym(t)} + $suffix """
@@ -191,7 +194,6 @@ object TPrintLowPri{
       ($cfgSym: pprint.Config) =>
         ${rec0(tpe, end = true)}
     }""")
-//    println("RES " + res)
     res
   }
 

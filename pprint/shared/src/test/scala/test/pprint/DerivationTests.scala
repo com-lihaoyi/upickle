@@ -10,7 +10,7 @@ import pprint.Config.Defaults._
 object DerivationTests extends TestSuite{
 
   def check[T: pprint.PPrint](t: T, expected: String) = {
-    val pprinted = pprint.PPrint(t).mkString
+    val pprinted = pprint.PPrint.tokenize(t).mkString
     assert(pprinted == expected.trim)
   }
 
@@ -90,10 +90,10 @@ object DerivationTests extends TestSuite{
         DeltaInvariant.Clear(): DeltaInvariant[Int, String],
         """Clear()"""
       )
-              check(
-                DeltaInvariant.Clear(): DeltaInvariant[Nothing, Nothing],
-                """Clear()"""
-              )
+      check(
+        DeltaInvariant.Clear(): DeltaInvariant[Nothing, Nothing],
+        """Clear()"""
+      )
     }
     'recursive {
       import derive.Recursive._

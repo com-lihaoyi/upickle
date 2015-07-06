@@ -18,7 +18,7 @@ object Macros {
   abstract class Reading[M[_]] extends Derive[M]{
     val c: Context
     import c.universe._
-    def wrapObject(t: c.Tree) = q"${c.prefix}.${newTermName("SingletonR")}($t)"
+    def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
       q"${c.prefix}.${newTermName("Case0R")}($t.apply _: () => $targetType)"
     def wrapCase1(t: c.Tree,
@@ -28,10 +28,10 @@ object Macros {
                   argType: c.Type,
                   targetType: c.Type) = {
       q"""
-        ${c.prefix}.CaseR[Tuple1[$argType], $targetType](
-          _ match {case Tuple1(x) => $t.apply[..$typeArgs](x)},
-          Array($arg),
-          Array($default)
+        ${c.prefix}.CaseR[_root_.scala.Tuple1[$argType], $targetType](
+          _ match {case _root_.scala.Tuple1(x) => $t.apply[..$typeArgs](x)},
+          _root_.scala.Array($arg),
+          _root_.scala.Array($default)
         )
         """
     }
@@ -41,12 +41,13 @@ object Macros {
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type) = {
-      val argSyms = (1 to args.length).map(t => q"xyz123.${newTermName("_"+t)}")
+      val x = freshName
+      val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
       q"""
         ${c.prefix}.CaseR[(..$argTypes), $targetType](
-          xyz123 => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
-          Array(..$args),
-          Array(..$defaults)
+          $x => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
+          _root_.scala.Array(..$args),
+          _root_.scala.Array(..$defaults)
         )
       """
     }
@@ -62,8 +63,8 @@ object Macros {
   abstract class Writing[M[_]] extends Derive[M]{
     val c: Context
     import c.universe._
-    def wrapObject(t: c.Tree) = q"${c.prefix}.${newTermName("SingletonW")}($t)"
-    def wrapCase0(t: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($t.unapply)"
+    def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
+    def wrapCase0(companion: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($companion.unapply)"
     def findUnapply(tpe: Type) = {
       val (companion, paramTypes, argSyms) = getArgSyms(tpe)
       Seq("unapply", "unapplySeq")
@@ -72,29 +73,29 @@ object Macros {
         .getOrElse(c.abort(c.enclosingPosition, "None of the following methods " +
         "were defined: unapply, unapplySeq"))
     }
-    def wrapCase1(t: c.Tree,
+    def wrapCase1(companion: c.Tree,
                   arg: String,
                   default: c.Tree,
                   typeArgs: Seq[c.Type],
                   argType: Type,
                   targetType: c.Type) = q"""
-        ${c.prefix}.CaseW[Tuple1[$argType], $targetType](
-          $t.${findUnapply(targetType)}(_).map(Tuple1.apply),
-          Array($arg),
-          Array($default)
+        ${c.prefix}.CaseW[_root_.scala.Tuple1[$argType], $targetType](
+          $companion.${findUnapply(targetType)}(_).map(_root_.scala.Tuple1.apply),
+          _root_.scala.Array($arg),
+          _root_.scala.Array($default)
         )
         """
     def internal = q"${c.prefix}.Internal"
-    def wrapCaseN(t: c.Tree,
+    def wrapCaseN(companion: c.Tree,
                   args: Seq[String],
                   defaults: Seq[c.Tree],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type) = q"""
         ${c.prefix}.CaseW[(..$argTypes), $targetType](
-          $t.${findUnapply(targetType)}[..$typeArgs],
-          Array(..$args),
-          Array(..$defaults)
+          $companion.${findUnapply(targetType)}[..$typeArgs],
+          _root_.scala.Array(..$args),
+          _root_.scala.Array(..$defaults)
         )
       """
     def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
@@ -115,12 +116,11 @@ object Macros {
       val c: c0.type = c0
       def typeclass = e2
     }.derive[T]
-//    println(res)
     c0.Expr[R[T]](res)
   }
 
   def macroWImpl[T, W[_]](c0: Context)
-                            (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
+                         (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
     import c0._
     import c0.universe._
 
@@ -128,16 +128,9 @@ object Macros {
       val c: c0.type = c0
       def typeclass = e2
     }.derive[T]
-//    println(res)
     c0.Expr[W[T]](res)
   }
-  import language.experimental._
-  import reflect.macros.blackbox.Context
-  def macroImpl[T](c: Context)(implicit e: c.WeakTypeTag[T]): c.Expr[String] = {
-    import c.universe._
-    c.Expr[String](q"${e.toString}")
-  }
-  def m = macro macroImpl[Seq[Int]]
+  
 }
 
 

@@ -7,7 +7,7 @@ import pprint.Config.Defaults._
 object HorizontalTests extends TestSuite{
 
   def check[T: pprint.PPrint](t: T, expected: String) = {
-    val pprinted = pprint.PPrint(t).mkString
+    val pprinted = pprint.PPrint.tokenize(t).mkString
     assert(pprinted == expected.trim)
   }
 
@@ -18,7 +18,6 @@ object HorizontalTests extends TestSuite{
 //
 //  implicitly[PPrint[Some[Nothing]]]
 //  implicitly[PPrint[Right[String, (Int, String, Int)]]]
-
 
   val tests = TestSuite{
     'Horizontal {

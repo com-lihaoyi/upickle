@@ -59,14 +59,13 @@ object PPrint extends Internals.LowPriPPrint{
    * if you don't know what to do with it. Generally used for human-facing
    * output
    */
-  def apply[T: PPrint](t: T): Iter[String] = {
-    val pprint = implicitly[PPrint[T]]
-    pprint.render(t)
+  def tokenize[T: PPrint](t: T)(implicit cfg: Config): Iter[String] = {
+    implicitly[PPrint[T]].render(t, cfg)
   }
 
-  def apply[A](pprinter0: PPrinter[A], cfg: Config) = new PPrint[A] {
+  def apply[A](pprinter0: PPrinter[A]) = new PPrint[A] {
     val pprinter = pprinter0
-    def render(t: A): Iter[String] = {
+    def render(t: A, cfg: Config): Iter[String] = {
       if (t == null) Iter("null")
       else pprinter.render(t, cfg)
     }
@@ -79,7 +78,7 @@ object PPrint extends Internals.LowPriPPrint{
     case class PPrint[A](f0: () => pprint.PPrint[A]) extends pprint.PPrint[A] {
       lazy val f = f0()
 
-      def render(t: A) = f.render(t)
+      def render(t: A, cfg: Config) = f.render(t, cfg)
 
       def pprinter = f.pprinter
     }
@@ -88,8 +87,8 @@ object PPrint extends Internals.LowPriPPrint{
   /**
    * Helper to make implicit resolution behave right
    */
-  implicit def Contra[A](implicit ca: PPrinter[A], cfg: Config): PPrint[A] =
-    PPrint(ca, cfg)
+  implicit def Contra[A](implicit ca: PPrinter[A]): PPrint[A] =
+    PPrint(ca)
 
 }
 
@@ -99,7 +98,7 @@ object PPrint extends Internals.LowPriPPrint{
  * in order to make contravariant implicit resolution behave right.
  */
 trait PPrint[A]{
-  def render(t: A): Iter[String]
+  def render(t: A, cfg: Config): Iter[String]
   def pprinter: PPrinter[A]
   def map(f: String => String) = pprinter.map(f)
 }
@@ -153,7 +152,7 @@ object PPrinter extends LowPriPPrinter{
 
   implicit val UnitRepr = literalColorPPrinter[Unit]
 
-//  implicit val NullRepr = literalColorPPrinter[Null]
+  implicit val NullRepr = literalColorPPrinter[Null]
   implicit val BooleanRepr = literalColorPPrinter[Boolean]
   implicit val ByteRepr = literalColorPPrinter[Byte]
   implicit val ShortRepr = literalColorPPrinter[Short]
@@ -233,7 +232,7 @@ object PPrinter extends LowPriPPrinter{
   }
 
   private def takeFirstLines(cfg: Config, iter: Iter[String]): Iter[String] = {
-   
+
     //Calculates how many lines and characters are remaining after printing the given string.
     //Also returns how much of thsi string can be printed if the space runs out
     @tailrec
@@ -253,7 +252,7 @@ object PPrinter extends LowPriPPrinter{
         else charIter(str, pos + 1, remainingLines, remainingChars)
       }
     }
-   
+
     @tailrec
     def strIter(lines: Int, chars: Int, begin: Iter[String]): Iter[String] = {
       if(!iter.hasNext) begin
@@ -425,15 +424,9 @@ object Internals {
     import c._
     import c.universe._
 
-
-    def wrapObject(t: Tree) = {
-
-      q"""
-      pprint.PPrint[$t.type](
-        pprint.PPrinter.Literal,
-        implicitly[pprint.Config]
-      )
-      """
+    def pkg = q"_root_.pprint"
+    def wrapObject(obj: Tree) = {
+      q"""$pkg.PPrint[$obj.type]($pkg.PPrinter.Literal)"""
     }
     def thingy(n: Int, targetType: Type, argTypes: Seq[Type]) = {
       getArgSyms(targetType) match {
@@ -448,8 +441,10 @@ object Internals {
                 "None of the following methods were defined: unapply, unapplySeq"
               )
             case Some(actionName) =>
+              val t = q"$freshName"
+              val cfg = q"$freshName"
 
-              def get = q"$companion.$actionName(t).get"
+              def get = q"$companion.$actionName($t).get"
               val w = n match {
                 case 0 => q"()"
                 case 1 => q"Tuple1($get)"
@@ -457,13 +452,12 @@ object Internals {
               }
               val tupleChunker = newTermName("Tuple" + argSyms.length + "Chunker")
               q"""
-              pprint.PPrint[$targetType](
-                pprint.PPrinter.ChunkedRepr[$targetType](
-                  pprint.Chunker[$targetType]( (t, cfg) =>
-                    pprint.Chunker.$tupleChunker[..$argTypes].chunk($w, cfg)
+              $pkg.PPrint[$targetType](
+                $pkg.PPrinter.ChunkedRepr[$targetType](
+                  $pkg.Chunker[$targetType]( ($t: $targetType, $cfg: $pkg.Config) =>
+                    $pkg.Chunker.$tupleChunker[..$argTypes].chunk($w, $cfg)
                   )
-                ),
-                implicitly[pprint.Config]
+                )
               )
               """
           }
@@ -471,20 +465,21 @@ object Internals {
     }
     def knot(t: Tree) = t
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[c.Type], targetType: c.Type) = {
-
-      val cases = subtrees.zip(subtypes).map{case (tree, tpe) => cq"x: $tpe => $tree.render(x)" }
+      val t = q"$freshName"
+      val cfg = q"$freshName"
+      val x = freshName
+      val cases = subtrees.zip(subtypes).map{case (tree, tpe) => cq"$x: $tpe => $tree.render($x, $cfg)" }
       q"""
-        pprint.PPrint[$targetType](
-          pprint.PPrinter[$targetType]{(t, cfg) =>
-            t match {case ..$cases}
-          },
-          implicitly[pprint.Config]
+        $pkg.PPrint[$targetType](
+          $pkg.PPrinter[$targetType]{($t: $targetType, $cfg: $pkg.Config) =>
+            $t match {case ..$cases}
+          }
         )
       """
     }
 
-    def wrapCase0(t: Tree, targetType: c.Type) = thingy(0, targetType, Nil)
-    def wrapCase1(t: Tree,
+    def wrapCase0(companion: Tree, targetType: c.Type) = thingy(0, targetType, Nil)
+    def wrapCase1(companion: Tree,
                   arg: String,
                   default: Tree,
                   typeArgs: Seq[c.Type],
@@ -493,7 +488,7 @@ object Internals {
 //      println("wrapCase1 " + typeArgs)
       thingy(1, targetType, Seq(argTypes))
     }
-    def wrapCaseN(t: Tree,
+    def wrapCaseN(companion: Tree,
                   args: Seq[String],
                   defaults: Seq[Tree],
                   typeArgs: Seq[c.Type],
@@ -503,10 +498,7 @@ object Internals {
       thingy(args.length, targetType, argTypes)
     }
     override def fallbackDerivation(t: Type): Option[Tree] = Some(q"""
-    pprint.PPrint[$t](
-      pprint.PPrinter.Literal,
-        implicitly[pprint.Config]
-      )
+    $pkg.PPrint[$t]($pkg.PPrinter.Literal)
     """)
   }
 }

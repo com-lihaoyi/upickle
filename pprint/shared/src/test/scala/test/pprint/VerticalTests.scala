@@ -8,8 +8,8 @@ import scala.util.matching.Regex
 
 object VerticalTests extends TestSuite{
 
-  def check[T: pprint.PPrint](t: T, expected: String) = {
-    val pprinted = pprint.PPrint(t).mkString
+  def check[T: pprint.PPrint](t: T, expected: String)(implicit cfg: pprint.Config) = {
+    val pprinted = pprint.PPrint.tokenize(t).mkString
     assert(pprinted == expected.trim)
   }
   class C(){
@@ -283,11 +283,11 @@ object VerticalTests extends TestSuite{
       }
 
       import Console._
-      * - count(pprint.PPrint(123), GREEN -> 1, RESET -> 1)
-      * - count(pprint.PPrint(""), GREEN -> 1, RESET -> 1)
-      * - count(pprint.PPrint(Seq(1, 2, 3)), GREEN -> 3, YELLOW -> 1, RESET -> 4)
+      * - count(pprint.PPrint.tokenize(123), GREEN -> 1, RESET -> 1)
+      * - count(pprint.PPrint.tokenize(""), GREEN -> 1, RESET -> 1)
+      * - count(pprint.PPrint.tokenize(Seq(1, 2, 3)), GREEN -> 3, YELLOW -> 1, RESET -> 4)
       * - count(
-        pprint.PPrint(Map(1 -> Nil, 2 -> Seq(" "), 3 -> Seq("   "))),
+        pprint.PPrint.tokenize(Map(1 -> Nil, 2 -> Seq(" "), 3 -> Seq("   "))),
         GREEN -> 5, YELLOW -> 4, RESET -> 9
       )
     }
