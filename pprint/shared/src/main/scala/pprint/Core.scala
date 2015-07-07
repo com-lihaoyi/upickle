@@ -1,5 +1,5 @@
 package pprint
-
+import language.higherKinds
 import acyclic.file
 
 /**

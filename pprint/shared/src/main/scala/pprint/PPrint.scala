@@ -8,7 +8,7 @@ import annotation.tailrec
 import acyclic.file
 import scala.{Iterator => Iter}
 import compat._
-
+import language.existentials
 /**
  * There are a few main classes involved here:
  *
@@ -149,7 +149,9 @@ object PPrinter extends LowPriPPrinter{
     Iter(c.color.literal("" + t))
   }
 
-  implicit val UnitRepr = literalColorPPrinter[Unit]
+  implicit val UnitRepr = PPrinter[Unit] { (t: Unit, c: Config) =>
+    Iter(c.color.literal("()"))
+  }
 
   implicit val NullRepr = literalColorPPrinter[Null]
   implicit val BooleanRepr = literalColorPPrinter[Boolean]

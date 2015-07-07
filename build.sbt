@@ -31,6 +31,7 @@ val settings = Seq(
     if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
     else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
   },
+  scalaJSStage in Global := FastOptStage,
   autoCompilerPlugins := true,
   //scalacOptions += "-Xlog-implicits",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
@@ -182,7 +183,7 @@ lazy val pprint = crossProject
     )
 lazy val pprintJVM = pprint.jvm
 lazy val pprintJS = pprint.js
-
+lazy val modules = project.aggregate(pprintJVM, pprintJS, upickleJVM, upickleJS)
 lazy val readme = scalatex.ScalatexReadme(
   projectId = "readme",
   wd = file(""),

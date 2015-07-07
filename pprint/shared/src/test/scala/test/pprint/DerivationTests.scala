@@ -121,18 +121,16 @@ object DerivationTests extends TestSuite{
       check(("lol", 1, 'c'): AnyRef, "(lol,1,c)")
 
       // Even random non-Scala stuff should work
-      val x = new util.HashMap[Int, String]()
-      x.put(1, "i am")
-      x.put(2, "cow")
-      check(x, "{1=i am, 2=cow}")
-      val z = new UUID(0, -1)
+      val x = new java.util.Random()
+      check(x, x.toString)
+//      val z = new UUID(0, -1)
 //      check(z, "00000000-0000-0000-ffff-ffffffffffff")
       // Make sure when dealing with composite data structures, we continue
       // to use the static versions as deep as we can go before falling back
       // to toString
       check(
-        derive.Generic.ADT(x, z: java.io.Serializable, "lol", "lol": Any, (1.5, 2.5), (1.5, 2.5): AnyRef),
-        """ADT({1=i am, 2=cow}, 00000000-0000-0000-ffff-ffffffffffff, "lol", lol, (1.5, 2.5), (1.5,2.5))"""
+        derive.Generic.ADT(x, x: java.io.Serializable, "lol", "lol": Any, (1.5, 2.5), (1.5, 2.5): AnyRef),
+        s"""ADT($x, $x, "lol", lol, (1.5, 2.5), (1.5,2.5))"""
       )
     }
   }

@@ -6,9 +6,9 @@ import scala.collection.{immutable => imm, mutable}
 import pprint.Config.Defaults._
 object HorizontalTests extends TestSuite{
 
-  def check[T: pprint.PPrint](t: T, expected: String) = {
+  def check[T: pprint.PPrint](t: T, expected: String*) = {
     val pprinted = pprint.PPrint.tokenize(t).mkString
-    assert(pprinted == expected.trim)
+    assert(expected.map(_.trim).contains(pprinted))
   }
 
 //  check(FooNoArgs(), "FooNoArgs()")
@@ -132,7 +132,12 @@ object HorizontalTests extends TestSuite{
         'List - check(List("1", "2", "3"), """List("1", "2", "3")""")
         'Vector - check(Vector('omg, 'wtf, 'bbq), """Vector('omg, 'wtf, 'bbq)""")
 
-        'Buffer - check(mutable.Buffer('omg, 'wtf, 'bbq), """ArrayBuffer('omg, 'wtf, 'bbq)""")
+        'Buffer - check(
+          mutable.Buffer('omg, 'wtf, 'bbq),
+          """ArrayBuffer('omg, 'wtf, 'bbq)""",
+          """Array('omg, 'wtf, 'bbq)"""
+        )
+
 
         // Streams are hard-coded to always display vertically, in order
         // to make streaming pretty-printing sane

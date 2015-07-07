@@ -3,7 +3,7 @@ package upickle
 import scala.{PartialFunction => PF}
 import language.experimental.macros
 import scala.annotation.implicitNotFound
-
+import language.higherKinds
 import acyclic.file
 class ReaderPicker[M[_]]
 class WriterPicker[M[_]]

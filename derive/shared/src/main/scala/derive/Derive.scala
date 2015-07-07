@@ -370,3 +370,9 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
   }
 }
+
+//object Main extends scalajs.js.JSApp{
+//  def main() = {
+//    println(collection.mutable.Buffer().stringPrefix)
+//  }
+//}

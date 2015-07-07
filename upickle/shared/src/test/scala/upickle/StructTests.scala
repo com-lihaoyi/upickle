@@ -6,7 +6,7 @@ import TestUtil._
 import java.util.UUID
 import acyclic.file
 import scala.reflect.ClassTag
-
+import language.postfixOps
 
 object StructTests extends TestSuite{
   Seq(1).to[Vector]
