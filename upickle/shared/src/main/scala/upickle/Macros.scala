@@ -6,7 +6,7 @@ import scala.language.experimental.macros
 import compat._
 import derive._
 import acyclic.file
-
+import language.higherKinds
 
 /**
  * Implementation of macros used by uPickle to serialize and deserialize

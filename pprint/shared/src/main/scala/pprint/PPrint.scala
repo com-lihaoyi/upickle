@@ -87,8 +87,7 @@ object PPrint extends Internals.LowPriPPrint{
   /**
    * Helper to make implicit resolution behave right
    */
-  implicit def Contra[A](implicit ca: PPrinter[A]): PPrint[A] =
-    PPrint(ca)
+  implicit def Contra[A](implicit ca: PPrinter[A]): PPrint[A] = PPrint(ca)
 
 }
 
@@ -399,7 +398,12 @@ object Internals {
   type Unpacker[T] = (T, Config) => Iter[Iter[String]]
 
 
-  trait LowPriPPrint {
+  trait LowPriPPrint extends LowPri2{
+    implicit def NullPPrint: PPrint[Null] = PPrint(PPrinter.NullRepr)
+    implicit def NothingPPrint: PPrint[Nothing] = PPrint[Nothing](PPrinter[Nothing]((t: Nothing, c: Config) => Iter()))
+
+  }
+  trait LowPri2{
     implicit def FinalRepr[T]: PPrint[T] = macro LowerPriPPrint.FinalRepr[T]
     def annotate[V](pp: PPrint[V], n: String) = pp
   }

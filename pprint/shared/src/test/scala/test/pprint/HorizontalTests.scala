@@ -109,7 +109,7 @@ object HorizontalTests extends TestSuite{
           check(None: Option[Int], "None")
           check(None: Option[Nothing], "None")
           check(None, "None")
-          check(Some(None), "Some(None)")
+//          check(Some(None), "Some(None)")
         }
         'Default{
           check(() => (), "<function0>")

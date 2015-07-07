@@ -3,7 +3,7 @@ import ScalaVersionStubs._
 import acyclic.file
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
-
+import language.higherKinds
 /**
  * Used to annotate either case classes or their fields, telling derive
  * to use a custom string as the key for that class/field rather than the
