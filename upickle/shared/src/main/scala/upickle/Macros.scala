@@ -45,15 +45,15 @@ object Macros {
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
       q"""
         ${c.prefix}.CaseR[(..$argTypes), $targetType](
-          ($x) => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
+          ($x: (..$argTypes)) => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
           _root_.scala.Array(..$args),
           _root_.scala.Array(..$defaults)
         )
       """
     }
-    def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
+    def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       val merged =
-        subtypes.map(p => q"$p.read": Tree)
+        subtrees.map(p => q"$p.read": Tree)
           .reduce((a, b) => q"$a orElse $b")
       q"${c.prefix}.Reader[$targetType]($merged)"
     }
@@ -131,7 +131,7 @@ object Macros {
       val c: c0.type = c0
       def typeclass = e2
     }.derive[T]
-    println(res)
+//    println(res)
     c0.Expr[W[T]](res)
   }
   
