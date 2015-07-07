@@ -53,8 +53,12 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
   def derive[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
-    if (tpe != typeOf[Nothing]) deriveType(tpe)
-    else fail(tpe, "Inferred `Reader[Nothing]`, something probably went wrong")
+    println(Console.YELLOW + "derive " + tpe + Console.RESET)
+    val res =
+      if (tpe != typeOf[Nothing]) deriveType(tpe)
+      else fail(tpe, "Inferred `Reader[Nothing]`, something probably went wrong")
+    println(Console.YELLOW + res + Console.RESET)
+    res
   }
 
   /**
@@ -135,7 +139,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         }
         def rec(tpe0: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
           val tpe = removeRepeats(tpe0)
-//          println(Console.CYAN + "REC " + Console.RESET + tpe)
+          println(Console.CYAN + "REC " + Console.RESET + tpe)
           val key = TypeKey(tpe)
 //          println(Console.CYAN + seen + Console.RESET + " " + System.identityHashCode(seen))
 //          println(Console.CYAN + memo + Console.RESET + " " + System.identityHashCode(memo))
@@ -154,14 +158,14 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                   Seq.empty[Tree]
               }
               val probe = q"{..$dummies; ${implicited(tpe)}}"
-//              println("TC " + name + " " + probe)
+              println("TC " + name + " " + probe)
               c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
                 case EmptyTree =>
-//                  println("Empty")
+                  println("Empty")
                   seen.add(key)
                   onFail(tpe, key, name)
                 case t =>
-//                  println("Present")
+                  println("Present")
                   Map()
               }
 
@@ -199,10 +203,13 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in derive.X.<init>
         // """
         val res = q"""{
-        def $returnName = {
+        implicit def $returnName = {
           ..$things
 
-          ${recTypes.mapValues(x => q"$x").getOrElse(TypeKey(tpe), fail(tpe, "Couldn't drive type"))}
+          ${
+            recTypes.mapValues(x => q"$x")
+                    .getOrElse(TypeKey(tpe), fail(tpe, "Couldn't derive type " + tpe))
+          }
         }
         $returnName
       }"""

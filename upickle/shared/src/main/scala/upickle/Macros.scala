@@ -41,11 +41,11 @@ object Macros {
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type) = {
-      val x = freshName
+      val x = q"$freshName"
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
       q"""
         ${c.prefix}.CaseR[(..$argTypes), $targetType](
-          $x => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
+          ($x) => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
           _root_.scala.Array(..$args),
           _root_.scala.Array(..$defaults)
         )
@@ -53,7 +53,7 @@ object Macros {
     }
     def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       val merged =
-        ts.map(p => q"$p.read": Tree)
+        subtypes.map(p => q"$p.read": Tree)
           .reduce((a, b) => q"$a orElse $b")
       q"${c.prefix}.Reader[$targetType]($merged)"
     }
@@ -66,7 +66,10 @@ object Macros {
     def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
     def wrapCase0(companion: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($companion.unapply)"
     def findUnapply(tpe: Type) = {
-      val (companion, paramTypes, argSyms) = getArgSyms(tpe)
+      val (companion, paramTypes, argSyms) = getArgSyms(tpe).fold(
+        errMsg => c.abort(c.enclosingPosition, errMsg),
+        x => x
+      )
       Seq("unapply", "unapplySeq")
         .map(newTermName(_))
         .find(companion.tpe.member(_) != NoSymbol)
@@ -100,8 +103,8 @@ object Macros {
       """
     def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       val merged =
-        if (ts.length == 1) q"$internal.merge0(${ts(0)}.write)"
-        else ts.map(p => q"$p.write": Tree)
+        if (subtree.length == 1) q"$internal.merge0(${subtree(0)}.write)"
+        else subtree.map(p => q"$p.write": Tree)
           .reduce((a, b) => q"$internal.merge($a, $b)")
       q"${c.prefix}.Writer[$targetType]($merged)"
     }
@@ -128,6 +131,7 @@ object Macros {
       val c: c0.type = c0
       def typeclass = e2
     }.derive[T]
+    println(res)
     c0.Expr[W[T]](res)
   }
   
