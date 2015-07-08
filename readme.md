@@ -1,4 +1,4 @@
-[Documentation](https://lihaoyi.github.io/upickle)
+[Documentation](https://lihaoyi.github.io/upickle-pprint)
 
 [![Build Status](https://travis-ci.org/lihaoyi/upickle.svg)](https://travis-ci.org/lihaoyi/upickle)
 
