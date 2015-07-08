@@ -24,7 +24,6 @@
 
   @sect{Getting Started}
     @p
-
       Add the following to your SBT config:
     @hl.scala
       libraryDependencies += "com.lihaoyi" %% "upickle" % "@repo.version"

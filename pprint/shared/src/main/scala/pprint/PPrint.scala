@@ -6,6 +6,7 @@ import scala.language.experimental.macros
 import language.higherKinds
 import annotation.tailrec
 import acyclic.file
+import scala.util.matching.Regex.Match
 import scala.{Iterator => Iter}
 import compat._
 import language.existentials
@@ -54,15 +55,6 @@ object Chunker extends PPrinterGen {
 }
 object PPrint extends Internals.LowPriPPrint{
 
-  /**
-   * Prettyprint a strongly-typed value, falling back to toString
-   * if you don't know what to do with it. Generally used for human-facing
-   * output
-   */
-  def tokenize[T: PPrint](t: T)(implicit cfg: Config): Iter[String] = {
-    implicitly[PPrint[T]].render(t, cfg)
-  }
-
   def apply[A](pprinter0: PPrinter[A]) = new PPrint[A] {
     val pprinter = pprinter0
     def render(t: A, cfg: Config): Iter[String] = {
@@ -99,14 +91,7 @@ object PPrint extends Internals.LowPriPPrint{
 trait PPrint[A]{
   def render(t: A, cfg: Config): Iter[String]
   def pprinter: PPrinter[A]
-  def map(f: String => String) = pprinter.map(f)
 }
-
-/**
- * Wrapper type for disabling output truncation.
- * PPrint(Full(value)) will always return the full output.
- */
-case class Show[A](value: A, lines: Int)
 
 /**
  * A typeclass you define to prettyprint values of type [[A]]
@@ -118,9 +103,7 @@ trait PPrinter[-A] {
   }
   def render0(t: A, c: Config): Iter[String]
 
-  def map(f: String => String): PPrinter[A] = PPrinter {
-    (t: A, c: Config) => render0(t, c).map(f)
-  }  
+
 }
 
 object PPrinter extends LowPriPPrinter{
@@ -129,7 +112,7 @@ object PPrinter extends LowPriPPrinter{
   def apply[T](r: (T, Config) => Iter[String]): PPrinter[T] = {
     new PPrinter[T]{ 
       def render0(t: T, c: Config) = {
-        if(c.lines() > 0)
+        if(c.height > 0)
           takeFirstLines(c, r(t, c))
         else r(t, c)
       }
@@ -145,27 +128,23 @@ object PPrinter extends LowPriPPrinter{
    * A [[PPrinter]] that does `toString`, with an optional
    * color
    */
-  def literalColorPPrinter[T]: PPrinter[T] = PPrinter[T] { (t: T, c: Config) =>
-    Iter(c.color.literal("" + t))
+  def literalColorPPrinter[T](map: String => String = x => x): PPrinter[T] = PPrinter[T] { (t: T, c: Config) =>
+    Iter(c.colors.literalColor, map(t.toString), c.colors.endColor)
   }
 
   implicit val UnitRepr = PPrinter[Unit] { (t: Unit, c: Config) =>
-    Iter(c.color.literal("()"))
+    Iter(c.colors.literalColor, "()", c.colors.endColor)
   }
 
-  implicit val NullRepr = literalColorPPrinter[Null]
-  implicit val BooleanRepr = literalColorPPrinter[Boolean]
-  implicit val ByteRepr = literalColorPPrinter[Byte]
-  implicit val ShortRepr = literalColorPPrinter[Short]
-  implicit val IntRepr = literalColorPPrinter[Int]
-  implicit val LongRepr = literalColorPPrinter[Long].map(_+"L")
-  implicit val FloatRepr = literalColorPPrinter[Float].map(_+"F")
-  implicit val DoubleRepr = literalColorPPrinter[Double]
-  implicit val CharRepr = PPrinter[Char] { (x, c) =>
-    val body = Iter("'", escape(x.toString), "'")
-    if (c.literalColor == null) body
-    else Iter(c.literalColor) ++ body ++ Iter(Console.RESET)
-  }
+  implicit val NullRepr = literalColorPPrinter[Null]()
+  implicit val BooleanRepr = literalColorPPrinter[Boolean]()
+  implicit val ByteRepr = literalColorPPrinter[Byte]()
+  implicit val ShortRepr = literalColorPPrinter[Short]()
+  implicit val IntRepr = literalColorPPrinter[Int]()
+  implicit val LongRepr = literalColorPPrinter[Long](_+"L")
+  implicit val FloatRepr = literalColorPPrinter[Float](_+"F")
+  implicit val DoubleRepr = literalColorPPrinter[Double]()
+  implicit val CharRepr = literalColorPPrinter[Char] { x => "'" + escape(x.toString) + "'" }
   implicit def ChunkedRepr[T <: Product: Chunker] = PPrinter[T]{ (t, c) =>
     if (t == null) Iterator("null")
     else Internals.handleChunks(t.productPrefix, c, implicitly[Chunker[T]].chunk(t, _))
@@ -196,11 +175,10 @@ object PPrinter extends LowPriPPrinter{
         Iter("\"\"\"\n") ++ indented ++ Iter("\n", indent, "\"\"\"")
       }
 
-    if (c.literalColor == null) body
-    else Iter(c.literalColor) ++ body ++ Iter(Console.RESET)
+    Iter(c.colors.literalColor) ++ body ++ Iter(c.colors.endColor)
   }
   implicit val SymbolRepr = PPrinter[Symbol]((x, c) =>
-    Iter(c.color.literal("'" + x.name))
+    Iter(c.colors.literalColor, "'", x.name, c.colors.endColor)
   )
 
   /**
@@ -232,46 +210,52 @@ object PPrinter extends LowPriPPrinter{
     s.toString()
   }
 
+  val ansiRegex = "\u001B\\[[;\\d]*m".r.pattern
   private def takeFirstLines(cfg: Config, iter: Iter[String]): Iter[String] = {
-
-    //Calculates how many lines and characters are remaining after printing the given string.
-    //Also returns how much of thsi string can be printed if the space runs out
+    // Calculates how many lines and characters are remaining after printing the given string.
+    // Also returns how much of this string can be printed if the space runs out
     @tailrec
     def charIter(str: String, pos: Int, lines: Int, chars: Int): (Int, Int, Option[Int]) = {
       if(pos >= str.length) (lines, chars, None)
       else if(lines == 1 && chars == 0){
-        //this would be the first character wrapping into the first line not printed
+        // this would be the first character wrapping into the first line not printed
         (0, 0, Some(pos))
-      }
-      else{
-
-        val (remainingLines, remainingChars) =
-          if(str(pos) == '\n') (lines - 1, cfg.maxWidth()) //starting a new line
-          else if(chars == 0) (lines - 1, cfg.maxWidth() - 1) //wrapping around and printing a character
-          else (lines, chars - 1) //simply printing a character
-        if(remainingLines == 0) (lines, chars, Some(pos + 1))
-        else charIter(str, pos + 1, remainingLines, remainingChars)
+      } else {
+        val m = ansiRegex.matcher(str)
+        m.region(pos, str.length)
+        if (m.lookingAt()) {
+          charIter(str, pos + m.end, lines, chars)
+        }else{
+          val (remainingLines, remainingChars) =
+            if(str(pos) == '\n') (lines - 1, cfg.width) //starting a new line
+            else if(chars == 0) (lines - 1, cfg.width - 1) //wrapping around and printing a character
+            else (lines, chars - 1) //simply printing a character
+          if(remainingLines == 0) (lines, chars, Some(pos + 1))
+          else charIter(str, pos + 1, remainingLines, remainingChars)
+        }
       }
     }
 
     @tailrec
     def strIter(lines: Int, chars: Int, begin: Iter[String]): Iter[String] = {
       if(!iter.hasNext) begin
-      else if(lines == 0) begin ++ Iter(cfg.color.prefix("..."))
+      else if(lines == 0) begin ++ Iter(cfg.colors.prefixColor, "...", cfg.colors.endColor)
       else{
         val head = iter.next
         val (remainingLines, remainingChars, substringLength) = charIter(head, 0, lines, chars)
         if(!substringLength.isEmpty){
           begin ++ Iter(
             head.substring(0, substringLength.get),
-            cfg.color.prefix("...")
+            cfg.colors.prefixColor,
+            "...",
+            cfg.colors.endColor
           )
         } else {
           strIter(remainingLines, remainingChars, begin ++ Iter(head))
         }
       }
     }
-    strIter(cfg.lines(), cfg.maxWidth(), Iter.empty)
+    strIter(cfg.height, cfg.width, Iter.empty)
   }
 
   implicit def ArrayRepr[T: PPrint] = PPrinter[Array[T]]{
@@ -279,21 +263,9 @@ object PPrinter extends LowPriPPrinter{
     (t: Array[T], c: Config) => repr.render(t, c)
   }
 
-
-
   implicit def MapRepr[T: PPrint, V: PPrint] = Internals.makeMapRepr[collection.Map, T, V]
-
-  implicit def showPPrinter[A: PPrint]: PPrinter[Show[A]] = {
-    new PPrinter[Show[A]]{
-      def render0(wrapper: Show[A], c: Config) = {
-        implicitly[PPrint[A]].pprinter.render(
-          wrapper.value,
-          c.copy(lines = () => wrapper.lines)
-        )
-      }
-    }
-  }
 }
+
 trait LowPriPPrinter{
   implicit def SeqRepr[T: PPrint, V[T] <: Traversable[T]]  =
     Internals.collectionRepr[T, V[T]]
@@ -347,13 +319,12 @@ object Internals {
                    chunkFunc: Config => Iter[Iter[String]]): Iter[String] = {
 
     val renamed = c.rename(name)
-    val coloredName = c.color.prefix(renamed)
     // Prefix, contents, and all the extra ", " "(" ")" characters
     val horizontalChunks =
       chunkFunc(c).flatMap(", " +: _.toStream)
                   .toStream
                   .drop(1)
-    val effectiveWidth = c.maxWidth() - (c.depth * c.indent)
+    val effectiveWidth = c.width - (c.depth * c.indent)
     // Make sure we don't read more from the `chunks` stream that we
     // have to before deciding to go vertically.
     //
@@ -373,7 +344,7 @@ object Internals {
     val overflow = checkOverflow(horizontalChunks, renamed.length + 2)
 
     if (overflow) handleChunksVertical(name, c, chunkFunc)
-    else Iter(coloredName, "(") ++ horizontalChunks ++ Iter(")")
+    else Iter(c.colors.prefixColor, renamed, c.colors.endColor, "(") ++ horizontalChunks ++ Iter(")")
   }
   val ansiRegex = "\u001B\\[[;\\d]*m"
 
@@ -385,14 +356,13 @@ object Internals {
   def handleChunksVertical(name: String,
                            c: Config,
                            chunkFunc: Config => Iter[Iter[String]]): Iter[String] = {
-    val renamed = c.rename(name)
-    val coloredName = c.color.prefix(renamed)
+
     val chunks2 = chunkFunc(c.deeper)
 
     // Needs to be a def to avoid exhaustion
     def indent = Iter.fill(c.depth)("  ")
 
-    Iter(coloredName, "(\n") ++
+    Iter(c.colors.prefixColor, c.rename(name), c.colors.endColor, "(\n") ++
     chunks2.flatMap(Iter(",\n", "  ") ++ indent ++ _).drop(1) ++
     Iter("\n") ++ indent ++ Iter(")")
   }

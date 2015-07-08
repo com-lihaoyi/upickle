@@ -8,10 +8,6 @@ import scala.util.matching.Regex
 
 object VerticalTests extends TestSuite{
 
-  def check[T: pprint.PPrint](t: T, expected: String)(implicit cfg: pprint.Config) = {
-    val pprinted = pprint.PPrint.tokenize(t).mkString
-    assert(pprinted == expected.trim)
-  }
   class C(){
     var counter = 0
     override def toString = {
@@ -21,12 +17,35 @@ object VerticalTests extends TestSuite{
   }
 
   val tests = TestSuite{
+
+    'ansiStripping {
+
+      val colorsToCheck = Seq(
+        pprint.Colors.Colored,
+        pprint.Colors.BlackWhite,
+        pprint.Colors(
+          pprint.Colors.Colored.literalColor * 3,
+          pprint.Colors.Colored.prefixColor * 3,
+          pprint.Colors.Colored.endColor * 3
+        )
+      )
+      for(color <- colorsToCheck){
+        val cfg = pprint.Config.Defaults.PPrintConfig.copy(width = 5, height = 3, colors=color)
+        Check(
+          List(1, 2, 3, 4, 5),
+          """List(
+            |  1,
+            |  2,
+            |...""".stripMargin
+        )(implicitly, cfg)
+      }
+    }
     'Laziness{
-      implicit def default = pprint.Config(maxWidth = () => 20, lines = () => 5)
+      implicit def default = pprint.Config(width = 20, height = 5)
       'list{
         'Horizontal{
           val C = new C
-          check(
+          Check(
             List.fill(4)(C),
             """List(C, C, C, C)"""
           )
@@ -34,7 +53,7 @@ object VerticalTests extends TestSuite{
         }
         'Vertical{
           val C = new C
-          check(
+          Check(
             List.fill(100)(C),
             """List(
               |  C,
@@ -55,7 +74,7 @@ object VerticalTests extends TestSuite{
       'map{
         'Horizontal{
           val C = new C
-          check(
+          Check(
             SortedMap(List.tabulate(2)(_ -> C):_*),
             """Map(0 -> C, 1 -> C)"""
           )
@@ -64,7 +83,7 @@ object VerticalTests extends TestSuite{
         }
         'Vertical{
           val C = new C
-          check(
+          Check(
             SortedMap(List.tabulate(100)(_ -> C):_*),
             """Map(
               |  0 -> C,
@@ -86,17 +105,17 @@ object VerticalTests extends TestSuite{
     }
     'Vertical{
 
-      implicit def default = pprint.Config(maxWidth = () => 25)
+      implicit def default = pprint.Config(width = 25)
       'singleNested {
-        * - check(
+        * - Check(
           List("12", "12", "12"),
           """List("12", "12", "12")"""
         )
-        * - check(
+        * - Check(
           List("123", "123", "123"),
           """List("123", "123", "123")"""
         )
-        * - check(
+        * - Check(
           List("1234", "123", "123"),
           """List(
             |  "1234",
@@ -104,11 +123,11 @@ object VerticalTests extends TestSuite{
             |  "123"
             |)""".stripMargin
         )
-        * - check(
+        * - Check(
           Map(1 -> 2, 3 -> 4),
           """Map(1 -> 2, 3 -> 4)"""
         )
-        * - check(
+        * - Check(
           Map(List(1, 2) -> List(3, 4), List(5, 6) -> List(7, 8)),
           """Map(
             |  List(1, 2) -> List(3, 4),
@@ -116,7 +135,7 @@ object VerticalTests extends TestSuite{
             |)""".stripMargin
         )
 
-        * - check(
+        * - Check(
           Map(
             List(123, 456, 789, 123, 456) -> List(3, 4, 3, 4),
             List(5, 6) -> List(7, 8)
@@ -133,7 +152,7 @@ object VerticalTests extends TestSuite{
             |)""".stripMargin
         )
 
-        * - check(
+        * - Check(
           Map(
             List(5, 6) -> List(7, 8),
             List(123, 456, 789, 123, 456) -> List(123, 456, 789, 123, 456)
@@ -156,7 +175,7 @@ object VerticalTests extends TestSuite{
             |)""".stripMargin
         )
 
-        * - check(
+        * - Check(
           List("12345", "12345", "12345"),
           """List(
             |  "12345",
@@ -164,7 +183,7 @@ object VerticalTests extends TestSuite{
             |  "12345"
             |)""".stripMargin
         )
-        * - check(
+        * - Check(
           Foo(123, Seq("hello world", "moo")),
           """Foo(
             |  123,
@@ -174,7 +193,7 @@ object VerticalTests extends TestSuite{
             |  )
             |)""".stripMargin
         )
-        * - check(
+        * - Check(
           Foo(123, Seq("moo")),
           """Foo(123, List("moo"))""".stripMargin
         )
@@ -182,7 +201,7 @@ object VerticalTests extends TestSuite{
       }
       'doubleNested{
 
-        * - check(
+        * - Check(
           List(Seq("omg", "omg"), Seq("mgg", "mgg"), Seq("ggx", "ggx")),
           """List(
             |  List("omg", "omg"),
@@ -190,7 +209,7 @@ object VerticalTests extends TestSuite{
             |  List("ggx", "ggx")
             |)""".stripMargin
         )
-        * - check(
+        * - Check(
           List(Seq("omg", "omg", "omg", "omg"), Seq("mgg", "mgg"), Seq("ggx", "ggx")),
           """List(
             |  List(
@@ -203,7 +222,7 @@ object VerticalTests extends TestSuite{
             |  List("ggx", "ggx")
             |)""".stripMargin
         )
-        * - check(
+        * - Check(
           List(
             Seq(
               Seq("mgg", "mgg", "lols"),
@@ -233,7 +252,7 @@ object VerticalTests extends TestSuite{
             |  )
             |)""".stripMargin
         )
-        * - check(
+        * - Check(
           FooG(Seq(FooG(Seq(Foo(123, Nil)), Nil)), Nil),
           """FooG(
             |  List(
@@ -248,7 +267,7 @@ object VerticalTests extends TestSuite{
             |)
           """.stripMargin
         )
-        * - check(
+        * - Check(
           FooG(FooG(Seq(Foo(3, Nil)), Nil), Nil),
           """FooG(
             |  FooG(
@@ -262,8 +281,8 @@ object VerticalTests extends TestSuite{
     }
     'traited {
       import pprint.Config.Defaults._
-      check(Nested.ODef.Foo(2, "ba"), "Foo(2, \"ba\")")
-      check(Nested.CDef.Foo(2, "ba"), "Foo(2, \"ba\")")
+      Check(Nested.ODef.Foo(2, "ba"), "Foo(2, \"ba\")")
+      Check(Nested.CDef.Foo(2, "ba"), "Foo(2, \"ba\")")
     }
     'Color{
       import pprint.Config.Colors._
@@ -283,20 +302,23 @@ object VerticalTests extends TestSuite{
       }
 
       import Console._
-      * - count(pprint.PPrint.tokenize(123), GREEN -> 1, RESET -> 1)
-      * - count(pprint.PPrint.tokenize(""), GREEN -> 1, RESET -> 1)
-      * - count(pprint.PPrint.tokenize(Seq(1, 2, 3)), GREEN -> 3, YELLOW -> 1, RESET -> 4)
+      * - count(pprint.tokenize(123), GREEN -> 1, RESET -> 1)
+      * - count(pprint.tokenize(""), GREEN -> 1, RESET -> 1)
+      * - count(pprint.tokenize(Seq(1, 2, 3)), GREEN -> 3, YELLOW -> 1, RESET -> 4)
       * - count(
-        pprint.PPrint.tokenize(Map(1 -> Nil, 2 -> Seq(" "), 3 -> Seq("   "))),
+        pprint.tokenize(Map(1 -> Nil, 2 -> Seq(" "), 3 -> Seq("   "))),
         GREEN -> 5, YELLOW -> 4, RESET -> 9
       )
     }
 
     'Truncation{
+//      'test{
+//        Check()
+//      }
       'longNoTruncation{
         implicit val cfg = pprint.Config.Defaults.PPrintConfig
-          * - check("a" * 10000,"\""+"a" * 10000+"\"")
-          * - check(
+          * - Check("a" * 10000,"\""+"a" * 10000+"\"")
+          * - Check(
             List.fill(30)(100),
             """List(
               |  100,
@@ -334,10 +356,10 @@ object VerticalTests extends TestSuite{
       }
 
       'shortNonTruncated{
-        implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(lines = () => 15)
-        * - check("a"*1000, "\"" + "a"*1000 + "\"")
-        * - check(List(1,2,3,4), "List(1, 2, 3, 4)")
-        * - check(
+        implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(height = 15)
+        * - Check("a"*1000, "\"" + "a"*1000 + "\"")
+        * - Check(List(1,2,3,4), "List(1, 2, 3, 4)")
+        * - Check(
           List.fill(13)("asdfghjklqwertz"),
           """List(
             |  "asdfghjklqwertz",
@@ -359,8 +381,8 @@ object VerticalTests extends TestSuite{
       }
 
       'shortLinesTruncated{
-        implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(lines = () => 15)
-        * - check(
+        implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(height = 15)
+        * - Check(
           List.fill(15)("foobarbaz"),
           """List(
             |  "foobarbaz",
@@ -379,7 +401,7 @@ object VerticalTests extends TestSuite{
             |  "foobarbaz",
             |...""".stripMargin
         )
-        * - check(
+        * - Check(
         List.fill(150)("foobarbaz"),
           """List(
             |  "foobarbaz",
@@ -402,38 +424,38 @@ object VerticalTests extends TestSuite{
 
       'longLineTruncated{
         implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(
-          maxWidth = () => 100,
-          lines = () => 3
+          width = 100,
+          height = 3
         )
-        check(
+        Check(
           "a" * 1000,
           """"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..."""
         )
       }
 
-      'stream{
-        implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(
-          lines = () => 5
-        )
-        check(
-          Stream.continually("foo"),
-          """Stream(
-            |  "foo",
-            |  "foo",
-            |  "foo",
-            |  "foo",
-            |...
-          """.stripMargin
-        )
-      }
+//      'stream{
+//        implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(
+//          height = 5
+//        )
+//        Check(
+//          Stream.continually("foo"),
+//          """Stream(
+//            |  "foo",
+//            |  "foo",
+//            |  "foo",
+//            |  "foo",
+//            |...
+//          """.stripMargin
+//        )
+//      }
     }
 
     'wrappedLines{
       implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(
-        maxWidth = () => 8,
-        lines = () => 5
+        width = 8,
+        height = 5
       )
-      check(
+      Check(
         "1234567890\n"*10,
         "\"\"\"\n1234567890\n1234567890\n..."
       )

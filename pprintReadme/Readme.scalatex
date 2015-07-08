@@ -1,0 +1,100 @@
+@sect{PPrint}
+  @hl.scala
+    scala> import pprint.Config.Defaults._
+
+    scala> pprint.pprintln(
+      List(Seq(Seq("mgg", "mgg", "lols"), Seq("mgg", "mgg")), Seq(Seq("ggx", "ggx"),Seq("ggx", "ggx", "wtfx")))
+    )
+    res33: String =
+    List(
+      List(List("mgg", "mgg", "lols"), List("mgg", "mgg")),
+      List(List("ggx", "ggx"), List("ggx", "ggx", "wtfx"))
+    )
+
+  @p
+    PPrint is a module that lets you easily print data structures in a form that is more convenient to use both visually and programmatically. Unlike a traditional @hl.scala{.toString}, PPrint...
+
+  @ul
+    @li
+      Prints many common data structures in a source-code-compatible way (e.g. strings are escaped), that you can paste directly into a console or REPL to evaluate
+    @li
+      Things are laid out nicely! Vertically spaced out and properly indented, instead of being all squashed onto one line.
+    @li
+      Pretty-printed output can be colored for easy viewing!
+    @li
+      Pretty-printing is @sect.ref("Streaming", "streaming"), meaning you can pretty-print extremely large data structures and stream it to stdout/files/logging without having to materialize the whole string in memory.
+    @li
+      Pretty-printing is configurable, so you can configure maximum widths for wrapping, maximum heights for truncation, and other such things.
+  @sect{Getting Started}
+    @p
+      Add the following to your SBT config:
+    @hl.scala
+      libraryDependencies += "com.lihaoyi" %% "upickle" % "@repo.version"
+
+    @p
+      The above example then showed how to use the default pprint configuration. You can also use
+
+    @hl.scala
+      import pprint.Config.Colors._
+
+    @p
+      Instead of @hl.scala{Defaults} in order to turn on colored pretty-printing.
+
+    @p
+      Pretty-printing is by default defined for most standard library types, as well as case classes and case objects. For other types not supported, it falls back to using @hl.scala{toString}
+
+    @hl.scala
+      scala> PPrint(new Object())
+      res35: String = java.lang.Object@@54f880c0
+
+    @p
+      You can configure the pretty-printing by defining your own implicit @hl.scala{Config} object, to consistently set things like maximum width, height or colors across a codebase. However, if you just want to set these thigns one-off, you can do that too:
+
+    @hl.scala
+        scala> pprint.pprintln(Seq(1, 2, 3))
+        List(1, 2, 3)
+
+        scala> pprint.pprintln(Seq(1, 2, 3), width = 5) // force wrapping
+        List(
+          1,
+          2,
+          3
+        )
+
+        scala> pprint.pprintln(Seq(1, 2, 3), width = 6, height = 2) // truncate
+        List(
+          1,
+        ...
+
+  
+  @sect{Streaming}
+
+    @p
+      PPrint is lazy and streaming. Unlike @hl.scala{println(x.toString)} which marshals the entire string in memory before returning it:
+
+    @hl.scala
+      scala> val large = Seq.fill(100000)("ABCDE" * 1000)
+      scala> println(large.toString)
+      java.lang.OutOfMemoryError: Java heap space
+
+    @p
+      @hl.scala{pprint.pprintln} streams the result to standard output, meaning that even for enormous data structures like the one above you can immediately start seeing output:
+
+    @hl.scala
+      scala> pprint.pprintln(large)
+      Seq(
+        "ABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEA
+        BCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABC
+        ...
+    @p
+      If you want to do something else with the streaming output apart from displaying it on the console, you can also call @hl.scala{PPrint.tokenize}
+
+    @hl.scala
+      scala> val large = Seq.fill(100000)("ABCDE" * 1000)
+      scala> pprint.PPrint.tokenize(large)
+      res0: Iterator[String] = non-empty iterator
+
+    @p
+      This gives you an iterator with which you can do whatever you want: stream it to a file, to your logging system, etc.. Even for extremely large data structures, you can use this data structure to page through it and see what it contains without ever materializing the entire string in memory.
+  @p
+    In order to pretty print a type @hl.scala{T}, you need to have a @hl.scala{T: PPrint} context bound present. In order to write your own custom pretty printer for some type @hl.scala{T}, provide a @hl.scala{PPrinter[T]}.

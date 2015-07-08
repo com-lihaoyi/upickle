@@ -184,8 +184,18 @@ lazy val pprint = crossProject
 lazy val pprintJVM = pprint.jvm
 lazy val pprintJS = pprint.js
 lazy val modules = project.aggregate(pprintJVM, pprintJS, upickleJVM, upickleJS)
-lazy val readme = scalatex.ScalatexReadme(
-  projectId = "readme",
+
+lazy val upickleReadme= scalatex.ScalatexReadme(
+  projectId = "upickleReadme",
+  wd = file(""),
+  url = "https://github.com/lihaoyi/upickle/tree/master",
+  source = "Readme"
+).settings(
+  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"repo.scala"
+)
+
+lazy val pprintReadme = scalatex.ScalatexReadme(
+  projectId = "pprintReadme",
   wd = file(""),
   url = "https://github.com/lihaoyi/upickle/tree/master",
   source = "Readme"
