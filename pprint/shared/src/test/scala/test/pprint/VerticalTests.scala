@@ -433,21 +433,21 @@ object VerticalTests extends TestSuite{
         )
       }
 
-//      'stream{
-//        implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(
-//          height = 5
-//        )
-//        Check(
-//          Stream.continually("foo"),
-//          """Stream(
-//            |  "foo",
-//            |  "foo",
-//            |  "foo",
-//            |  "foo",
-//            |...
-//          """.stripMargin
-//        )
-//      }
+      'stream{
+        implicit val cfg = pprint.Config.Defaults.PPrintConfig.copy(
+          height = 5
+        )
+        Check(
+          Stream.continually("foo"),
+          """Stream(
+            |  "foo",
+            |  "foo",
+            |  "foo",
+            |  "foo",
+            |...
+          """.stripMargin
+        )
+      }
     }
 
     'wrappedLines{
