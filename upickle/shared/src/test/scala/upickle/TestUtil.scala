@@ -1,6 +1,6 @@
 package upickle
 import utest._
-import upickle.old._
+import upickle.default._
 import acyclic.file
 /**
 * Created by haoyi on 4/22/14.
@@ -14,20 +14,21 @@ object TestUtil{
     }
   }
   def rw[T: Reader: Writer](t: T, s: String*) = {
-    rwk[T, T](t, s:_*)(t => t)
+    rwk[T, T](t, s:_*)
   }
-  def rwk[T: Reader: Writer, V](t: T, sIn: String*)(k: T => V) = {
+  def rwk[T: Reader: Writer, V](t: T, sIn: String*) = {
     val writtenT = write(t)
 
     val strings = sIn.map(_.trim)
 
-    if (strings.length > 0) assert(strings.contains(writtenT))
+    if (strings.length > 0)
+      assert(strings.map(upickle.json.read).contains(upickle.json.read(writtenT)))
 
     for (s <- strings) {
       val readS = read[T](s)
-      assert(k(readS) == k(t))
+      assert(readS == t)
     }
 
-    assert(k(read[T](writtenT)) == k(t))
+    assert(read[T](writtenT) == t)
   }
 }

@@ -224,13 +224,7 @@ trait Implicits extends Types { imp: Generated =>
   implicit val UuidR = R[UUID]{case Js.Str(s) => UUID.fromString(s)}
   implicit val UuidW = W[UUID]{case t: UUID => Js.Str(t.toString)}
 
-  def annotate[V: ClassTag](rw: R[V], n: String) = R[V]{
-    case Js.Arr(Js.Str(`n`), x) => rw.read(x)
-  }
 
-  def annotate[V: ClassTag](rw: W[V], n: String) = W[V]{
-    case x: V => Js.Arr(Js.Str(n), rw.write(x))
-  }
 
   def makeReader[T](pf: PartialFunction[Js.Value, T]) = Reader.apply(pf)
   def makeWriter[T](f: T => Js.Value): Writer[T] = Writer.apply(f)

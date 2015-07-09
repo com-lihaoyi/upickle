@@ -1,7 +1,7 @@
 package upickle
 
 import utest._
-import upickle.old.read
+import upickle.legacy.read
 import acyclic.file
 case class Fee(i: Int, s: String)
 sealed trait Fi

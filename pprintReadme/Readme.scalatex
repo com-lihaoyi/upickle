@@ -4,20 +4,16 @@
   @hl.scala
     scala> import pprint.Config.Defaults._
 
-    scala> pprint.pprintln(
-      List(Seq(Seq("mgg", "mgg", "lols"), Seq("mgg", "mgg")), Seq(Seq("ggx", "ggx"),Seq("ggx", "ggx", "wtfx")))
-    )
-    res33: String =
+    scala> pprint.pprintln(List(Seq(Seq("mgg", "mgg", "lols"), Seq("mgg", "mgg")), Seq(Seq("ggx", "ggx"),Seq("ggx", "ggx", "wtfx"))))
+    res1: String =
     List(
       List(List("mgg", "mgg", "lols"), List("mgg", "mgg")),
       List(List("ggx", "ggx"), List("ggx", "ggx", "wtfx"))
     )
 
     scala> case class Foo(s: String, list: List[Int])
-    scala> pprint.pprintln(
-      List(Foo("hello", List(1, 2, 3)), Foo("world", List())),
-      width=25
-      )
+    scala> pprint.pprintln(List(Foo("hello", List(1, 2, 3)), Foo("world", List())), width=25)
+    res2: String =
     List(
       Foo(
         "hello",

@@ -1,6 +1,6 @@
 package upickle
 import utest._
-import upickle.old.read
+import upickle.legacy.read
 import TestUtil._
 
 object PrimitiveTests extends TestSuite{
