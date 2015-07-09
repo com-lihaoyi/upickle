@@ -1,0 +1,216 @@
+<!DOCTYPE html><html><head><link href="META-INF/resources/webjars/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" /><link href="styles.css" rel="stylesheet" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><style>
+.scalatex-site-Styles-headerLink{
+  color: #777;
+  opacity: 0.05;
+  text-decoration: none;
+}
+
+
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink{
+  color: #777;
+  opacity: 0.5;
+  text-decoration: none;
+}
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink:hover{
+  opacity: 1.0;
+}
+.scalatex-site-Styles-hoverContainer:hover .scalatex-site-Styles-headerLink:active{
+  opacity: 0.75;
+}
+
+.scalatex-site-Styles-content{
+  color: #777;
+  line-height: 1.6em;
+  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 800px;
+  padding: 0 1em;
+  padding-bottom: 50px;
+}
+.scalatex-site-Styles-content *{
+  position: relative;
+}
+.scalatex-site-Styles-content p{
+  text-align: justify;
+}
+.scalatex-site-Styles-content a:link{
+  color: #37a;
+  text-decoration: none;
+}
+.scalatex-site-Styles-content a:visited{
+  color: #949;
+  text-decoration: none;
+}
+.scalatex-site-Styles-content a:hover{
+  text-decoration: underline;
+}
+.scalatex-site-Styles-content a:active{
+  color: #000;
+  text-decoration: underline;
+}
+.scalatex-site-Styles-content code{
+  color: #000;
+}
+
+/*Workaround for bug in highlight.js IDEA theme*/
+span.hljs-tag, span.hljs-symbol{
+    background: none;
+}
+    </style><script src="scripts.js"></script></head><body><div>
+
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="PPrint" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">PPrint<a class=" scalatex-site-Styles-headerLink" href="#PPrint" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+  <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; import pprint.Config.Defaults._
+
+scala&gt; pprint.pprintln(List(Seq(Seq(&quot;mgg&quot;, &quot;mgg&quot;, &quot;lols&quot;), Seq(&quot;mgg&quot;, &quot;mgg&quot;)), Seq(Seq(&quot;ggx&quot;, &quot;ggx&quot;),Seq(&quot;ggx&quot;, &quot;ggx&quot;, &quot;wtfx&quot;))))
+res1: String =
+List(
+  List(List(&quot;mgg&quot;, &quot;mgg&quot;, &quot;lols&quot;), List(&quot;mgg&quot;, &quot;mgg&quot;)),
+  List(List(&quot;ggx&quot;, &quot;ggx&quot;), List(&quot;ggx&quot;, &quot;ggx&quot;, &quot;wtfx&quot;))
+)
+
+scala&gt; case class Foo(s: String, list: List[Int])
+scala&gt; pprint.pprintln(List(Foo(&quot;hello&quot;, List(1, 2, 3)), Foo(&quot;world&quot;, List())), width=25)
+res2: String =
+List(
+  Foo(
+    &quot;hello&quot;,
+    List(1, 2, 3)
+  ),
+  Foo(&quot;world&quot;, List())
+)</code></pre>
+  <p>
+    PPrint is a module that lets you easily print data structures in a form that is more convenient to use both visually and programmatically. Unlike a traditional <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.toString</code>, PPrint...
+</p>
+  <ul>
+    <li>
+      Prints many common data structures in a source-code-compatible way (e.g. strings are escaped), that you can paste directly into a console or REPL to evaluate</li>
+    <li>
+      Things are laid out nicely! Vertically spaced out and properly indented, instead of being all squashed onto one line.</li>
+    <li>
+      Pretty-printed output can be colored for easy viewing!</li>
+    <li>
+      Pretty-printing is <a href="#Streaming">streaming</a>, meaning you can pretty-print extremely large data structures and stream it to stdout/files/logging without having to materialize the whole string in memory.</li>
+    <li>
+      Pretty-printing is configurable, so you can configure maximum widths for wrapping, maximum heights for truncation, and other such things.</li></ul>
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="GettingStarted" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Getting Started<a class=" scalatex-site-Styles-headerLink" href="#GettingStarted" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <p>
+      Add the following to your SBT config:</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;pprint&quot; % &quot;0.3.0&quot;</code></pre>
+    <p>
+      Or for Scala.js:</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %%% &quot;pprint&quot; % &quot;0.3.0&quot;</code></pre>
+    <p>
+      The above example then showed how to use the default pprint configuration. You can also use
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">import pprint.Config.Colors._
+</code></pre>
+    <p>
+      Instead of <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Defaults</code> in order to turn on colored pretty-printing.
+</p>
+    <p>
+      Pretty-printing is by default defined for most standard library types, as well as case classes and case objects. For other types not supported, it falls back to using <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">toString</code>
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; PPrint(new Object())
+res35: String = java.lang.Object@54f880c0
+</code></pre>
+    <p>
+      You can configure the pretty-printing by defining your own implicit <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Config</code> object, to consistently set things like maximum width, height or colors across a codebase. However, if you just want to set these thigns one-off, you can do that too:
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; pprint.pprintln(Seq(1, 2, 3))
+List(1, 2, 3)
+
+scala&gt; pprint.pprintln(Seq(1, 2, 3), width = 5) // force wrapping
+List(
+  1,
+  2,
+  3
+)
+
+scala&gt; pprint.pprintln(Seq(1, 2, 3), width = 6, height = 2) // truncate
+List(
+  1,
+...
+
+</code></pre>
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Streaming" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Streaming<a class=" scalatex-site-Styles-headerLink" href="#Streaming" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+
+    <p>
+      PPrint is lazy and streaming. Unlike <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">println(x.toString)</code> which marshals the entire string in memory before returning it:
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; val large = Seq.fill(100000)(&quot;ABCDE&quot; * 1000)
+scala&gt; println(large.toString)
+java.lang.OutOfMemoryError: Java heap space
+</code></pre>
+    <p>
+      <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">pprint.pprintln</code> streams the result to standard output, meaning that even for enormous data structures like the one above you can immediately start seeing output:
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; pprint.pprintln(large)
+Seq(
+  &quot;ABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEA
+  BCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABC
+  ...
+</code></pre>
+    <p>
+      For example, if you have a massive (or even infinite!) data structure and wish to only show a certain amount of it, truncating it is straightforward:
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; val large = Seq.tabulate(100000)(&quot;ABCDE&quot; + _)
+
+scala&gt; pprint.pprintln(large, height=20)
+List(
+  &quot;ABCDE0&quot;,
+  &quot;ABCDE1&quot;,
+  &quot;ABCDE2&quot;,
+  &quot;ABCDE3&quot;,
+  &quot;ABCDE4&quot;,
+  &quot;ABCDE5&quot;,
+  &quot;ABCDE6&quot;,
+  &quot;ABCDE7&quot;,
+  &quot;ABCDE8&quot;,
+  &quot;ABCDE9&quot;,
+  &quot;ABCDE10&quot;,
+  &quot;ABCDE11&quot;,
+  &quot;ABCDE12&quot;,
+  &quot;ABCDE13&quot;,
+  &quot;ABCDE14&quot;,
+  &quot;ABCDE15&quot;,
+  &quot;ABCDE16&quot;,
+  &quot;ABCDE17&quot;,
+  &quot;ABCDE18&quot;,
+...
+</code></pre>
+    <p>
+      If you want to do something else with the streaming output apart from displaying it on the console, you can also call <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">PPrint.tokenize</code>
+</p>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; val large = Seq.fill(100000)(&quot;ABCDE&quot; * 1000)
+scala&gt; pprint.PPrint.tokenize(large)
+res0: Iterator[String] = non-empty iterator
+</code></pre>
+    <p>
+      This gives you an iterator with which you can do whatever you want: stream it to a file, to your logging system, etc.. Even for extremely large data structures, you can use this data structure to page through it and see what it contains without ever materializing the entire string in memory.
+</p>
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Customization" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Customization<a class=" scalatex-site-Styles-headerLink" href="#Customization" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+
+    <p>
+      In order to pretty print a type <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T</code>, you need to have a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T: PPrint</code> context bound present. In order to write your own custom pretty printer for some type <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T</code>, provide an implicit <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">PPrinter[T]</code> in scope.
+</p>
+  <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="VersionHistory" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Version History<a class=" scalatex-site-Styles-headerLink" href="#VersionHistory" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <h1 id="0.3.0" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.3.0" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.3.0</h1>
+      <ul>
+        <li>
+          First release outside of the Ammonite project where this lived for a long time</li>
+        <li>
+          Shared case-class implicit-derivation back-end with uPickle, greatly expanding the scope of things that can be prettyprinted</li></ul></div>
+</div><script>
+    scalatex.scrollspy.Controller().main(
+      [{"value":"PPrint","children":[{"value":"Getting Started","children":[]},{"value":"Streaming","children":[]},{"value":"Customization","children":[]},{"value":"Version History","children":[{"value":"0.3.0","children":[]}]}]}]
+  )</script><script>
+    ['DOMContentLoaded', 'load'].forEach(function(ev){
+      addEventListener(ev, function(){
+        Array.prototype.forEach.call(
+          document.getElementsByClassName('scalatex-site-Styles-highlightMe'),
+          hljs.highlightBlock
+        );
+      })
+    })
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
