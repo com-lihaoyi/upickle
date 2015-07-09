@@ -183,7 +183,10 @@ lazy val pprint = crossProject
     )
 lazy val pprintJVM = pprint.jvm
 lazy val pprintJS = pprint.js
-lazy val modules = project.aggregate(pprintJVM, pprintJS, upickleJVM, upickleJS)
+lazy val modules = project.aggregate(pprintJVM, pprintJS, upickleJVM, upickleJS, deriveJS, deriveJVM).settings(
+  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo"))),
+  publishArtifact := false
+)
 
 lazy val upickleReadme= scalatex.ScalatexReadme(
   projectId = "upickleReadme",
