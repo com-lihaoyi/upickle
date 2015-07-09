@@ -1,3 +1,5 @@
+@import Main._
+
 @sect{PPrint}
   @hl.scala
     scala> import pprint.Config.Defaults._
@@ -11,6 +13,18 @@
       List(List("ggx", "ggx"), List("ggx", "ggx", "wtfx"))
     )
 
+    scala> case class Foo(s: String, list: List[Int])
+    scala> pprint.pprintln(
+      List(Foo("hello", List(1, 2, 3)), Foo("world", List())),
+      width=25
+      )
+    List(
+      Foo(
+        "hello",
+        List(1, 2, 3)
+      ),
+      Foo("world", List())
+    )
   @p
     PPrint is a module that lets you easily print data structures in a form that is more convenient to use both visually and programmatically. Unlike a traditional @hl.scala{.toString}, PPrint...
 
@@ -29,8 +43,11 @@
     @p
       Add the following to your SBT config:
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %% "upickle" % "@repo.version"
-
+      libraryDependencies += "com.lihaoyi" %% "pprint" % "@repo.version"
+    @p
+      Or for Scala.js:
+    @hl.scala
+      libraryDependencies += "com.lihaoyi" %%% "pprint" % "@repo.version"
     @p
       The above example then showed how to use the default pprint configuration. You can also use
 
@@ -86,6 +103,36 @@
         "ABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEA
         BCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABCDEABC
         ...
+
+    @p
+      For example, if you have a massive (or even infinite!) data structure and wish to only show a certain amount of it, truncating it is straightforward:
+
+    @hl.scala
+      scala> val large = Seq.tabulate(100000)("ABCDE" + _)
+
+      scala> pprint.pprintln(large, height=20)
+      List(
+        "ABCDE0",
+        "ABCDE1",
+        "ABCDE2",
+        "ABCDE3",
+        "ABCDE4",
+        "ABCDE5",
+        "ABCDE6",
+        "ABCDE7",
+        "ABCDE8",
+        "ABCDE9",
+        "ABCDE10",
+        "ABCDE11",
+        "ABCDE12",
+        "ABCDE13",
+        "ABCDE14",
+        "ABCDE15",
+        "ABCDE16",
+        "ABCDE17",
+        "ABCDE18",
+      ...
+
     @p
       If you want to do something else with the streaming output apart from displaying it on the console, you can also call @hl.scala{PPrint.tokenize}
 
@@ -96,5 +143,8 @@
 
     @p
       This gives you an iterator with which you can do whatever you want: stream it to a file, to your logging system, etc.. Even for extremely large data structures, you can use this data structure to page through it and see what it contains without ever materializing the entire string in memory.
-  @p
-    In order to pretty print a type @hl.scala{T}, you need to have a @hl.scala{T: PPrint} context bound present. In order to write your own custom pretty printer for some type @hl.scala{T}, provide a @hl.scala{PPrinter[T]}.
+
+  @sect{Customization}
+
+    @p
+      In order to pretty print a type @hl.scala{T}, you need to have a @hl.scala{T: PPrint} context bound present. In order to write your own custom pretty printer for some type @hl.scala{T}, provide an implicit @hl.scala{PPrinter[T]} in scope.
