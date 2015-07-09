@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 /**
 * Created by haoyi on 7/4/15.
 */
-abstract class Api extends Types with Implicits with Generated with LowPriX{
+trait Api extends Types with Implicits with Generated with LowPriX{
   protected[this] def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = Internal.validate(name)(pf)
 
   type key = derive.key
@@ -23,7 +23,8 @@ object legacy extends Api{
     case x: V => Js.Arr(Js.Str(n), rw.write(x))
   }
 }
-class AttributeTagged(tagName: String) extends Api{
+trait AttributeTagged extends Api{
+  def tagName: String
   def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V]{
     case Js.Obj(x@_*) if x.contains((tagName, Js.Str(n))) =>
     rw.read(Js.Obj(x.filter(_._1 != tagName):_*))
@@ -34,7 +35,9 @@ class AttributeTagged(tagName: String) extends Api{
     Js.Obj((tagName, Js.Str(n)) +: rw.write(x).asInstanceOf[Js.Obj].value:_*)
   }
 }
-object default extends AttributeTagged("$type")
+object default extends AttributeTagged{
+  def tagName = "$type"
+}
 object Forwarder{
   def applyR[T](c: derive.ScalaVersionStubs.Context)
               (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {

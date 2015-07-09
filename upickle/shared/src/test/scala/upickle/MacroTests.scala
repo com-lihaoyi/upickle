@@ -261,13 +261,12 @@ object MacroTests extends TestSuite{
           val pref2 = "derive.GenericADTs.DeltaHardcoded"
           val D3 = DeltaHardcoded
           type D3[A, B] = DeltaHardcoded[A, B]
-          // All this stuff doesn't compile in 2.10.x
-//          rw(D3.Insert(Seq(1), "1"), s"""{"$$type":"$pref2.Insert","key":[1],"value":"1"}""")
+          rw(D3.Insert(Seq(1), "1"), s"""{"$$type":"$pref2.Insert","key":[1],"value":"1"}""")
           rw(D3.Insert(Seq(1), "1"): D3[Seq[Int], String], s"""{"$$type":"$pref2.Insert","key":[1],"value":"1"}""")
-//          rw(D3.Remove(Seq(1)), s"""["$pref2.Remove",{"key":[1]}]""")
-//          rw(D3.Remove(Seq(1)): D3[Seq[Int], String], s"""{"$$type":"$pref2.Remove","key":[1]}""")
-//          rw(D3.Clear(), s"""{"$$type:"$pref2.Clear"}""")
-//          rw(D3.Clear(): D3[Seq[Int], String], s"""{"$$type:"$pref2.Clear"}""")
+          rw(D3.Remove(Seq(1)), s"""{"$$type":"$pref2.Remove", "key":[1]}""")
+          rw(D3.Remove(Seq(1)): D3[Seq[Int], String], s"""{"$$type":"$pref2.Remove","key":[1]}""")
+          rw(D3.Clear(), s"""{"$$type":"$pref2.Clear"}""")
+          rw(D3.Clear(): D3[Seq[Int], String], s"""{"$$type":"$pref2.Clear"}""")
         }
       }
     }

@@ -237,6 +237,19 @@
       This allows even greater customizability. Rather than simply changing the shape of the class's pickled object, you can entirely replace it! In this example, instead of pickling to a normal @code{Js.Obj}, we pickle to a @code{Js.Str}, storing both @code{i} and @code{s} as part of that single string.
     @p
       Note that when writing custom picklers, it is entirely up to you to get it right, e.g. making sure that an object that gets round-trip pickled/unpickled comes out the same as when it started.
+
+  @sect{Custom Configuration}
+    @p
+      Often, there will be times that you want to customize something on a project-wide level. uPickle provides hooks in letting you subclass the @hl.scala{upickle.Api} trait to create your own bundles apart from the in-built @hl.scala{upickle.default} and @hl.scala{upickle.legacy}. You have multiple levels of possible customization:
+
+    @ul
+      @li
+        @hl.scala{upickle.Api}, which lets you customize the @hl.scala{annotate} methods, which are used to tag sealed hierarchies with their class names. This is used to e.g. distinguish @hl.scala{upickle.default}'s @hl.scala{$type} attribute vs @hl.scala{upickle.legacy}'s array-wrapper
+      @li
+        @hl.scala{upickle.AttributeTagged}, which assumes you want the standard @hl.scala{annotate} method using a type attribute, but letting you customize the attribute.
+      @li
+        In both these cases, you are also free to override the @hl.scala{CaseR} and @hl.scala{CaseW} implicits, which controls how case classes are serialized. For example, you could make it serialize to a JSON array rather than a dictionary.
+
   @sect{Limitations}
 
     @p
@@ -249,8 +262,6 @@
         Reflective reading and writing
       @li
         Read/writing of untyped values e.g. @code{Any}
-      @li
-        Generic sealed hierarchies
       @li
         Read/writing arbitrarily shaped objects
     @p
@@ -321,9 +332,16 @@
 
   @sect{Version History}
 
+    @sect{0.3.0}
+      @ul
+        @li
+          Top-to-bottom rewrite of type-class derivation macros. Much faster, more reliable, etc.. Still one or two cases where it misbehaves, but much fewer than before. Extracted it into the @hl.scala{derive} subproject
+        @li
+          Force users to choose between @hl.scala{import upickle.default._} which now renders sealed trait hierarchies as dictionaries with a @hl.scala{$type} attribute, and @hl.scala{import upickle.legacy._} which does the old-style array-wrapper.
+        @li
+          You can also now create your own custom subclass of @hl.scala{upickle.Api} if you wish to customize things further, e.g. changing the type-attribute or changing the rendering of case classes.
 
     @sect{0.2.8}
-
       @ul
         @li
           Support for `java.util.UUID`, which are serialized as strings in the standard format
