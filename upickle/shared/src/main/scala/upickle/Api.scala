@@ -5,15 +5,30 @@ import language.experimental.macros
 import scala.reflect.ClassTag
 
 /**
-* Created by haoyi on 7/4/15.
-*/
+ * An instance of the upickle API. There's a default instance at
+ * `upickle.default`, but you can also implement it yourself to customize
+ * its behavior. Override the `annotate` methods to control how a sealed
+ * trait instance is tagged during reading and writing.
+ */
 trait Api extends Types with Implicits with Generated with LowPriX{
   protected[this] def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = Internal.validate(name)(pf)
 
   type key = derive.key
+
   def annotate[V: ClassTag](rw: Reader[V], n: String): Reader[V]
   def annotate[V: ClassTag](rw: Writer[V], n: String): Writer[V]
 }
+
+/**
+ * The default way of accessing upickle
+ */
+object default extends AttributeTagged{
+  def tagName = "$type"
+}
+/**
+ * An instance of the upickle API that follows the old serialization for
+ * tagged instances of sealed traits.
+ */
 object legacy extends Api{
   def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V]{
     case Js.Arr(Js.Str(`n`), x) => rw.read(x)
@@ -23,6 +38,12 @@ object legacy extends Api{
     case x: V => Js.Arr(Js.Str(n), rw.write(x))
   }
 }
+
+/**
+ * A `upickle.Api` that follows the default sealed-trait-instance-tagging
+ * behavior of using an attribute, but allow you to control what the name
+ * of the attribute is.
+ */
 trait AttributeTagged extends Api{
   def tagName: String
   def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V]{
@@ -35,9 +56,10 @@ trait AttributeTagged extends Api{
     Js.Obj((tagName, Js.Str(n)) +: rw.write(x).asInstanceOf[Js.Obj].value:_*)
   }
 }
-object default extends AttributeTagged{
-  def tagName = "$type"
-}
+
+/**
+ * Stupid hacks to work around scalac not forwarding macro type params properly
+ */
 object Forwarder{
   def applyR[T](c: derive.ScalaVersionStubs.Context)
               (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
