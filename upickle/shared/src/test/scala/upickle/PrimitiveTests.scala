@@ -1,7 +1,6 @@
 package upickle
 import utest._
-import scala.collection.SortedSet
-import scala.concurrent.duration._
+import upickle.legacy.read
 import TestUtil._
 
 object PrimitiveTests extends TestSuite{

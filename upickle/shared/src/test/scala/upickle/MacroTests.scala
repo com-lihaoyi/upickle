@@ -1,8 +1,47 @@
 package upickle
-
+import acyclic.file
+import derive._
 import utest._
 import upickle.TestUtil._
+import upickle.default.{read, write}
 
+object Custom {
+  trait ThingBase{
+    val i: Int
+    val s: String
+    override def equals(o: Any) = {
+      o.toString == this.toString
+    }
+
+    override def toString() = {
+      s"Thing($i, $s)"
+    }
+  }
+  class Thing(val i: Int, val s: String) extends ThingBase
+
+  object Thing{
+    def apply(i: Int) = new Thing(i + 10, "s" * (i + 10))
+    def unapply(t: Thing) = Some(t.i - 10)
+  }
+
+  class Thing2(val i: Int, val s: String) extends ThingBase
+
+  abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
+    implicit val thing2Writer = upickle.default.Writer[T]{
+      case t => Js.Str(t.i + " " + t.s)
+    }
+    implicit val thing2Reader = upickle.default.Reader[T]{
+      case Js.Str(str) =>
+        val Array(i, s) = str.split(" ")
+        f(i.toInt, s)
+    }
+  }
+  object Thing2 extends ThingBaseCompanion[Thing2](new Thing2(_, _))
+
+  case class Thing3(i: Int, s: String) extends ThingBase
+
+  object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
+}
 
 object MacroTests extends TestSuite{
   import Generic.ADT
@@ -24,12 +63,15 @@ object MacroTests extends TestSuite{
     ADT0()
   )
   // Doesn't work :(
-  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
+//  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
 
-//  implicitly[Reader[Seq[Nothing]]]
-
+//  implicitly[Reader[A_]]
+//  implicitly[upickle.old.Writer[upickle.MixedIn.Obj.ClsB]]
+//  println(write(ADTs.ADTc(1, "lol", (1.1, 1.2))))
+//  implicitly[upickle.old.Writer[ADTs.ADTc]]
 
   val tests = TestSuite{
+
     'mixedIn{
       import MixedIn._
       * - rw(Obj.ClsB(1), """{"i":1}""")
@@ -52,12 +94,15 @@ object MacroTests extends TestSuite{
     'exponential{
 
       // Doesn't even need to execute, as long as it can compile
-      val ww1 = implicitly[upickle.Writer[Exponential.A1]]
+      val ww1 = implicitly[upickle.legacy.Writer[Exponential.A1]]
     }
+
+
     'commonCustomStructures{
       'simpleAdt {
 
-        * - rw(ADTs.ADT0(), """{}""")
+        * - rw(ADTs.ADT0(), """{
+        }""")
         * - rw(ADTs.ADTa(1), """{"i":1}""")
         * - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
 
@@ -96,52 +141,52 @@ object MacroTests extends TestSuite{
         // class the instance belongs to.
         import Hierarchy._
         'shallow {
-          * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
-          * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+          * - rw(B(1), """{"$type": "derive.Hierarchy.B", "i":1}""")
+          * - rw(C("a", "b"), """{"$type": "derive.Hierarchy.C", "s1":"a","s2":"b"}""")
 //Doesn't work in 2.10.4
-//          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
-//          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
+//          * - rw(AnZ: Z, """["derive.Hierarchy.AnZ",{}]""")
+//          * - rw(AnZ, """["derive.Hierarchy.AnZ",{}]""")
 
-          * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B",{"i":1}]""")
-          * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "derive.Hierarchy.B", "i":1}""")
+          * - rw(C("a", "b"): A, """{"$type": "derive.Hierarchy.C", "s1":"a","s2":"b"}""")
         }
         'deep{
           import DeepHierarchy._
 
-          * - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
-          * - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
-          * - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
-          * - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+          * - rw(B(1), """{"$type": "derive.DeepHierarchy.B", "i":1}""")
+          * - rw(B(1): A, """{"$type": "derive.DeepHierarchy.B", "i":1}""")
+          * - rw(AnQ(1): Q, """{"$type": "derive.DeepHierarchy.AnQ", "i":1}""")
+          * - rw(AnQ(1), """{"$type": "derive.DeepHierarchy.AnQ","i":1}""")
 
-          * - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
-          * - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
-          * - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
-          * - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-          * - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-          * - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-          * - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
-          * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
-          * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
+          * - rw(F(AnQ(1)), """{"$type": "derive.DeepHierarchy.F","q":{"$type":"derive.DeepHierarchy.AnQ", "i":1}}""")
+          * - rw(F(AnQ(2)): A, """{"$type": "derive.DeepHierarchy.F","q":{"$type":"derive.DeepHierarchy.AnQ", "i":2}}""")
+          * - rw(F(AnQ(3)): C, """{"$type": "derive.DeepHierarchy.F","q":{"$type":"derive.DeepHierarchy.AnQ", "i":3}}""")
+          * - rw(D("1"), """{"$type": "derive.DeepHierarchy.D", "s":"1"}""")
+          * - rw(D("1"): C, """{"$type": "derive.DeepHierarchy.D", "s":"1"}""")
+          * - rw(D("1"): A, """{"$type": "derive.DeepHierarchy.D", "s":"1"}""")
+          * - rw(E(true), """{"$type": "derive.DeepHierarchy.E", "b":true}""")
+          * - rw(E(true): C, """{"$type": "derive.DeepHierarchy.E","b":true}""")
+          * - rw(E(true): A, """{"$type": "derive.DeepHierarchy.E", "b":true}""")
         }
       }
       'singleton {
         import Singletons._
 
-        rw(BB, """["upickle.Singletons.BB",{}]""")
-        rw(CC, """["upickle.Singletons.CC",{}]""")
-        rw(BB: AA, """["upickle.Singletons.BB",{}]""")
-        rw(CC: AA, """["upickle.Singletons.CC",{}]""")
+        rw(BB, """{"$type":"derive.Singletons.BB"}""")
+        rw(CC, """{"$type":"derive.Singletons.CC"}""")
+        rw(BB: AA, """{"$type":"derive.Singletons.BB"}""")
+        rw(CC: AA, """{"$type":"derive.Singletons.CC"}""")
       }
     }
     'robustnessAgainstVaryingSchemas {
       'renameKeysViaAnnotations {
         import Annotated._
 
-        * - rw(B(1), """["0",{"omg":1}]""")
-        * - rw(C("a", "b"), """["1",{"lol":"a","wtf":"b"}]""")
+        * - rw(B(1), """{"$type": "0", "omg":1}""")
+        * - rw(C("a", "b"), """{"$type": "1", "lol":"a","wtf":"b"}""")
 
-        * - rw(B(1): A, """["0",{"omg":1}]""")
-        * - rw(C("a", "b"): A, """["1",{"lol":"a","wtf":"b"}]""")
+        * - rw(B(1): A, """{"$type": "0", "omg":1}""")
+        * - rw(C("a", "b"): A, """{"$type": "1", "lol":"a","wtf":"b"}""")
       }
       'useDefaults {
         // Ignore the values which match the default when writing and
@@ -191,37 +236,37 @@ object MacroTests extends TestSuite{
       'ADT{
         import GenericADTs._
         * - {
-          val pref1 = "upickle.GenericADTs.Delta"
+          val pref1 = "derive.GenericADTs.Delta"
           val D1 = Delta
           type D1[+A, +B] = Delta[A, B]
-          rw(D1.Insert(1, 1), s"""["$pref1.Insert",{"key":1,"value":1}]""")
-          rw(D1.Insert(1, 1): D1[Int, Int], s"""["$pref1.Insert",{"key":1,"value":1}]""")
-          rw(D1.Remove(1), s"""["$pref1.Remove",{"key":1}]""")
-          rw(D1.Remove(1): D1[Int, Int], s"""["$pref1.Remove",{"key":1}]""")
-          rw(D1.Clear(), s"""["$pref1.Clear",{}]""")
-          rw(D1.Clear(): D1[Int, Int], s"""["$pref1.Clear",{}]""")
+          rw(D1.Insert(1, 1), s"""{"$$type":"$pref1.Insert","key":1,"value":1}""")
+          rw(D1.Insert(1, 1): D1[Int, Int], s"""{"$$type":"$pref1.Insert","key":1,"value":1}""")
+          rw(D1.Remove(1), s"""{"$$type":"$pref1.Remove","key":1}""")
+          rw(D1.Remove(1): D1[Int, Int], s"""{"$$type":"$pref1.Remove","key":1}""")
+          rw(D1.Clear(), s"""{"$$type":"$pref1.Clear"}""")
+          rw(D1.Clear(): D1[Int, Int], s"""{"$$type":"$pref1.Clear"}""")
         }
         * - {
-          val pref2 = "upickle.GenericADTs.DeltaInvariant"
+          val pref2 = "derive.GenericADTs.DeltaInvariant"
           val D2 = DeltaInvariant
           type D2[A, B] = DeltaInvariant[A, B]
-          rw(D2.Insert(1, 1), s"""["$pref2.Insert",{"key":1,"value":1}]""")
-          rw(D2.Insert(1, 1): D2[Int, Int], s"""["$pref2.Insert",{"key":1,"value":1}]""")
-          rw(D2.Remove(1), s"""["$pref2.Remove",{"key":1}]""")
-          rw(D2.Remove(1): D2[Int, Int], s"""["$pref2.Remove",{"key":1}]""")
-          rw(D2.Clear(), s"""["$pref2.Clear",{}]""")
-          rw(D2.Clear(): D2[Int, Int], s"""["$pref2.Clear",{}]""")
+          rw(D2.Insert(1, 1), s"""{"$$type":"$pref2.Insert","key":1,"value":1}""")
+          rw(D2.Insert(1, 1): D2[Int, Int], s"""{"$$type":"$pref2.Insert","key":1,"value":1}""")
+          rw(D2.Remove(1), s"""{"$$type":"$pref2.Remove","key":1}""")
+          rw(D2.Remove(1): D2[Int, Int], s"""{"$$type":"$pref2.Remove","key":1}""")
+          rw(D2.Clear(), s"""{"$$type":"$pref2.Clear"}""")
+          rw(D2.Clear(): D2[Int, Int], s"""{"$$type":"$pref2.Clear"}""")
         }
         * - {
-          val pref2 = "upickle.GenericADTs.DeltaHardcoded"
+          val pref2 = "derive.GenericADTs.DeltaHardcoded"
           val D3 = DeltaHardcoded
           type D3[A, B] = DeltaHardcoded[A, B]
-          rw(D3.Insert(Seq(1), "1"), s"""["$pref2.Insert",{"key":[1],"value":"1"}]""")
-          rw(D3.Insert(Seq(1), "1"): D3[Seq[Int], String], s"""["$pref2.Insert",{"key":[1],"value":"1"}]""")
-          rw(D3.Remove(Seq(1)), s"""["$pref2.Remove",{"key":[1]}]""")
-          rw(D3.Remove(Seq(1)): D3[Seq[Int], String], s"""["$pref2.Remove",{"key":[1]}]""")
-          rw(D3.Clear(), s"""["$pref2.Clear",{}]""")
-          rw(D3.Clear(): D3[Seq[Int], String], s"""["$pref2.Clear",{}]""")
+          rw(D3.Insert(Seq(1), "1"), s"""{"$$type":"$pref2.Insert","key":[1],"value":"1"}""")
+          rw(D3.Insert(Seq(1), "1"): D3[Seq[Int], String], s"""{"$$type":"$pref2.Insert","key":[1],"value":"1"}""")
+          rw(D3.Remove(Seq(1)), s"""{"$$type":"$pref2.Remove", "key":[1]}""")
+          rw(D3.Remove(Seq(1)): D3[Seq[Int], String], s"""{"$$type":"$pref2.Remove","key":[1]}""")
+          rw(D3.Clear(), s"""{"$$type":"$pref2.Clear"}""")
+          rw(D3.Clear(): D3[Seq[Int], String], s"""{"$$type":"$pref2.Clear"}""")
         }
       }
     }
@@ -230,19 +275,69 @@ object MacroTests extends TestSuite{
       import Recursive._
       rw(
         IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
-        """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
+        """{
+          "value": 123,
+          "children": [
+            {"value":456,"children":[]},
+            {"value":789,"children":[]}
+          ]
+        }"""
       )
       rw(
         SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))),
-        """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
+        """{
+          "$type": "derive.Recursive.SingleNode",
+          "value": 123,
+          "children": [
+            {
+              "$type": "derive.Recursive.SingleNode",
+              "value": 456,
+              "children": []
+            },
+            {
+              "$type": "derive.Recursive.SingleNode",
+              "value":789,
+              "children":[]
+            }
+          ]
+        }"""
       )
       rw(
         SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))): SingleTree,
-        """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
+        """{
+          "$type": "derive.Recursive.SingleNode",
+          "value": 123,
+          "children": [
+            {
+              "$type": "derive.Recursive.SingleNode",
+              "value": 456,
+              "children": []
+            },
+            {
+              "$type": "derive.Recursive.SingleNode",
+              "value":789,
+              "children":[]
+            }
+          ]
+        }"""
       )
-      rw(End: LL, """["upickle.Recursive.End",{}]""")
-      rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
-      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
+      rw(End: LL, """{"$type":"derive.Recursive.End"}""")
+      rw(Node(3, End): LL,
+        """{
+          "$type": "derive.Recursive.Node",
+          "c": 3,
+          "next": {"$type":"derive.Recursive.End"}
+        }""")
+      rw(Node(6, Node(3, End)),
+        """{
+          "$type": "derive.Recursive.Node",
+          "c": 6,
+          "next": {
+            "$type": "derive.Recursive.Node",
+            "c":3,
+            "next":{"$type":"derive.Recursive.End"}
+          }
+        }""")
 
     }
 

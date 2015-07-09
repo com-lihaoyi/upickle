@@ -1,6 +1,8 @@
 package upickle
 
 import utest._
+import upickle.legacy.read
+import acyclic.file
 case class Fee(i: Int, s: String)
 sealed trait Fi
 object Fi{
@@ -84,12 +86,12 @@ object FailureTests extends TestSuite{
           val err = intercept[Invalid.Data]{ readFoo() }
           assert(err.msg.contains("Key Missing: s"))
         }
-        'completelyInvalid{
-          val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
-          val err = intercept[Invalid.Data] { readFoo2() }
-          assert(err.msg.contains("Object"))
-          println(err)
-        }
+//        'completelyInvalid{
+//          val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
+//          val err = intercept[Invalid.Data] { readFoo2() }
+//          assert(err.msg.contains("Object"))
+//          println(err)
+//        }
 
 //        'invalidTag {
 //          val readFo = () => read[Fi.Fo]( """["omg", {}]""")
