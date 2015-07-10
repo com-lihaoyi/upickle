@@ -396,10 +396,19 @@ object MacroTests extends TestSuite{
     }
     'issues {
       'issue95 {
-        implicitly[default.Writer[Tuple1[List[C1]]]]
-        implicitly[default.Writer[C2]]
-        implicitly[default.Reader[Tuple1[List[C1]]]]
-        implicitly[default.Reader[C2]]
+        rw(
+          Tuple1(List(C1("hello", List("world")))),
+          """[[{"name": "hello", "types": ["world"]}]]"""
+        )
+        rw(
+          C2(List(C1("hello", List("world")))),
+          """{"results": [{"name": "hello", "types": ["world"]}]}"""
+        )
+
+        rw(
+          GeoCoding2(List(Result2("a", "b", List("c"))), "d"),
+          """{"results": [{"name": "a", "whatever": "b", "types": ["c"]}], "status": "d"}"""
+        )
       }
 //      'issue94 {
 //
@@ -410,6 +419,3 @@ object MacroTests extends TestSuite{
     }
   }
 }
-//import java.util.UUID
-//
-//case class Example(ids: Seq[UUID])

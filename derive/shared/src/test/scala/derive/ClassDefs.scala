@@ -155,3 +155,10 @@ object Amorphous{
 // when the fix is backed out
 case class C1(name : String, types : List[String])
 case class C2(results : List[C1])
+
+case class Result2(name : String,
+                   whatever : String,
+                   types : List[String]
+                    )
+
+case class GeoCoding2(results : List[Result2], status: String)
