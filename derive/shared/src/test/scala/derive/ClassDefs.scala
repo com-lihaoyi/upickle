@@ -177,3 +177,6 @@ object Issue94{
   case class Example2(ids: List[List[Foo]])
 
 }
+object Issue92{
+  abstract class Rational extends Ordered[Rational]
+}

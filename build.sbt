@@ -18,8 +18,8 @@ val settings = Seq(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
     "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"/*,
-    "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"*/
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
+    "org.spire-math" %% "spire" % "0.10.1" % "test"
   ) ++ (
     if (scalaVersion.value startsWith "2.11.") Nil
     else Seq(
@@ -169,13 +169,7 @@ lazy val pprint = crossProject
         trait PPrinterGen extends GenUtils{
           ${tuples.mkString("\n")}
         }
-        trait TPrintGen[Type[_], Cfg]{
-          def make[T](f: Cfg => String): Type[T]
-          def get[T: Type](cfg: Cfg): String
-          implicit def F0TPrint[R: Type] = make[() => R](cfg => "() => " + get[R](cfg))
-          implicit def F1TPrint[T1: Type, R: Type] = make[T1 => R](cfg => get[T1](cfg) + " => " + get[R](cfg))
-          ${typeGen.mkString("\n")}
-        }
+
       """.stripMargin
       IO.write(file, output)
       Seq(file)

@@ -4,11 +4,18 @@ package test.pprint
 import java.util
 import java.util.UUID
 
+import derive.Issue92
+import spire.math.Rational
 import utest._
 import scala.collection.{immutable => imm, mutable}
 import pprint.Config.Defaults._
+
+import scala.math.{ScalaNumericConversions, ScalaNumber}
+
 object DerivationTests extends TestSuite{
-  
+  import spire.math._
+
+
   val tests = TestSuite{
     'singletons {
       import derive.Singletons._
@@ -124,6 +131,12 @@ object DerivationTests extends TestSuite{
         derive.Generic.ADT(x, x: java.io.Serializable, "lol", "lol": Any, (1.5, 2.5), (1.5, 2.5): AnyRef),
         s"""ADT($x, $x, "lol", lol, (1.5, 2.5), (1.5,2.5))"""
       )
+    }
+    'issue92{
+      val r = new derive.Issue92.Rational {
+        override def compare(that: Issue92.Rational): Int = ???
+      }
+      Check(r : derive.Issue92.Rational, r.toString)
     }
   }
 }
