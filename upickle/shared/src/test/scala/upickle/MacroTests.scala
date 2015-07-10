@@ -394,6 +394,22 @@ object MacroTests extends TestSuite{
         n
       }
     }
-
+    'issues {
+      'issue95 {
+        implicitly[default.Writer[Tuple1[List[C1]]]]
+        implicitly[default.Writer[C2]]
+        implicitly[default.Reader[Tuple1[List[C1]]]]
+        implicitly[default.Reader[C2]]
+      }
+//      'issue94 {
+//
+//
+//
+//        implicitly[default.Writer[Example]]
+//      }
+    }
   }
 }
+//import java.util.UUID
+//
+//case class Example(ids: Seq[UUID])

@@ -149,3 +149,9 @@ object Amorphous{
     val x = "lol"
   }
 }
+// issue #95
+// For some reason this stuff must live top-level; the test fails to
+// go red when the case classes are moved inside a wrapper object even
+// when the fix is backed out
+case class C1(name : String, types : List[String])
+case class C2(results : List[C1])

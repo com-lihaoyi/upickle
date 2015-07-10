@@ -33,7 +33,7 @@ val settings = Seq(
   },
   scalaJSStage in Global := FastOptStage,
   autoCompilerPlugins := true,
-  //scalacOptions += "-Xlog-implicits",
+//  scalacOptions += "-Xlog-implicits",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
   pomExtra :=
     <url>https://github.com/lihaoyi/upickle</url>

@@ -218,6 +218,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       case t => t
     }
 //    println(Console.CYAN + "end derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
+//    println(res)
     res
   }
 

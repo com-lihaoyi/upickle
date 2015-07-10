@@ -33,7 +33,7 @@ object Macros {
           _ match {case _root_.scala.Tuple1(x) => $t.apply[..$typeArgs](x)},
           _root_.scala.Array($arg),
           _root_.scala.Array($default)
-        )
+        )(${c.prefix}.Tuple1R)
         """
     }
     def wrapCaseN(t: c.Tree,
@@ -43,13 +43,14 @@ object Macros {
                   argTypes: Seq[Type],
                   targetType: c.Type) = {
       val x = q"$freshName"
+      val name = newTermName("Tuple"+args.length+"R")
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
       q"""
         ${c.prefix}.CaseR[(..$argTypes), $targetType](
           ($x: (..$argTypes)) => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
           _root_.scala.Array(..$args),
           _root_.scala.Array(..$defaults)
-        )
+        )(${c.prefix}.$name)
       """
     }
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
@@ -87,7 +88,7 @@ object Macros {
           $companion.${findUnapply(targetType)}(_).map(_root_.scala.Tuple1.apply),
           _root_.scala.Array($arg),
           _root_.scala.Array($default)
-        )
+        )(${c.prefix}.Tuple1W)
         """
     def internal = q"${c.prefix}.Internal"
     def wrapCaseN(companion: c.Tree,
@@ -95,13 +96,16 @@ object Macros {
                   defaults: Seq[c.Tree],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
-                  targetType: c.Type) = q"""
+                  targetType: c.Type) = {
+      val name = newTermName("Tuple"+args.length+"W")
+      q"""
         ${c.prefix}.CaseW[(..$argTypes), $targetType](
           $companion.${findUnapply(targetType)}[..$typeArgs],
           _root_.scala.Array(..$args),
           _root_.scala.Array(..$defaults)
-        )
+        )(${c.prefix}.$name)
       """
+    }
     def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       val merged =
         if (subtree.length == 1) q"$internal.merge0(${subtree(0)}.write)"
@@ -113,7 +117,6 @@ object Macros {
   }
   def macroRImpl[T, R[_]](c0: Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
-    import c0._
     import c0.universe._
 
     val res = new Reading[R]{
@@ -125,7 +128,6 @@ object Macros {
 
   def macroWImpl[T, W[_]](c0: Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
-    import c0._
     import c0.universe._
 
     val res = new Writing[W]{
