@@ -213,8 +213,8 @@ trait Implicits extends Types { imp: Generated =>
 
   implicit val DurationR = R[Duration](Internal.validate("DurationString"){FiniteR.read orElse InfiniteR.read})
 
-  implicit val UuidR = R[UUID]{case Js.Str(s) => UUID.fromString(s)}
-  implicit val UuidW = W[UUID]{case t: UUID => Js.Str(t.toString)}
+  implicit def UuidR: R[UUID] = R[UUID]{case Js.Str(s) => UUID.fromString(s)}
+  implicit def UuidW: W[UUID] = W[UUID]{case t: UUID => Js.Str(t.toString)}
 
 
 

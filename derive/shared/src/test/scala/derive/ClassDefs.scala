@@ -162,3 +162,18 @@ case class Result2(name : String,
                     )
 
 case class GeoCoding2(results : List[Result2], status: String)
+
+object Issue94{
+  class Foo(val x: String){
+    override def toString = x
+    override def hashCode = x.hashCode
+    override def equals(o: Any) = o match{
+      case f: Foo => x == f.x
+      case _ => false
+    }
+  }
+
+  case class Example(ids: List[Foo])
+  case class Example2(ids: List[List[Foo]])
+
+}

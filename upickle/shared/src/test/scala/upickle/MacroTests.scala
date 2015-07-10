@@ -410,12 +410,22 @@ object MacroTests extends TestSuite{
           """{"results": [{"name": "a", "whatever": "b", "types": ["c"]}], "status": "d"}"""
         )
       }
-//      'issue94 {
-//
-//
-//
-//        implicitly[default.Writer[Example]]
-//      }
+      'issue94{
+
+        implicit val fooW: default.Writer[Issue94.Foo] =
+          default.Writer[Issue94.Foo]{case t: Issue94.Foo => Js.Str(t.x)}
+        implicit val fooR: default.Reader[Issue94.Foo] =
+          default.Reader[Issue94.Foo]{case Js.Str(x) => new Issue94.Foo(x)}
+
+        rw(
+          Issue94.Example(List(new Issue94.Foo("lol"))),
+          """{"ids": ["lol"]}"""
+        )
+        rw(
+          Issue94.Example2(List(List(new Issue94.Foo("lol")))),
+          """{"ids": [["lol"]]}"""
+        )
+      }
     }
   }
 }

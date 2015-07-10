@@ -153,6 +153,10 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                   args.map(TypeKey)
                     .distinct
                     .map(_.t)
+                    .filter{ t =>
+                      val x = c.inferImplicitValue(typeclassFor(t), withMacrosDisabled = true)
+                      x == EmptyTree
+                    }
                     .map(tpe => q"implicit def $freshName: ${typeclassFor(tpe)} = ???")
                 case _ =>
                   Seq.empty[Tree]
