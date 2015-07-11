@@ -249,7 +249,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   def deriveClass(tpe: c.Type) = {
     getArgSyms(tpe) match {
       case Left(msg) => fail(tpe, msg)
-      case Right((companion, paramTypes, argSyms)) =>
+      case Right((companion, typeParams, argSyms)) =>
 
 
         //    println("argSyms " + argSyms.map(_.typeSignature))
@@ -282,7 +282,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
             val concrete = tpe.normalize.asInstanceOf[TypeRef].args
             if (t.typeSymbol != definitions.RepeatedParamClass) {
 
-              t.substituteTypes(paramTypes, concrete)
+              t.substituteTypes(typeParams, concrete)
             } else {
               val TypeRef(pref, sym, args) = typeOf[Seq[Int]]
               import compat._
@@ -340,9 +340,27 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
   def getArgSyms(tpe: c.Type) = {
     companionTree(tpe).right.flatMap { companion =>
-      companion.tpe.member(newTermName("apply")) match {
-        case NoSymbol => Left(s"Don't know how to derive $tpe; it's companion has no `apply` method")
-        case apply =>
+      val primaryConstructor =
+        tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor).get
+
+      val concrete = tpe.normalize.asInstanceOf[TypeRef].args
+
+      def types(m: Symbol, typeParams: List[Symbol]) = {
+        m.asMethod
+          .paramss
+          .flatten
+          .map(_.typeSignature.substituteTypes(typeParams, concrete))
+      }
+      val matchingApply = companion.tpe.members.find(m =>
+        m.name.decoded == "apply" &&
+        m.isMethod &&
+        types(m, m.asMethod.typeParams).zip(types(primaryConstructor, tpe.typeSymbol.asClass.typeParams))
+                                       .forall{case (x, y) => x =:= y }
+      )
+
+      matchingApply match {
+        case None => Left(s"Don't know how to derive $tpe; it's companion has no `apply` method")
+        case Some(apply) =>
           val argSyms =
             apply.asMethod
               .paramss

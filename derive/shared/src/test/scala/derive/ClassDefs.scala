@@ -180,3 +180,14 @@ object Issue94{
 object Issue92{
   abstract class Rational extends Ordered[Rational]
 }
+object Issue96{
+  sealed trait Trait
+  class BadApply(i: Int) extends Trait
+  object BadApply{
+    def apply(i: Int) = new BadApply(i)
+    def apply(i: Int, s: String) = new BadApply(i + s.toInt)
+  }
+  sealed trait Field { }
+
+  case class ChoiceField(choices: Array[String]) extends Field
+}

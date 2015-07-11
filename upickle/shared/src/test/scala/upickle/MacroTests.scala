@@ -426,6 +426,12 @@ object MacroTests extends TestSuite{
           """{"ids": [["lol"]]}"""
         )
       }
+      'issue96{
+        'readOnly - implicitly[default.Reader[Issue96.Trait]]
+
+//    implicitly[default.Reader[Issue96.Field]]
+
+      }
     }
   }
 }

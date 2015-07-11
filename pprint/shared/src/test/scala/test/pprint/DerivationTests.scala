@@ -109,6 +109,7 @@ object DerivationTests extends TestSuite{
         "A1(A2(A3(null, null), null), A2(null, A3(A4(null, null), null)))"
       )
     }
+
     'fallback{
       // make sure we can pprint stuff that looks nothing like a case class
       // by falling back to good old toString
