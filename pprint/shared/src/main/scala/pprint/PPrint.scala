@@ -372,7 +372,7 @@ object Internals {
 
   trait LowPriPPrint extends LowPri2{
     implicit def NullPPrint: PPrint[Null] = PPrint(PPrinter.NullRepr)
-    implicit def NothingPPrint: PPrint[Nothing] = PPrint[Nothing](PPrinter[Nothing]((t: Nothing, c: Config) => Iter()))
+//    implicit def NothingPPrint: PPrint[Nothing] = PPrint[Nothing](PPrinter[Nothing]((t: Nothing, c: Config) => Iter()))
 
   }
   trait LowPri2{

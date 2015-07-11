@@ -77,7 +77,7 @@ object HorizontalTests extends TestSuite{
       }
 
       'misc {
-        //        'Nothing - intercept[NotImplementedError](Check(???, ""))
+        'Nothing - intercept[Exception](Check(throw new Exception(), ""))
         'Null {
           Check(null, "null")
           Check(null: String, "null")
