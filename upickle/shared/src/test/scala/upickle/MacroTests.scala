@@ -349,41 +349,41 @@ object MacroTests extends TestSuite{
       rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
     }
-    'performance{
-      import Generic.ADT
-      import Hierarchy._
-      import Recursive._
-      import Defaults._
-      import ADTs.ADT0
-
-      // Some arbitrary data that represents a mix of all the different
-      // ways things can be pickled and unpickled
-
-      val stringified = write(data)
-      val r1 = read[Data](stringified)
-      assert(data == r1)
-      val rewritten = write(read[Data](stringified))
-      assert(stringified == rewritten)
-
-      'read{
-        var n = 0
-        val start = System.currentTimeMillis()
-        while(System.currentTimeMillis() < start + 5000){
-          read[Data](stringified)
-          n += 1
-        }
-        n
-      }
-      'write{
-        var n = 0
-        val start = System.currentTimeMillis()
-        while(System.currentTimeMillis() < start + 5000){
-          write(data)
-          n += 1
-        }
-        n
-      }
-    }
+  //    'performance{
+  //      import Generic.ADT
+  //      import Hierarchy._
+  //      import Recursive._
+  //      import Defaults._
+  //      import ADTs.ADT0
+  //
+  //      // Some arbitrary data that represents a mix of all the different
+  //      // ways things can be pickled and unpickled
+  //
+  //      val stringified = write(data)
+  //      val r1 = read[Data](stringified)
+  //      assert(data == r1)
+  //      val rewritten = write(read[Data](stringified))
+  //      assert(stringified == rewritten)
+  //
+  //      'read{
+  //        var n = 0
+  //        val start = System.currentTimeMillis()
+  //        while(System.currentTimeMillis() < start + 5000){
+  //          read[Data](stringified)
+  //          n += 1
+  //        }
+  //        n
+  //      }
+  //      'write{
+  //        var n = 0
+  //        val start = System.currentTimeMillis()
+  //        while(System.currentTimeMillis() < start + 5000){
+  //          write(data)
+  //          n += 1
+  //        }
+  //        n
+  //      }
+  //    }
     'issues {
       'issue95 {
         rw(
@@ -419,7 +419,21 @@ object MacroTests extends TestSuite{
       'issue96{
         'readOnly - implicitly[default.Reader[Issue96.Trait]]
 
-//    implicitly[default.Reader[Issue96.Field]]
+        rwk(
+          Issue96.ChoiceField(Array("i", "am", "cow")),
+          """{"$type": "derive.Issue96.ChoiceField", "choices": ["i", "am", "cow"]}"""
+        )(_.choices.toSeq)
+
+        rwk(
+          Issue96.ChoiceField(Array("i", "am", "cow")): Issue96.Field,
+          """{"$type": "derive.Issue96.ChoiceField", "choices": ["i", "am", "cow"]}"""
+        )(_.asInstanceOf[Issue96.ChoiceField].choices.toSeq)
+        def f0[T: default.Writer] = implicitly[default.Writer[Array[T]]]
+        def f[T: default.Reader: reflect.ClassTag] = implicitly[default.Reader[Array[T]]]
+        // Doesn't fail elegantly in 2.10. =(
+//        compileError("""
+//          def f[T: default.Reader] = implicitly[default.Reader[Array[T]]]
+//        """)
       }
     }
   }

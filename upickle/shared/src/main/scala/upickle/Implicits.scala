@@ -154,7 +154,7 @@ trait Implicits extends Types { imp: Generated =>
   implicit def SomeR[T: R] = R[Some[T]](OptionR[T].read andThen (_.asInstanceOf[Some[T]]))
   implicit def NoneR: R[None.type] = R[None.type](OptionR[Int].read andThen (_.asInstanceOf[None.type]))
 
-  implicit def ArrayW[T: W: ClassTag] = SeqLikeW[T, Array](Array.unapplySeq)
+  implicit def ArrayW[T: W] = SeqLikeW[T, Array](Array.unapplySeq)
   implicit def ArrayR[T: R: ClassTag] = SeqLikeR[T, Array](x => Array.apply(x:_*))
 
   implicit def MapW[K: W, V: W]: W[Map[K, V]] =

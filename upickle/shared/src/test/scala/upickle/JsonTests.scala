@@ -80,29 +80,29 @@ object JsonTests extends TestSuite{
       }
       (parsed(19), reparsed(19))
     }
-    "performance" - {
-      "read" - {
-        var n = 0
-        val start = System.currentTimeMillis()
-        var parsed: Js.Value = Js.Null
-        while(System.currentTimeMillis() < start + 5000){
-          parsed = Js.Null
-          parsed = json.read(ugly)
-          n += 1
-        }
-        n
-      }
-      "write" - {
-        var n = 0
-        val start = System.currentTimeMillis()
-        var output = ""
-        while(System.currentTimeMillis() < start + 5000){
-          output = json.write(parsed)
-          output = ""
-          n += 1
-        }
-        n
-      }
-    }
+//    "performance" - {
+//      "read" - {
+//        var n = 0
+//        val start = System.currentTimeMillis()
+//        var parsed: Js.Value = Js.Null
+//        while(System.currentTimeMillis() < start + 5000){
+//          parsed = Js.Null
+//          parsed = json.read(ugly)
+//          n += 1
+//        }
+//        n
+//      }
+//      "write" - {
+//        var n = 0
+//        val start = System.currentTimeMillis()
+//        var output = ""
+//        while(System.currentTimeMillis() < start + 5000){
+//          output = json.write(parsed)
+//          output = ""
+//          n += 1
+//        }
+//        n
+//      }
+//    }
   }
 }

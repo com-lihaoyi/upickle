@@ -111,7 +111,7 @@ object FailureTests extends TestSuite{
     'compileErrors{
       compileError("write(new Object)")
       compileError("""read[Object]("")""")
-      compileError("""read[Array[Object]]("")""").msg
+//      compileError("""read[Array[Object]]("")""").msg
 
     }
   }
