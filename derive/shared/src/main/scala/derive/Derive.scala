@@ -71,7 +71,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     // drops the type arguments from the subclasses the first time we
     // run this in 2.10.x
     def impl =
-      for(subtypeSym <- tpe.typeSymbol.asClass.knownDirectSubclasses) yield {
+      for(subtypeSym <- tpe.typeSymbol.asClass.knownDirectSubclasses.filter(!_.toString.contains("<local child>"))) yield {
         val st = subtypeSym.asType.toType
         val baseClsArgs = st.baseType(tpe.typeSymbol).asInstanceOf[TypeRef].args
         val sub2 = st.substituteTypes(baseClsArgs.map(_.typeSymbol), tpe.args)
@@ -236,7 +236,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
     if (!clsSymbol.isSealed) {
       fail(tpe, s"[error] The referenced trait [[${clsSymbol.name}]] must be sealed.")
-    }else if (clsSymbol.knownDirectSubclasses.isEmpty) {
+    }else if (clsSymbol.knownDirectSubclasses.filter(!_.toString.contains("<local child>")).isEmpty) {
       val msg = s"The referenced trait [[${clsSymbol.name}]] does not have any sub-classes. This may " +
         "happen due to a limitation of scalac (SI-7046) given that the trait is " +
         "not in the same package. If this is the case, the hierarchy may be " +

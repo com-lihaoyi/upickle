@@ -452,7 +452,8 @@ object Internals {
       val t = q"$freshName"
       val cfg = q"$freshName"
       val x = freshName
-      val cases = subtrees.zip(subtypes).map{case (tree, tpe) => cq"$x: $tpe => $tree.render($x, $cfg)" }
+      val cases = subtrees.zip(subtypes)
+                          .map{case (tree, tpe) => cq"$x: $tpe => $tree.render($x, $cfg)" }
       q"""
         $pkg.PPrint[$targetType](
           $pkg.PPrinter[$targetType]{($t: $targetType, $cfg: $pkg.Config) =>

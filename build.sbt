@@ -19,7 +19,7 @@ val settings = Seq(
     "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
     "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-    "org.spire-math" %% "spire" % "0.10.1" % "test"
+    "com.typesafe.akka" %% "akka-http-experimental" % "1.0-M3" % "test"
   ) ++ (
     if (scalaVersion.value startsWith "2.11.") Nil
     else Seq(
