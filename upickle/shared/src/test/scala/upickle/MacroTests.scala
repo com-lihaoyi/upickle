@@ -17,12 +17,6 @@ object Custom {
       s"Thing($i, $s)"
     }
   }
-  class Thing(val i: Int, val s: String) extends ThingBase
-
-  object Thing{
-    def apply(i: Int) = new Thing(i + 10, "s" * (i + 10))
-    def unapply(t: Thing) = Some(t.i - 10)
-  }
 
   class Thing2(val i: Int, val s: String) extends ThingBase
 
@@ -342,10 +336,6 @@ object MacroTests extends TestSuite{
     }
 
     'custom {
-      'clsApplyUnapply {
-        rw(new Custom.Thing(1, "s"), """{"i":-9}""")
-        rw(Custom.Thing(10), """{"i":10}""")
-      }
       'clsReaderWriter {
         rw(new Custom.Thing2(1, "s"), """ "1 s" """)
         rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
@@ -430,7 +420,6 @@ object MacroTests extends TestSuite{
         'readOnly - implicitly[default.Reader[Issue96.Trait]]
 
 //    implicitly[default.Reader[Issue96.Field]]
-
       }
     }
   }

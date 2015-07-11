@@ -342,32 +342,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     companionTree(tpe).right.flatMap { companion =>
       val primaryConstructor =
         tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor).get
-
-      val concrete = tpe.normalize.asInstanceOf[TypeRef].args
-
-      def types(m: Symbol, typeParams: List[Symbol]) = {
-        m.asMethod
-          .paramss
-          .flatten
-          .map(_.typeSignature.substituteTypes(typeParams, concrete))
-      }
-      val matchingApply = companion.tpe.members.find(m =>
-        m.name.decoded == "apply" &&
-        m.isMethod &&
-        types(m, m.asMethod.typeParams).zip(types(primaryConstructor, tpe.typeSymbol.asClass.typeParams))
-                                       .forall{case (x, y) => x =:= y }
-      )
-
-      matchingApply match {
-        case None => Left(s"Don't know how to derive $tpe; it's companion has no `apply` method")
-        case Some(apply) =>
-          val argSyms =
-            apply.asMethod
-              .paramss
-              .flatten
-
-          Right((companion, apply.asMethod.typeParams, argSyms))
-      }
+      Right((companion, tpe.typeSymbol.asClass.typeParams, primaryConstructor.asMethod.paramss.flatten))
     }
   }
 
