@@ -146,6 +146,12 @@
       In order to pretty print a type @hl.scala{T}, you need to have a @hl.scala{T: PPrint} context bound present. In order to write your own custom pretty printer for some type @hl.scala{T}, provide an implicit @hl.scala{PPrinter[T]} in scope.
 
   @sect{Version History}
+    @sect{0.3.2}
+      @ul
+        @li
+          Fix compiler crash on pretty-printing @hl.scala{akka.http.Http.ServerBinding}
+        @li
+          Made pretty-print work for inferred type @hl.scala{Nothing}
     @sect{0.3.1}
       @ul
         @li
