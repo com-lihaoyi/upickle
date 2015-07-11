@@ -222,19 +222,12 @@
 
 
     @p
-      Apart from customizing the keys used to store the fields of a class, uPickle also allows you to completely replace the default @code{Reader}/@code{Writer} used to write that class. For classes you control. For example, you can customize the pickling process partially by providing a custom pair of @code{apply}/@code{unapply} methods in the companion object, as shown above
-
-    @hl.ref(exampleTests, Seq("object Custom", ""))
-      
-    @p
-      In this example, we store @code{Thing} instances as a single number, and   regenerate both the @code{i} and @code{s} fields from that number.
-    @p
-      Another alternative, which gives even more customizability, is to provide an implicit @code{Reader}/@code{Writer} pair in the companion object:
+      Apart from customizing the keys used to store the fields of a class, uPickle also allows you to completely replace the default @code{Reader}/@code{Writer} used to write that class. For classes you control. You need to provide an implicit @code{Reader}/@code{Writer} pair in the companion object:
     
     @hl.ref(exampleTests, Seq("object Custom2", ""))
 
     @p
-      This allows even greater customizability. Rather than simply changing the shape of the class's pickled object, you can entirely replace it! In this example, instead of pickling to a normal @code{Js.Obj}, we pickle to a @code{Js.Str}, storing both @code{i} and @code{s} as part of that single string.
+      In this example, instead of pickling to a normal @code{Js.Obj}, we pickle to a @code{Js.Str}, storing both @code{i} and @code{s} as part of that single string.
     @p
       Note that when writing custom picklers, it is entirely up to you to get it right, e.g. making sure that an object that gets round-trip pickled/unpickled comes out the same as when it started.
 
@@ -331,6 +324,12 @@
       uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with @hl.scala{apply}/@hl.scala{unapply} on the companion?") that makes its behavior predictable and simple to understand.
 
   @sect{Version History}
+    @sect{0.3.2}
+      @ul
+        @li
+          Fix more edge cases around typeclass derivation: #94, #95, #96
+        @li
+          Don't get tripped up by custom Apply methods: #48
     @sect{0.3.1}
       @ul
         @li
