@@ -331,6 +331,10 @@
       uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with @hl.scala{apply}/@hl.scala{unapply} on the companion?") that makes its behavior predictable and simple to understand.
 
   @sect{Version History}
+    @sect{0.3.1}
+      @ul
+        @li
+          Fixed edge cases around typeclass derivation
 
     @sect{0.3.0}
       @ul

@@ -138,5 +138,11 @@ object DerivationTests extends TestSuite{
       }
       Check(r : derive.Issue92.Rational, r.toString)
     }
+    'test{
+      Check(
+        derive.C2(List(derive.C1("hello", List("world")))),
+        """C2(List(C1("hello", List("world"))))"""
+      )
+    }
   }
 }
