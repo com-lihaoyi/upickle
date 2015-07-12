@@ -99,7 +99,8 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       case t: TypeRef => check(t.pre, t.sym)
       case t: SingleType => check(t.pre, t.sym)
       case t: ThisType => isAccessible(t.typeSymbol.asType.toType)
-      case NoPrefix => true
+      case t: ExistentialType => isAccessible(t.underlying)
+      case _ => true
     }
 //    println("isAccessible " + tpe + " " + res)
     res
