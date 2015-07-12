@@ -96,7 +96,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       case EmptyTree =>
 
 
-        def onFail(tpe: Type, key: TypeKey, name: TermName) = {
+        def onFail(tpe: Type, key: TypeKey, name: TermName): Map[TypeKey, TermName] = {
 
           tpe.normalize match {
             case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
@@ -104,7 +104,8 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
               rec(args(0))
             case TypeRef(pref, cls, args)
               if tpe.typeSymbol.isClass
-                && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstractClass) =>
+                && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstractClass)
+                && tpe.typeSymbol.asClass.isSealed =>
 //              println(Console.CYAN + "<Traitish>" + Console.RESET + tpe)
               val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
 
@@ -116,12 +117,14 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
             case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
 //              println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
               Map(key -> name)
-            case TypeRef(_, cls, args) =>
+            case TypeRef(_, cls, args) if cls.isClass && cls.asClass.isCaseClass =>
 //              println(Console.CYAN + "<Class>" + Console.RESET + tpe)
               getArgSyms(tpe) match {
                 case Left(errMsg) =>
+//                  println("LEFT")
                   Map.empty[TypeKey, TermName]
                 case Right((companion, typeParams, argSyms)) =>
+//                  println("Right")
                   val x =
                     argSyms
                       .map(_.typeSignature.substituteTypes(typeParams, args))
@@ -133,7 +136,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
             case x =>
 //              println("<???>")
-              Map(key -> name)
+              Map()
           }
 
         }
@@ -167,14 +170,14 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 implicit def x[T]: reflect.ClassTag[T] = ???;
                 ${implicited(tpe)}
               }"""
-//              println("TC " + name + " " + probe)
+              println("TC " + name + " " + probe)
               c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
                 case EmptyTree =>
-//                  println("Empty")
+                  println("Empty")
                   seen.add(key)
                   onFail(tpe, key, name)
                 case t =>
-//                  println("Present")
+                  println("Present")
                   Map()
               }
 
@@ -222,7 +225,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         }
         $returnName
       }"""
-        //    println("RES " + res)
+//            println("RES " + res)
         res
       case t => t
     }
@@ -345,9 +348,11 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
   def getArgSyms(tpe: c.Type) = {
     companionTree(tpe).right.flatMap { companion =>
-      val primaryConstructor =
-        tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor).get
-      Right((companion, tpe.typeSymbol.asClass.typeParams, primaryConstructor.asMethod.paramss.flatten))
+      tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor) match {
+        case None => Left("Can't find primary constructor of " + tpe)
+        case Some(primaryConstructor) => Right((companion, tpe.typeSymbol.asClass.typeParams, primaryConstructor.asMethod.paramss.flatten))
+      }
+
     }
   }
 
