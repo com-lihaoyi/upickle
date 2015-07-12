@@ -3,7 +3,7 @@ package upickle
 
 import language.experimental.macros
 import scala.reflect.ClassTag
-
+import language.higherKinds
 /**
  * An instance of the upickle API. There's a default instance at
  * `upickle.default`, but you can also implement it yourself to customize

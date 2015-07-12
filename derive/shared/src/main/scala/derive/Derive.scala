@@ -123,7 +123,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
           tpe.normalize match {
             case x if !isAccessible(tpe) =>
-//              println("NOT ACCESSIBLE " + x)
+//              println("<Not Accessible>" + x)
               Map()
             case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
 //              println(Console.CYAN + "<Repeat>" + Console.RESET + tpe)
@@ -140,10 +140,10 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 subTypes.flatMap(rec(_)) ++
                 args.flatMap(rec(_))
               lol
-            case TypeRef(_, cls, args) if tpe.typeSymbol.isModuleClass =>
+            case tpe if tpe.typeSymbol.isModuleClass =>
 //              println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
               Map(key -> name)
-            case TypeRef(_, cls, args) if cls.isClass && cls.asClass.isCaseClass =>
+            case TypeRef(_, cls, args) if cls.isClass && !cls.asClass.isAbstractClass =>
 //              println(Console.CYAN + "<Class>" + Console.RESET + tpe)
               getArgSyms(tpe) match {
                 case Left(errMsg) =>
@@ -162,7 +162,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
             case x =>
 //              println("<???>")
-              Map(key -> name)
+              Map()
           }
 
         }

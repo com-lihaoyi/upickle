@@ -37,6 +37,7 @@ object Custom {
   object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
 }
 
+
 object MacroTests extends TestSuite{
   import Generic.ADT
   import Hierarchy._
