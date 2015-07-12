@@ -93,7 +93,7 @@ object HorizontalTests extends TestSuite{
         'Options {
           Check(Some(123), "Some(123)")
           Check(None: Option[Int], "None")
-          Check(None: Option[Nothing], "None")
+//          Check(None: Option[Nothing], "None")
           Check(None, "None")
 //          Check(Some(None), "Some(None)")
         }

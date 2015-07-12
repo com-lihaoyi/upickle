@@ -82,6 +82,28 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     impl
   }
 
+  def isAccessible(tpe: Type): Boolean = {
+//    println("isAccessible " + tpe)
+    def check(pre: Type, sym: Symbol) = {
+      val global = c.universe.asInstanceOf[scala.tools.nsc.Global]
+      val typer = c.asInstanceOf[reflect.macros.runtime.Context].callsiteTyper.asInstanceOf[global.analyzer.Typer]
+      val typerContext = typer.context
+      val sym = tpe.typeSymbol
+      val res =  typerContext.isAccessible(
+        sym.asInstanceOf[global.Symbol],
+        pre.asInstanceOf[global.Type]
+      )
+      res && isAccessible(pre)
+    }
+    val res = tpe match{
+      case t: TypeRef => check(t.pre, t.sym)
+      case t: SingleType => check(t.pre, t.sym)
+      case t: ThisType => isAccessible(t.typeSymbol.asType.toType)
+      case NoPrefix => true
+    }
+//    println("isAccessible " + tpe + " " + res)
+    res
+  }
   /**
    * derive the typeclass for a particular type
    */
@@ -99,6 +121,9 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         def onFail(tpe: Type, key: TypeKey, name: TermName): Map[TypeKey, TermName] = {
 
           tpe.normalize match {
+            case x if !isAccessible(tpe) =>
+//              println("NOT ACCESSIBLE " + x)
+              Map()
             case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
 //              println(Console.CYAN + "<Repeat>" + Console.RESET + tpe)
               rec(args(0))
@@ -136,7 +161,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
             case x =>
 //              println("<???>")
-              Map()
+              Map(key -> name)
           }
 
         }
@@ -170,14 +195,14 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 implicit def x[T]: reflect.ClassTag[T] = ???;
                 ${implicited(tpe)}
               }"""
-              println("TC " + name + " " + probe)
+//              println("TC " + name + " " + probe)
               c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
                 case EmptyTree =>
-                  println("Empty")
+//                  println("Empty")
                   seen.add(key)
                   onFail(tpe, key, name)
                 case t =>
-                  println("Present")
+//                  println("Present")
                   Map()
               }
 

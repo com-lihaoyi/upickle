@@ -18,7 +18,8 @@ val settings = Seq(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
     "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
+    "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
   ) ++ (
     if (scalaVersion.value startsWith "2.11.") Nil
     else Seq(
@@ -172,8 +173,14 @@ lazy val pprint = crossProject
       """.stripMargin
       IO.write(file, output)
       Seq(file)
-      }
+    }
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-http-experimental" % "1.0-M3" % "test",
+      "org.spire-math" %% "spire" % "0.10.1" % "test"
     )
+  )
 lazy val pprintJVM = pprint.jvm
 lazy val pprintJS = pprint.js
 lazy val modules = project.aggregate(pprintJVM, pprintJS, upickleJVM, upickleJS, deriveJS, deriveJVM).settings(
