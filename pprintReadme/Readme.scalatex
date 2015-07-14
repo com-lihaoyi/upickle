@@ -146,6 +146,14 @@
       In order to pretty print a type @hl.scala{T}, you need to have a @hl.scala{T: PPrint} context bound present. In order to write your own custom pretty printer for some type @hl.scala{T}, provide an implicit @hl.scala{PPrinter[T]} in scope.
 
   @sect{Version History}
+    @sect{0.3.4}
+      @ul
+        @li
+          Remove unnecessary shapeless dependency
+    @sect{0.3.3}
+      @ul
+        @li
+          Fix more edge cases to avoid diverging implicits
     @sect{0.3.2}
       @ul
         @li
