@@ -257,6 +257,8 @@
         Read/writing of untyped values e.g. @code{Any}
       @li
         Read/writing arbitrarily shaped objects
+      @li
+        Read/writing case classes with multiple parameter lists.
     @p
       Most of these limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away. In general, uPickle is designed to serialize statically-typed, tree-shaped, immutable data structures. Anything more complex is out of scope.
   @sect{JSON API}
