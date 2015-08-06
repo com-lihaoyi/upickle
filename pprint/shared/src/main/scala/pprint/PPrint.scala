@@ -388,6 +388,7 @@ object Internals {
     def FinalRepr[T: c0.WeakTypeTag](c0: derive.ScalaVersionStubs.Context) = c0.Expr[PPrint[T]] {
       import c0.universe._
 //      println("FinalRepr " + weakTypeOf[T])
+      val t = weakTypeTag[T]
       val d = new Deriver {
         val c: c0.type = c0
         def typeclass = c.weakTypeTag[pprint.PPrint[_]]
@@ -395,13 +396,21 @@ object Internals {
 
       // Fallback manually in case everything fails
       val res = try d.derive[T] catch{
-        case e if e.toString.contains("DivergentImplicit$") => d.fallbackDerivation(weakTypeOf[T]) match{
-          case Some(x) => x
-          case None => throw e
-        }
+        case e if e.toString.contains("DivergentImplicit$") =>
+          d.fallbackDerivation(weakTypeOf[T]) match{
+            case Some(x) => x
+            case None => throw e
+          }
       }
-//      println(res)
-      res
+      try {
+        c0.typeCheck(res)
+        res
+      }
+      catch{case e =>
+        def pkg = q"_root_.pprint"
+        q"""$pkg.PPrint[$t]($pkg.PPrinter.Literal)"""
+      }
+
     }
   }
   abstract class Deriver extends Derive[pprint.PPrint]{

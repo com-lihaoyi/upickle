@@ -88,27 +88,9 @@ object DerivationTests extends TestSuite{
         DeltaInvariant.Clear(): DeltaInvariant[Int, String],
         """Clear()"""
       )
-//      Doesn't compile in 2.10.x
-//      Check(
-//        DeltaInvariant.Clear(): DeltaInvariant[Nothing, Nothing],
-//        """Clear()"""
-//      )
-    }
-    'recursive {
-      import derive.Recursive._
-      Check(
-        IntTree(1, List(IntTree(2, List()), IntTree(4, List(IntTree(3, List()))))),
-        "IntTree(1, List(IntTree(2, List()), IntTree(4, List(IntTree(3, List())))))"
-      )
-    }
-    'exponential{
-      import derive.Exponential._
 
-      Check(
-        A1(A2(A3(null, null), null), A2(null, A3(A4(null, null), null))),
-        "A1(A2(A3(null, null), null), A2(null, A3(A4(null, null), null)))"
-      )
     }
+
 
     'fallback{
       // make sure we can pprint stuff that looks nothing like a case class
@@ -131,6 +113,12 @@ object DerivationTests extends TestSuite{
       Check(
         derive.Generic.ADT(x, x: java.io.Serializable, "lol", "lol": Any, (1.5, 2.5), (1.5, 2.5): AnyRef),
         s"""ADT($x, $x, "lol", lol, (1.5, 2.5), (1.5,2.5))"""
+      )
+      import spire.implicits._
+      import spire.math._
+      Check(
+        Interval(0, 10),
+        "[0, 10]"
       )
     }
     'issue92{

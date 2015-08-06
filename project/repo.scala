@@ -1,3 +1,3 @@
 package object repo{
-  val version = "0.3.4"
+  val version = "0.3.5"
 }
