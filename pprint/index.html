@@ -96,10 +96,10 @@ List(
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="GettingStarted" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Getting Started<a class=" scalatex-site-Styles-headerLink" href="#GettingStarted" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <p>
       Add the following to your SBT config:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;pprint&quot; % &quot;0.3.4&quot;</code></pre>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;pprint&quot; % &quot;0.3.6&quot;</code></pre>
     <p>
       Or for Scala.js:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %%% &quot;pprint&quot; % &quot;0.3.4&quot;</code></pre>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %%% &quot;pprint&quot; % &quot;0.3.6&quot;</code></pre>
     <p>
       The above example then showed how to use the default pprint configuration. You can also use
 </p>
@@ -195,6 +195,14 @@ res0: Iterator[String] = non-empty iterator
       In order to pretty print a type <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T</code>, you need to have a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T: PPrint</code> context bound present. In order to write your own custom pretty printer for some type <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T</code>, provide an implicit <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">PPrinter[T]</code> in scope.
 </p>
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="VersionHistory" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Version History<a class=" scalatex-site-Styles-headerLink" href="#VersionHistory" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <h1 id="0.3.6" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.3.6" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.3.6</h1>
+      <ul>
+        <li>
+          Fix more bugs in PPrint derivation</li></ul>
+    <h1 id="0.3.5" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.3.5" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.3.5</h1>
+      <ul>
+        <li>
+          Fix some bugs in PPrint derivation</li></ul>
     <h1 id="0.3.4" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.3.4" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.3.4</h1>
       <ul>
         <li>
@@ -221,7 +229,7 @@ res0: Iterator[String] = non-empty iterator
           Shared case-class implicit-derivation back-end with uPickle, greatly expanding the scope of things that can be prettyprinted</li></ul></div>
 </div><script>
     scalatex.scrollspy.Controller().main(
-      [{"value":"PPrint","children":[{"value":"Getting Started","children":[]},{"value":"Streaming","children":[]},{"value":"Customization","children":[]},{"value":"Version History","children":[{"value":"0.3.4","children":[]},{"value":"0.3.3","children":[]},{"value":"0.3.2","children":[]},{"value":"0.3.1","children":[]},{"value":"0.3.0","children":[]}]}]}]
+      [{"value":"PPrint","children":[{"value":"Getting Started","children":[]},{"value":"Streaming","children":[]},{"value":"Customization","children":[]},{"value":"Version History","children":[{"value":"0.3.6","children":[]},{"value":"0.3.5","children":[]},{"value":"0.3.4","children":[]},{"value":"0.3.3","children":[]},{"value":"0.3.2","children":[]},{"value":"0.3.1","children":[]},{"value":"0.3.0","children":[]}]}]}]
   )</script><script>
     ['DOMContentLoaded', 'load'].forEach(function(ev){
       addEventListener(ev, function(){
@@ -231,4 +239,4 @@ res0: Iterator[String] = non-empty iterator
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
