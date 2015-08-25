@@ -121,6 +121,14 @@ object DerivationTests extends TestSuite{
         "[0, 10]"
       )
     }
+    'enums{
+      val days1 = pprint.tokenize(java.util.concurrent.TimeUnit.DAYS).mkString
+      val days2 = pprint.tokenize(java.util.concurrent.TimeUnit.DAYS: java.util.concurrent.TimeUnit).mkString
+      assert(
+        days1 == "DAYS",
+        days2 == "DAYS"
+      )
+    }
     'issue92{
       val r = new derive.Issue92.Rational {
         override def compare(that: Issue92.Rational): Int = ???
