@@ -114,12 +114,7 @@ object DerivationTests extends TestSuite{
         derive.Generic.ADT(x, x: java.io.Serializable, "lol", "lol": Any, (1.5, 2.5), (1.5, 2.5): AnyRef),
         s"""ADT($x, $x, "lol", lol, (1.5, 2.5), (1.5,2.5))"""
       )
-      import spire.implicits._
-      import spire.math._
-      Check(
-        Interval(0, 10),
-        "[0, 10]"
-      )
+
     }
     'enums{
       val days1 = pprint.tokenize(java.util.concurrent.TimeUnit.DAYS).mkString

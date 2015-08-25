@@ -28,6 +28,13 @@ object JvmTests extends TestSuite{
 
       val m = mean(Rational(1, 2), Rational(3, 2), Rational(0))
       implicitly[pprint.PPrint[Rational]]
+
+      import spire.implicits._
+      import spire.math._
+      Check(
+        Interval(0, 10),
+        "[0, 10]"
+      )
     }
   }
 }
