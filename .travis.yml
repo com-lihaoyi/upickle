@@ -5,4 +5,4 @@ scala:
   - 2.11.7
 
 script:
-- sbt ++$TRAVIS_SCALA_VERSION upickleJVM/test upickleJS/test
+- sbt ++$TRAVIS_SCALA_VERSION upickleJVM/test upickleJS/test pprintJVM/test pprintJS/test
