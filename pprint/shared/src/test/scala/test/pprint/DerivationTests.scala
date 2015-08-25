@@ -123,10 +123,10 @@ object DerivationTests extends TestSuite{
     }
     'enums{
       val days1 = pprint.tokenize(java.util.concurrent.TimeUnit.DAYS).mkString
-      val days2 = pprint.tokenize(java.util.concurrent.TimeUnit.DAYS: java.util.concurrent.TimeUnit).mkString
+      val days2 = pprint.tokenize(scala.concurrent.duration.SECONDS: java.util.concurrent.TimeUnit).mkString
       assert(
         days1 == "DAYS",
-        days2 == "DAYS"
+        days2 == "SECONDS"
       )
     }
     'issue92{
