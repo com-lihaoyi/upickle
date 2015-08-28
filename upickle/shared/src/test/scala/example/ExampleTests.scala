@@ -177,7 +177,7 @@ object ExampleTests extends TestSuite{
       }
       'tag{
         write(B(10))                          --> """{"$type":"Bee","i":10}"""
-        read[B]("""{"$type":"Bee","i":10}""") --> B(10)
+        read[A]("""{"$type":"Bee","i":10}""") --> B(10)
       }
     }
   }
