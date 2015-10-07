@@ -3,7 +3,7 @@ import utest._
 import upickle.legacy.read
 import TestUtil._
 
-object PrimitiveTests extends TestSuite{
+object PrimitiveTests extends TestSuite with BigDecimalSupport {
 
   def tests = TestSuite{
     'Unit{
@@ -33,6 +33,24 @@ object PrimitiveTests extends TestSuite{
       'min-rw(Long.MinValue, """ "-9223372036854775808" """)
       'max-rw(Long.MaxValue, """ "9223372036854775807" """)
       'null-assert(read[Long]("null") == 0)
+    }
+    'BigInt{
+      'whole-rw(BigInt("125123"), """ "125123" """)
+      'fractional-rw(BigInt("1251231542312"), """ "1251231542312" """)
+      'negative-rw(BigInt("-1251231542312"), """ "-1251231542312" """)
+      'big-rw(
+        BigInt("23420744098430230498023841234712512315423127402740234"),
+          """ "23420744098430230498023841234712512315423127402740234" """)
+      'null-rw(null: BigInt, "null")
+    }
+    'BigDecimal{
+      'whole-rw(BigDecimal("125123"), """ "125123" """)
+      'fractional-rw(BigDecimal("125123.1542312"), """ "125123.1542312" """)
+      'negative-rw(BigDecimal("-125123.1542312"), """ "-125123.1542312" """)
+      'big-rw(
+        exactBigDecimal("234207440984302304980238412.15423127402740234"),
+          """ "234207440984302304980238412.15423127402740234" """)
+      'null-rw(null: BigDecimal, "null")
     }
 
     'Int{

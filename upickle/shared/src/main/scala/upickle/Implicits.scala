@@ -17,7 +17,7 @@ import java.util.UUID
 * Typeclasses to allow read/writing of all the common
 * data-types and data-structures in the standard library
 */
-trait Implicits extends Types { imp: Generated =>
+trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
 
 
 
@@ -129,6 +129,8 @@ trait Implicits extends Types { imp: Generated =>
   implicit val LongRW = NumericStringReadWriter[Long](_.toLong)
   implicit val FloatRW = NumericReadWriter(_.toFloat, _.toFloat)
   implicit val DoubleRW = NumericReadWriter(_.toDouble, _.toDouble)
+  implicit val BigIntRW = NumericStringReadWriter[BigInt](BigInt(_))
+  implicit val BigDecimalRW = NumericStringReadWriter[BigDecimal](exactBigDecimal)
 
   import collection.generic.CanBuildFrom
   implicit def SeqishR[V[_], T: R]
