@@ -3,7 +3,7 @@ crossScalaVersions := Seq("2.10.4", "2.11.4")
 val settings = Seq(
   organization := "com.lihaoyi",
   version := repo.version,
-  scalaVersion := "2.10.4",
+  scalaVersion := "2.11.7",
 
   scalacOptions := Seq("-unchecked",
     "-deprecation",
@@ -125,7 +125,7 @@ lazy val upickleJS = upickle.js
 lazy val upickleJVM = upickle.jvm
 lazy val test = project
   .in(file("test"))
-  .dependsOn(upickleJVM, pprintJVM)
+  .dependsOn(upickleJVM, pprintJVM, deriveJVM % "compile->compile;test->test;test->compile;compile->test")
   .settings(
     settings,
     scalaVersion := "2.11.7"
