@@ -420,21 +420,47 @@ object MacroTests extends TestSuite{
       'issue96{
         'readOnly - implicitly[default.Reader[Issue96.Trait]]
 
-        rwk(
-          Issue96.ChoiceField(Array("i", "am", "cow")),
-          """{"$type": "derive.Issue96.ChoiceField", "choices": ["i", "am", "cow"]}"""
-        )(_.choices.toSeq)
+        val choice = Issue96.ChoiceField(Array("i", "am", "cow"))
+        val expected = """{"$type": "derive.Issue96.ChoiceField", "choices": ["i", "am", "cow"]}"""
+        rwk(choice, expected)(_.choices.toSeq)
 
-        rwk(
-          Issue96.ChoiceField(Array("i", "am", "cow")): Issue96.Field,
-          """{"$type": "derive.Issue96.ChoiceField", "choices": ["i", "am", "cow"]}"""
-        )(_.asInstanceOf[Issue96.ChoiceField].choices.toSeq)
+        rwk(choice: Issue96.Field, expected)(_.asInstanceOf[Issue96.ChoiceField].choices.toSeq)
         def f0[T: default.Writer] = implicitly[default.Writer[Array[T]]]
         def f[T: default.Reader: reflect.ClassTag] = implicitly[default.Reader[Array[T]]]
         // Doesn't fail elegantly in 2.10. =(
 //        compileError("""
 //          def f[T: default.Reader] = implicitly[default.Reader[Array[T]]]
 //        """)
+      }
+      'scalatex{
+        val block = Ast.Block(1, Seq(Ast.Block.Text(2, "hello")))
+        val blockText = """{
+            "$type":"derive.Ast.Block",
+            "offset":1,
+            "parts":[
+              {
+                "$type": "derive.Ast.Block.Text",
+                "offset":2,
+                "txt":"hello"
+              }
+            ]
+          }"""
+        rw(block: Ast, blockText)
+        rw(block: Ast.Block, blockText)
+        rw(block: Ast.Block.Sub, blockText)
+        rw(block: Ast.Chain.Sub, blockText)
+
+        val header = Ast.Header(0, "Hello", block)
+        val headerText = s"""{
+          "$$type": "derive.Ast.Header",
+          "offset": 0,
+          "front": "Hello",
+          "block": $blockText
+        }"""
+        rw(header: Ast, headerText)
+        rw(header: Ast.Header, headerText)
+        rw(header: Ast.Block.Sub, headerText)
+        rw(header: Ast.Chain.Sub, headerText)
       }
     }
   }
