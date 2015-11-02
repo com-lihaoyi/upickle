@@ -16,7 +16,7 @@ import language.existentials
  * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
-  abstract class Reading[M[_]] extends Derive[M]{
+  abstract class Reading extends Derive{
     val c: Context
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
@@ -62,7 +62,7 @@ object Macros {
     def knot(t: Tree) = q"${c.prefix}.Knot.Reader(() => $t)"
 
   }
-  abstract class Writing[M[_]] extends Derive[M]{
+  abstract class Writing extends Derive{
     val c: Context
     import c.universe._
     def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
@@ -119,9 +119,10 @@ object Macros {
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
     import c0.universe._
 
-    val res = new Reading[R]{
+    val res = new Reading{
       val c: c0.type = c0
-      def typeclass = e2
+
+      def typeclassFor[T: this.c.WeakTypeTag]: this.c.universe.Type = c.weakTypeOf[R[T]]
     }.derive[T]
     c0.Expr[R[T]](res)
   }
@@ -130,9 +131,9 @@ object Macros {
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
     import c0.universe._
 
-    val res = new Writing[W]{
+    val res = new Writing{
       val c: c0.type = c0
-      def typeclass = e2
+      def typeclassFor[T: this.c.WeakTypeTag]: this.c.universe.Type = c.weakTypeOf[W[T]]
     }.derive[T]
 //    println(res)
     c0.Expr[W[T]](res)

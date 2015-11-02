@@ -10,10 +10,11 @@ import language.higherKinds
  * default string which is the full-name of that class/field.
  */
 class key(s: String) extends StaticAnnotation
-trait DeriveApi[M[_]]{
+trait DeriveApi{
   val c: Context
   import c.universe._
-  def typeclass: c.WeakTypeTag[M[_]]
+  def typeclassFor[T: c.WeakTypeTag]: Type
+  def typeclassFor(t: Type): Type = typeclassFor(c.WeakTypeTag(t))
   def wrapObject(obj: Tree): Tree
   def wrapCase0(companion: Tree, targetType: c.Type): Tree
   def wrapCase1(companion: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
@@ -23,7 +24,7 @@ trait DeriveApi[M[_]]{
   def fallbackDerivation(t: Type): Option[Tree] = None
 }
 
-abstract class Derive[M[_]] extends DeriveApi[M]{
+abstract class Derive extends DeriveApi{
   case class TypeKey(t: c.Type) {
     override def equals(o: Any) = t =:= o.asInstanceOf[TypeKey].t
   }
@@ -33,23 +34,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     case None => c.abort(c.enclosingPosition, s)
     case Some(tree) => tree
   }
-  def typeclassFor(t: Type) = {
-//    println("typeclassFor " + weakTypeOf[M[_]](typeclass))
-
-    weakTypeOf[M[_]](typeclass) match {
-      case TypeRef(a, b, _) =>
-        TypeRef(a, b, List(t))
-      case ExistentialType(_, TypeRef(a, b, _)) =>
-        TypeRef(a, b, List(t))
-      case x =>
-        println("Dunno Wad Dis Typeclazz Is " + x)
-        println(x)
-        println(x.getClass)
-        ???
-    }
-  }
   def freshName = c.fresh[TermName]("derive")
-
 
   def derive[T: c.WeakTypeTag] = {
     val tpe = weakTypeTag[T].tpe
