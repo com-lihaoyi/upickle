@@ -123,7 +123,13 @@ val upickle = crossProject
 
 lazy val upickleJS = upickle.js
 lazy val upickleJVM = upickle.jvm
-
+lazy val test = project
+  .in(file("test"))
+  .dependsOn(upickleJVM, pprintJVM)
+  .settings(
+    settings,
+    scalaVersion := "2.11.7"
+  )
 
 lazy val pprint = crossProject
   .dependsOn(derive % "compile->compile;test->test")
