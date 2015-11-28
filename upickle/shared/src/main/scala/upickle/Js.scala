@@ -59,5 +59,7 @@ object Js {
   case object Null extends Value{
     def value = null
   }
+  //for objects that cannot be serialised but can be used in an AST
+  case class Unserializable[T](value: T) extends AnyVal with Value
 }
 
