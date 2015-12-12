@@ -14,13 +14,15 @@ import acyclic.file
  * @param renames A map used to rename things to more common names, e.g.
  *                renamig `WrappedArray` to `Array` or getting rid of
  *                TupleN *
+ * @param showFieldNames Whether case class field names should be printed
  */
 case class Config(width: Int = Config.defaultMaxWidth,
                   height: Int = Config.defaultLines,
                   depth: Int = 0,
                   indent: Int = Config.defaultIndent,
                   colors: Colors = pprint.Colors.BlackWhite,
-                  renames: Map[String, String] = Config.defaultRenames)
+                  renames: Map[String, String] = Config.defaultRenames,
+                  showFieldNames: Boolean = false)
   extends GenConfig[Config]{
   def deeper = copy(depth = depth + 1)
 
