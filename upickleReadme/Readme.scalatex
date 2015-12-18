@@ -100,7 +100,7 @@
 
     @hl.ref(exampleTests, Seq("'more", "'booleans", ""))
 
-    @p  
+    @p
       Numbers are serialized as JSON numbers
 
     @hl.ref(exampleTests, Seq("'more", "'numbers", ""))
@@ -114,7 +114,7 @@
       Special values of @hl.scala{Double}s and @hl.scala{Float}s are also serialized as Strings
 
     @hl.ref(exampleTests, Seq("'more", "'specialNumbers", ""))
-      
+
 
 
     @p
@@ -131,31 +131,31 @@
       @code{Option}s are serialized as JSON lists with 0 or 1 element
 
     @hl.ref(exampleTests, Seq("'more", "'options", ""))
-      
-    
+
+
     @p
       Tuples of all sizes (1-22) are serialized as heterogenous JSON lists
-    
+
     @hl.ref(exampleTests, Seq("'more", "'tuples", ""))
-      
+
     @p
       Case classes of sizes 1-22 are serialized as JSON dictionaries with the keys being the names of each field
 
-    @hl.ref(exampleTests, Seq("object Simple", ""))   
+    @hl.ref(exampleTests, Seq("object Simple", ""))
     @hl.ref(exampleTests, Seq("'more", "'caseClass", ""), "  }")
 
     @p
       Sealed hierarchies are serialized as tagged values, the serialized object tagged with the full name of the instance's class:
 
-    @hl.ref(exampleTests, Seq("object Sealed", ""))      
+    @hl.ref(exampleTests, Seq("object Sealed", ""))
     @hl.ref(exampleTests, Seq("'more", "'sealed", ""), "  }")
-      
+
     @p
       Serializability is recursive; you can serialize a type only if all its members are serializable. That means that collections, tuples and case-classes made only of serializable members are themselves serializable
 
-    @hl.ref(exampleTests, Seq("object Recursive", ""))      
+    @hl.ref(exampleTests, Seq("object Recursive", ""))
     @hl.ref(exampleTests, Seq("'more", "'recursive", ""), "  }")
-      
+
     @p
 
       Nulls serialize into JSON nulls, as you would expect
@@ -179,7 +179,7 @@
       If a field is missing upon deserialization, uPickle uses the default value if one exists
 
     @hl.ref(exampleTests, Seq("'defaults", "'reading"), "  }")
-      
+
     @p
 
       If a field at serialization time has the same value as the default, uPickle leaves it out of the serialized blob
@@ -195,10 +195,10 @@
 
       uPickle allows you to specify the key that a field is serialized with via a @hl.scala{@@key} annotation
 
-    
+
     @hl.ref(exampleTests, Seq("object Keyed", ""))
     @hl.ref(exampleTests, Seq("'keyed", "'attrs", ""))
-      
+
     @p
 
       Practically, this is useful if you want to rename the field within your Scala code while still maintaining backwards compatibility with previously-pickled objects. Simple rename the field and add a @hl.scala{@@key("...")} with the old name so uPickle can continue to work with the old objects correctly.
@@ -207,9 +207,9 @@
 
     @hl.ref(exampleTests, Seq("object KeyedTag", ""))
     @hl.ref(exampleTests, Seq("'keyed", "'tag", ""))
-      
 
-    
+
+
     @p
       This is useful in cases where:
     @ul
@@ -223,7 +223,7 @@
 
     @p
       Apart from customizing the keys used to store the fields of a class, uPickle also allows you to completely replace the default @code{Reader}/@code{Writer} used to write that class. For classes you control. You need to provide an implicit @code{Reader}/@code{Writer} pair in the companion object:
-    
+
     @hl.ref(exampleTests, Seq("object Custom2", ""))
 
     @p
