@@ -34,7 +34,7 @@ object Hierarchy {
   case object AnZ extends Z //new line
 }
 object DeepHierarchy {
-  sealed trait A
+  sealed abstract class A
   case class B(i: Int) extends A
 
   sealed trait C extends A
