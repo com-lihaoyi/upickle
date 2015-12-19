@@ -133,7 +133,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
               rec(args(0))
             case TypeRef(pref, cls, args)
               if tpe.typeSymbol.isClass
-                && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstract)
+                && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstractClass)
                 && tpe.typeSymbol.asClass.isSealed =>
 //              println(Console.CYAN + "<Traitish>" + Console.RESET + tpe)
               val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
@@ -146,7 +146,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
             case tpe if tpe.typeSymbol.isModuleClass =>
 //              println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
               Map(key -> name)
-            case TypeRef(_, cls, args) if cls.isClass && !cls.asClass.isAbstract =>
+            case TypeRef(_, cls, args) if cls.isClass && !cls.asClass.isAbstractClass =>
 //              println(Console.CYAN + "<Class>" + Console.RESET + tpe)
               getArgSyms(tpe) match {
                 case Left(errMsg) =>
@@ -224,7 +224,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
         val things = recTypes.map { case (TypeKey(tpe), name) =>
           val pick =
-            if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstract && !tpe.typeSymbol.isJava)) deriveTrait(tpe)
+            if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) deriveTrait(tpe)
             else if (tpe.typeSymbol.isModuleClass) deriveObject(tpe)
             else deriveClass(tpe)
 
