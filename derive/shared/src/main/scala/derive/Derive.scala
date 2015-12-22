@@ -1,7 +1,5 @@
 package derive
 
-import java.lang.reflect.Parameter
-
 import ScalaVersionStubs._
 import acyclic.file
 import scala.annotation.StaticAnnotation
