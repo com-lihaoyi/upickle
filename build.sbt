@@ -183,7 +183,7 @@ lazy val pprint = crossProject
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "org.spire-math" %% "spire" % "0.10.1" % "test",
+      "org.spire-math" %% "spire" % "0.11.0" % "test",
       "com.typesafe.akka" %% "akka-http-experimental" % "1.0-M3" % "test",
       "com.twitter" %% "finagle-httpx" % "6.26.0" % "test"
     )

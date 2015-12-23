@@ -1,4 +1,5 @@
 package derive
+
 import ScalaVersionStubs._
 import acyclic.file
 import scala.annotation.StaticAnnotation
@@ -224,7 +225,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
         val things = recTypes.map { case (TypeKey(tpe), name) =>
           val pick =
-            if (tpe.typeSymbol.asClass.isTrait) deriveTrait(tpe)
+            if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) deriveTrait(tpe)
             else if (tpe.typeSymbol.isModuleClass) deriveObject(tpe)
             else deriveClass(tpe)
 
@@ -287,7 +288,6 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     getArgSyms(tpe) match {
       case Left(msg) => fail(tpe, msg)
       case Right((companion, typeParams, argSyms)) =>
-
 
         //    println("argSyms " + argSyms.map(_.typeSignature))
         val args = argSyms.map { p =>
@@ -377,6 +377,9 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
   def getArgSyms(tpe: c.Type) = {
     companionTree(tpe).right.flatMap { companion =>
+      //tickle the companion members -- Not doing this leads to unexpected runtime behavior
+      //I wonder if there is an SI related to this?
+      companion.tpe.members.foreach(_ => ())
       tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor) match {
         case None => Left("Can't find primary constructor of " + tpe)
         case Some(primaryConstructor) => Right((companion, tpe.typeSymbol.asClass.typeParams, primaryConstructor.asMethod.paramss.flatten))
