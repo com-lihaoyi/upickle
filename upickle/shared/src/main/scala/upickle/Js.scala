@@ -59,5 +59,7 @@ object Js {
   case object Null extends Value{
     def value = null
   }
+  //for other objects that are already json (or cloneable ) objects ( eg. js.Any )
+  case class Other[T](value: T) extends AnyVal with Value
 }
 

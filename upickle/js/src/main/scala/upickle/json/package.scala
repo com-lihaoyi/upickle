@@ -1,6 +1,8 @@
 package upickle
-import acyclic.file
-import scalajs.js
+
+import upickle.Js.Other
+
+import scala.scalajs.js
 
 
 package object json {
@@ -12,6 +14,11 @@ package object json {
     case false => Js.False
     case null => Js.Null
     case s: js.Array[_] => Js.Arr(s.map(readJs(_: Any)):_*)
+    //this does not actually work:
+    //to know that one should map to Other(... ) would
+    //require one to know that the object mapped to extends js.Any, not that the input is js.Any
+    //which it inevitably is here.
+    case cloneable: js.Any => Other(cloneable)
     case s: js.Object => Js.Obj(s.asInstanceOf[js.Dictionary[_]].mapValues(readJs).toSeq:_*)
   }
 
@@ -32,6 +39,7 @@ package object json {
     case Js.Null => null
     case Js.Arr(children@_*) => js.Array(children.map(writeJs(_)):_*)
     case Js.Obj(kvs@_*) => js.Dictionary(kvs.map{case (k, v) => (k, writeJs(v))}:_*)
+    case Js.Other(t) => t.asInstanceOf[js.Any]
   }
 
   def write(v: Js.Value): String =
