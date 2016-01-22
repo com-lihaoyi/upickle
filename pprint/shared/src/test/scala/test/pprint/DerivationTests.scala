@@ -37,6 +37,13 @@ object DerivationTests extends TestSuite{
 
       Check(ADT0(), "ADT0()")
     }
+    'adtsWithFields {
+      import derive.ADTs._
+      Check(
+        Seq(ADTb(123, "hello world")),
+        """List(ADTb(i = 123, s = "hello world"))"""
+      )(implicitly, PPrintConfig.copy(showFieldNames = true))
+    }
     'sealedHierarchies {
       import derive.DeepHierarchy._
       Check(

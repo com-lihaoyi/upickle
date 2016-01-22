@@ -108,9 +108,9 @@ trait PPrinter[-A] {
 
 object PPrinter extends LowPriPPrinter{
   // Things being injected into PPrinterGen to keep it acyclic
-  
+
   def apply[T](r: (T, Config) => Iter[String]): PPrinter[T] = {
-    new PPrinter[T]{ 
+    new PPrinter[T]{
       def render0(t: T, c: Config) = {
         if(c.height > 0)
           takeFirstLines(c, r(t, c))
@@ -447,9 +447,13 @@ object Internals {
               q"""
               $pkg.PPrint[$targetType](
                 $pkg.PPrinter.ChunkedRepr[$targetType](
-                  $pkg.Chunker[$targetType]( ($t: $targetType, $cfg: $pkg.Config) =>
-                    $pkg.Chunker.$tupleChunker[..$argTypes].chunk($w, $cfg)
-                  )
+                  $pkg.Chunker[$targetType]{ ($t: $targetType, $cfg: $pkg.Config) =>
+                    val chunkedArgs = $pkg.Chunker.$tupleChunker[..$argTypes].chunk($w, $cfg)
+                    if ($cfg.showFieldNames) chunkedArgs
+                      .zip(Iterator.apply(..${argSyms.map(_.name.toString + " = ")}))
+                      .map{case (chunkedArg, field) => Iterator.single(field) ++ chunkedArg}
+                    else chunkedArgs
+                  }
                 )
               )
               """
