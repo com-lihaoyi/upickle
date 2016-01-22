@@ -27,6 +27,7 @@ trait DeriveApi[M[_]]{
 abstract class Derive[M[_]] extends DeriveApi[M]{
   case class TypeKey(t: c.Type) {
     override def equals(o: Any) = t =:= o.asInstanceOf[TypeKey].t
+    override def hashCode: Int = t.typeSymbol.fullName.hashCode
   }
   import c.universe._
   import compat._
