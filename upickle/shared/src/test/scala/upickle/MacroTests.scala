@@ -462,6 +462,18 @@ object MacroTests extends TestSuite{
         rw(header: Ast.Block.Sub, headerText)
         rw(header: Ast.Chain.Sub, headerText)
       }
+      'issue108{
+        object Main{
+          import upickle.default._
+          //import upickle._
+          case class Stuff(lol: String)
+          case class Wat(stuff: Stuff)
+
+          abstract class TakesWriter[T: Writer]
+          class Something extends TakesWriter[Wat]
+        }
+
+      }
     }
   }
 }

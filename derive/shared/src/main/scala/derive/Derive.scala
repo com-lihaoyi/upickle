@@ -245,17 +245,25 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         // symbol variable bitmap$0 does not exist in derive.X.<init>
         // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in derive.X.<init>
         // """
-        val res = q"""{
-        def $returnName = {
+        //
+        // Dump it in an anonymous class to avoid https://issues.scala-lang.org/browse/SI-8775,
+        // which results in this other weird crash
+        //
+        // Implementation restriction: access of value derive$macro$2$1 from <$anon: Function0>,
+        // would require illegal premature access to the unconstructed `this` of class Something
+        // in object Main
+        val res = q"""
+        (new {
           ..$things
-
-          ${
-            recTypes.mapValues(x => q"$x")
-                    .getOrElse(TypeKey(tpe), fail(tpe, "Couldn't derive type " + tpe))
+          def $returnName = {
+            ${
+              recTypes.mapValues(x => q"$x")
+                      .getOrElse(TypeKey(tpe), fail(tpe, "Couldn't derive type " + tpe))
+            }
           }
-        }
-        $returnName
-      }"""
+
+        }).$returnName
+        """
 //            println("RES " + res)
         res
       case t => t
