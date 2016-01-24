@@ -112,8 +112,8 @@ object FailureTests extends TestSuite{
       compileError("write(new Object)")
       compileError("""read[Object]("")""")
 //      compileError("""read[Array[Object]]("")""").msg
-
+      // Make sure this doesn't hang the compiler =/
+      compileError("implicitly[upickle.default.Reader[Nothing]]")
     }
   }
 }
-class C

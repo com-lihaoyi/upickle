@@ -61,14 +61,26 @@ trait AttributeTagged extends Api{
  * Stupid hacks to work around scalac not forwarding macro type params properly
  */
 object Forwarder{
+  def dieIfNothing[T: c.WeakTypeTag]
+                  (c: derive.ScalaVersionStubs.Context)
+                  (name: String) = {
+    if (c.weakTypeOf[T] =:= c.weakTypeOf[Nothing]) {
+      c.abort(
+        c.enclosingPosition,
+        s"uPickle is trying to infer a $name[Nothing]. That probably means you messed up"
+      )
+    }
+  }
   def applyR[T](c: derive.ScalaVersionStubs.Context)
               (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
+    dieIfNothing[T](c)("Reader")
     c.Expr[T](q"${c.prefix}.macroR0[$e, ${c.prefix}.Reader]")
   }
   def applyW[T](c: derive.ScalaVersionStubs.Context)
               (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
+    dieIfNothing[T](c)("Writer")
     c.Expr[T](q"${c.prefix}.macroW0[$e, ${c.prefix}.Writer]")
   }
 }

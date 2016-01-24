@@ -203,7 +203,6 @@ object ExampleTests extends TestSuite{
         object SnakePickle extends upickle.AttributeTagged{
           def camelToSnake(s: String) = {
             val res = s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
-            println(s + " -> " + res)
             res
           }
           override def CaseR[T: this.Reader, V]
