@@ -23,7 +23,7 @@ trait Api extends Types with Implicits with Generated with LowPriX{
  * The default way of accessing upickle
  */
 object default extends AttributeTagged{
-  def tagName = "$type"
+
 }
 /**
  * An instance of the upickle API that follows the old serialization for
@@ -45,7 +45,7 @@ object legacy extends Api{
  * of the attribute is.
  */
 trait AttributeTagged extends Api{
-  def tagName: String
+  def tagName = "$type"
   def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V]{
     case Js.Obj(x@_*) if x.contains((tagName, Js.Str(n))) =>
     rw.read(Js.Obj(x.filter(_._1 != tagName):_*))

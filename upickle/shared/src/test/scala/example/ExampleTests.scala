@@ -1,10 +1,9 @@
 package example
 import acyclic.file
-import upickle.TestUtil
-import upickle.default.{read, write, _}
+import upickle.{Js, TestUtil}
 import utest._
 object Simple {
-  case class Thing(a: Int, b: String)
+  case class Thing(myFieldA: Int, myFieldB: String)
   case class Big(i: Int, b: Boolean, str: String, c: Char, t: Thing)
 }
 object Sealed{
@@ -131,9 +130,9 @@ object ExampleTests extends TestSuite{
 
       'caseClass{
         import upickle._
-        write(Thing(1, "gg"))                     --> """{"a":1,"b":"gg"}"""
+        write(Thing(1, "gg"))             --> """{"myFieldA":1,"myFieldB":"gg"}"""
         write(Big(1, true, "lol", 'Z', Thing(7, ""))) -->
-          """{"i":1,"b":true,"str":"lol","c":"Z","t":{"a":7,"b":""}}"""
+          """{"i":1,"b":true,"str":"lol","c":"Z","t":{"myFieldA":7,"myFieldB":""}}"""
 
         write(Big(1, true, "lol", 'Z', Thing(7, "")), indent = 4) -->
           """{
@@ -142,8 +141,8 @@ object ExampleTests extends TestSuite{
             |    "str": "lol",
             |    "c": "Z",
             |    "t": {
-            |        "a": 7,
-            |        "b": ""
+            |        "myFieldA": 7,
+            |        "myFieldB": ""
             |    }
             |}""".stripMargin
         }
@@ -165,7 +164,7 @@ object ExampleTests extends TestSuite{
           """[[[1,2],[3,4]],[[5,6],[7,8]]]"""
 
         write(Seq(Thing(1, "g"), Thing(2, "k"))) -->
-          """[{"a":1,"b":"g"},{"a":2,"b":"k"}]"""
+          """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
 
         write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3)))) -->
           """{"name":"bearrr","foos":[{"i":1},{"i":2},{"i":3}]}"""
@@ -199,6 +198,34 @@ object ExampleTests extends TestSuite{
       'tag{
         write(B(10))                          --> """{"$type":"Bee","i":10}"""
         read[B]("""{"$type":"Bee","i":10}""") --> B(10)
+      }
+      'snakeCase{
+        object SnakePickle extends upickle.AttributeTagged{
+          def camelToSnake(s: String) = {
+            val res = s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
+            println(s + " -> " + res)
+            res
+          }
+          override def CaseR[T: this.Reader, V]
+                            (f: T => V,
+                             names: Array[String],
+                             defaults: Array[Js.Value]) = {
+            super.CaseR[T, V](f, names.map(camelToSnake), defaults)
+          }
+          override def CaseW[T: this.Writer, V]
+                            (f: V => Option[T],
+                             names: Array[String],
+                             defaults: Array[Js.Value]) = {
+            super.CaseW[T, V](f, names.map(camelToSnake), defaults)
+          }
+        }
+        // Default read-writing
+        upickle.default.write(Thing(1, "gg")) --> """{"myFieldA":1,"myFieldB":"gg"}"""
+        upickle.default.read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") --> Thing(1, "gg")
+
+        // snake_case_keys read-writing
+        SnakePickle.write(Thing(1, "gg")) --> """{"my_field_a":1,"my_field_b":"gg"}"""
+        SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") --> Thing(1, "gg")
       }
     }
   }

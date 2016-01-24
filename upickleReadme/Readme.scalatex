@@ -241,7 +241,9 @@
       @li
         @hl.scala{upickle.AttributeTagged}, which assumes you want the standard @hl.scala{annotate} method using a type attribute, but letting you customize the attribute.
       @li
-        In both these cases, you are also free to override the @hl.scala{CaseR} and @hl.scala{CaseW} implicits, which controls how case classes are serialized. For example, you could make it serialize to a JSON array rather than a dictionary.
+        In both these cases, you are also free to override the @hl.scala{CaseR} and @hl.scala{CaseW} implicits, which controls how case classes are serialized. For example, you could make it serialize to a JSON array rather than a dictionary. Or, for example, convert the @code{camelCase} Scala identifiers to @code{snake_case} or some other convention:
+
+      @hl.ref(exampleTests, Seq("'snakeCase", ""))
 
   @sect{Limitations}
 
