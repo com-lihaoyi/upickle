@@ -50,55 +50,70 @@ private[json] trait MutableFacade[J] extends Facade[J] {
 sealed trait Renderer {
   final def render(jv: Js.Value): String = {
     val sb = new StringBuilder
-    render(sb, 0, jv)
+    render(sb, 0, jv, 0)
     sb.toString
   }
 
-  final def render(sb: StringBuilder, depth: Int, jv: Js.Value): Unit =
+  final def render(sb: StringBuilder, depth: Int, jv: Js.Value, indent: Int): Unit =
     jv match {
       case Js.Null => sb.append("null")
       case Js.True => sb.append("true")
       case Js.False => sb.append("false")
       case Js.Num(n) => sb.append(if (n == n.toInt) n.toInt.toString else n.toString)
       case Js.Str(s) => renderString(sb, s)
-      case Js.Arr(vs@_*) => renderArray(sb, depth, vs)
-      case Js.Obj(vs@_*) => renderObject(sb, depth, canonicalizeObject(vs))
+      case Js.Arr(vs@_*) => renderArray(sb, depth, vs, indent)
+      case Js.Obj(vs@_*) => renderObject(sb, depth, canonicalizeObject(vs), indent)
     }
 
   def canonicalizeObject(vs: Seq[(String, Js.Value)]): Iterator[(String, Js.Value)]
 
   def renderString(sb: StringBuilder, s: String): Unit
 
-  final def renderArray(sb: StringBuilder, depth: Int, vs: Seq[Js.Value]): Unit = {
+  final def renderIndent(sb: StringBuilder, depth: Int, indent: Int) = {
+    if (indent == 0) ()
+    else {
+      sb.append('\n')
+      for(_ <- 0 until (indent * depth)) sb.append(' ')
+    }
+  }
+  final def renderArray(sb: StringBuilder, depth: Int, vs: Seq[Js.Value], indent: Int): Unit = {
     if (vs.isEmpty) sb.append("[]")
     else {
-      sb.append("[")
-      render(sb, depth + 1, vs(0))
+      sb.append('[')
+      renderIndent(sb, depth + 1, indent)
+      render(sb, depth + 1, vs(0), indent)
       var i = 1
       while (i < vs.length) {
-        sb.append(",")
-        render(sb, depth + 1, vs(i))
+        sb.append(',')
+        renderIndent(sb, depth + 1, indent)
+        render(sb, depth + 1, vs(i), indent)
         i += 1
       }
-      sb.append("]")
+      renderIndent(sb, depth, indent)
+      sb.append(']')
     }
   }
 
-  final def renderObject(sb: StringBuilder, depth: Int, it: Iterator[(String, Js.Value)]): Unit = {
+  final def renderObject(sb: StringBuilder, depth: Int, it: Iterator[(String, Js.Value)], indent: Int): Unit = {
     if (!it.hasNext) return { sb.append("{}"); () }
     val (k0, v0) = it.next
-    sb.append("{")
+    sb.append('{')
+    renderIndent(sb, depth + 1, indent)
     renderString(sb, k0)
-    sb.append(":")
-    render(sb, depth + 1, v0)
+    sb.append(':')
+    if(indent != 0) sb.append(' ')
+    render(sb, depth + 1, v0, indent)
     while (it.hasNext) {
       val (k, v) = it.next
-      sb.append(",")
+      sb.append(',')
+      renderIndent(sb, depth + 1, indent)
       renderString(sb, k)
-      sb.append(":")
-      render(sb, depth + 1, v)
+      sb.append(':')
+      if(indent != 0) sb.append(' ')
+      render(sb, depth + 1, v, indent)
     }
-    sb.append("}")
+    renderIndent(sb, depth, indent)
+    sb.append('}')
   }
 
   final def escape(sb: StringBuilder, s: String, unicode: Boolean): Unit = {

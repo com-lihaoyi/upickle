@@ -34,6 +34,11 @@ package object json {
     case Js.Obj(kvs@_*) => js.Dictionary(kvs.map{case (k, v) => (k, writeJs(v))}:_*)
   }
 
-  def write(v: Js.Value): String =
-    js.JSON.stringify(writeJs(v).asInstanceOf[js.Any])
+  def write(v: Js.Value, indent: Int = 0): String = {
+    js.JSON.stringify(
+      writeJs(v).asInstanceOf[js.Any],
+      null.asInstanceOf[js.Function2[String, js.Any, js.Any]],
+      indent
+    )
+  }
 }

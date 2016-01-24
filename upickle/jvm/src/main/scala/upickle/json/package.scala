@@ -11,7 +11,9 @@ package object json {
       case util.Failure(e) => throw Invalid.Json(e.toString, s)
     }
   }
-  def write(v: Js.Value): String = {
-    FastRenderer.render(v)
+  def write(v: Js.Value, indent: Int = 0): String = {
+    val sb = new StringBuilder
+    FastRenderer.render(sb, 0, v, indent)
+    sb.toString
   }
 }

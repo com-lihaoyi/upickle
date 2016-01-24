@@ -122,7 +122,7 @@ trait Types{ types =>
   /**
    * Serialize an object of type [[T]] to a `String`
    */
-  def write[T: Writer](expr: T): String = json.write(writeJs(expr))
+  def write[T: Writer](expr: T, indent: Int = 0): String = json.write(writeJs(expr), indent)
   /**
    * Serialize an object of type [[T]] to a `Js.Value`
    */

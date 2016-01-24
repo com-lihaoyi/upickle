@@ -105,6 +105,15 @@ object ExampleTests extends TestSuite{
       }
       'seqs{
         write(Array(1, 2, 3))             --> "[1,2,3]"
+
+        // You can pass in an `indent` parameter to format it nicely
+        write(Array(1, 2, 3), indent = 4)  -->
+          """[
+            |    1,
+            |    2,
+            |    3
+            |]""".stripMargin
+
         write(Seq(1, 2, 3))               --> "[1,2,3]"
         write(Vector(1, 2, 3))            --> "[1,2,3]"
         write(List(1, 2, 3))              --> "[1,2,3]"
@@ -126,7 +135,18 @@ object ExampleTests extends TestSuite{
         write(Big(1, true, "lol", 'Z', Thing(7, ""))) -->
           """{"i":1,"b":true,"str":"lol","c":"Z","t":{"a":7,"b":""}}"""
 
-      }
+        write(Big(1, true, "lol", 'Z', Thing(7, "")), indent = 4) -->
+          """{
+            |    "i": 1,
+            |    "b": true,
+            |    "str": "lol",
+            |    "c": "Z",
+            |    "t": {
+            |        "a": 7,
+            |        "b": ""
+            |    }
+            |}""".stripMargin
+        }
 
 
       'sealed{
@@ -149,6 +169,7 @@ object ExampleTests extends TestSuite{
 
         write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3)))) -->
           """{"name":"bearrr","foos":[{"i":1},{"i":2},{"i":3}]}"""
+
       }
       'null{
         write(Bar(null, Seq(Foo(1), null, Foo(3)))) -->
