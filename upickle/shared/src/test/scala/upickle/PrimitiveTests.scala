@@ -48,6 +48,14 @@ object PrimitiveTests extends TestSuite{
       'fractional-rw(125123.1542312, """125123.1542312""")
       'negative-rw(-125123.1542312, """-125123.1542312""")
       'null-assert(read[Double]("null") == 0.0)
+      'nan-assert(
+        java.lang.Double.isNaN(read[Double](""" "NaN" """)),
+        upickle.default.write(Double.NaN) == "\"NaN\""
+      )
+
+
+
+
     }
 
     'Short{
@@ -78,6 +86,10 @@ object PrimitiveTests extends TestSuite{
       'inf-rw(Float.PositiveInfinity, """ "Infinity" """)
       "neg-inf" - rw(Float.NegativeInfinity, """ "-Infinity" """)
       'null-assert(read[Float]("null") == 0.0)
+      'nan-assert(
+        java.lang.Float.isNaN(read[Float](""" "NaN" """)),
+        upickle.default.write(Float.NaN) == "\"NaN\""
+      )
     }
 
     'Char{

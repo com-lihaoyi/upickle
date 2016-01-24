@@ -105,6 +105,8 @@ trait Implicits extends Types { imp: Generated =>
     {
       case x @ Double.PositiveInfinity => Js.Str(x.toString)
       case x @ Double.NegativeInfinity => Js.Str(x.toString)
+      case x: Double if java.lang.Double.isNaN(x) => Js.Str(x.toString)
+      case x: Float if java.lang.Double.isNaN(x) => Js.Str(x.toString)
       case x => Js.Num(implicitly[Numeric[T]].toDouble(x))
     },
     numericReaderFunc[T](func, func2)
