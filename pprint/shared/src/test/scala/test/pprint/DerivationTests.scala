@@ -1,16 +1,21 @@
 package test.pprint
 
 
-import java.util
-import java.util.UUID
 
 import derive.Issue92
 import utest._
-import scala.collection.{immutable => imm, mutable}
 import pprint.Config.Defaults._
 
-import scala.math.{ScalaNumericConversions, ScalaNumber}
-
+case class CustomToString(){
+  override def toString = "LA LA LA"
+}
+sealed trait Customs
+object Customs{
+  case class A(i: Int) extends Customs
+  case class B(s: String) extends Customs{
+    override def toString = "Beeee"
+  }
+}
 object DerivationTests extends TestSuite{
 
 
@@ -135,6 +140,13 @@ object DerivationTests extends TestSuite{
         derive.C2(List(derive.C1("hello", List("world")))),
         """C2(List(C1("hello", List("world"))))"""
       )
+    }
+    'customToString{
+      Check(new CustomToString(), "LA LA LA")
+      Check(new Customs.A(123), "A(123)")
+      Check(new Customs.A(123): Customs, "A(123)")
+      Check(new Customs.B("123"), "Beeee")
+      Check(new Customs.B("123"): Customs, "Beeee")
     }
   }
 }
