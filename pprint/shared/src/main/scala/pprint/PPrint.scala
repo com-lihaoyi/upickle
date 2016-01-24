@@ -391,7 +391,8 @@ object Internals {
       val t = weakTypeTag[T]
       val d = new Deriver {
         val c: c0.type = c0
-        def typeclass = c.weakTypeTag[pprint.PPrint[_]]
+        def typeclassFor[T: c0.WeakTypeTag]: c0.universe.Type =
+            c.weakTypeTag[pprint.PPrint[T]].tpe
       }
 
       // Fallback manually in case everything fails
@@ -413,7 +414,7 @@ object Internals {
 
     }
   }
-  abstract class Deriver extends Derive[pprint.PPrint]{
+  abstract class Deriver extends Derive{
     import c._
     import c.universe._
 
