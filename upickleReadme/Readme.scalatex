@@ -2,7 +2,7 @@
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
 @val exampleTests = wd/'upickle/'shared/'src/'test/'scala/'example/"ExampleTests.scala"
-@sect("µPickle "+ repo.version)
+@sect("µPickle "+ upicklePPrint.Constants.version)
 
   @p
     uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
@@ -26,7 +26,7 @@
     @p
       Add the following to your SBT config:
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %% "upickle" % "@repo.version"
+      libraryDependencies += "com.lihaoyi" %% "upickle" % "@upicklePPrint.Constants.version"
 
 
     @p
@@ -38,7 +38,7 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        libraryDependencies += "com.lihaoyi" %%% "upickle" % "@repo.version"
+        libraryDependencies += "com.lihaoyi" %%% "upickle" % "@upicklePPrint.Constants.version"
       @p
 
         Other than that, everything is used the same way. upickle-0.2.8 is only compatible with ScalaJS 0.6.x.

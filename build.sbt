@@ -2,7 +2,7 @@ crossScalaVersions := Seq("2.10.4", "2.11.4")
 
 val settings = Seq(
   organization := "com.lihaoyi",
-  version := repo.version,
+  version := upicklePPrint.Constants.version,
   scalaVersion := "2.11.7",
 
   scalacOptions := Seq("-unchecked",

@@ -39,11 +39,11 @@
     @p
       Add the following to your SBT config:
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %% "pprint" % "@repo.version"
+      libraryDependencies += "com.lihaoyi" %% "pprint" % "@upicklePPrint.Constants.version"
     @p
       Or for Scala.js:
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %%% "pprint" % "@repo.version"
+      libraryDependencies += "com.lihaoyi" %%% "pprint" % "@upicklePPrint.Constants.version"
     @p
       The above example then showed how to use the default pprint configuration. You can also use
 
