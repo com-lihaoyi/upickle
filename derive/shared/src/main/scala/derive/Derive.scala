@@ -195,10 +195,12 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 case _ =>
                   Seq.empty[Tree]
               }
+              val classTagImplicit = freshName
+              val classTagImplicitType = freshName
               // Hard-code availability of ClassTags to make array serialization work
               val probe = q"""{
                 ..$dummies;
-                implicit def x[T]: reflect.ClassTag[T] = ???;
+                implicit def $classTagImplicit[$classTagImplicitType]: reflect.ClassTag[$classTagImplicitType] = ???;
                 ${implicited(tpe)}
               }"""
 //              println("TC " + name + " " + probe)
