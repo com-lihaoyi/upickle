@@ -86,26 +86,26 @@ object FailureTests extends TestSuite{
           val err = intercept[Invalid.Data]{ readFoo() }
           assert(err.msg.contains("Key Missing: s"))
         }
-//        'completelyInvalid{
-//          val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
-//          val err = intercept[Invalid.Data] { readFoo2() }
-//          assert(err.msg.contains("Object"))
-//          println(err)
-//        }
+        'completelyInvalid{
+          val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
+          val err = intercept[Invalid.Data] { readFoo2() }
+          assert(err.msg.contains("Object"))
+          println(err)
+        }
 
-//        'invalidTag {
-//          val readFo = () => read[Fi.Fo]( """["omg", {}]""")
-//          val err = intercept[Invalid.Data]{ readFo() }
-//          assert(err.msg.contains("Tagged Object"))
-//          assert(err.msg.contains("upickle.Fi.Fo"))
-//        }
+        'invalidTag {
+          val readFo = () => read[Fi.Fo]( """["omg", {}]""")
+          val err = intercept[Invalid.Data]{ readFo() }
+          assert(err.msg.contains("Tagged Object"))
+          assert(err.msg.contains("upickle.Fi.Fo"))
+        }
 
-//        'invalidTag2{
-//          val readFo2 = () => read[Fi]("""["omg", {}]""")
-//          val err = intercept[Invalid.Data]{ readFo2() }
-//          assert(err.msg.contains("Tagged Object"))
-//          assert(err.msg.contains("upickle.Fi"))
-//        }
+        'invalidTag2{
+          val readFo2 = () => read[Fi]("""["omg", {}]""")
+          val err = intercept[Invalid.Data]{ readFo2() }
+          assert(err.msg.contains("Tagged Object"))
+          assert(err.msg.contains("upickle.Fi"))
+        }
       }
     }
     'compileErrors{

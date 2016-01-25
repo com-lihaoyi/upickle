@@ -1,6 +1,7 @@
 package upickle
 
 
+import upickle.Js.Value
 
 import scala.reflect.ClassTag
 import scala.concurrent.duration.{FiniteDuration, Duration}
@@ -46,10 +47,13 @@ trait Implicits extends Types { imp: Generated =>
       case t: T => f(t)
     }
 
+    def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = new PartialFunction[Js.Value, T] {
+      def isDefinedAt(x: Value) = pf.isDefinedAt(x)
 
-
-    def validate[T](name: String)(pf: PartialFunction[Js.Value, T]): PartialFunction[Js.Value, T] = {
-      pf.orElse { case x => throw Invalid.Data(x, name) }
+      def apply(v1: Value): T = pf.applyOrElse(v1, (x: Js.Value) => throw Invalid.Data(x, name))
+    }
+    def validateReader[T](name: String)(r: => Reader[T]): Reader[T] = new Reader[T]{
+      override def read0 = validate(name)(r.read)
     }
   }
 
@@ -86,20 +90,20 @@ trait Implicits extends Types { imp: Generated =>
     }
   }
 
-  private[this] def numericStringReaderFunc[T](func: String => T): JPF[T] = Internal.validate("Number"){
+  private[this] def numericStringReaderFunc[T](func: String => T): JPF[T] = Internal.validate("String"){
     case x: Js.Str => func(x.value)
   }
   private[this] def NumericStringReadWriter[T](func: String => T) = RW[T](
     x => Js.Str(x.toString),
     numericStringReaderFunc[T](func)
   )
-  private[this] def numericReaderFunc[T: Numeric](func: Double => T, func2: String => T): JPF[T] = Internal.validate("Number"){
+  private[this] def numericReaderFunc[T: Numeric](func: Double => T, func2: String => T): JPF[T] = Internal.validate("Number or String"){
     case n @ Js.Num(x) => try{func(x) } catch {case e: NumberFormatException => throw Invalid.Data(n, "Number")}
     case s @ Js.Str(x) => try{func2(x) } catch {case e: NumberFormatException => throw Invalid.Data(s, "Number")}
   }
 
   private[this] def NumericReadWriter[T: Numeric](func: Double => T, func2: String => T): RW[T] = RW[T](
-    {
+   {
       case x @ Double.PositiveInfinity => Js.Str(x.toString)
       case x @ Double.NegativeInfinity => Js.Str(x.toString)
       case x: Double if java.lang.Double.isNaN(x) => Js.Str(x.toString)
@@ -199,18 +203,20 @@ trait Implicits extends Types { imp: Generated =>
   }
 
   implicit val InfiniteW = W[Duration.Infinite](DurationW.write)
-  implicit val InfiniteR = R[Duration.Infinite]{
+  implicit val InfiniteR = R[Duration.Infinite]{Internal.validate("DurationString"){
     case Js.Str("inf") => Duration.Inf
     case Js.Str("-inf") => Duration.MinusInf
     case Js.Str("undef") => Duration.Undefined
-  }
+  }}
 
   implicit val FiniteW = W[FiniteDuration](DurationW.write)
-  implicit val FiniteR = R[FiniteDuration]{
+  implicit val FiniteR = R[FiniteDuration]{Internal.validate("DurationString"){
     case x: Js.Str => Duration.fromNanos(x.value.toLong)
-  }
+  }}
 
-  implicit val DurationR = R[Duration](Internal.validate("DurationString"){FiniteR.read orElse InfiniteR.read})
+  implicit val DurationR = R[Duration](Internal.validate("DurationString"){
+    FiniteR.read orElse InfiniteR.read
+  })
 
   implicit def UuidR: R[UUID] = R[UUID]{case Js.Str(s) => UUID.fromString(s)}
   implicit def UuidW: W[UUID] = W[UUID]{case t: UUID => Js.Str(t.toString)}

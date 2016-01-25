@@ -118,23 +118,23 @@ object Macros {
   def macroRImpl[T, R[_]](c0: Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
     import c0.universe._
-
+    println("macroW " + weakTypeOf[T])
     val res = new Reading[R]{
       val c: c0.type = c0
       def typeclass = e2
     }.derive[T]
-    c0.Expr[R[T]](res)
+    val msg = "Tagged Object " + weakTypeOf[T].typeSymbol.fullName
+    c0.Expr[R[T]](q"""${c0.prefix}.Internal.validateReader($msg){$res}""")
   }
 
   def macroWImpl[T, W[_]](c0: Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
     import c0.universe._
-
+    println("macroW " + weakTypeOf[T])
     val res = new Writing[W]{
       val c: c0.type = c0
       def typeclass = e2
     }.derive[T]
-//    println(res)
     c0.Expr[W[T]](res)
   }
   
