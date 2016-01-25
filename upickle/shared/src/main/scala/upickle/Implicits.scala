@@ -3,10 +3,7 @@ package upickle
 
 
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success}
-import scala.collection.SortedSet
 import scala.concurrent.duration.{FiniteDuration, Duration}
-import scala.reflect.macros.Context
 import acyclic.file
 import scala.language.higherKinds
 import scala.language.experimental.macros
