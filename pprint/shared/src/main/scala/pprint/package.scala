@@ -25,7 +25,7 @@ package object pprint {
                           height: Integer = null,
                           indent: Integer = null,
                           colors: Colors = null)
-                         (implicit cfg: Config): Iterator[String] = {
+                         (implicit cfg: Config = Config.Defaults.PPrintConfig): Iterator[String] = {
     def f[T](t: T, t2: T): T = {
       Option(t).getOrElse(t2)
     }
