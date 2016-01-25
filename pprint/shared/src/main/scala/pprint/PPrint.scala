@@ -422,7 +422,7 @@ object Internals {
       q"""$pkg.PPrint[$obj.type]($pkg.PPrinter.Literal)"""
     }
     def thingy(n: Int, targetType: Type, argTypes: Seq[Type]) = {
-      val toStringSymbol = targetType.member(TermName("toString"))
+      val toStringSymbol = targetType.member(newTermName("toString"))
       if (!toStringSymbol.isSynthetic && toStringSymbol.owner != c.weakTypeOf[Object].typeSymbol){
         fail(targetType, "LOLs")
       } else getArgSyms(targetType) match {

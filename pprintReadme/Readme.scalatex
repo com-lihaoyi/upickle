@@ -160,6 +160,14 @@
     @sect{0.3.6}
       @ul
         @li
+          Case-classes providing custom @hl.scala{.toString} methods now use those instead of the macro-generated pretty-printer (#115)
+        @li
+          @hl.scala{pprint.tokenize} now takes the default @code{Config} by default, thus removing the need for a special import, just like @code{pprint.pprint} does
+        @li
+          Slightly improve hygiene of uPickle/PPrint macro expansion
+    @sect{0.3.6}
+      @ul
+        @li
           Fix more bugs in PPrint derivation
     @sect{0.3.5}
       @ul

@@ -344,6 +344,25 @@
       uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with @hl.scala{apply}/@hl.scala{unapply} on the companion?") that makes its behavior predictable and simple to understand.
 
   @sect{Version History}
+    @sect{0.3.7}
+      @ul
+        @li
+          You can now pass in an @hl.scala{indent} parameter to @hl.scala{upickle.default.write} in order to format/indent the JSON nicely across multiple lines
+        @li
+          Derivation based on sealed abstract classes works, in addition to traits (#104), thanks to @a("Voltir", href:="https://github.com/Voltir")
+        @li
+          Fix non-deterministic failure due to improperly implemented @code{equals}/@code{hashCode} in macro (#124), thanks to @a("Voltir", href:="https://github.com/lihaoyi/upickle-pprint/issues/124")
+        @li
+          Slightly improve hygiene of uPickle/PPrint macro expansion
+        @li
+          uPickle de-serialization failures should no longer throw @code{MatchErrors} (#101)
+        @li
+          Using case-class-derived @code{Reader}s/@code{Writer}s should no longer fail in class @code{extends} clauses (#108)
+        @li
+          @code{Float.NaN} and @code{Double.NaN} are now properly handled (#123)
+        @li
+          Provided an example of a @sect.ref{Custom Configuration} being used to @code{snake_case} case-class fields during serialization/de-serialization (#120)
+
     @sect{0.3.6}
       @ul
         @li
