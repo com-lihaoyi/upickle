@@ -58,7 +58,7 @@ span.hljs-tag, span.hljs-symbol{
     background: none;
 }
     </style><title>PPrint</title><script src="scripts.js"></script></head><body><div>
-
+<a href="https://github.com/lihaoyi/upickle-pprint"><img style="position: absolute;top: 0px;right: 0px;border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" /></a>
 <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="PPrint" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">PPrint<a class=" scalatex-site-Styles-headerLink" href="#PPrint" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
   <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; import pprint.Config.Defaults._
 
@@ -96,10 +96,10 @@ List(
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="GettingStarted" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Getting Started<a class=" scalatex-site-Styles-headerLink" href="#GettingStarted" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <p>
       Add the following to your SBT config:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;pprint&quot; % &quot;0.3.6&quot;</code></pre>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;pprint&quot; % &quot;0.3.7&quot;</code></pre>
     <p>
       Or for Scala.js:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %%% &quot;pprint&quot; % &quot;0.3.6&quot;</code></pre>
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %%% &quot;pprint&quot; % &quot;0.3.7&quot;</code></pre>
     <p>
       The above example then showed how to use the default pprint configuration. You can also use
 </p>
@@ -198,6 +198,14 @@ res0: Iterator[String] = non-empty iterator
     <h1 id="0.3.6" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.3.6" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.3.6</h1>
       <ul>
         <li>
+          Case-classes providing custom <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.toString</code> methods now use those instead of the macro-generated pretty-printer (#115)</li>
+        <li>
+          <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">pprint.tokenize</code> now takes the default <code>Config</code> by default, thus removing the need for a special import, just like <code>pprint.pprint</code> does</li>
+        <li>
+          Slightly improve hygiene of uPickle/PPrint macro expansion</li></ul>
+    <h1 id="0.3.6" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.3.6" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.3.6</h1>
+      <ul>
+        <li>
           Fix more bugs in PPrint derivation</li></ul>
     <h1 id="0.3.5" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.3.5" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.3.5</h1>
       <ul>
@@ -229,7 +237,7 @@ res0: Iterator[String] = non-empty iterator
           Shared case-class implicit-derivation back-end with uPickle, greatly expanding the scope of things that can be prettyprinted</li></ul></div>
 </div><script>
     scalatex.scrollspy.Controller().main(
-      [{"value":"PPrint","children":[{"value":"Getting Started","children":[]},{"value":"Streaming","children":[]},{"value":"Customization","children":[]},{"value":"Version History","children":[{"value":"0.3.6","children":[]},{"value":"0.3.5","children":[]},{"value":"0.3.4","children":[]},{"value":"0.3.3","children":[]},{"value":"0.3.2","children":[]},{"value":"0.3.1","children":[]},{"value":"0.3.0","children":[]}]}]}]
+      [{"value":"PPrint","children":[{"value":"Getting Started","children":[]},{"value":"Streaming","children":[]},{"value":"Customization","children":[]},{"value":"Version History","children":[{"value":"0.3.6","children":[]},{"value":"0.3.6","children":[]},{"value":"0.3.5","children":[]},{"value":"0.3.4","children":[]},{"value":"0.3.3","children":[]},{"value":"0.3.2","children":[]},{"value":"0.3.1","children":[]},{"value":"0.3.0","children":[]}]}]}]
   )</script><script>
     ['DOMContentLoaded', 'load'].forEach(function(ev){
       addEventListener(ev, function(){
@@ -239,4 +247,4 @@ res0: Iterator[String] = non-empty iterator
         );
       })
     })
-  </script></body></html>
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
