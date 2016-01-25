@@ -201,7 +201,7 @@ lazy val upickleReadme= scalatex.ScalatexReadme(
   url = "https://github.com/lihaoyi/upickle/tree/master",
   source = "Readme"
 ).settings(
-  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"repo.scala"
+  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala"
 )
 
 lazy val pprintReadme = scalatex.ScalatexReadme(
@@ -210,5 +210,5 @@ lazy val pprintReadme = scalatex.ScalatexReadme(
   url = "https://github.com/lihaoyi/upickle/tree/master",
   source = "Readme"
 ).settings(
-  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"repo.scala"
+  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala"
 )
