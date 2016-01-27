@@ -90,9 +90,31 @@ trait Types{ types =>
   trait Reader[T]{
     def read0: PF[Js.Value, T]
 
-    final def read : PF[Js.Value, T] = ({
+    private def readNull: PF[Js.Value, T] = {
       case Js.Null => null.asInstanceOf[T]
-    }: PF[Js.Value, T]) orElse read0
+    }
+
+    private def invalid: PF[Js.Value, T] = {
+      case any => throw Invalid.Data(any, "name")
+    }
+
+    /*
+     * This was originally equivalent to [[readNull orElse read0]].  However,
+     * that limited flexibility because there was no way to pick off null
+     * for some other reason (ie: deserializing an Option[String] as null and
+     * a string).
+     * 
+     * This reverses the order.  However, in the original ordering read0 will throw
+     * an exception when called with a value not in the domain.  In the new ordering
+     * it won't throw that exception because isDefinedAt is called and prevents
+     * the call to apply.  By adding it again at the end, the original behaviour of
+     * throwing the exception is restored.
+     */
+
+    //final def read: PF[Js.Value, T] = readNull orElse read0
+    final def read: PF[Js.Value, T] = read0 orElse readNull orElse read0
+
+
   }
   object Reader{
     /**
