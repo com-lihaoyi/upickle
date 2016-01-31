@@ -1,9 +1,31 @@
 package object pprint {
   import acyclic.pkg
+
+  /**
+    * Pretty-prints something to the console for you to look at, with
+    * a bunch of additional metadata (function-name, line-num, optional tag, etc.)
+    * to make debugging easier
+    */
+  def log[T: PPrint](value: T, tag: String = "")
+                    (implicit cfg: Config = Config.Colors.PPrintConfig,
+                     path: sourcecode.Enclosing,
+                     line: sourcecode.Line) = {
+    val titleIter = path.toString
+    val tagIter =
+      if (tag == "") ""
+      else " " + tokenize(tag).mkString
+    val lineIter = ":" + tokenize(line.value).mkString
+
+    println(cfg.colors.prefixColor + titleIter + tagIter + cfg.colors.endColor + lineIter)
+    pprintln(value)
+  }
   def pprintln[T: PPrint](implicit cfg: Config) = (t: T) => {
     tokenize(t)(implicitly[PPrint[T]], cfg).foreach(print)
     println()
   }
+  /**
+    * Pretty-prints something to the console for you to look at.
+    */
   def pprintln[T: PPrint](t: T,
                           width: Integer = null,
                           height: Integer = null,

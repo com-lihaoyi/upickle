@@ -13,7 +13,7 @@
 )
 @sect{PPrint}
   @hl.scala
-    scala> import pprint.Config.Defaults._
+    scala> import pprint.Config.Colors._
 
     scala> pprint.pprintln(List(Seq(Seq("mgg", "mgg", "lols"), Seq("mgg", "mgg")), Seq(Seq("ggx", "ggx"),Seq("ggx", "ggx", "wtfx"))))
     res1: String =
@@ -31,6 +31,20 @@
         List(1, 2, 3)
       ),
       Foo("world", List())
+    )
+    scala> class Foo{
+         |   def bar(grid: Seq[Seq[Int]]) = {
+         |     pprint.log(grid, tag="grid")
+         |   }
+         | }
+    defined class Foo
+
+    scala> new Foo().bar(Seq(0 until 10, 10 until 20, 20 until 30))
+    pkg.Foo#bar "grid":12
+    List(
+      Range(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+      Range(10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+      Range(20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
     )
   @p
     PPrint is a module that lets you easily print data structures in a form that is more convenient to use both visually and programmatically. Unlike a traditional @hl.scala{.toString}, PPrint...
@@ -89,8 +103,26 @@
         List(
           1,
         ...
+    @p
+      PPrint also provides the @code{pprint.log} function, which automatically adds some context so you can find your printouts later:
+    @hl.scala
+      scala> class Foo{
+           |   def bar(grid: Seq[Seq[Int]]) = {
+           |     pprint.log(grid, tag="grid")
+           |   }
+           | }
+      defined class Foo
 
-  
+      scala> new Foo().bar(Seq(0 until 10, 10 until 20, 20 until 30))
+      pkg.Foo#bar "grid":12
+      List(
+        Range(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+        Range(10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
+        Range(20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
+      )
+    @p
+      Note how the package name, class name, and method name, along with the optional @code{tag}. are all formatted nicely for you to read. This should make it much easier for you to find each individual print later. Just like `pprint.pprintln`, the output is nicely formatted across multiple lines and syntax-highlighted for readability.
+
   @sect{Streaming}
 
     @p
@@ -157,6 +189,13 @@
       In order to pretty print a type @hl.scala{T}, you need to have a @hl.scala{T: PPrint} context bound present. In order to write your own custom pretty printer for some type @hl.scala{T}, provide an implicit @hl.scala{PPrinter[T]} in scope.
 
   @sect{Version History}
+    @sect{0.3.8}
+      @ul
+        @li
+          Robustify PPrint macros slightly against crashes @a("Ammonte#198", href:="https://github.com/lihaoyi/Ammonite/issues/198") and @a("doobie#258", href:="https://github.com/tpolecat/doobie/issues/258")
+
+        @li
+          Added the @hl.scala{pprint.log} function, for convenient no-setup console logging and debugging
     @sect{0.3.7}
       @ul
         @li

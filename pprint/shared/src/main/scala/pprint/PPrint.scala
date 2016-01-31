@@ -466,10 +466,13 @@ object Internals {
       val x = freshName
       val cases = subtrees.zip(subtypes)
                           .map{case (tree, tpe) => cq"$x: $tpe => $tree.render($x, $cfg)" }
+      val finalCase =
+        for(fallback <- fallbackDerivation(targetType))
+        yield cq"$x => $fallback.render($x, $cfg)"
       q"""
         $pkg.PPrint[$targetType](
           $pkg.PPrinter[$targetType]{($t: $targetType, $cfg: $pkg.Config) =>
-            $t match {case ..$cases}
+            $t match {case ..${cases ++ finalCase}}
           }
         )
       """

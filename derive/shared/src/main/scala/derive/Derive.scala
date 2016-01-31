@@ -76,9 +76,13 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       for{
         subtypeSym <- tpe.typeSymbol.asClass.knownDirectSubclasses.filter(!_.toString.contains("<local child>"))
         if subtypeSym.isType
+        st = subtypeSym.asType.toType
+        baseClsArgs = st.baseType(tpe.typeSymbol).asInstanceOf[TypeRef].args
+        // If the type arguments don't line up, just give up and fail to find
+        // the subclasses. It should fall back to plain-old-toString
+        if baseClsArgs.size == tpe.args.size
       } yield {
-        val st = subtypeSym.asType.toType
-        val baseClsArgs = st.baseType(tpe.typeSymbol).asInstanceOf[TypeRef].args
+
         val sub2 = st.substituteTypes(baseClsArgs.map(_.typeSymbol), tpe.args)
         //        println(Console.YELLOW + "sub2 " + Console.RESET + sub2)
         sub2
@@ -144,6 +148,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                 Map(key -> name) ++
                 subTypes.flatMap(rec(_)) ++
                 args.flatMap(rec(_))
+
               lol
             case tpe if tpe.typeSymbol.isModuleClass =>
 //              println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
