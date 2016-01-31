@@ -60,39 +60,7 @@ span.hljs-tag, span.hljs-symbol{
     </style><title>PPrint</title><script src="scripts.js"></script></head><body><div>
 <a href="https://github.com/lihaoyi/upickle-pprint"><img style="position: absolute;top: 0px;right: 0px;border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" /></a>
 <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="PPrint" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">PPrint<a class=" scalatex-site-Styles-headerLink" href="#PPrint" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
-  <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; import pprint.Config.Colors._
-
-scala&gt; pprint.pprintln(List(Seq(Seq(&quot;mgg&quot;, &quot;mgg&quot;, &quot;lols&quot;), Seq(&quot;mgg&quot;, &quot;mgg&quot;)), Seq(Seq(&quot;ggx&quot;, &quot;ggx&quot;),Seq(&quot;ggx&quot;, &quot;ggx&quot;, &quot;wtfx&quot;))))
-res1: String =
-List(
-  List(List(&quot;mgg&quot;, &quot;mgg&quot;, &quot;lols&quot;), List(&quot;mgg&quot;, &quot;mgg&quot;)),
-  List(List(&quot;ggx&quot;, &quot;ggx&quot;), List(&quot;ggx&quot;, &quot;ggx&quot;, &quot;wtfx&quot;))
-)
-
-scala&gt; case class Foo(s: String, list: List[Int])
-scala&gt; pprint.pprintln(List(Foo(&quot;hello&quot;, List(1, 2, 3)), Foo(&quot;world&quot;, List())), width=25)
-res2: String =
-List(
-  Foo(
-    &quot;hello&quot;,
-    List(1, 2, 3)
-  ),
-  Foo(&quot;world&quot;, List())
-)
-scala&gt; class Foo{
-     |   def bar(grid: Seq[Seq[Int]]) = {
-     |     pprint.log(grid, tag=&quot;grid&quot;)
-     |   }
-     | }
-defined class Foo
-
-scala&gt; new Foo().bar(Seq(0 until 10, 10 until 20, 20 until 30))
-pkg.Foo#bar &quot;grid&quot;:12
-List(
-  Range(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
-  Range(10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
-  Range(20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
-)</code></pre>
+  <img src="Example.png" alt="Example use case of PPrint" style="width: 100%;" />
   <p>
     PPrint is a module that lets you easily print data structures in a form that is more convenient to use both visually and programmatically. Unlike a traditional <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.toString</code>, PPrint...
 </p>
@@ -115,12 +83,20 @@ List(
       Or for Scala.js:</p>
     <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %%% &quot;pprint&quot; % &quot;0.3.8&quot;</code></pre>
     <p>
-      The above example then showed how to use the default pprint configuration. You can also use
-</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">import pprint.Config.Colors._
-</code></pre>
+      The above example then showed how to use the default pprint configuration. You can also set up your own custom implicit `pprint.Config` if you want to control e.g. colors, width, or max-height of the output.</p>
     <p>
-      Instead of <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Defaults</code> in order to turn on colored pretty-printing.
+      The three main methods you need to care about are:
+</p>
+    <ul>
+      <li>
+        <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">pprint.pprintln(value: T): Unit</code>: pretty-prints the given value to the console</li>
+      <li>
+        <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">pprint.log(value: T, tag=&quot;optional&quot;): Unit</code>: pretty-prints the given value to the console along with debugging information (class-name, method-name, line-number, an optional tag) to make it easy to find your prints again later. If you're finding yourself putting many debug prints in different files, this makes it much easier to keep them straight</li>
+      <li>
+        <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">pprint.tokenize(value: T): Iterator[String]</code>: same as <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">pprint.pprintln</code>, except instead of dumping to standard output it returns an iterator you can consume or pass around to use at your leisure.
+</li></ul>
+    <p>
+      You can of course define your own custom methods if you want to e.g. always log to a log file or some third-party service, or if you want your own custom set of debug information to be printed (instead of what <code>.log</code> provides). See the short <a href="https://github.com/lihaoyi/upickle-pprint/blob/master/pprint/shared/src/main/scala/pprint/package.scala#L1">implementation of these methods</a> if you want ideas on how to write your own versions.
 </p>
     <p>
       Pretty-printing is by default defined for most standard library types, as well as case classes and case objects. For other types not supported, it falls back to using <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">toString</code>
@@ -285,4 +261,4 @@ res0: Iterator[String] = non-empty iterator
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
