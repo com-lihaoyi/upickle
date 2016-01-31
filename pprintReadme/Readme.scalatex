@@ -12,40 +12,11 @@
   )
 )
 @sect{PPrint}
-  @hl.scala
-    scala> import pprint.Config.Colors._
-
-    scala> pprint.pprintln(List(Seq(Seq("mgg", "mgg", "lols"), Seq("mgg", "mgg")), Seq(Seq("ggx", "ggx"),Seq("ggx", "ggx", "wtfx"))))
-    res1: String =
-    List(
-      List(List("mgg", "mgg", "lols"), List("mgg", "mgg")),
-      List(List("ggx", "ggx"), List("ggx", "ggx", "wtfx"))
-    )
-
-    scala> case class Foo(s: String, list: List[Int])
-    scala> pprint.pprintln(List(Foo("hello", List(1, 2, 3)), Foo("world", List())), width=25)
-    res2: String =
-    List(
-      Foo(
-        "hello",
-        List(1, 2, 3)
-      ),
-      Foo("world", List())
-    )
-    scala> class Foo{
-         |   def bar(grid: Seq[Seq[Int]]) = {
-         |     pprint.log(grid, tag="grid")
-         |   }
-         | }
-    defined class Foo
-
-    scala> new Foo().bar(Seq(0 until 10, 10 until 20, 20 until 30))
-    pkg.Foo#bar "grid":12
-    List(
-      Range(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
-      Range(10, 11, 12, 13, 14, 15, 16, 17, 18, 19),
-      Range(20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
-    )
+  @img(
+    src := "Example.png",
+    alt := "Example use case of PPrint",
+    width := "100%"
+  )
   @p
     PPrint is a module that lets you easily print data structures in a form that is more convenient to use both visually and programmatically. Unlike a traditional @hl.scala{.toString}, PPrint...
 
@@ -70,13 +41,20 @@
     @hl.scala
       libraryDependencies += "com.lihaoyi" %%% "pprint" % "@upicklePPrint.Constants.version"
     @p
-      The above example then showed how to use the default pprint configuration. You can also use
+      The above example then showed how to use the default pprint configuration. You can also set up your own custom implicit `pprint.Config` if you want to control e.g. colors, width, or max-height of the output.
+    @p
+      The three main methods you need to care about are:
 
-    @hl.scala
-      import pprint.Config.Colors._
+    @ul
+      @li
+        @hl.scala{pprint.pprintln(value: T): Unit}: pretty-prints the given value to the console
+      @li
+        @hl.scala{pprint.log(value: T, tag="optional"): Unit}: pretty-prints the given value to the console along with debugging information (class-name, method-name, line-number, an optional tag) to make it easy to find your prints again later. If you're finding yourself putting many debug prints in different files, this makes it much easier to keep them straight
+      @li
+        @hl.scala{pprint.tokenize(value: T): Iterator[String]}: same as @hl.scala{pprint.pprintln}, except instead of dumping to standard output it returns an iterator you can consume or pass around to use at your leisure.
 
     @p
-      Instead of @hl.scala{Defaults} in order to turn on colored pretty-printing.
+      You can of course define your own custom methods if you want to e.g. always log to a log file or some third-party service, or if you want your own custom set of debug information to be printed (instead of what @code{.log} provides). See the short @lnk("implementation of these methods", "https://github.com/lihaoyi/upickle-pprint/blob/master/pprint/shared/src/main/scala/pprint/package.scala#L1") if you want ideas on how to write your own versions.
 
     @p
       Pretty-printing is by default defined for most standard library types, as well as case classes and case objects. For other types not supported, it falls back to using @hl.scala{toString}
