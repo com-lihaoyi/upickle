@@ -18,10 +18,8 @@ object Invalid{
    * @param input The `String` it was trying to parse
    */
   case class Json(msg: String, input: String)
-    extends scala.Exception()
-    with Invalid {
-    override def getMessage(): String = s"$msg (input: $input)"
-  }
+    extends scala.Exception(s"$msg (input: $input)")
+    with Invalid
 
   /**
    * Thrown when uPickle tries to convert a JSON blob into a given data
@@ -32,10 +30,8 @@ object Invalid{
    * @param msg Human-readable text saying what went wrong
    */
   case class Data(data: Js.Value, msg: String)
-    extends Exception()
-    with Invalid {
-    override def getMessage(): String = s"$msg (data: $data)"
-  }
+    extends Exception(s"$msg (data: $data)")
+    with Invalid
 }
 
 /**
