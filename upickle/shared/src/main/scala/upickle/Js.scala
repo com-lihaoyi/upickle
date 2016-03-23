@@ -19,7 +19,9 @@ object Invalid{
    */
   case class Json(msg: String, input: String)
     extends scala.Exception()
-    with Invalid
+    with Invalid {
+    override def getMessage(): String = s"$msg (input: $input)"
+  }
 
   /**
    * Thrown when uPickle tries to convert a JSON blob into a given data
@@ -31,7 +33,9 @@ object Invalid{
    */
   case class Data(data: Js.Value, msg: String)
     extends Exception()
-    with Invalid
+    with Invalid {
+    override def getMessage(): String = s"$msg (data: $data)"
+  }
 }
 
 /**
