@@ -18,7 +18,7 @@ object Invalid{
    * @param input The `String` it was trying to parse
    */
   case class Json(msg: String, input: String)
-    extends scala.Exception()
+    extends scala.Exception(s"$msg (input: $input)")
     with Invalid
 
   /**
@@ -30,7 +30,7 @@ object Invalid{
    * @param msg Human-readable text saying what went wrong
    */
   case class Data(data: Js.Value, msg: String)
-    extends Exception()
+    extends Exception(s"$msg (data: $data)")
     with Invalid
 }
 
