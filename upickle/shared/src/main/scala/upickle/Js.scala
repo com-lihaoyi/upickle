@@ -79,9 +79,16 @@ object Js {
       case _ => throw Invalid.Data(this, "Expected Js.Num")
     }
 
-    def apply(i: Int): Value = this.asInstanceOf[Arr].value(i)
-    def apply(s: java.lang.String): Value = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
-
+    /**
+      * Looks up the [[Js.Value]] as a [[Js.Arr]] using an index, throws
+      * otherwise if it's not a [[Js.Arr]]
+      */
+    def apply(i: Int): Value = this.arr(i)
+    /**
+      * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
+      * otherwise if it's not a [[Js.Obj]]
+      */
+    def apply(s: java.lang.String): Value = this.obj(s)
   }
   case class Str(value: java.lang.String) extends AnyVal with Value
   case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
