@@ -344,6 +344,18 @@
       uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with @hl.scala{apply}/@hl.scala{unapply} on the companion?") that makes its behavior predictable and simple to understand.
 
   @sect{Version History}
+    @sect{0.3.9}
+      @ul
+        @li
+          Add @hl.scala{.arr: Seq[Js.Value]}, @hl.scala{.obj: Map[String, Js.Value]}, @hl.scala{.str: String} and @hl.scala{.num: Double} helper methods on @hl.scala{Js.Value} to simplify usage as a simple JSON tree.
+        @li
+          @hl.scala{Invalid.Json} and @hl.scala{Invalid.Data} now have better exception messages by default, which should simplify debugging
+        @li
+          Some usages should compile faster due to fiddling with implicits (#138)
+    @sect{0.3.8}
+      @ul
+        @li
+          Tweaks to PPrint
     @sect{0.3.7}
       @ul
         @li

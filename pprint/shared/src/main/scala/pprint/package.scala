@@ -6,18 +6,49 @@ package object pprint {
     * a bunch of additional metadata (function-name, line-num, optional tag, etc.)
     * to make debugging easier
     */
-  def log[T: PPrint](value: T, tag: String = "")
+  def log[T: PPrint](value: sourcecode.Text[T], tag: String = "", verbose: Boolean = false)
+                     (implicit cfg: Config = Config.Colors.PPrintConfig,
+                      path: sourcecode.Name,
+                      line: sourcecode.Line) = {
+    val titleIter = path.value.toString
+    val tagIter =
+      if (tag == "") ""
+      else " " + tokenize(tag).mkString
+    val lineIter = ":" + tokenize(line.value).mkString
+
+    val valName = value.source
+    val item = tokenize(value.value).mkString
+
+    println(
+      cfg.colors.prefixColor +
+        titleIter +
+        tagIter +
+        cfg.colors.endColor +
+        lineIter +
+        " " +
+        valName +
+        "\t" +
+        item
+    )
+  }
+
+  /**
+    * More verbose version of [[log]]
+    */
+  def log2[T: PPrint](value: sourcecode.Text[T], tag: String = "", verbose: Boolean = false)
                     (implicit cfg: Config = Config.Colors.PPrintConfig,
                      path: sourcecode.Enclosing,
                      line: sourcecode.Line) = {
-    val titleIter = path.toString
+    val titleIter = path.value.toString
     val tagIter =
       if (tag == "") ""
       else " " + tokenize(tag).mkString
     val lineIter = ":" + tokenize(line.value).mkString
 
     println(cfg.colors.prefixColor + titleIter + tagIter + cfg.colors.endColor + lineIter)
-    pprintln(value)
+    pprintln(value.value)
+
+
   }
   def pprintln[T: PPrint](implicit cfg: Config) = (t: T) => {
     tokenize(t)(implicitly[PPrint[T]], cfg).foreach(print)

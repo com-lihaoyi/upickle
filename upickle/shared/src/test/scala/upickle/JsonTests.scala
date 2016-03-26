@@ -80,6 +80,21 @@ object JsonTests extends TestSuite{
       }
       (parsed(19), reparsed(19))
     }
+    'shortcuts{
+      'positive{
+        json.read("[1]").arr        ==> Seq(Js.Num(1))
+        json.read("1").num          ==> 1
+        json.read("\"1\"").str      ==> "1"
+        json.read("{\"1\": 1}").obj ==> Map("1" -> Js.Num(1))
+      }
+      'negative{
+        intercept[Invalid.Data]{json.read("[1]").obj}
+        intercept[Invalid.Data]{json.read("1").obj}
+        intercept[Invalid.Data]{json.read("\"1\"").obj}
+
+      }
+    }
+
 //    "performance" - {
 //      "read" - {
 //        var n = 0

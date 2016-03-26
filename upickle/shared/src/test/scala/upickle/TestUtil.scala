@@ -8,13 +8,6 @@ object TestUtil extends TestUtil[upickle.default.type](upickle.default)
 object LegacyTestUtil extends TestUtil[upickle.legacy.type](upickle.legacy)
 class TestUtil[Api <: upickle.Api](api: Api){
   import api._
-  implicit class -->[T](x: T){
-    def -->(y: T) = {
-      val lhs = x
-      val rhs = y
-      assert(lhs == rhs)
-    }
-  }
   def rw[T: Reader: Writer](t: T, s: String*) = {
     rwk[T, T](t, s:_*)(x => x)
   }

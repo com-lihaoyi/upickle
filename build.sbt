@@ -17,7 +17,7 @@ val settings = Seq(
   testFrameworks += new TestFramework("utest.runner.Framework"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
-    "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
+    "com.lihaoyi" %%% "utest" % "0.4.3" % "test",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
   ) ++ (
@@ -137,7 +137,7 @@ lazy val pprint = crossProject
   .settings(
     name := "pprint",
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "sourcecode" % "0.1.0",
+      "com.lihaoyi" %%% "sourcecode" % "0.1.1",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
       "com.chuusai" %% "shapeless" % "2.2.3" % "test" ,
       "org.tpolecat" %% "doobie-core" % "0.2.3" % "test"

@@ -32,6 +32,7 @@ object Invalid{
   case class Data(data: Js.Value, msg: String)
     extends Exception(s"$msg (data: $data)")
     with Invalid
+
 }
 
 /**
@@ -41,10 +42,46 @@ object Invalid{
 * JSON AST.
 */
 object Js {
+
   sealed trait Value extends Any {
     def value: Any
+
+    /**
+      * Returns the `String` value of this [[Js.Value]], fails if it is not
+      * a [[Js.Str]]
+      */
+    def str = this match{
+      case Str(value) => value
+      case _ => throw Invalid.Data(this, "Expected Js.Str")
+    }
+    /**
+      * Returns the key/value map of this [[Js.Value]], fails if it is not
+      * a [[Js.Obj]]
+      */
+    def obj = this match{
+      case Obj(value @_*) => value.toMap
+      case _ => throw Invalid.Data(this, "Expected Js.Obj")
+    }
+    /**
+      * Returns the elements of this [[Js.Value]], fails if it is not
+      * a [[Js.Arr]]
+      */
+    def arr = this match{
+      case Arr(value @ _*) => value
+      case _ => throw Invalid.Data(this, "Expected Js.Arr")
+    }
+    /**
+      * Returns the `Double` value of this [[Js.Value]], fails if it is not
+      * a [[Js.Num]]
+      */
+    def num = this match{
+      case Num(value) => value
+      case _ => throw Invalid.Data(this, "Expected Js.Num")
+    }
+
     def apply(i: Int): Value = this.asInstanceOf[Arr].value(i)
     def apply(s: java.lang.String): Value = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
+
   }
   case class Str(value: java.lang.String) extends AnyVal with Value
   case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
