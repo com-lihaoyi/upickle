@@ -66,7 +66,7 @@ object JsonTests extends TestSuite{
       """.stripMargin
     val parsed = json.read(ugly)
 
-    "correctness" - {
+    'correctness - {
       val unparsed = json.write(parsed)
       val reparsed = json.read(unparsed)
       for (json <- Seq(parsed, reparsed)){

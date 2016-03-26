@@ -316,7 +316,7 @@
               * a [[Js.Obj]]
               */
             def obj = this match{
-              case Obj(value @_*) => value.toMap
+              case Obj(value @@ _*) => value.toMap
               case _ => throw Invalid.Data(this, "Expected Js.Obj")
             }
             /**
@@ -324,7 +324,7 @@
               * a [[Js.Arr]]
               */
             def arr = this match{
-              case Arr(value @ _*) => value
+              case Arr(value @@ _*) => value
               case _ => throw Invalid.Data(this, "Expected Js.Arr")
             }
             /**
