@@ -170,7 +170,7 @@
     @sect{0.3.9}
       @ul
         @li
-          Tweaks to @hl.scala{pprint.log}
+          Tweaks to @hl.scala{pprint.log} to make it less verbose, added @hl.scala{pprint.log2} with the old behavior and verbosity.
     @sect{0.3.8}
       @ul
         @li
