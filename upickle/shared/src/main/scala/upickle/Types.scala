@@ -87,35 +87,23 @@ trait Types{ types =>
   @implicitNotFound(
     "uPickle does not know how to read [${T}]s; define an implicit Reader[${T}] to teach it how"
   )
-  trait Reader[T]{
+  trait Reader[T] {
     def read0: PF[Js.Value, T]
 
     private def readNull: PF[Js.Value, T] = {
       case Js.Null => null.asInstanceOf[T]
     }
 
-    private def invalid: PF[Js.Value, T] = {
-      case any => throw Invalid.Data(any, "name")
+    // Alternative implementation:
+    // final def read: PF[Js.Value, T] = read0 orElse readNull orElse read0
+
+    final def read: PF[Js.Value, T] = new PartialFunction[Js.Value, T] {
+      def isDefinedAt(x: Js.Value) = read0.isDefinedAt(x)
+
+      def apply(v1: Js.Value): T = read0.applyOrElse(v1, readNull orElse read0)
     }
-
-    /*
-     * This was originally equivalent to [[readNull orElse read0]].  However,
-     * that limited flexibility because there was no way to pick off null
-     * for some other reason (ie: deserializing an Option[String] as null and
-     * a string).
-     * 
-     * This reverses the order.  However, in the original ordering read0 will throw
-     * an exception when called with a value not in the domain.  In the new ordering
-     * it won't throw that exception because isDefinedAt is called and prevents
-     * the call to apply.  By adding it again at the end, the original behaviour of
-     * throwing the exception is restored.
-     */
-
-    //final def read: PF[Js.Value, T] = readNull orElse read0
-    final def read: PF[Js.Value, T] = read0 orElse readNull orElse read0
-
-
   }
+
   object Reader{
     /**
      * Helper class to make it convenient to create instances of [[Reader]]
