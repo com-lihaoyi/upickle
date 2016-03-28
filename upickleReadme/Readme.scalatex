@@ -305,8 +305,70 @@
 
     @hl.scala
       object Js {
-        sealed trait Value extends Any {
-          def value: Any
+        object Js {
+
+          sealed trait Value extends Any {
+            def value: Any
+
+            /**
+              * Returns the `String` value of this [[Js.Value]], fails if it is not
+              * a [[Js.Str]]
+              */
+            def str = this match{
+              case Str(value) => value
+              case _ => throw Invalid.Data(this, "Expected Js.Str")
+            }
+            /**
+              * Returns the key/value map of this [[Js.Value]], fails if it is not
+              * a [[Js.Obj]]
+              */
+            def obj = this match{
+              case Obj(value @@ _*) => value.toMap
+              case _ => throw Invalid.Data(this, "Expected Js.Obj")
+            }
+            /**
+              * Returns the elements of this [[Js.Value]], fails if it is not
+              * a [[Js.Arr]]
+              */
+            def arr = this match{
+              case Arr(value @@ _*) => value
+              case _ => throw Invalid.Data(this, "Expected Js.Arr")
+            }
+            /**
+              * Returns the `Double` value of this [[Js.Value]], fails if it is not
+              * a [[Js.Num]]
+              */
+            def num = this match{
+              case Num(value) => value
+              case _ => throw Invalid.Data(this, "Expected Js.Num")
+            }
+
+            /**
+              * Looks up the [[Js.Value]] as a [[Js.Arr]] using an index, throws
+              * otherwise if it's not a [[Js.Arr]]
+              */
+            def apply(i: Int): Value = this.arr(i)
+            /**
+              * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
+              * otherwise if it's not a [[Js.Obj]]
+              */
+            def apply(s: java.lang.String): Value = this.obj(s)
+          }
+          case class Str(value: java.lang.String) extends AnyVal with Value
+          case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
+          case class Arr(value: Value*) extends AnyVal with Value
+          case class Num(value: Double) extends AnyVal with Value
+          case object False extends Value{
+            def value = false
+          }
+          case object True extends Value{
+            def value = true
+          }
+          case object Null extends Value{
+            def value = null
+          }
+        }
+
           def apply(i: Int): Value = this.asInstanceOf[Arr].value(i)
           def apply(s: java.lang.String): Value = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
         }
@@ -335,6 +397,12 @@
 
       Which you use to convert between structured @hl.scala{Js.*} trees and unstructured @hl.scala{String}s. As described earlier, the implementation of these functions differs between ScalaJVM/ScalaJS.
     @p
+      You can use this JSON data structure for simple tasks:
+
+    @hl.ref(wd/'upickle/'shared/'src/'test/'scala/'upickle/"JsonTests.scala", Seq("'shortcuts", "'positive", ""))
+    @hl.ref(wd/'upickle/'shared/'src/'test/'scala/'upickle/"JsonTests.scala", Seq("'correctness", ""))
+
+    @p
       uPickle does not provide any other utilities are JSON that other libraries do (zippers, lenses, combinators, ...). If you're looking for a compact JSON AST to construct or pattern match on, together with fast serializing and deserializing, it may do the trick.
   @sect{Why uPickle}
     @p
@@ -351,6 +419,18 @@
       uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with @hl.scala{apply}/@hl.scala{unapply} on the companion?") that makes its behavior predictable and simple to understand.
 
   @sect{Version History}
+    @sect{0.3.9}
+      @ul
+        @li
+          Add @hl.scala{.arr: Seq[Js.Value]}, @hl.scala{.obj: Map[String, Js.Value]}, @hl.scala{.str: String} and @hl.scala{.num: Double} helper methods on @hl.scala{Js.Value} to simplify usage as a simple JSON tree.
+        @li
+          @hl.scala{Invalid.Json} and @hl.scala{Invalid.Data} now have better exception messages by default, which should simplify debugging
+        @li
+          Some usages should compile faster due to fiddling with implicits (#138)
+    @sect{0.3.8}
+      @ul
+        @li
+          Tweaks to PPrint
     @sect{0.3.7}
       @ul
         @li

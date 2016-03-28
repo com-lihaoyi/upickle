@@ -18,7 +18,7 @@ object Invalid{
    * @param input The `String` it was trying to parse
    */
   case class Json(msg: String, input: String)
-    extends scala.Exception()
+    extends scala.Exception(s"$msg (input: $input)")
     with Invalid
 
   /**
@@ -30,8 +30,9 @@ object Invalid{
    * @param msg Human-readable text saying what went wrong
    */
   case class Data(data: Js.Value, msg: String)
-    extends Exception()
+    extends Exception(s"$msg (data: $data)")
     with Invalid
+
 }
 
 /**
@@ -41,10 +42,53 @@ object Invalid{
 * JSON AST.
 */
 object Js {
+
   sealed trait Value extends Any {
     def value: Any
-    def apply(i: Int): Value = this.asInstanceOf[Arr].value(i)
-    def apply(s: java.lang.String): Value = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
+
+    /**
+      * Returns the `String` value of this [[Js.Value]], fails if it is not
+      * a [[Js.Str]]
+      */
+    def str = this match{
+      case Str(value) => value
+      case _ => throw Invalid.Data(this, "Expected Js.Str")
+    }
+    /**
+      * Returns the key/value map of this [[Js.Value]], fails if it is not
+      * a [[Js.Obj]]
+      */
+    def obj = this match{
+      case Obj(value @_*) => value.toMap
+      case _ => throw Invalid.Data(this, "Expected Js.Obj")
+    }
+    /**
+      * Returns the elements of this [[Js.Value]], fails if it is not
+      * a [[Js.Arr]]
+      */
+    def arr = this match{
+      case Arr(value @ _*) => value
+      case _ => throw Invalid.Data(this, "Expected Js.Arr")
+    }
+    /**
+      * Returns the `Double` value of this [[Js.Value]], fails if it is not
+      * a [[Js.Num]]
+      */
+    def num = this match{
+      case Num(value) => value
+      case _ => throw Invalid.Data(this, "Expected Js.Num")
+    }
+
+    /**
+      * Looks up the [[Js.Value]] as a [[Js.Arr]] using an index, throws
+      * otherwise if it's not a [[Js.Arr]]
+      */
+    def apply(i: Int): Value = this.arr(i)
+    /**
+      * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
+      * otherwise if it's not a [[Js.Obj]]
+      */
+    def apply(s: java.lang.String): Value = this.obj(s)
   }
   case class Str(value: java.lang.String) extends AnyVal with Value
   case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value

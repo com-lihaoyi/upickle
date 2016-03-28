@@ -389,9 +389,14 @@ object Internals {
       import c0.universe._
 //      println("FinalRepr " + weakTypeOf[T])
       val t = weakTypeTag[T]
+      /**
+        * For some reason this needs to be outside the `new Derive{...}`
+        * block otherwise the Scala/Scala.js compiler crashes =/
+        */
+      val typeTag = c0.weakTypeTag[pprint.PPrint[_]]
       val d = new Deriver {
         val c: c0.type = c0
-        def typeclass = c.weakTypeTag[pprint.PPrint[_]]
+        def typeclass = typeTag
       }
 
       // Fallback manually in case everything fails
@@ -466,10 +471,13 @@ object Internals {
       val x = freshName
       val cases = subtrees.zip(subtypes)
                           .map{case (tree, tpe) => cq"$x: $tpe => $tree.render($x, $cfg)" }
+      val finalCase =
+        for(fallback <- fallbackDerivation(targetType))
+        yield cq"$x => $fallback.render($x, $cfg)"
       q"""
         $pkg.PPrint[$targetType](
           $pkg.PPrinter[$targetType]{($t: $targetType, $cfg: $pkg.Config) =>
-            $t match {case ..$cases}
+            $t match {case ..${cases ++ finalCase}}
           }
         )
       """

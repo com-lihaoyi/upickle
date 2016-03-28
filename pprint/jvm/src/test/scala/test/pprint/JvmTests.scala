@@ -36,5 +36,22 @@ object JvmTests extends TestSuite{
         "[0, 10]"
       )
     }
+    'doobie{
+      import scalaz._, Scalaz._
+      import doobie.imports._
+      Check(
+        42.point[ConnectionIO],
+        "Return(42)"
+      )
+    }
+    'coproduct{
+      import shapeless.{:+:, CNil, Coproduct}
+      type X = Int :+: String :+: CNil
+
+      Check(
+        Coproduct[X](1),
+        "1"
+      )
+    }
   }
 }
