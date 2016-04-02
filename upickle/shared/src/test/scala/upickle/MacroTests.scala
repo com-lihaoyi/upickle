@@ -350,41 +350,41 @@ object MacroTests extends TestSuite{
       rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
     }
-//      'performance{
-//        import Generic.ADT
-//        import Hierarchy._
-//        import Recursive._
-//        import Defaults._
-//        import ADTs.ADT0
-//
-//        // Some arbitrary data that represents a mix of all the different
-//        // ways things can be pickled and unpickled
-//
-//        val stringified = write(data)
-//        val r1 = read[Data](stringified)
-//        assert(data == r1)
-//        val rewritten = write(read[Data](stringified))
-//        assert(stringified == rewritten)
-//
-//        'read{
-//          var n = 0
-//          val start = System.currentTimeMillis()
-//          while(System.currentTimeMillis() < start + 5000){
-//            read[Data](stringified)
-//            n += 1
-//          }
-//          n
-//        }
-//        'write{
-//          var n = 0
-//          val start = System.currentTimeMillis()
-//          while(System.currentTimeMillis() < start + 5000){
-//            write(data)
-//            n += 1
-//          }
-//          n
-//        }
-//      }
+      'performance{
+        import Generic.ADT
+        import Hierarchy._
+        import Recursive._
+        import Defaults._
+        import ADTs.ADT0
+
+        // Some arbitrary data that represents a mix of all the different
+        // ways things can be pickled and unpickled
+
+        val stringified = write(data)
+        val r1 = read[Data](stringified)
+        assert(data == r1)
+        val rewritten = write(read[Data](stringified))
+        assert(stringified == rewritten)
+
+        'read{
+          var n = 0
+          val start = System.currentTimeMillis()
+          while(System.currentTimeMillis() < start + 5000){
+            read[Data](stringified)
+            n += 1
+          }
+          n
+        }
+        'write{
+          var n = 0
+          val start = System.currentTimeMillis()
+          while(System.currentTimeMillis() < start + 5000){
+            write(data)
+            n += 1
+          }
+          n
+        }
+      }
     'issues {
       'issue95 {
         rw(

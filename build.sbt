@@ -26,12 +26,8 @@ val settings = Seq(
       "org.scalamacros" %% s"quasiquotes" % "2.0.0" % "provided",
       compilerPlugin("org.scalamacros" % s"paradise" % "2.1.0-M5" cross CrossVersion.full)
     )
-    ),
-  unmanagedSourceDirectories in Compile ++= {
-    if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
-    else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
-  },
-  scalaJSStage in Global := FastOptStage,
+  ),
+  scalaJSStage in Global := FullOptStage,
   autoCompilerPlugins := true,
 //  scalacOptions += "-Xlog-implicits",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
@@ -121,7 +117,9 @@ val upickle = crossProject
     libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.3"
   )
 
-lazy val upickleJS = upickle.js
+lazy val upickleJS = upickle.js.settings(
+   scalaJSUseRhino in Global := false
+)
 lazy val upickleJVM = upickle.jvm
 lazy val test = project
   .in(file("test"))
