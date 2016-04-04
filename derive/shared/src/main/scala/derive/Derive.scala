@@ -10,7 +10,7 @@ import language.higherKinds
  * to use a custom string as the key for that class/field rather than the
  * default string which is the full-name of that class/field.
  */
-class key(s: String) extends StaticAnnotation
+case class key(s: String) extends StaticAnnotation
 trait DeriveApi[M[_]]{
   val c: Context
   import c.universe._
