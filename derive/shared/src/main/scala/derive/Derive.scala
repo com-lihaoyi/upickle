@@ -57,7 +57,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     val tpe = weakTypeTag[T].tpe
 //    println(Console.YELLOW + "derive " + tpe + Console.RESET)
     val res =
-      if (tpe != typeOf[Nothing]) deriveType[T](tpe)
+      if (tpe != typeOf[Nothing]) deriveType(tpe)
       else fail(tpe, "Inferred `Reader[Nothing]`, something probably went wrong")
 //    println(Console.YELLOW + res + Console.RESET)
     res
@@ -115,6 +115,9 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     res
   }
 
+
+  //This function is "borrowed" from Miles Sabin's shapeless library,
+  //modified for use in the derive macro
   def cachedImplicitImpl(tTpe: c.Type): Tree = {
     val casted = c.asInstanceOf[reflect.macros.runtime.Context]
     val typer = casted.callsiteTyper
@@ -122,8 +125,6 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     val analyzer: global.analyzer.type = global.analyzer
     val tCtx = typer.context
     val owner = tCtx.owner
-    //if(!owner.isVal && !owner.isLazy)
-    //  c.abort(c.enclosingPosition, "cachedImplicit should only be used to initialize vals and lazy vals")
     if(!owner.isVal && !owner.isLazy) return EmptyTree
     val application = casted.macroApplication
     val tpe = {
@@ -167,7 +168,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   /**
    * derive the typeclass for a particular type
    */
-  def deriveType[T: c.WeakTypeTag](targetTpe: c.Type): c.Tree = {
+  def deriveType(targetTpe: c.Type): c.Tree = {
     //println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
     val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
 
@@ -482,11 +483,6 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   }
 }
 
-class CachedImplicitMacros(val c: Context) {
-  import c.universe._
-
-
-}
 //object Main extends scalajs.js.JSApp{
 //  def main() = {
 //    println(collection.mutable.Buffer().stringPrefix)
