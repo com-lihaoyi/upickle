@@ -57,7 +57,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     val tpe = weakTypeTag[T].tpe
 //    println(Console.YELLOW + "derive " + tpe + Console.RESET)
     val res =
-      if (tpe != typeOf[Nothing]) deriveType(tpe)
+      if (tpe != typeOf[Nothing]) deriveType[T](tpe)
       else fail(tpe, "Inferred `Reader[Nothing]`, something probably went wrong")
 //    println(Console.YELLOW + res + Console.RESET)
     res
@@ -114,22 +114,72 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 //    println("isAccessible " + tpe + " " + res)
     res
   }
+
+  def cachedImplicitImpl(tTpe: c.Type): Tree = {
+    val casted = c.asInstanceOf[reflect.macros.runtime.Context]
+    val typer = casted.callsiteTyper
+    val global: casted.universe.type = casted.universe
+    val analyzer: global.analyzer.type = global.analyzer
+    val tCtx = typer.context
+    val owner = tCtx.owner
+    //if(!owner.isVal && !owner.isLazy)
+    //  c.abort(c.enclosingPosition, "cachedImplicit should only be used to initialize vals and lazy vals")
+    if(!owner.isVal && !owner.isLazy) return EmptyTree
+    val application = casted.macroApplication
+    val tpe = {
+      val tpe0 =
+        if (tTpe.typeSymbol.isParameter) owner.tpe.asInstanceOf[Type]
+        else tTpe
+      tpe0.finalResultType
+    }.asInstanceOf[global.Type]
+
+    // Run our own custom implicit search that isn't allowed to find
+    // the thing we are enclosed in
+    val sCtx = tCtx.makeImplicit(false)
+    val is = new analyzer.ImplicitSearch(
+      tree = application,
+      pt = tpe,
+      isView = false,
+      context0 = sCtx,
+      pos0 = c.enclosingPosition.asInstanceOf[global.Position]
+    ) {
+      override def searchImplicit(
+        implicitInfoss: List[List[analyzer.ImplicitInfo]],
+        isLocalToCallsite: Boolean
+      ): analyzer.SearchResult = {
+        val filteredInput = implicitInfoss.map { infos =>
+          infos.filter { info =>
+            val sym = info.sym.accessedOrSelf
+            sym.owner != owner.owner || (!sym.isVal && !sym.isLazy)
+          }
+        }
+        super.searchImplicit(filteredInput, isLocalToCallsite)
+      }
+    }
+    val best = is.bestImplicit
+    if(best.isFailure) {
+      EmptyTree
+    } else {
+      best.tree.asInstanceOf[Tree]
+    }
+  }
+
   /**
    * derive the typeclass for a particular type
    */
-  def deriveType(tpe: c.Type): c.Tree = {
-//    println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
+  def deriveType[T: c.WeakTypeTag](targetTpe: c.Type): c.Tree = {
+    //println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
     val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
 
     val seen = collection.mutable.Set.empty[TypeKey]
+
     def implicited(tpe: Type) = q"implicitly[${typeclassFor(tpe)}]"
 
-    val res = c.typeCheck(implicited(tpe), withMacrosDisabled = true, silent = true) match {
+    def cached(tpe: Type) = cachedImplicitImpl(tpe)
+
+    val res = c.typeCheck(cached(targetTpe), withMacrosDisabled = true, silent = true) match {
       case EmptyTree =>
-
-
         def onFail(tpe: Type, key: TypeKey, name: TermName): Map[TypeKey, TermName] = {
-
           tpe.normalize match {
             case x if !isAccessible(tpe) =>
 //              println("<Not Accessible>" + x)
@@ -215,8 +265,12 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
                   seen.add(key)
                   onFail(tpe, key, name)
                 case t =>
-//                  println("Present")
-                  Map()
+                  //this catches the case when the companion object contains the implicit derive definition
+                  if(cachedImplicitImpl(tpe) == EmptyTree && tpe == targetTpe) {
+                    seen.add(key)
+                    onFail(tpe,key,name)
+                  }
+                  else Map()
               }
 
             })
@@ -226,12 +280,13 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
         //    println("a")
         val first = freshName
         //    println("b")
-        val recTypes = rec(tpe, first)
+        val recTypes = rec(targetTpe, first)
 
         //    println("c")
-        //        println("recTypes " + recTypes)
+        //    println("recTypes " + recTypes)
 
         val things = recTypes.map { case (TypeKey(tpe), name) =>
+          //println(name)
           val pick =
             if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) deriveTrait(tpe)
             else if (tpe.typeSymbol.isModuleClass) deriveObject(tpe)
@@ -242,7 +297,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
           """
 
         }
-//        println(things)
+        //println(things)
 
         val returnName = freshName
         // Do this weird immediately-called-method dance to avoid weird crash
@@ -265,18 +320,18 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
           def $returnName = {
             ${
               recTypes.mapValues(x => q"$x")
-                      .getOrElse(TypeKey(tpe), fail(tpe, "Couldn't derive type " + tpe))
+                      .getOrElse(TypeKey(targetTpe), fail(targetTpe, "Couldn't derive type " + targetTpe))
             }
           }
 
         }).$returnName
         """
-//            println("RES " + res)
+        //    println("RES " + res)
         res
       case t => t
     }
 //    println(Console.CYAN + "end derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
-//    println(res)
+    //println(res)
     res
   }
 
@@ -427,6 +482,11 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   }
 }
 
+class CachedImplicitMacros(val c: Context) {
+  import c.universe._
+
+
+}
 //object Main extends scalajs.js.JSApp{
 //  def main() = {
 //    println(collection.mutable.Buffer().stringPrefix)
