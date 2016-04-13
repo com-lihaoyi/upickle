@@ -87,7 +87,6 @@ object Forwarder{
     (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
     dieIfNothing[T](c)("ReadWriter")
-    println(q"${c.prefix}")
     c.Expr[T](q"${c.prefix}.macroRW0[$e, ${c.prefix}.Reader, ${c.prefix}.Writer]")
   }
 }
