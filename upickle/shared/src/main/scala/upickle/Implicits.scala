@@ -55,6 +55,10 @@ trait Implicits extends Types { imp: Generated =>
     def validateReader[T](name: String)(r: => Reader[T]): Reader[T] = new Reader[T]{
       override def read0 = validate(name)(r.read)
     }
+    def validateReaderWithWriter[T](name: String)(r: => Reader[T], w: => Writer[T]) = new Reader[T] with Writer[T] {
+      override def read0 = validate(name)(r.read)
+      override def write0 = w.write
+    }
   }
 
   import Internal._
