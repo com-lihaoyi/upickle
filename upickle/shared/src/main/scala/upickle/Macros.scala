@@ -137,9 +137,9 @@ object Macros {
   }
 
   def macroRWImpl[T, RM[_], WM[_]](c0: Context)
-                           (implicit e1: c0.WeakTypeTag[T],
-                                     e2: c0.WeakTypeTag[RM[_]],
-                                     e3: c0.WeakTypeTag[WM[_]] ): c0.Expr[RM[T] with WM[T]] = {
+                                  (implicit e1: c0.WeakTypeTag[T],
+                                            e2: c0.WeakTypeTag[RM[_]],
+                                            e3: c0.WeakTypeTag[WM[_]] ): c0.Expr[RM[T] with WM[T]] = {
     import c0.universe._
 
     val rRes = new Reading[RM]{

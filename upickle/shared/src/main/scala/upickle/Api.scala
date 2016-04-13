@@ -84,7 +84,7 @@ object Forwarder{
     c.Expr[T](q"${c.prefix}.macroW0[$e, ${c.prefix}.Writer]")
   }
   def applyRW[T](c: derive.ScalaVersionStubs.Context)
-    (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
+                (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
     dieIfNothing[T](c)("ReadWriter")
     c.Expr[T](q"${c.prefix}.macroRW0[$e, ${c.prefix}.Reader, ${c.prefix}.Writer]")
