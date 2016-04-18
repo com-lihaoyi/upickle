@@ -486,7 +486,6 @@ object Internals {
     def wrapCase0(companion: Tree, targetType: c.Type) = thingy(0, targetType, Nil)
     def wrapCase1(companion: Tree,
                   arg: String,
-                  default: Tree,
                   typeArgs: Seq[c.Type],
                   argTypes: Type,
                   targetType: c.Type) = {
@@ -495,7 +494,6 @@ object Internals {
     }
     def wrapCaseN(companion: Tree,
                   args: Seq[String],
-                  defaults: Seq[Tree],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type): Tree = {

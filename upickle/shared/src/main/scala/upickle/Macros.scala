@@ -16,38 +16,56 @@ import language.existentials
  * types you don't have a Reader/Writer in scope for.
  */
 object Macros {
-  abstract class Reading[M[_]] extends Derive[M]{
+
+  trait DeriveDefaults {
+    val c: Context
+
+    import c.universe._
+
+    def deriveDefaults(companion: c.Tree, numArgs: Int): Seq[c.Tree] = {
+      val defaults = (0 until numArgs).map { i =>
+        val defaultName = newTermName("apply$default$" + (i + 1))
+        companion.tpe.member(defaultName) match {
+          case NoSymbol => q"null"
+          case _ => q"${c.prefix}.writeJs($companion.$defaultName)"
+        }
+      }
+      defaults
+    }
+  }
+
+  abstract class Reading[M[_]] extends Derive[M] with DeriveDefaults {
     val c: Context
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
       q"${c.prefix}.${newTermName("Case0R")}($t.apply _: () => $targetType)"
-    def wrapCase1(t: c.Tree,
+    def wrapCase1(companion: c.Tree,
                   arg: String,
-                  default: c.Tree,
                   typeArgs: Seq[c.Type],
                   argType: c.Type,
                   targetType: c.Type) = {
+      val defaults = deriveDefaults(companion,1)
       q"""
         ${c.prefix}.CaseR[_root_.scala.Tuple1[$argType], $targetType](
-          _ match {case _root_.scala.Tuple1(x) => $t.apply[..$typeArgs](x)},
+          _ match {case _root_.scala.Tuple1(x) => $companion.apply[..$typeArgs](x)},
           _root_.scala.Array($arg),
-          _root_.scala.Array($default)
+          _root_.scala.Array(..$defaults)
         )(${c.prefix}.Tuple1R)
         """
     }
-    def wrapCaseN(t: c.Tree,
+    def wrapCaseN(companion: c.Tree,
                   args: Seq[String],
-                  defaults: Seq[c.Tree],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type) = {
       val x = q"$freshName"
       val name = newTermName("Tuple"+args.length+"R")
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
+      val defaults = deriveDefaults(companion,argTypes.length)
       q"""
         ${c.prefix}.CaseR[(..$argTypes), $targetType](
-          ($x: (..$argTypes)) => ($t.apply: (..$argTypes) => $targetType)(..$argSyms),
+          ($x: (..$argTypes)) => ($companion.apply: (..$argTypes) => $targetType)(..$argSyms),
           _root_.scala.Array(..$args),
           _root_.scala.Array(..$defaults)
         )(${c.prefix}.$name)
@@ -62,7 +80,7 @@ object Macros {
     def knot(t: Tree) = q"${c.prefix}.Knot.Reader(() => $t)"
 
   }
-  abstract class Writing[M[_]] extends Derive[M]{
+  abstract class Writing[M[_]] extends Derive[M] with DeriveDefaults {
     val c: Context
     import c.universe._
     def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
@@ -80,23 +98,26 @@ object Macros {
     }
     def wrapCase1(companion: c.Tree,
                   arg: String,
-                  default: c.Tree,
                   typeArgs: Seq[c.Type],
                   argType: Type,
-                  targetType: c.Type) = q"""
+                  targetType: c.Type) = {
+      val defaults = deriveDefaults(companion,1)
+      q"""
         ${c.prefix}.CaseW[_root_.scala.Tuple1[$argType], $targetType](
           $companion.${findUnapply(targetType)}(_).map(_root_.scala.Tuple1.apply),
           _root_.scala.Array($arg),
-          _root_.scala.Array($default)
+          _root_.scala.Array(..$defaults)
         )(${c.prefix}.Tuple1W)
         """
+    }
+
     def internal = q"${c.prefix}.Internal"
     def wrapCaseN(companion: c.Tree,
                   args: Seq[String],
-                  defaults: Seq[c.Tree],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type) = {
+      val defaults = deriveDefaults(companion,argTypes.length)
       val name = newTermName("Tuple"+args.length+"W")
       q"""
         ${c.prefix}.CaseW[(..$argTypes), $targetType](
