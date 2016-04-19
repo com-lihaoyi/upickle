@@ -1,8 +1,8 @@
 package test.pprint
 
-import derive.Recursive.IntTree
-import test.pprint.Check
-import utest.framework.TestSuite
+import derive.GenericADTs.DeltaInvariant
+import pprint.Config.Defaults._
+import utest._
 
 object Only211Tests extends TestSuite{
   val tests = TestSuite{
