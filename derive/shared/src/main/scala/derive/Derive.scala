@@ -2,7 +2,7 @@ package derive
 
 import ScalaVersionStubs._
 import acyclic.file
-import scala.annotation.StaticAnnotation
+import scala.annotation.{tailrec, StaticAnnotation}
 import scala.language.experimental.macros
 import language.higherKinds
 /**
@@ -118,6 +118,17 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
 
   //This function is "borrowed" from Miles Sabin's shapeless library,
   //modified for use in the derive macro
+  def finalResultTypeCompat(tpe: Type): Type = {
+    @tailrec
+    def loop(tp: Type): Type = tp match {
+      case PolyType(_, restpe)       => loop(restpe)
+      case MethodType(_, restpe)     => loop(restpe)
+      case NullaryMethodType(restpe) => loop(restpe)
+      case _                         => tp
+    }
+    loop(tpe)
+  }
+
   def cachedImplicitImpl(tTpe: c.Type): Tree = {
     val casted = c.asInstanceOf[reflect.macros.runtime.Context]
     val typer = casted.callsiteTyper
@@ -131,7 +142,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       val tpe0 =
         if (tTpe.typeSymbol.isParameter) owner.tpe.asInstanceOf[Type]
         else tTpe
-      tpe0.finalResultType
+      finalResultTypeCompat(tpe0)
     }.asInstanceOf[global.Type]
 
     // Run our own custom implicit search that isn't allowed to find
