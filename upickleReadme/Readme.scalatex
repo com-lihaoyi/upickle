@@ -3,6 +3,7 @@
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
 @val exampleTests = wd/'upickle/'shared/'src/'test/'scala/'example/"ExampleTests.scala"
+@val optionsAsNullTests = wd/'upickle/'shared/'src/'test/'scala/'example/"OptionsAsNullTests.scala"
 
 @a(
   href := "https://github.com/lihaoyi/upickle-pprint",
@@ -244,6 +245,12 @@
 
     @p
       In this example, instead of pickling to a normal @code{Js.Obj}, we pickle to a @code{Js.Str}, storing both @code{i} and @code{s} as part of that single string.
+
+    @p
+      If you are using uPickle to convert JSON from another source into Scala data structures, you may find the following encoding of @hl.scala{Option[T]} more convenient than the defaults:
+
+    @hl.ref(optionsAsNullTests, "object OptionPickler", "// end_ex")
+
     @p
       Note that when writing custom picklers, it is entirely up to you to get it right, e.g. making sure that an object that gets round-trip pickled/unpickled comes out the same as when it started.
 

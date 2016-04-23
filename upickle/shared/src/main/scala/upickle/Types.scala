@@ -87,13 +87,23 @@ trait Types{ types =>
   @implicitNotFound(
     "uPickle does not know how to read [${T}]s; define an implicit Reader[${T}] to teach it how"
   )
-  trait Reader[T]{
+  trait Reader[T] {
     def read0: PF[Js.Value, T]
 
-    final def read : PF[Js.Value, T] = ({
+    private def readNull: PF[Js.Value, T] = {
       case Js.Null => null.asInstanceOf[T]
-    }: PF[Js.Value, T]) orElse read0
+    }
+
+    // Alternative implementation:
+    // final def read: PF[Js.Value, T] = read0 orElse readNull orElse read0
+
+    final def read: PF[Js.Value, T] = new PartialFunction[Js.Value, T] {
+      def isDefinedAt(x: Js.Value) = read0.isDefinedAt(x)
+
+      def apply(v1: Js.Value): T = read0.applyOrElse(v1, readNull orElse read0)
+    }
   }
+
   object Reader{
     /**
      * Helper class to make it convenient to create instances of [[Reader]]
