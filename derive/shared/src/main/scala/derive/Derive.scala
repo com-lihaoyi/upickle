@@ -17,8 +17,8 @@ trait DeriveApi[M[_]]{
   def typeclass: c.WeakTypeTag[M[_]]
   def wrapObject(obj: Tree): Tree
   def wrapCase0(companion: Tree, targetType: c.Type): Tree
-  def wrapCase1(companion: Tree, arg: String, default: Tree, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
-  def wrapCaseN(companion: Tree, args: Seq[String], defaults: Seq[Tree], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
+  def wrapCase1(companion: Tree, arg: String, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
+  def wrapCaseN(companion: Tree, args: Seq[String], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
   def knot(t: Tree): Tree
   def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
   def fallbackDerivation(t: Type): Option[Tree] = None
@@ -310,14 +310,6 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
           customKey(p).getOrElse(p.name.toString)
         }
 
-        val defaults = argSyms.zipWithIndex.map { case (s, i) =>
-          val defaultName = newTermName("apply$default$" + (i + 1))
-          companion.tpe.member(defaultName) match {
-            case NoSymbol => q"null"
-            case _ => q"${c.prefix}.writeJs($companion.$defaultName)"
-          }
-        }
-
         val typeArgs = tpe match {
           case TypeRef(_, _, args) => args
           case _ => c.abort(
@@ -348,9 +340,9 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
           if (args.length == 0) // 0-arg case classes are treated like `object`s
             wrapCase0(companion, tpe)
           else if (args.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
-            wrapCase1(companion, args(0), defaults(0), typeArgs, func(argSyms(0).typeSignature), tpe)
+            wrapCase1(companion, args(0), typeArgs, func(argSyms(0).typeSignature), tpe)
           else // Otherwise, reading and writing are kinda identical
-            wrapCaseN(companion, args, defaults, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
+            wrapCaseN(companion, args, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
 
         annotate(tpe)(q"$derive")
     }
