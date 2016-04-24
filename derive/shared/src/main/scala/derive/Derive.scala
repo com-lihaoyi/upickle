@@ -57,7 +57,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     val tpe = weakTypeTag[T].tpe
 //    println(Console.YELLOW + "derive " + tpe + Console.RESET)
     val res =
-      if (tpe != typeOf[Nothing]) deriveType(tpe)
+      if (tpe != typeOf[Nothing]) deriveType(tpe, true)
       else fail(tpe, "Inferred `Reader[Nothing]`, something probably went wrong")
 //    println(Console.YELLOW + res + Console.RESET)
     res
@@ -117,7 +117,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
   /**
    * derive the typeclass for a particular type
    */
-  def deriveType(tpe: c.Type): c.Tree = {
+  def deriveType(tpe: c.Type, first: Boolean): c.Tree = {
 //    println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
     val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
 

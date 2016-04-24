@@ -156,6 +156,25 @@ object Macros {
     }.derive[T]
     c0.Expr[W[T]](res)
   }
-  
+
+  def macroRWImpl[T, RM[_], WM[_]](c0: Context)
+                                  (implicit e1: c0.WeakTypeTag[T],
+                                   e2: c0.WeakTypeTag[RM[_]],
+                                   e3: c0.WeakTypeTag[WM[_]] ): c0.Expr[RM[T] with WM[T]] = {
+    import c0.universe._
+
+    val rRes = new Reading[RM]{
+      val c: c0.type = c0
+      def typeclass = e2
+    }.derive[T]
+
+    val wRes = new Writing[WM]{
+      val c: c0.type = c0
+      def typeclass = e3
+    }.derive[T]
+
+    val msg = "Tagged Object " + weakTypeOf[T].typeSymbol.fullName
+    c0.Expr[RM[T] with WM[T]](q"""${c0.prefix}.Internal.validateReaderWithWriter($msg)($rRes,$wRes)""")
+  }
 }
 

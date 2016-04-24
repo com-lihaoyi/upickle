@@ -83,10 +83,18 @@ object Forwarder{
     dieIfNothing[T](c)("Writer")
     c.Expr[T](q"${c.prefix}.macroW0[$e, ${c.prefix}.Writer]")
   }
+  def applyRW[T](c: derive.ScalaVersionStubs.Context)
+                (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
+    import c.universe._
+    dieIfNothing[T](c)("ReadWriter")
+    c.Expr[T](q"${c.prefix}.macroRW0[$e, ${c.prefix}.Reader, ${c.prefix}.Writer]")
+  }
 }
 trait LowPriX{ this: Api =>
   implicit def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
   implicit def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
+  def macroRW[T]: ReadWriter[T] = macro Forwarder.applyRW[T]
   def macroR0[T, M[_]]: Reader[T] = macro Macros.macroRImpl[T, M]
   def macroW0[T, M[_]]: Writer[T] = macro Macros.macroWImpl[T, M]
+  def macroRW0[T, RM[_], WM[_]]: ReadWriter[T] = macro Macros.macroRWImpl[T, RM, WM]
 }
