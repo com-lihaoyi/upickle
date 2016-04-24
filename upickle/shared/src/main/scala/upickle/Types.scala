@@ -48,9 +48,12 @@ trait Types{ types =>
    * [[Reader]] and [[Writer]] at the same time.
    */
   object ReadWriter {
-    def apply[T](_write: T => Js.Value, _read: PF[Js.Value, T]): Writer[T] with Reader[T] = new Writer[T] with Reader[T]{
+    def apply[T](_write: T => Js.Value, _read: PF[Js.Value, T])
+                (implicit src: sourcecode.Enclosing)
+                : Writer[T] with Reader[T] = new Writer[T] with Reader[T]{
       val read0 = _read
       val write0 = _write
+      override def toString = src.value
     }
   }
 
@@ -75,8 +78,10 @@ trait Types{ types =>
      * Helper class to make it convenient to create instances of [[Writer]]
      * from the equivalent function
      */
-    def apply[T](_write: T => Js.Value): Writer[T] = new Writer[T]{
+    def apply[T](_write: T => Js.Value)
+                (implicit src: sourcecode.Enclosing): Writer[T] = new Writer[T]{
       val write0 = _write
+      override def toString = src.value
     }
 
   }
@@ -115,8 +120,10 @@ trait Types{ types =>
      * Helper class to make it convenient to create instances of [[Reader]]
      * from the equivalent function
      */
-    def apply[T](_read: PF[Js.Value, T]): Reader[T] = new Reader[T]{
+    def apply[T](_read: PF[Js.Value, T])
+                (implicit src: sourcecode.Enclosing): Reader[T] = new Reader[T]{
       val read0 = _read
+      override def toString = src.value
     }
   }
 

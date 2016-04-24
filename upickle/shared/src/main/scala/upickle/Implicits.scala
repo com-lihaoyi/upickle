@@ -51,13 +51,16 @@ trait Implicits extends Types { imp: Generated =>
       def isDefinedAt(x: Value) = pf.isDefinedAt(x)
 
       def apply(v1: Value): T = pf.applyOrElse(v1, (x: Js.Value) => throw Invalid.Data(x, name))
+      override def toString = s"validate($name, $pf)"
     }
     def validateReader[T](name: String)(r: => Reader[T]): Reader[T] = new Reader[T]{
       override val read0 = validate(name)(r.read)
+      override def toString = s"validateReader($name, $r)"
     }
     def validateReaderWithWriter[T](name: String)(r: => Reader[T], w: => Writer[T]) = new Reader[T] with Writer[T] {
       override def read0 = validate(name)(r.read)
       override def write0 = w.write
+      override def toString = s"validateReaderWithWriter($name, $r, $w)"
     }
   }
 

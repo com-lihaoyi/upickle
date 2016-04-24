@@ -18,6 +18,7 @@ val settings = Seq(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
     "com.lihaoyi" %%% "utest" % "0.4.3" % "test",
+    "com.lihaoyi" %%% "sourcecode" % "0.1.1",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
   ) ++ (
@@ -156,6 +157,19 @@ lazy val pprint = crossProject
         }
         """
       }
+      val output = s"""
+        package pprint
+        trait PPrinterGen extends GenUtils{
+          ${tuples.mkString("\n")}
+        }
+
+      """.stripMargin
+      IO.write(file, output)
+      Seq(file)
+    },
+    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+      val file = dir/"pprint"/"TPrintGen.scala"
+
       val typeGen = for(i <- 2 to 22) yield {
         val ts = (1 to i).map("T" + _).mkString(", ")
         val tsBounded = (1 to i).map("T" + _ + ": Type").mkString(", ")
@@ -167,15 +181,19 @@ lazy val pprint = crossProject
           implicit def T${i}TPrint[$tsBounded] = make[($ts)](cfg =>
             "(" + $tsGet + ")"
           )
-
         """
       }
       val output = s"""
-        package pprint
-        trait PPrinterGen extends GenUtils{
-          ${tuples.mkString("\n")}
+        package ammonite.repl.frontend
+        trait TPrintGen[Type[_], Cfg]{
+          def make[T](f: Cfg => String): Type[T]
+          def get[T: Type](cfg: Cfg): String
+          implicit def F0TPrint[R: Type] = make[() => R](cfg => "() => " + get[R](cfg))
+          implicit def F1TPrint[T1: Type, R: Type] = {
+            make[T1 => R](cfg => get[T1](cfg) + " => " + get[R](cfg))
+          }
+          ${typeGen.mkString("\n")}
         }
-
       """.stripMargin
       IO.write(file, output)
       Seq(file)
