@@ -9,12 +9,12 @@ object AutopickleCases {
 
   object Foo {
     def pklR: upickle.default.Reader[Foo] = upickle.default.macroR[Foo]
-    implicit def pklW: upickle.default.Writer[Foo] = upickle.default.macroW[Foo]
+    implicit val pklW: upickle.default.Writer[Foo] = upickle.default.macroW[Foo]
   }
 
   case class Bar(b: String, a: Double)
   object Bar {
-    implicit def pkl = {
+    implicit val pkl = {
       upickle.default.macroRW[Bar]
     }
   }

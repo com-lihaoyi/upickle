@@ -1,5 +1,5 @@
 package upickle
-import acyclic.file
+
 import scala.annotation.switch
 import scala.collection.mutable.StringBuilder
 
@@ -89,6 +89,8 @@ object Js {
       * otherwise if it's not a [[Js.Obj]]
       */
     def apply(s: java.lang.String): Value = this.obj(s)
+
+    override def toString = upickle.json.write(this, indent = 4)
   }
   case class Str(value: java.lang.String) extends AnyVal with Value
   case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
