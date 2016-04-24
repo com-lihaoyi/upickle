@@ -205,7 +205,7 @@ res0: Iterator[String] = non-empty iterator
     <p>
       Apart from pretty-printing values, PPrint also allows you to pretty-print types with the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">pprint.tprint</code> function:
 </p>
-    <img src="TPrint.png" alt="Example use case of TPrint" style="height: 257px;margin-left: auto;margin-right: auto;display: block;" />
+    <img src="TPrint.png" alt="Example use case of TPrint" style="height: 427px;margin-left: auto;margin-right: auto;display: block;" />
 
     <p>
       Apart from calling <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">tprint</code> yourself, you can also add an implicit <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">TPrint[T]</code> param to a function with a type-parameter <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T</code> and use <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">TPrint[T]#render(cfg: Config)</code> to pretty-print a type. This is handy if you want to write type-printing functionality to an existing function.
