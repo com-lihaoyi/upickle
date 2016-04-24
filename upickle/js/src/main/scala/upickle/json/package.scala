@@ -1,5 +1,5 @@
 package upickle
-import acyclic.file
+
 import scalajs.js
 
 
