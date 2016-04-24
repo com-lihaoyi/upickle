@@ -93,8 +93,5 @@ package object pprint {
   def tprint[T: TPrint](implicit config: Config = Config.Defaults.PPrintConfig) = {
     implicitly[TPrint[T]].render(config)
   }
-  def tprint[T: TPrint](implicit config: Config = Config.Defaults.PPrintConfig) = {
-    implicitly[TPrint[T]].render(config)
-  }
 }
 
