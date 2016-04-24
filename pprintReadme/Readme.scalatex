@@ -183,7 +183,7 @@
     )
 
     @p
-      Apart from calling @hl.scala{tprint} yourself, you can also add an implicit @hl.scala{TPrint[T]} param to a function with a type-parameter @hl.scala{T} and use @hl.scala{TPrint[T]#render(cfg: Config} to pretty-print a type. This is handy if you want to write type-printing functionality to an existing function.
+      Apart from calling @hl.scala{tprint} yourself, you can also add an implicit @hl.scala{TPrint[T]} param to a function with a type-parameter @hl.scala{T} and use @hl.scala{TPrint[T]#render(cfg: Config)} to pretty-print a type. This is handy if you want to write type-printing functionality to an existing function.
 
     @p
       Like value pretty-printing, the colors can be configured by the @hl.scala{pprint.Config}, with @hl.scala{import pprint.Config.Colors._} for colored type-printing and @hl.scala{import pprint.Config.BlackWhite._} for non-colored type-printing. You can also provide your own implicit @hl.scala{TPrint[T]} values if you want to customize the type printing of a particular type.
