@@ -11,7 +11,7 @@ class WriterPicker[M[_]]
 /**
 * Basic functionality to be able to read and write objects. Kept as a trait so
 * other internal files can use it, while also mixing it into the `upickle`
-* package to form the public API
+* package to form the public API1
 */
 trait Types{ types =>
   /**
@@ -49,8 +49,8 @@ trait Types{ types =>
    */
   object ReadWriter {
     def apply[T](_write: T => Js.Value, _read: PF[Js.Value, T]): Writer[T] with Reader[T] = new Writer[T] with Reader[T]{
-      def read0 = _read
-      def write0 = _write
+      val read0 = _read
+      val write0 = _write
     }
   }
 
@@ -64,7 +64,7 @@ trait Types{ types =>
   )
   trait Writer[T]{
     def write0: T => Js.Value
-    final def write: T => Js.Value = {
+    final val write: T => Js.Value = {
       case null => Js.Null
       case t => write0(t)
     }
@@ -88,19 +88,25 @@ trait Types{ types =>
     "uPickle does not know how to read [${T}]s; define an implicit Reader[${T}] to teach it how"
   )
   trait Reader[T] {
+
     def read0: PF[Js.Value, T]
 
-    private def readNull: PF[Js.Value, T] = {
+    private val readNull: PF[Js.Value, T] = {
       case Js.Null => null.asInstanceOf[T]
     }
 
-    // Alternative implementation:
-    // final def read: PF[Js.Value, T] = read0 orElse readNull orElse read0
+    final val read: PF[Js.Value, T] = new PartialFunction[Js.Value, T] {
+      def isDefinedAt(x: Js.Value) = x == Js.Null || read0.isDefinedAt(x)
 
-    final def read: PF[Js.Value, T] = new PartialFunction[Js.Value, T] {
-      def isDefinedAt(x: Js.Value) = read0.isDefinedAt(x)
+      /**
+        * Do this `isDefinedAt` dance to make sure we throw the correct error
+        * message (that of `read0` instead of `readNull` in the case where someone
+        * calls `read.apply` on some invalid value
+        */
+      def apply(v1: Js.Value): T =
+        if (!this.isDefinedAt(v1)) read0(v1)
+        else read0.applyOrElse(v1, readNull)
 
-      def apply(v1: Js.Value): T = read0.applyOrElse(v1, readNull orElse read0)
     }
   }
 
@@ -110,7 +116,7 @@ trait Types{ types =>
      * from the equivalent function
      */
     def apply[T](_read: PF[Js.Value, T]): Reader[T] = new Reader[T]{
-      def read0 = _read
+      val read0 = _read
     }
   }
 

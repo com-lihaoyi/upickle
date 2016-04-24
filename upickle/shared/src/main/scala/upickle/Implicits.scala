@@ -53,7 +53,7 @@ trait Implicits extends Types { imp: Generated =>
       def apply(v1: Value): T = pf.applyOrElse(v1, (x: Js.Value) => throw Invalid.Data(x, name))
     }
     def validateReader[T](name: String)(r: => Reader[T]): Reader[T] = new Reader[T]{
-      override def read0 = validate(name)(r.read)
+      override val read0 = validate(name)(r.read)
     }
   }
 
