@@ -12,12 +12,12 @@ object AutopickleCases {
     implicit val pklW: upickle.default.Writer[CachedSealedTrait] = upickle.default.macroW[CachedSealedTrait]
   }
 
+  case class UncachedCaseClass(b: String, a: Double)
+
   case class CachedCaseClass(b: String, a: Double)
   object CachedCaseClass {
     implicit val pkl = upickle.default.macroRW[CachedCaseClass]
   }
-
-  case class UncachedCaseClass(b: String, a: Double)
 }
 
 /**
@@ -42,11 +42,16 @@ object AutopickleTests extends TestSuite {
       assert(!(reader eq CachedSealedTrait.pklR))
       assert(upickle.default.read(exampleString)(reader) == example)
     }
-    "cachedRW" - {
-      val res = upickle.default.read[CachedCaseClass](upickle.default.write(CachedCaseClass("aaa",42.0)))
-      assert(res == CachedCaseClass("aaa",42.0))
-      assert(implicitly[upickle.default.Reader[CachedCaseClass]] eq implicitly[upickle.default.Reader[CachedCaseClass]])
-      assert(implicitly[upickle.default.Writer[CachedCaseClass]] eq implicitly[upickle.default.Writer[CachedCaseClass]])
+    "roundTripCachedRW" - {
+      import upickle.default.{read, write}
+      val res = read[CachedCaseClass](write(CachedCaseClass("aaa", 42.0)))
+      assert(res == CachedCaseClass("aaa", 42.0))
+    }
+    "reusedCachedRW" - {
+      import upickle.default.{Reader, Writer}
+      // Each time you ask for an implicit reader or writer, it's the same one
+      assert(implicitly[Reader[CachedCaseClass]] eq implicitly[Reader[CachedCaseClass]])
+      assert(implicitly[Writer[CachedCaseClass]] eq implicitly[Writer[CachedCaseClass]])
     }
     "uncachedRW" - {
       val res = upickle.default.read[UncachedCaseClass](upickle.default.write(UncachedCaseClass("aaa",42.0)))

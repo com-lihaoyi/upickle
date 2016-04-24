@@ -15,7 +15,7 @@
   @img(
     src := "Example.png",
     alt := "Example use case of PPrint",
-    width := "100%"
+    height := 267
   )
   @p
     PPrint is a module that lets you easily print data structures in a form that is more convenient to use both visually and programmatically. Unlike a traditional @hl.scala{.toString}, PPrint...
@@ -166,7 +166,34 @@
     @p
       In order to pretty print a type @hl.scala{T}, you need to have a @hl.scala{T: PPrint} context bound present. In order to write your own custom pretty printer for some type @hl.scala{T}, provide an implicit @hl.scala{PPrinter[T]} in scope.
 
+  @sect{TPrint}
+    @p
+      Apart from pretty-printing values, PPrint also allows you to pretty-print types with the @hl.scala{pprint.tprint} function:
+
+    @img(
+      src := "TPrint.png",
+      alt := "Example use case of TPrint",
+      height := 207
+    )
+
+    @p
+      Apart from calling @hl.scala{tprint} yourself, you can also add an implicit @hl.scala{TPrint[T]} param to a function with a type-parameter @hl.scala{T} and use @hl.scala{TPrint[T]#render(cfg: Config} to pretty-print a type. This is handy if you want to write type-printing functionality to an existing function.
+
+    @p
+      Like value pretty-printing, the colors can be configured by the @hl.scala{pprint.Config}, with @hl.scala{import pprint.Config.Colors._} for colored type-printing and @hl.scala{import pprint.Config.BlackWhite._} for non-colored type-printing. You can also provide your own implicit @hl.scala{TPrint[T]} values if you want to customize the type printing of a particular type.
+
+    @img(
+      src := "TPrintCustom.png",
+      alt := "Example use case of Custom TPrint",
+      height := 309
+    )
   @sect{Version History}
+    @sect{0.4.0}
+      @ul
+        @li
+          Added @sect.ref{TPrint} implicit, which can be materialized for any type to get a nicely-formatted, colored version of the type @code{T}s normal @code{toString}
+
+
     @sect{0.3.9}
       @ul
         @li

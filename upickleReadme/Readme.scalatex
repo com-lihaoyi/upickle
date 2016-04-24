@@ -3,7 +3,11 @@
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
 @val exampleTests = wd/'upickle/'shared/'src/'test/'scala/'example/"ExampleTests.scala"
+
 @val optionsAsNullTests = wd/'upickle/'shared/'src/'test/'scala/'example/"OptionsAsNullTests.scala"
+
+@val autoPickleTests = wd/'upickle/'shared/'src/'test/'scala/'upickle/"AutoPickleTests.scala"
+
 
 @a(
   href := "https://github.com/lihaoyi/upickle-pprint",
@@ -286,6 +290,7 @@
         Read/writing case classes with multiple parameter lists.
     @p
       Most of these limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away. In general, uPickle is designed to serialize statically-typed, tree-shaped, immutable data structures. Anything more complex is out of scope.
+
   @sect{JSON API}
 
     @p
@@ -404,6 +409,28 @@
 
     @p
       uPickle does not provide any other utilities are JSON that other libraries do (zippers, lenses, combinators, ...). If you're looking for a compact JSON AST to construct or pattern match on, together with fast serializing and deserializing, it may do the trick.
+
+
+  @sect{Caching Picklers}
+    @p
+      Synthesizing @hl.scala{case class} picklers at every callsite where you're pickling something can get expensive: at compile-time the compiler is deriving the correct combination of readers of writers over and over at every callsite, and at runtime the JVM is instantiating that same combination over and over.
+
+    @p
+      To speed things up both at compile time and runtime, you can pre-generate picklers inside the @hl.scala{case class}es companion objects. This should greatly speed up compilation in large codebases with lots of different case-classes being pickled, and improve runtime performance. Simply add a @hl.scala{macroRW} implicit into your @hl.scala{case class}'s companion object:
+
+    @hl.ref(autoPickleTests, Seq("CachedCaseClass"))
+
+    @p
+      And then the next time you read and write the case class, things should work as expected:
+
+    @hl.ref(autoPickleTests, Seq("roundTripCachedRW", ""))
+
+    @p
+      Except that the @hl.scala{Reader} and @hl.scala{Writer} is simply taken from the companion object each time instead of being synthesized again and again at every callside
+
+    @hl.ref(autoPickleTests, Seq("reusedCachedRW", ""))
+
+
   @sect{Why uPickle}
     @p
 
@@ -427,6 +454,8 @@
           Made @hl.scala{derive.key} a @hl.scala{case class}
         @li
           Remove unnecessary dependency of @hl.scala{derive} on default arguments #143
+        @li
+          Fixed derivation allowing @sect.ref{Caching Picklers} in a @hl.scala{case class}'s companion object, potentially speeding up compilation times and runtimes
     @sect{0.3.9}
       @ul
         @li
