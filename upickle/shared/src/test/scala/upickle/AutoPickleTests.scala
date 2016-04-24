@@ -8,13 +8,13 @@ object AutopickleCases {
   case object B extends Foo
 
   object Foo {
-    val pklR: upickle.default.Reader[Foo] = upickle.default.macroR[Foo]
-    implicit val pklW: upickle.default.Writer[Foo] = upickle.default.macroW[Foo]
+    def pklR: upickle.default.Reader[Foo] = upickle.default.macroR[Foo]
+    implicit def pklW: upickle.default.Writer[Foo] = upickle.default.macroW[Foo]
   }
 
   case class Bar(b: String, a: Double)
   object Bar {
-    implicit val pkl = {
+    implicit def pkl = {
       upickle.default.macroRW[Bar]
     }
   }
