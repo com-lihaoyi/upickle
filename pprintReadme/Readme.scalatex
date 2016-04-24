@@ -176,7 +176,7 @@
     @img(
       src := "TPrint.png",
       alt := "Example use case of TPrint",
-      height := 207,
+      height := 257,
       marginLeft.auto,
       marginRight.auto,
       display.block
@@ -191,7 +191,7 @@
     @img(
       src := "TPrintCustom.png",
       alt := "Example use case of Custom TPrint",
-      height := 309,
+      height := 359,
       marginLeft.auto,
       marginRight.auto,
       display.block
