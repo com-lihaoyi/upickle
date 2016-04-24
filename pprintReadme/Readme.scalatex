@@ -17,7 +17,8 @@
     alt := "Example use case of PPrint",
     height := 767,
     marginLeft.auto,
-    marginRight.auto
+    marginRight.auto,
+    display.block
   )
   @p
     PPrint is a module that lets you easily print data structures in a form that is more convenient to use both visually and programmatically. Unlike a traditional @hl.scala{.toString}, PPrint...
@@ -177,7 +178,8 @@
       alt := "Example use case of TPrint",
       height := 207,
       marginLeft.auto,
-      marginRight.auto
+      marginRight.auto,
+      display.block
     )
 
     @p
@@ -191,7 +193,8 @@
       alt := "Example use case of Custom TPrint",
       height := 309,
       marginLeft.auto,
-      marginRight.auto
+      marginRight.auto,
+      display.block
     )
   @sect{Version History}
     @sect{0.4.0}
