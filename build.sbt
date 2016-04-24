@@ -184,7 +184,7 @@ lazy val pprint = crossProject
         """
       }
       val output = s"""
-        package ammonite.repl.frontend
+        package pprint
         trait TPrintGen[Type[_], Cfg]{
           def make[T](f: Cfg => String): Type[T]
           def get[T: Type](cfg: Cfg): String

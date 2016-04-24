@@ -99,10 +99,10 @@ object TPrintLowPri{
         byName match{
           case Some(t) =>
             c.typecheck(q"null.asInstanceOf[$tpe]")
-            q""" "=> " + ammonite.repl.frontend.TPrint.implicitly[$t].render($cfgSym) """
+            q""" "=> " + pprint.TPrint.implicitly[$t].render($cfgSym) """
           case _ =>
             c.typecheck(q"null.asInstanceOf[$tpe]")
-            q""" ammonite.repl.frontend.TPrint.implicitly[$tpe].render($cfgSym) """
+            q""" pprint.TPrint.implicitly[$tpe].render($cfgSym) """
         }
 
       }catch{case e: TypecheckException =>
@@ -196,7 +196,7 @@ object TPrintLowPri{
         q"$value.toString"
     }
     lazy val cfgSym = c.freshName[TermName]("cfg")
-    val res = c.Expr[TPrint[T]](q"""ammonite.repl.frontend.TPrint.lambda{
+    val res = c.Expr[TPrint[T]](q"""pprint.TPrint.lambda{
       ($cfgSym: pprint.Config) =>
         ${rec0(tpe, end = true)}
     }""")
