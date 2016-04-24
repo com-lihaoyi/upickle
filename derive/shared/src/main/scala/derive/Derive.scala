@@ -118,164 +118,163 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
    * derive the typeclass for a particular type
    */
   def deriveType(tpe: c.Type, first: Boolean): c.Tree = {
-//    println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
+    // println(Console.CYAN + "derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
     val memo = collection.mutable.Map.empty[TypeKey, Map[TypeKey, TermName]]
 
     val seen = collection.mutable.Set.empty[TypeKey]
     def implicited(tpe: Type) = q"implicitly[${typeclassFor(tpe)}]"
 
-    val res = c.typeCheck(implicited(tpe), withMacrosDisabled = true, silent = true) match {
-      case EmptyTree =>
 
+    def onFail(tpe: Type, key: TypeKey, name: TermName): Map[TypeKey, TermName] = {
 
-        def onFail(tpe: Type, key: TypeKey, name: TermName): Map[TypeKey, TermName] = {
+      tpe.normalize match {
+        case x if !isAccessible(tpe) =>
+          // println("<Not Accessible>" + x)
+          Map()
+        case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
+          // println(Console.CYAN + "<Repeat>" + Console.RESET + tpe)
+          rec(args(0))
+        case TypeRef(pref, cls, args)
+          if tpe.typeSymbol.isClass
+            && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstractClass)
+            && tpe.typeSymbol.asClass.isSealed =>
+          // println(Console.CYAN + "<Traitish>" + Console.RESET + tpe)
+          val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
 
-          tpe.normalize match {
-            case x if !isAccessible(tpe) =>
-//              println("<Not Accessible>" + x)
-              Map()
-            case TypeRef(_, cls, args) if cls == definitions.RepeatedParamClass =>
-//              println(Console.CYAN + "<Repeat>" + Console.RESET + tpe)
-              rec(args(0))
-            case TypeRef(pref, cls, args)
-              if tpe.typeSymbol.isClass
-                && (tpe.typeSymbol.asClass.isTrait || tpe.typeSymbol.asClass.isAbstractClass)
-                && tpe.typeSymbol.asClass.isSealed =>
-//              println(Console.CYAN + "<Traitish>" + Console.RESET + tpe)
-              val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef])
+          val lol =
+            Map(key -> name) ++
+              subTypes.flatMap(rec(_)) ++
+              args.flatMap(rec(_))
 
-              val lol =
-                Map(key -> name) ++
-                subTypes.flatMap(rec(_)) ++
-                args.flatMap(rec(_))
+          lol
+        case tpe if tpe.typeSymbol.isModuleClass =>
+          // println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
+          Map(key -> name)
+        case TypeRef(_, cls, args) if cls.isClass && !cls.asClass.isAbstractClass =>
+          // println(Console.CYAN + "<Class>" + Console.RESET + tpe)
+          getArgSyms(tpe) match {
+            case Left(errMsg) =>
+              // println("LEFT")
+              Map.empty[TypeKey, TermName]
+            case Right((companion, typeParams, argSyms)) =>
+              // println("Right")
+              val x =
+                argSyms
+                  .map(_.typeSignature.substituteTypes(typeParams, args))
+                  .flatMap(rec(_))
+                  .toSet
 
-              lol
-            case tpe if tpe.typeSymbol.isModuleClass =>
-//              println(Console.CYAN + "<Singleton>" + Console.RESET + tpe)
-              Map(key -> name)
-            case TypeRef(_, cls, args) if cls.isClass && !cls.asClass.isAbstractClass =>
-//              println(Console.CYAN + "<Class>" + Console.RESET + tpe)
-              getArgSyms(tpe) match {
-                case Left(errMsg) =>
-//                  println("LEFT")
-                  Map.empty[TypeKey, TermName]
-                case Right((companion, typeParams, argSyms)) =>
-//                  println("Right")
-                  val x =
-                    argSyms
-                      .map(_.typeSignature.substituteTypes(typeParams, args))
-                      .flatMap(rec(_))
-                      .toSet
-
-                  Map(key -> name) ++ x
-              }
-
-            case x =>
-//              println("<???>")
-              Map()
+              Map(key -> name) ++ x
           }
 
-        }
-        def rec(tpe0: c.Type, name: TermName = freshName): Map[TypeKey, TermName] = {
-          val tpe = removeRepeats(tpe0)
-//          println(Console.CYAN + "REC " + Console.RESET + tpe)
-          val key = TypeKey(tpe)
-//          println(Console.CYAN + seen + Console.RESET + " " + System.identityHashCode(seen))
-//          println(Console.CYAN + memo + Console.RESET + " " + System.identityHashCode(memo))
-          if (seen(TypeKey(tpe))) Map()
-          else {
-            seen.add(key)
-            memo.getOrElseUpdate(TypeKey(tpe), {
-              // If it can't find any non-macro implicits, try to recurse into the type
-              val dummies = tpe match {
-                case TypeRef(_, _, args) =>
-                  args.map(TypeKey)
-                    .distinct
-                    .map(_.t)
-                    .filter{ t =>
-                      val x = c.inferImplicitValue(typeclassFor(t), withMacrosDisabled = true)
-                      x == EmptyTree
-                    }
-                    .map(tpe => q"implicit def $freshName: ${typeclassFor(tpe)} = ???")
-                case _ =>
-                  Seq.empty[Tree]
-              }
-              val classTagImplicit = freshName
-              val classTagImplicitType = c.fresh[TypeName]("derive")
-              // Hard-code availability of ClassTags to make array serialization work
-              val probe = q"""{
-                ..$dummies;
-                implicit def $classTagImplicit[$classTagImplicitType]: reflect.ClassTag[$classTagImplicitType] = ???;
-                ${implicited(tpe)}
-              }"""
-//              println("TC " + name + " " + probe)
-              c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
-                case EmptyTree =>
-//                  println("Empty")
-                  seen.add(key)
-                  onFail(tpe, key, name)
-                case t =>
-//                  println("Present")
-                  Map()
-              }
+        case x =>
+          // println("<???>")
+          Map()
+      }
 
-            })
-          }
-        }
-
-        //    println("a")
-        val first = freshName
-        //    println("b")
-        val recTypes = rec(tpe, first)
-
-        //    println("c")
-        //        println("recTypes " + recTypes)
-
-        val things = recTypes.map { case (TypeKey(tpe), name) =>
-          val pick =
-            if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) deriveTrait(tpe)
-            else if (tpe.typeSymbol.isModuleClass) deriveObject(tpe)
-            else deriveClass(tpe)
-
-          q"""
-            implicit lazy val $name: ${typeclassFor(tpe)} = ${knot(pick)}
-          """
-
-        }
-//        println(things)
-
-        val returnName = freshName
-        // Do this weird immediately-called-method dance to avoid weird crash
-        // in 2.11.x:
-        //
-        // """
-        // symbol variable bitmap$0 does not exist in derive.X.<init>
-        // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in derive.X.<init>
-        // """
-        //
-        // Dump it in an anonymous class to avoid https://issues.scala-lang.org/browse/SI-8775,
-        // which results in this other weird crash
-        //
-        // Implementation restriction: access of value derive$macro$2$1 from <$anon: Function0>,
-        // would require illegal premature access to the unconstructed `this` of class Something
-        // in object Main
-        val res = q"""
-        (new {
-          ..$things
-          def $returnName = {
-            ${
-              recTypes.mapValues(x => q"$x")
-                      .getOrElse(TypeKey(tpe), fail(tpe, "Couldn't derive type " + tpe))
-            }
-          }
-
-        }).$returnName
-        """
-//            println("RES " + res)
-        res
-      case t => t
     }
-//    println(Console.CYAN + "end derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
+    def rec(tpe0: c.Type, name: TermName = freshName, first: Boolean = false): Map[TypeKey, TermName] = {
+      val tpe = removeRepeats(tpe0)
+      // println(Console.CYAN + "REC " + Console.RESET + tpe + "\t" + first)
+      val key = TypeKey(tpe)
+      // println(Console.CYAN + seen + Console.RESET + " " + System.identityHashCode(seen))
+      // println(Console.CYAN + memo + Console.RESET + " " + System.identityHashCode(memo))
+      if (seen(TypeKey(tpe))) Map()
+      else {
+        seen.add(key)
+        memo.getOrElseUpdate(TypeKey(tpe), {
+          // If it can't find any non-macro implicits, try to recurse into the type
+          val dummies = tpe match {
+            case TypeRef(_, _, args) =>
+              args.map(TypeKey)
+                .distinct
+                .map(_.t)
+                .filter{ t =>
+                    val x = c.inferImplicitValue(typeclassFor(t), withMacrosDisabled = true)
+                  x == EmptyTree
+                }
+                .map(tpe => q"implicit def $freshName: ${typeclassFor(tpe)} = ???")
+            case _ =>
+              Seq.empty[Tree]
+          }
+          val classTagImplicit = freshName
+          val classTagImplicitType = c.fresh[TypeName]("derive")
+          // Hard-code availability of ClassTags to make array serialization work
+          val probe = q"""{
+              ..$dummies;
+              implicit def $classTagImplicit[$classTagImplicitType]: reflect.ClassTag[$classTagImplicitType] = ???;
+              ${implicited(tpe)}
+            }"""
+          // println("TC " + name + " " + probe)
+          if (first) {
+            // println("FIRST")
+            seen.add(key)
+            onFail(tpe, key, name)
+          }else c.typeCheck(probe, withMacrosDisabled = true, silent = true) match {
+            case EmptyTree =>
+              // println("Empty")
+              seen.add(key)
+              onFail(tpe, key, name)
+            case t =>
+              // println("Present")
+              Map()
+          }
+
+        })
+      }
+    }
+
+    //    println("a")
+    val first = freshName
+    //    println("b")
+    val recTypes = rec(tpe, first, first = true)
+
+    // println("cD")
+    //      println("recTypes " + recTypes)
+
+    val things = recTypes.map { case (TypeKey(tpe), name) =>
+      val pick =
+        if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) deriveTrait(tpe)
+        else if (tpe.typeSymbol.isModuleClass) deriveObject(tpe)
+        else deriveClass(tpe)
+
+      q"""
+          implicit lazy val $name: ${typeclassFor(tpe)} = ${knot(pick)}
+        """
+
+    }
+    //        println(things)
+
+    val returnName = freshName
+    // Do this weird immediately-called-method dance to avoid weird crash
+    // in 2.11.x:
+    //
+    // """
+    // symbol variable bitmap$0 does not exist in derive.X.<init>
+    // scala.reflect.internal.FatalError: symbol variable bitmap$0 does not exist in derive.X.<init>
+    // """
+    //
+    // Dump it in an anonymous class to avoid https://issues.scala-lang.org/browse/SI-8775,
+    // which results in this other weird crash
+    //
+    // Implementation restriction: access of value derive$macro$2$1 from <$anon: Function0>,
+    // would require illegal premature access to the unconstructed `this` of class Something
+    // in object Main
+    val res = q"""
+      (new {
+        ..$things
+        def $returnName = {
+          ${
+      recTypes.mapValues(x => q"$x")
+        .getOrElse(TypeKey(tpe), fail(tpe, "Couldn't derive type " + tpe))
+          }
+        }
+
+      }).$returnName
+      """
+      //            println("RES " + res)
+
+      //    println(Console.CYAN + "end derive " + Console.RESET + tpe + " " + System.identityHashCode(tpe))
 //    println(res)
     res
   }
