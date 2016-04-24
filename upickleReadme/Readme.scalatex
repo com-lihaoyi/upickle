@@ -451,7 +451,7 @@
     @sect{0.4.0}
       @ul
         @li
-          Allow custom handling for JSON @hl.scala{null}s via @sect.ref{Custom Picklers}
+          Allow custom handling for JSON @hl.scala{null}s via a @sect.ref{Custom Configuration}
         @li
           Made @hl.scala{derive.key} a @hl.scala{case class}
         @li
