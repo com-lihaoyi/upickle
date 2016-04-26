@@ -101,8 +101,7 @@ span.hljs-tag, span.hljs-symbol{
     <p>
       Pretty-printing is by default defined for most standard library types, as well as case classes and case objects. For other types not supported, it falls back to using <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">toString</code>
 </p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; PPrint(new Object())
-res35: String = java.lang.Object@54f880c0
+    <pre><code class="scala scalatex-site-Styles-highlightMe">scala&gt; pprint.pprintln(new Object())java.lang.Object@54f880c0
 </code></pre>
     <p>
       You can configure the pretty-printing by defining your own implicit <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Config</code> object, to consistently set things like maximum width, height or colors across a codebase. However, if you just want to set these things one-off, you can do that too:
