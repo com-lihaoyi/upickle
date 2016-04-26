@@ -63,8 +63,8 @@
       Pretty-printing is by default defined for most standard library types, as well as case classes and case objects. For other types not supported, it falls back to using @hl.scala{toString}
 
     @hl.scala
-      scala> PPrint(new Object())
-      res35: String = java.lang.Object@@54f880c0
+      scala> pprint.pprintln(new Object())
+      java.lang.Object@@54f880c0
 
     @p
       You can configure the pretty-printing by defining your own implicit @hl.scala{Config} object, to consistently set things like maximum width, height or colors across a codebase. However, if you just want to set these things one-off, you can do that too:
