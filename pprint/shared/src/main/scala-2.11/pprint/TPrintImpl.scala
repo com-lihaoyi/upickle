@@ -17,7 +17,7 @@ object TPrintLowPri{
       else s.name.decodedName.toString.stripSuffix(".type")
 
     def literalColor(s: Tree) = {
-      q"$cfgSym.typeColor + ($s) + $cfgSym.endColor"
+      q"$cfgSym.typeColor($s).render"
     }
     def printSym(s: Symbol): Tree = {
       literalColor(q"${printSymString(s)}")

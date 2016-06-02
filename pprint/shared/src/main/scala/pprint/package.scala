@@ -20,15 +20,12 @@ package object pprint {
     val item = tokenize(value.value).mkString
 
     println(
-      cfg.colors.prefixColor +
-        titleIter +
-        tagIter +
-        cfg.colors.endColor +
-        lineIter +
-        " " +
-        valName +
-        "\t" +
-        item
+      cfg.colors.prefixColor(titleIter + tagIter).render +
+      lineIter +
+      " " +
+      valName +
+      "\t" +
+      item
     )
   }
 
@@ -45,7 +42,7 @@ package object pprint {
       else " " + tokenize(tag).mkString
     val lineIter = ":" + tokenize(line.value).mkString
 
-    println(cfg.colors.prefixColor + titleIter + tagIter + cfg.colors.endColor + lineIter)
+    println(cfg.colors.prefixColor(titleIter + tagIter).render + lineIter)
     pprintln(value.value)
 
 

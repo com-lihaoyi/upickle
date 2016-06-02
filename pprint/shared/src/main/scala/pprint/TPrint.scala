@@ -15,7 +15,7 @@ trait TPrint[T]{
 
 object TPrint extends TPrintGen[TPrint, TPrintColors] with TPrintLowPri{
   def literal[T](s: String) = new TPrint[T]{
-    def render(implicit cfg: TPrintColors) = cfg.typeColor + s + cfg.endColor
+    def render(implicit cfg: TPrintColors) = cfg.typeColor(s).toString
   }
   def lambda[T](f: TPrintColors => String) = new TPrint[T]{
     def render(implicit cfg: TPrintColors) = f(cfg)
@@ -26,12 +26,11 @@ object TPrint extends TPrintGen[TPrint, TPrintColors] with TPrintLowPri{
   implicit val NothingTPrint: TPrint[Nothing] = TPrint.literal("Nothing")
 }
 
-case class TPrintColors(typeColor: String,
-                        endColor: String)
+case class TPrintColors(typeColor: fansi.Attrs)
 
 object TPrintColors{
-  implicit object BlackWhite extends TPrintColors("", "")
-  object Colors extends TPrintColors(Console.GREEN, Console.RESET){
+  implicit object BlackWhite extends TPrintColors(fansi.Attrs())
+  object Colors extends TPrintColors(fansi.Color.Green){
     implicit val Colored = this
   }
 }

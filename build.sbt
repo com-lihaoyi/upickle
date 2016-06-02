@@ -136,7 +136,7 @@ lazy val pprint = crossProject
   .settings(
     name := "pprint",
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "sourcecode" % "0.1.1",
+      "com.lihaoyi" %%% "fansi" % "0.1.2",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
       "com.chuusai" %% "shapeless" % "2.2.3" % "test" ,
       "org.tpolecat" %% "doobie-core" % "0.2.3" % "test"

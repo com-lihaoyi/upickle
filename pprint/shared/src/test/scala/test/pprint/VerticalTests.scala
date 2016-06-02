@@ -24,9 +24,8 @@ object VerticalTests extends TestSuite{
         pprint.Colors.Colored,
         pprint.Colors.BlackWhite,
         pprint.Colors(
-          pprint.Colors.Colored.literalColor * 3,
-          pprint.Colors.Colored.prefixColor * 3,
-          pprint.Colors.Colored.endColor * 3
+          fansi.Color.Yellow ++ fansi.Underlined.On,
+          fansi.Color.Blue ++ fansi.Bold.On
         )
       )
       for(color <- colorsToCheck){
@@ -302,12 +301,13 @@ object VerticalTests extends TestSuite{
       }
 
       import Console._
-      * - count(pprint.tokenize(123), GREEN -> 1, RESET -> 1)
-      * - count(pprint.tokenize(""), GREEN -> 1, RESET -> 1)
-      * - count(pprint.tokenize(Seq(1, 2, 3)), GREEN -> 3, YELLOW -> 1, RESET -> 4)
+      val cReset = fansi.Color.Reset.escape
+      * - count(pprint.tokenize(123), GREEN -> 1, cReset -> 1)
+      * - count(pprint.tokenize(""), GREEN -> 1, cReset -> 1)
+      * - count(pprint.tokenize(Seq(1, 2, 3)), GREEN -> 3, YELLOW -> 1, cReset -> 4)
       * - count(
         pprint.tokenize(Map(1 -> Nil, 2 -> Seq(" "), 3 -> Seq("   "))),
-        GREEN -> 5, YELLOW -> 4, RESET -> 9
+        GREEN -> 5, YELLOW -> 4, cReset -> 9
       )
     }
 

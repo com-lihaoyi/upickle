@@ -27,12 +27,11 @@ case class Config(width: Int = Config.defaultMaxWidth,
   def rename(s: String) = renames.getOrElse(s, s)
 
 }
-case class Colors(literalColor: String,
-                  prefixColor: String,
-                  endColor: String)
+case class Colors(literalColor: fansi.Attrs,
+                  prefixColor: fansi.Attrs)
 object Colors{
-  val BlackWhite = Colors("", "", "")
-  val Colored = Colors(Console.GREEN, Console.YELLOW, Console.RESET)
+  val BlackWhite = Colors(fansi.Attrs(), fansi.Attrs())
+  val Colored = Colors(fansi.Color.Green, fansi.Color.Yellow)
 }
 
 object Config {

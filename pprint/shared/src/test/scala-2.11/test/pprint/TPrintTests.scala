@@ -204,9 +204,9 @@ object TPrintTests extends TestSuite{
       import pprint.TPrintColors.Colors._
       def checkColor[T](expected: String)(implicit tprint: TPrint[T]) = {
         val tprinted = tprint.render.replace(
-          implicitly[pprint.TPrintColors].typeColor, "<"
+          fansi.Color.Green.escape, "<"
         ).replace(
-          implicitly[pprint.TPrintColors].endColor, ">"
+          fansi.Color.Reset.escape, ">"
         )
         assert(tprinted == expected)
       }

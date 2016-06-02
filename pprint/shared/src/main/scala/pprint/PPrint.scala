@@ -129,11 +129,11 @@ object PPrinter extends LowPriPPrinter{
    * color
    */
   def literalColorPPrinter[T](map: String => String = x => x): PPrinter[T] = PPrinter[T] { (t: T, c: Config) =>
-    Iter(c.colors.literalColor, map(t.toString), c.colors.endColor)
+    Iter(c.colors.literalColor(map(t.toString)).render)
   }
 
   implicit val UnitRepr = PPrinter[Unit] { (t: Unit, c: Config) =>
-    Iter(c.colors.literalColor, "()", c.colors.endColor)
+    Iter(c.colors.literalColor("()").render)
   }
 
   implicit val NullRepr = literalColorPPrinter[Null]()
@@ -175,10 +175,15 @@ object PPrinter extends LowPriPPrinter{
         Iter("\"\"\"\n") ++ indented ++ Iter("\n", indent, "\"\"\"")
       }
 
-    Iter(c.colors.literalColor) ++ body ++ Iter(c.colors.endColor)
+    // This is a really hacky way to extract the color-prefix and reset-suffix
+    // from a fansi.Attrs value. Fansi should expose some way to do this
+    // directly, but until that happens this will do
+    val snippet = c.colors.literalColor(" ").render
+    val Array(prefix, suffix) = snippet.split(" ", -1)
+    Iter(prefix) ++ body ++ Iter(suffix)
   }
   implicit val SymbolRepr = PPrinter[Symbol]((x, c) =>
-    Iter(c.colors.literalColor, "'", x.name, c.colors.endColor)
+    Iter(c.colors.literalColor("'" + x.name).render)
   )
 
   /**
@@ -239,16 +244,14 @@ object PPrinter extends LowPriPPrinter{
     @tailrec
     def strIter(lines: Int, chars: Int, begin: Iter[String]): Iter[String] = {
       if(!iter.hasNext) begin
-      else if(lines == 0) begin ++ Iter(cfg.colors.prefixColor, "...", cfg.colors.endColor)
+      else if(lines == 0) begin ++ Iter(cfg.colors.prefixColor("...").render)
       else{
         val head = iter.next
         val (remainingLines, remainingChars, substringLength) = charIter(head, 0, lines, chars)
         if(!substringLength.isEmpty){
           begin ++ Iter(
             head.substring(0, substringLength.get),
-            cfg.colors.prefixColor,
-            "...",
-            cfg.colors.endColor
+            cfg.colors.prefixColor("...").render
           )
         } else {
           strIter(remainingLines, remainingChars, begin ++ Iter(head))
@@ -344,7 +347,7 @@ object Internals {
     val overflow = checkOverflow(horizontalChunks, renamed.length + 2)
 
     if (overflow) handleChunksVertical(name, c, chunkFunc)
-    else Iter(c.colors.prefixColor, renamed, c.colors.endColor, "(") ++ horizontalChunks ++ Iter(")")
+    else Iter(c.colors.prefixColor(renamed).render, "(") ++ horizontalChunks ++ Iter(")")
   }
   val ansiRegex = "\u001B\\[[;\\d]*m"
 
@@ -362,7 +365,7 @@ object Internals {
     // Needs to be a def to avoid exhaustion
     def indent = Iter.fill(c.depth)("  ")
 
-    Iter(c.colors.prefixColor, c.rename(name), c.colors.endColor, "(\n") ++
+    Iter(c.colors.prefixColor(c.rename(name)).render, "(\n") ++
     chunks2.flatMap(Iter(",\n", "  ") ++ indent ++ _).drop(1) ++
     Iter("\n") ++ indent ++ Iter(")")
   }
