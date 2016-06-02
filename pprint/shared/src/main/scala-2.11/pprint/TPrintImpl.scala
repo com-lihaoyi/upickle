@@ -17,7 +17,7 @@ object TPrintLowPri{
       else s.name.decodedName.toString.stripSuffix(".type")
 
     def literalColor(s: Tree) = {
-      q"$cfgSym.colors.literalColor + ($s) + $cfgSym.colors.endColor"
+      q"$cfgSym.typeColor + ($s) + $cfgSym.endColor"
     }
     def printSym(s: Symbol): Tree = {
       literalColor(q"${printSymString(s)}")
@@ -197,7 +197,7 @@ object TPrintLowPri{
     }
     lazy val cfgSym = c.freshName[TermName]("cfg")
     val res = c.Expr[TPrint[T]](q"""pprint.TPrint.lambda{
-      ($cfgSym: pprint.Config) =>
+      ($cfgSym: pprint.TPrintColors) =>
         ${rec0(tpe, end = true)}
     }""")
     //    println("RES " + res)

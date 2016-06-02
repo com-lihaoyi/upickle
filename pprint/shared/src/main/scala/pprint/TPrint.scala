@@ -10,18 +10,28 @@ package pprint
   *   what's currently in scope
   */
 trait TPrint[T]{
-  def render(implicit cfg: Config): String
+  def render(implicit cfg: TPrintColors): String
 }
 
-object TPrint extends TPrintGen[TPrint, Config] with TPrintLowPri{
+object TPrint extends TPrintGen[TPrint, TPrintColors] with TPrintLowPri{
   def literal[T](s: String) = new TPrint[T]{
-    def render(implicit cfg: Config) = cfg.colors.literalColor + s + cfg.colors.endColor
+    def render(implicit cfg: TPrintColors) = cfg.typeColor + s + cfg.endColor
   }
-  def lambda[T](f: Config => String) = new TPrint[T]{
-    def render(implicit cfg: Config) = f(cfg)
+  def lambda[T](f: TPrintColors => String) = new TPrint[T]{
+    def render(implicit cfg: TPrintColors) = f(cfg)
   }
-  def make[T](f: Config => String) = TPrint.lambda[T](f)
-  def get[T](cfg: Config)(implicit t: TPrint[T]) = t.render(cfg)
+  def make[T](f: TPrintColors => String) = TPrint.lambda[T](f)
+  def get[T](cfg: TPrintColors)(implicit t: TPrint[T]) = t.render(cfg)
   def implicitly[T](implicit t: TPrint[T]): TPrint[T] = t
   implicit val NothingTPrint: TPrint[Nothing] = TPrint.literal("Nothing")
+}
+
+case class TPrintColors(typeColor: String,
+                        endColor: String)
+
+object TPrintColors{
+  implicit object BlackWhite extends TPrintColors("", "")
+  object Colors extends TPrintColors(Console.GREEN, Console.RESET){
+    implicit val Colored = this
+  }
 }

@@ -201,12 +201,12 @@ object TPrintTests extends TestSuite{
       }
     }
     'colored{
-      import pprint.Config.Colors._
+      import pprint.TPrintColors.Colors._
       def checkColor[T](expected: String)(implicit tprint: TPrint[T]) = {
         val tprinted = tprint.render.replace(
-          implicitly[pprint.Config].colors.literalColor, "<"
+          implicitly[pprint.TPrintColors].typeColor, "<"
         ).replace(
-          implicitly[pprint.Config].colors.endColor, ">"
+          implicitly[pprint.TPrintColors].endColor, ">"
         )
         assert(tprinted == expected)
       }

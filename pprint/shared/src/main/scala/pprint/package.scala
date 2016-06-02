@@ -90,7 +90,7 @@ package object pprint {
     )
     implicitly[PPrint[T]].render(t, newCfg)
   }
-  def tprint[T: TPrint](implicit config: Config = Config.Defaults.PPrintConfig) = {
+  def tprint[T: TPrint](implicit config: TPrintColors) = {
     implicitly[TPrint[T]].render(config)
   }
 }
