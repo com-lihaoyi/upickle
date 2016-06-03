@@ -317,42 +317,42 @@ object VerticalTests extends TestSuite{
 //      }
       'longNoTruncation{
         implicit val cfg = pprint.Config.Defaults.PPrintConfig
-          * - Check("a" * 10000,"\""+"a" * 10000+"\"")
-          * - Check(
-            List.fill(30)(100),
-            """List(
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100,
-              |  100
-              |)""".stripMargin
-            )
+        * - Check("a" * 10000,"\""+"a" * 10000+"\"")
+        * - Check(
+          List.fill(30)(100),
+          """List(
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100,
+            |  100
+            |)""".stripMargin
+        )
       }
 
       'shortNonTruncated{
@@ -402,7 +402,7 @@ object VerticalTests extends TestSuite{
             |...""".stripMargin
         )
         * - Check(
-        List.fill(150)("foobarbaz"),
+          List.fill(150)("foobarbaz"),
           """List(
             |  "foobarbaz",
             |  "foobarbaz",

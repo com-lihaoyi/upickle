@@ -179,7 +179,9 @@ object PPrinter extends LowPriPPrinter{
     // from a fansi.Attrs value. Fansi should expose some way to do this
     // directly, but until that happens this will do
     val snippet = c.colors.literalColor(" ").render
-    val Array(prefix, suffix) = snippet.split(" ", -1)
+    val prefix = fansi.Attrs.emitAnsiCodes(0, c.colors.literalColor.applyMask)
+    val suffix = fansi.Attrs.emitAnsiCodes(c.colors.literalColor.applyMask, 0)
+
     Iter(prefix) ++ body ++ Iter(suffix)
   }
   implicit val SymbolRepr = PPrinter[Symbol]((x, c) =>
