@@ -197,6 +197,10 @@
       display.block
     )
   @sect{Version History}
+    @sect{0.4.1}
+      @ul
+        @li
+          Updating PPrint to use the [Fansi](https://github.com/lihaoyi/fansi) library for dealing with colors, instead of `Console.*`
     @sect{0.4.0}
       @ul
         @li
