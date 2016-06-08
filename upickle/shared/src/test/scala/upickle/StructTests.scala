@@ -155,5 +155,16 @@ object StructTests extends TestSuite{
         rw(uuid, s""" "$uuidString" """)
       }
     }
+
+    'objs{
+      val nestedObj = Js.Obj("foo" -> Js.Null, "bar" -> Js.Obj("baz" -> Js.Str("str")))
+      val emptyObj = Js.Obj()
+      'nested{
+        rw(nestedObj, """{"foo":null,"bar":{"baz":"str"}}""")
+      }
+      'empty{
+        rw(emptyObj, """{}""")
+      }
+    }
   }
 }

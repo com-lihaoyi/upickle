@@ -228,7 +228,8 @@ trait Implicits extends Types { imp: Generated =>
   implicit def UuidR: R[UUID] = R[UUID]{case Js.Str(s) => UUID.fromString(s)}
   implicit def UuidW: W[UUID] = W[UUID]{case t: UUID => Js.Str(t.toString)}
 
-
+  implicit def ObjR: R[Js.Obj] = R[Js.Obj]{case o: Js.Obj => o}
+  implicit def ObjW: W[Js.Obj] = W[Js.Obj]{case o: Js.Obj => o}
 
   def makeReader[T](pf: PartialFunction[Js.Value, T]) = Reader.apply(pf)
   def makeWriter[T](f: T => Js.Value): Writer[T] = Writer.apply(f)
