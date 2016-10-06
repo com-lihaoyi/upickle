@@ -45,6 +45,7 @@ object PrimitiveTests extends TestSuite{
 
     'Double{
       'whole-rw(125123: Double, """125123.0""", """125123""")
+      'wholeLarge-rw(1475741505173L: Double, """1475741505173.0""", """1475741505173""")
       'fractional-rw(125123.1542312, """125123.1542312""")
       'negative-rw(-125123.1542312, """-125123.1542312""")
       'null-assert(read[Double]("null") == 0.0)
