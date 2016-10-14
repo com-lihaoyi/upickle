@@ -55,6 +55,8 @@
         @hl.scala{pprint.log(value: T, tag="optional"): Unit}: pretty-prints the given value to the console along with debugging information (class-name, method-name, line-number, an optional tag) to make it easy to find your prints again later. If you're finding yourself putting many debug prints in different files, this makes it much easier to keep them straight
       @li
         @hl.scala{pprint.tokenize(value: T): Iterator[String]}: same as @hl.scala{pprint.pprintln}, except instead of dumping to standard output it returns an iterator you can consume or pass around to use at your leisure.
+      @li
+        @hl.scala{pprint.stringify(value: T): String}: same as @hl.scala{pprint.pprintln}, except instead of dumping to standard output it returns a string.
 
     @p
       You can of course define your own custom methods if you want to e.g. always log to a log file or some third-party service, or if you want your own custom set of debug information to be printed (instead of what @code{.log} provides). See the short @lnk("implementation of these methods", "https://github.com/lihaoyi/upickle-pprint/blob/master/pprint/shared/src/main/scala/pprint/package.scala#L1") if you want ideas on how to write your own versions.

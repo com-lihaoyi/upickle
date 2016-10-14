@@ -155,5 +155,29 @@ object StructTests extends TestSuite{
         rw(uuid, s""" "$uuidString" """)
       }
     }
+
+    'jsValue{
+      'value{
+        val value:Js.Value = Js.Str("test")
+        rw(value, """"test"""")
+      }
+      'str-rw(Js.Str("test"), """"test"""")
+      'num-rw(Js.Num(7), """7""")
+      'obj{
+        'nested-rw(Js.Obj("foo" -> Js.Null, "bar" -> Js.Obj("baz" -> Js.Str("str"))), """{"foo":null,"bar":{"baz":"str"}}""")
+        'empty-rw(Js.Obj(), """{}""")
+      }
+      'arr{
+        'nonEmpty-rw(Js.Arr(Js.Num(5), Js.Num(6)), """[5,6]""")
+        'empty-rw(Js.Arr(), """[]""")
+      }
+      'true-rw(Js.True, """true""")
+      'false-rw(Js.False, """false""")
+      'null-rw(Js.Null, """null""")
+      // 'inCaseClass{
+      //   case class A(json:Js.Value)
+      //   rw(new A(Js.Num(7)), """{json:7}""")
+      // }
+    }
   }
 }

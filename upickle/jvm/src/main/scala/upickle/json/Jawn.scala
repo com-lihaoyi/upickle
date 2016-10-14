@@ -59,7 +59,7 @@ sealed trait Renderer {
       case Js.Null => sb.append("null")
       case Js.True => sb.append("true")
       case Js.False => sb.append("false")
-      case Js.Num(n) => sb.append(if (n == n.toInt) n.toInt.toString else n.toString)
+      case Js.Num(n) => sb.append(if (n == n.toLong) n.toLong.toString else n.toString)
       case Js.Str(s) => renderString(sb, s)
       case Js.Arr(vs@_*) => renderArray(sb, depth, vs, indent)
       case Js.Obj(vs@_*) => renderObject(sb, depth, canonicalizeObject(vs), indent)

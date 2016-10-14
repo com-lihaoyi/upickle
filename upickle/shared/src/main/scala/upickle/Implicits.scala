@@ -258,6 +258,26 @@ trait Implicits extends Types { imp: Generated =>
   implicit def UuidR: R[UUID] = R[UUID]{case Js.Str(s) => UUID.fromString(s)}
   implicit def UuidW: W[UUID] = W[UUID]{case t: UUID => Js.Str(t.toString)}
 
+  implicit def JsObjR: R[Js.Obj] = R[Js.Obj]{case v:Js.Obj => v}
+  implicit def JsObjW: W[Js.Obj] = W[Js.Obj]{case v:Js.Obj => v}
+
+  implicit def JsArrR: R[Js.Arr] = R[Js.Arr]{case v:Js.Arr => v}
+  implicit def JsArrW: W[Js.Arr] = W[Js.Arr]{case v:Js.Arr => v}
+
+  implicit def JsStrR: R[Js.Str] = R[Js.Str]{case v:Js.Str => v}
+  implicit def JsStrW: W[Js.Str] = W[Js.Str]{case v:Js.Str => v}
+
+  implicit def JsNumR: R[Js.Num] = R[Js.Num]{case v:Js.Num => v}
+  implicit def JsNumW: W[Js.Num] = W[Js.Num]{case v:Js.Num => v}
+
+  implicit def JsTrueR: R[Js.True.type] = R[Js.True.type]{case v:Js.True.type => v}
+  implicit def JsTrueW: W[Js.True.type] = W[Js.True.type]{case v:Js.True.type => v}
+
+  implicit def JsFalseR: R[Js.False.type] = R[Js.False.type]{case v:Js.False.type => v}
+  implicit def JsFalseW: W[Js.False.type] = W[Js.False.type]{case v:Js.False.type => v}
+
+  implicit def JsNullR: R[Js.Null.type] = R[Js.Null.type]{case v:Js.Null.type => v}
+  implicit def JsNullW: W[Js.Null.type] = W[Js.Null.type]{case v:Js.Null.type => v}
 
 
   def makeReader[T](pf: PartialFunction[Js.Value, T]) = Reader.apply(pf)
