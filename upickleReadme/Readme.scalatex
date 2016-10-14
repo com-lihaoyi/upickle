@@ -195,7 +195,7 @@
       @li
         @code{upickle.Invalid.Data}: thrown when unpickling fails at the second step which attempts to convert the parsed JSON tree into structured data of the desired type. Contains the offending JSON subtree in @code{data}, along with a human-readable error message.
 
-  @sect{Manually Specifying Sealed Trait Picklers}
+  @sect{Manual Sealed Trait Picklers}
     @p
       Due to a bug in the Scala compiler SI-7046, automatic sealed trait
       pickling can fail unpredictably. This can be worked around by instead
