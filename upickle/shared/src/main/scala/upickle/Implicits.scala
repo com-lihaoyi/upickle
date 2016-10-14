@@ -25,6 +25,34 @@ trait Implicits extends Types { imp: Generated =>
   implicit def Tuple2R[T1: R, T2: R]: R[(T1, T2)]
   implicit def Tuple2W[T1: W, T2: W]: W[(T1, T2)]
 
+
+  implicit class MergeRW[T: ClassTag](a: ReadWriter[T]){
+    def merge[V <: R: ClassTag, R >: T](b: ReadWriter[V]): ReadWriter[R] = {
+      ReadWriter[R](
+        {
+          case r: V => b.write(r)
+          case r: T => a.write(r)
+        },
+        b.read.orElse[Js.Value, R](a.read)
+      )
+    }
+  }
+  implicit class MergeR[T: ClassTag](a: Reader[T]){
+    def merge[V <: R: ClassTag, R >: T](b: Reader[V]): Reader[R] = {
+      Reader[R](b.read.orElse[Js.Value, R](a.read))
+    }
+  }
+
+  implicit class MergeW[T: ClassTag](a: Writer[T]){
+    def merge[V <: R: ClassTag, R >: T](b: Writer[V]): Writer[R] = {
+      Writer[R]{
+        case r: V => b.write(r)
+        case r: T => a.write(r)
+      }
+
+    }
+  }
+
   /**
    * APIs that need to be exposed to the outside world to support Macros
    * which depend on them, but probably should not get used directly.
@@ -46,6 +74,8 @@ trait Implicits extends Types { imp: Generated =>
       case v: V => g(v)
       case t: T => f(t)
     }
+
+
 
     def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = new PartialFunction[Js.Value, T] {
       def isDefinedAt(x: Value) = pf.isDefinedAt(x)

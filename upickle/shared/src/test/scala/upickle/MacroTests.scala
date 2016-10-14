@@ -37,6 +37,16 @@ object Custom {
   object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
 }
 
+// this can be un-sealed as long as `derivedSubclasses` is defined in the companion
+sealed trait TypedFoo
+object TypedFoo{
+  import upickle.default._
+  implicit val readWriter: ReadWriter[TypedFoo] =
+    macroRW[Bar] merge macroRW[Baz] merge macroRW[Quz]
+  case class Bar(i: Int) extends TypedFoo
+  case class Baz(s: String) extends TypedFoo
+  case class Quz(b: Boolean) extends TypedFoo
+}
 
 object MacroTests extends TestSuite{
   import Generic.ADT
@@ -473,6 +483,17 @@ object MacroTests extends TestSuite{
           class Something extends TakesWriter[Wat]
         }
 
+      }
+      'companioImplicitPickedUp{
+        assert(implicitly[upickle.default.Reader[TypedFoo]] eq TypedFoo.readWriter)
+        assert(implicitly[upickle.default.Writer[TypedFoo]] eq TypedFoo.readWriter)
+        assert(implicitly[upickle.default.ReadWriter[TypedFoo]] eq TypedFoo.readWriter)
+      }
+      'companionImplicitWorks{
+
+        rw(TypedFoo.Bar(1): TypedFoo, """{"$type": "upickle.TypedFoo.Bar", "i": 1}""")
+        rw(TypedFoo.Baz("lol"): TypedFoo, """{"$type": "upickle.TypedFoo.Baz", "s": "lol"}""")
+        rw(TypedFoo.Quz(true): TypedFoo, """{"$type": "upickle.TypedFoo.Quz", "b": true}""")
       }
     }
   }
