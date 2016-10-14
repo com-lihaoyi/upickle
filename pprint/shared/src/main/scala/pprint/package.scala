@@ -65,6 +65,22 @@ package object pprint {
     tokenize(t, width, height, indent, colors)(implicitly[PPrint[T]], cfg).foreach(print)
     println()
   }
+  def stringify[T: PPrint](implicit cfg: Config) = (t: T) => {
+    tokenize(t)(implicitly[PPrint[T]], cfg).mkString
+  }
+  /**
+    * Pretty stringify
+    */
+  def stringify[T: PPrint](t: T,
+                          width: Integer = null,
+                          height: Integer = null,
+                          indent: Integer = null,
+                          colors: Colors = null)
+                         (implicit cfg: Config = Config.Defaults.PPrintConfig) = {
+
+
+    tokenize(t, width, height, indent, colors)(implicitly[PPrint[T]], cfg).mkString
+  }
   /**
    * Prettyprint a strongly-typed value, falling back to toString
    * if you don't know what to do with it. Generally used for human-facing
