@@ -1,4 +1,4 @@
 package upicklePPrint
 object Constants{
-  val version = "0.4.2"
+  val version = "0.4.3"
 }
