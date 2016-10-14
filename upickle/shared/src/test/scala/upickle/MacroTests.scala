@@ -43,10 +43,12 @@ object TypedFoo{
   import upickle.default._
   implicit val readWriter: ReadWriter[TypedFoo] =
     macroRW[Bar] merge macroRW[Baz] merge macroRW[Quz]
+
   case class Bar(i: Int) extends TypedFoo
   case class Baz(s: String) extends TypedFoo
   case class Quz(b: Boolean) extends TypedFoo
 }
+// End TypedFoo
 
 object MacroTests extends TestSuite{
   import Generic.ADT

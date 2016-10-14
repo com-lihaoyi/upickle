@@ -3,6 +3,7 @@
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
 @val exampleTests = wd/'upickle/'shared/'src/'test/'scala/'example/"ExampleTests.scala"
+@val macroTests = wd/'upickle/'shared/'src/'test/'scala/'upickle/"MacroTests.scala"
 
 @val optionsAsNullTests = wd/'upickle/'shared/'src/'test/'scala/'example/"OptionsAsNullTests.scala"
 
@@ -193,6 +194,23 @@
         @code{upickle.Invalid.Json}: thrown when unpickling fails at the first step which attempst to convert the incoming @code{String} into semi-structured JSON data. The exception contains data about where parsing failed (@code{input}, @code{line}, @code{col}) as well as a human-readable error message.
       @li
         @code{upickle.Invalid.Data}: thrown when unpickling fails at the second step which attempts to convert the parsed JSON tree into structured data of the desired type. Contains the offending JSON subtree in @code{data}, along with a human-readable error message.
+
+  @sect{Manually Specifying Sealed Trait Picklers}
+    @p
+      Due to a bug in the Scala compiler SI-7046, automatic sealed trait
+      pickling can fail unpredictably. This can be worked around by instead
+      using the @code{macroRW} and @code{merge} methods to manually specify
+      which sub-types of a sealed trait to consider when pickling:
+
+    @hl.ref(macroTests, "sealed trait TypedFoo", "// End TypedFoo")
+
+    @p
+      By placing it in the companion object, we ensure that the pickler is
+      cached and always used by default, even if not explicitly imported.
+      From there you can use it manually:
+
+    @hl.ref(macroTests, "'companioImplicitPickedUp")
+
 
   @sect{Defaults}
 
@@ -393,15 +411,15 @@
           def value = null
         }
       }
-    @p
 
+    @p
       As well as in the @hl.scala{upickle.json.read} and @hl.scala{upickle.json.write} functions:
 
     @hl.scala
       def read(s: String): Js.Value
       def write(v: Js.Value): String
-    @p
 
+    @p
       Which you use to convert between structured @hl.scala{Js.*} trees and unstructured @hl.scala{String}s. As described earlier, the implementation of these functions differs between ScalaJVM/ScalaJS.
     @p
       You can use this JSON data structure for simple tasks:
@@ -412,6 +430,9 @@
     @p
       uPickle does not provide any other utilities are JSON that other libraries do (zippers, lenses, combinators, ...). If you're looking for a compact JSON AST to construct or pattern match on, together with fast serializing and deserializing, it may do the trick.
 
+    @p
+      uPickle's @hl.scala{Js.Value} type and subclasses are all themselves
+      serializable, and they serialize to themselves.
 
   @sect{Caching Picklers}
     @p
@@ -449,11 +470,25 @@
 
   @sect{Version History}
 
-    @sect{0.4.1}
+    @sect{0.4.3}
       @ul
         @li
           Support for @hl.scala{BigInt} and @hl.scala{BigDecimal},
           thanks to @lnk("Jisoo Park", "https://github.com/guersam")
+        @li
+          @code{Js.Value}s are now serializable, thanks to
+          @lnk("Felix Dietza", "https://github.com/fdietze")
+        @li
+          Made it easy to write @sect.ref{Manual Sealed Trait Picklers}
+          in order to work around problems with SI-7046
+    @sect{0.4.1}
+      @ul
+        @li
+          Changes to @lnk("PPrint", "http://www.lihaoyi.com/upickle-pprint/pprint/#0.4.2")
+    @sect{0.4.1}
+      @ul
+        @li
+          Changes to @lnk("PPrint", "http://www.lihaoyi.com/upickle-pprint/pprint/#0.4.1")
     @sect{0.4.0}
       @ul
         @li

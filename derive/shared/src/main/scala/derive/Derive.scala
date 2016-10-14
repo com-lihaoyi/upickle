@@ -285,10 +285,11 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
     if (!clsSymbol.isSealed) {
       fail(tpe, s"[error] The referenced trait [[${clsSymbol.name}]] must be sealed.")
     }else if (clsSymbol.knownDirectSubclasses.filter(!_.toString.contains("<local child>")).isEmpty) {
-      val msg = s"The referenced trait [[${clsSymbol.name}]] does not have any sub-classes. This may " +
-        "happen due to a limitation of scalac (SI-7046) given that the trait is " +
-        "not in the same package. If this is the case, the hierarchy may be " +
-        "defined using integer constants."
+      val msg =
+        s"The referenced trait [[${clsSymbol.name}]] does not have any sub-classes. This may " +
+        "happen due to a limitation of scalac (SI-7046). To work around this, " +
+        "try manually specifying the sealed trait picklers as described in " +
+        "http://lihaoyi.github.com/upickle-pprint/upickle/#ManualSealedTraitPicklers"
       fail(tpe, msg)
     }else{
       val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef]).toSeq

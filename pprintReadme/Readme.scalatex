@@ -199,10 +199,20 @@
       display.block
     )
   @sect{Version History}
+    @sect{0.4.3}
+      @ul
+        @li
+          Add @hl.scala{pprint.stringify} function, thanks to
+          @lnk("David Portabella", "https://github.com/dportabella")
+
+    @sect{0.4.2}
+      @ul
+        @li
+          Bump fansi version
     @sect{0.4.1}
       @ul
         @li
-          Updating PPrint to use the [Fansi](https://github.com/lihaoyi/fansi) library for dealing with colors, instead of `Console.*`
+          Updating PPrint to use the @lnk("Fansi", "https://github.com/lihaoyi/fansi") library for dealing with colors, instead of `Console.*`
     @sect{0.4.0}
       @ul
         @li
