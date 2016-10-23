@@ -1,9 +1,10 @@
-crossScalaVersions := Seq("2.10.4", "2.11.4")
 
 val settings = Seq(
   organization := "com.lihaoyi",
   version := upicklePPrint.Constants.version,
-  scalaVersion := "2.11.7",
+
+  scalaVersion := "2.11.8",
+  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0"),
 
   scalacOptions := Seq("-unchecked",
     "-deprecation",
@@ -11,50 +12,54 @@ val settings = Seq(
     "-feature"),
   // Sonatype
   publishArtifact in Test := false,
-  publishTo <<= version { (v: String) =>
-    Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
-  },
+  publishTo := Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
+  
+  scmInfo := Some(ScmInfo(
+    browseUrl = url("https://github.com/lihaoyi/upickle"),
+    connection = "scm:git:git@github.com:lihaoyi/upickle.git"
+  )),
+  licenses := Seq("MIT" -> url("http://www.opensource.org/licenses/mit-license.html")),
+  developers += Developer(
+    email = "haoyi.sg@gmail.com",
+    id = "lihaoyi",
+    name = "Li Haoyi",
+    url = url("https://github.com/lihaoyi")
+  ),
+
   testFrameworks += new TestFramework("utest.runner.Framework"),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
-    "com.lihaoyi" %%% "utest" % "0.4.3" % "test",
-    "com.lihaoyi" %%% "sourcecode" % "0.1.1",
+    "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
+    "com.lihaoyi" %%% "utest" % "0.4.4" % "test",
+    "com.lihaoyi" %%% "sourcecode" % "0.1.3",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
   ) ++ (
-    if (scalaVersion.value startsWith "2.11.") Nil
-    else Seq(
-      "org.scalamacros" %% s"quasiquotes" % "2.0.0" % "provided",
-      compilerPlugin("org.scalamacros" % s"paradise" % "2.1.0-M5" cross CrossVersion.full)
-    )
+    if(scalaBinaryVersion.value == "2.10")
+      Seq(
+        compilerPlugin("org.scalamacros" % s"paradise" % "2.1.0" cross CrossVersion.full),
+        "org.scalamacros" %% s"quasiquotes" % "2.1.0"
+      )
+    else Seq()
   ),
   scalaJSStage in Global := FullOptStage,
   autoCompilerPlugins := true,
 //  scalacOptions += "-Xlog-implicits",
-  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
-  pomExtra :=
-    <url>https://github.com/lihaoyi/upickle</url>
-      <licenses>
-        <license>
-          <name>MIT license</name>
-          <url>http://www.opensource.org/licenses/mit-license.php</url>
-        </license>
-      </licenses>
-      <scm>
-        <url>git://github.com/lihaoyi/upickle.git</url>
-        <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
-      </scm>
-      <developers>
-        <developer>
-          <id>lihaoyi</id>
-          <name>Li Haoyi</name>
-          <url>https://github.com/lihaoyi</url>
-        </developer>
-      </developers>
+  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5")
 )
 
-val derive = crossProject.settings(settings:_*).settings(
-  name := "derive"
+settings
+
+val compatible211and212 = 
+  unmanagedSourceDirectories in Compile ++= {
+    if (Set("2.11", "2.12").contains(scalaBinaryVersion.value)) 
+      Seq(baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.11_2.12")
+    else
+      Seq()
+  }
+
+val derive = crossProject.settings(settings).settings(
+  name := "derive",
+  compatible211and212
 )
 val deriveJS = derive.js
 val deriveJVM = derive.jvm
@@ -63,6 +68,7 @@ val upickle = crossProject
   .settings(settings:_*)
   .settings(
     name := "upickle",
+    compatible211and212,
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
       val file = dir / "upickle" / "Generated.scala"
       val tuplesAndCases = (1 to 22).map{ i =>
@@ -115,7 +121,7 @@ val upickle = crossProject
         s"-P:scalajs:mapSourceURI:$a->$g/v${version.value}/"
       }))
   ).jvmSettings(
-    libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.3"
+    libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.10.3"
   )
 
 lazy val upickleJS = upickle.js.settings(
@@ -125,21 +131,18 @@ lazy val upickleJVM = upickle.jvm
 lazy val test = project
   .in(file("test"))
   .dependsOn(upickleJVM, pprintJVM, deriveJVM % "compile->compile;test->test;test->compile;compile->test")
-  .settings(
-    settings,
-    scalaVersion := "2.11.7"
-  )
+  .settings(settings)
 
 lazy val pprint = crossProject
   .dependsOn(derive % "compile->compile;test->test")
   .settings(settings:_*)
   .settings(
+    compatible211and212,
     name := "pprint",
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "fansi" % "0.2.0",
+      "com.lihaoyi" %%% "fansi" % "0.2.3",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-      "com.chuusai" %% "shapeless" % "2.2.3" % "test" ,
-      "org.tpolecat" %% "doobie-core" % "0.2.3" % "test"
+      "com.chuusai" %%% "shapeless" % "2.3.2" % "test"
     ),
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
       val file = dir/"pprint"/"PPrintGen.scala"
@@ -199,16 +202,28 @@ lazy val pprint = crossProject
       Seq(file)
     }
   )
-  .jvmSettings(
-    libraryDependencies ++= Seq(
-      "org.spire-math" %% "spire" % "0.11.0" % "test",
-      "com.typesafe.akka" %% "akka-http-experimental" % "1.0-M3" % "test",
-      "com.twitter" %% "finagle-httpx" % "6.26.0" % "test"
-    )
+  .jvmSettings( 
+    libraryDependencies ++= {
+      if (Set("2.10", "2.11").contains(scalaBinaryVersion.value))
+        Seq(
+          "org.spire-math" %% "spire" % "0.11.0" % "test",
+          "com.typesafe.akka" %% "akka-http-experimental" % "1.0-M3" % "test",
+          "com.twitter" %% "finagle-httpx" % "6.26.0" % "test",
+          "org.tpolecat" %% "doobie-core" % "0.2.3" % "test"
+        )
+      else Seq() // not yet available for 2.12
+    },
+    unmanagedSourceDirectories in Compile ++= {
+      if (Set("2.10", "2.11").contains(scalaBinaryVersion.value)) 
+        Seq(baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.10_2.11")
+      else
+        Seq() // skip 2.12
+    }
   )
+
 lazy val pprintJVM = pprint.jvm
 lazy val pprintJS = pprint.js
-lazy val modules = project.aggregate(pprintJVM, pprintJS, upickleJVM, upickleJS, deriveJS, deriveJVM).settings(
+lazy val modules = project.settings(settings).aggregate(pprintJVM, pprintJS, upickleJVM, upickleJS, deriveJS, deriveJVM).settings(
   publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo"))),
   publishArtifact := false
 )

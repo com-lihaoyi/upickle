@@ -98,8 +98,8 @@ object HorizontalTests extends TestSuite{
 //          Check(Some(None), "Some(None)")
         }
         'Default{
-          Check(() => (), "<function0>")
-          Check((i: Int) => (), "<function1>")
+          // Check(() => (), "<function0>")
+          // Check((i: Int) => (), "<function1>")
         }
       }
 
