@@ -477,7 +477,7 @@
           thanks to @lnk("Jisoo Park", "https://github.com/guersam")
         @li
           @code{Js.Value}s are now serializable, thanks to
-          @lnk("Felix Dietza", "https://github.com/fdietze")
+          @lnk("Felix Dietze", "https://github.com/fdietze")
         @li
           Made it easy to write @sect.ref{Manual Sealed Trait Picklers}
           in order to work around problems with SI-7046
