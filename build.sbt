@@ -3,7 +3,7 @@ val settings = Seq(
   organization := "com.lihaoyi",
   version := upicklePPrint.Constants.version,
 
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.12.0",
   crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0"),
 
   scalacOptions := Seq("-unchecked",
@@ -69,7 +69,9 @@ val upickle = crossProject
   .settings(
     name := "upickle",
     compatible211and212,
-    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+    sourceGenerators in Compile += Def.task{
+      val dir = (sourceManaged in Compile).value
+
       val file = dir / "upickle" / "Generated.scala"
       val tuplesAndCases = (1 to 22).map{ i =>
         def commaSeparated(s: Int => String) = (1 to i).map(s).mkString(", ")
@@ -112,7 +114,7 @@ val upickle = crossProject
           }
         """)
       Seq(file)
-    }
+    }.taskValue
   ).jsSettings(
     scalaJSStage in Test := FullOptStage,
       scalacOptions ++= (if (isSnapshot.value) Seq.empty else Seq({
@@ -124,9 +126,7 @@ val upickle = crossProject
     libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.10.3"
   )
 
-lazy val upickleJS = upickle.js.settings(
-   scalaJSUseRhino in Global := false
-)
+lazy val upickleJS = upickle.js
 lazy val upickleJVM = upickle.jvm
 lazy val test = project
   .in(file("test"))
@@ -144,7 +144,8 @@ lazy val pprint = crossProject
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
       "com.chuusai" %%% "shapeless" % "2.3.2" % "test"
     ),
-    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+    sourceGenerators in Compile += Def.task {
+      val dir = (sourceManaged in Compile).value
       val file = dir/"pprint"/"PPrintGen.scala"
       val tuples = (1 to 22).map{ i =>
         val ts = (1 to i) map ("T" + _)
@@ -169,8 +170,9 @@ lazy val pprint = crossProject
       """.stripMargin
       IO.write(file, output)
       Seq(file)
-    },
-    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+    }.taskValue,
+    sourceGenerators in Compile += Def.task {
+      val dir = (sourceManaged in Compile).value
       val file = dir/"pprint"/"TPrintGen.scala"
 
       val typeGen = for(i <- 2 to 22) yield {
@@ -200,7 +202,7 @@ lazy val pprint = crossProject
       """.stripMargin
       IO.write(file, output)
       Seq(file)
-    }
+    }.taskValue
   )
   .jvmSettings( 
     libraryDependencies ++= {
@@ -228,12 +230,13 @@ lazy val modules = project.settings(settings).aggregate(pprintJVM, pprintJS, upi
   publishArtifact := false
 )
 
-lazy val upickleReadme= scalatex.ScalatexReadme(
+lazy val upickleReadme = scalatex.ScalatexReadme(
   projectId = "upickleReadme",
   wd = file(""),
   url = "https://github.com/lihaoyi/upickle/tree/master",
   source = "Readme"
 ).settings(
+  scalaVersion := "2.11.8",
   (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala"
 )
 
@@ -243,5 +246,6 @@ lazy val pprintReadme = scalatex.ScalatexReadme(
   url = "https://github.com/lihaoyi/upickle/tree/master",
   source = "Readme"
 ).settings(
+  scalaVersion := "2.11.8",
   (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala"
 )
