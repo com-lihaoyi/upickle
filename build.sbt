@@ -14,18 +14,6 @@ val settings = Seq(
   publishArtifact in Test := false,
   publishTo := Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
   
-  scmInfo := Some(ScmInfo(
-    browseUrl = url("https://github.com/lihaoyi/upickle"),
-    connection = "scm:git:git@github.com:lihaoyi/upickle.git"
-  )),
-  licenses := Seq("MIT" -> url("http://www.opensource.org/licenses/mit-license.html")),
-  developers += Developer(
-    email = "haoyi.sg@gmail.com",
-    id = "lihaoyi",
-    name = "Li Haoyi",
-    url = url("https://github.com/lihaoyi")
-  ),
-
   testFrameworks += new TestFramework("utest.runner.Framework"),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
@@ -44,7 +32,26 @@ val settings = Seq(
   scalaJSStage in Global := FullOptStage,
   autoCompilerPlugins := true,
 //  scalacOptions += "-Xlog-implicits",
-  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5")
+  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
+  pomExtra :=
+    <url>https://github.com/lihaoyi/upickle</url>
+      <licenses>
+        <license>
+          <name>MIT license</name>
+          <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+      </licenses>
+      <scm>
+        <url>git://github.com/lihaoyi/upickle.git</url>
+        <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>lihaoyi</id>
+          <name>Li Haoyi</name>
+          <url>https://github.com/lihaoyi</url>
+        </developer>
+      </developers>
 )
 
 settings
