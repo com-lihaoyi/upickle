@@ -447,21 +447,28 @@ object Internals {
                 "None of the following methods were defined: unapply, unapplySeq"
               )
             case Some(actionName) =>
-              val t = q"$freshName"
-              val cfg = q"$freshName"
+              val t    = freshName
+              val cfg  = freshName
+              val t2   = freshName
+              val cfg2 = freshName
 
-              def get = q"$companion.$actionName($t).get"
-              val w = n match {
-                case 0 => q"()"
-                case 1 => q"Tuple1($get)"
-                case n => get
+              val tuple = newTypeName("Tuple" + argSyms.length)
+
+              val renderers = argTypes.zip(argSyms).zipWithIndex.map { case ((typ, sym), i) =>
+                val accessor = newTermName(sym.name.toString)
+                val fieldPrefix = s"${sym.name} = "
+                q"""Iterator(if ($cfg2.showFieldName) $fieldPrefix else "")  ++ $pkg.Chunker.render[$typ]($t2.$accessor, $cfg2)"""
               }
-              val tupleChunker = newTermName("Tuple" + argSyms.length + "Chunker")
+
               q"""
               $pkg.PPrint[$targetType](
                 $pkg.PPrinter.ChunkedRepr[$targetType](
                   $pkg.Chunker[$targetType]( ($t: $targetType, $cfg: $pkg.Config) =>
-                    $pkg.Chunker.$tupleChunker[..$argTypes].chunk($w, $cfg)
+                    $pkg.Chunker.makeChunker[$targetType] {
+                      ($t2: $targetType, $cfg2: $pkg.Config) => Iterator(
+                        ..$renderers
+                      )
+                    }.chunk($t, $cfg)
                   )
                 )
               )
