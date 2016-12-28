@@ -101,8 +101,8 @@ object StructTests extends TestSuite{
       'inf-rw(Duration.Inf, """ "inf" """)
       "-inf" - rw(Duration.MinusInf, """ "-inf" """)
       'undef-rw(Duration.Undefined, """ "undef" """)
-      "1-second" - rw(1.second, """ "1000000000" """)
-      "2-hour" - rw(2.hours, """ "7200000000000" """)
+      "1-second" - rw(1.second, "1000000000")
+      "2-hour" - rw(2.hours, "7200000000000")
     }
 
     'combinations{
@@ -123,10 +123,10 @@ object StructTests extends TestSuite{
       )
 
       'EitherDurationOptionDuration{
-        rw(Left(10 seconds): Either[Duration, Int], """[0,"10000000000"]""")
-        rw(Right(Some(0.33 millis)): Either[Int, Option[Duration]], """[1,["330000"]]""")
-        rw(Left(10 seconds): Either[Duration, Option[Duration]], """[0,"10000000000"]""")
-        rw(Right(Some(0.33 millis)): Either[Duration, Option[Duration]], """[1,["330000"]]""")
+        rw(Left(10 seconds): Either[Duration, Int], """[0,10000000000]""")
+        rw(Right(Some(0.33 millis)): Either[Int, Option[Duration]], """[1,[330000]]""")
+        rw(Left(10 seconds): Either[Duration, Option[Duration]], """[0,10000000000]""")
+        rw(Right(Some(0.33 millis)): Either[Duration, Option[Duration]], """[1,[330000]]""")
       }
     }
 
