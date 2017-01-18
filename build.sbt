@@ -56,17 +56,19 @@ val settings = Seq(
 
 settings
 
-val compatible211and212 = 
+val compatible211andAbove =
   unmanagedSourceDirectories in Compile ++= {
-    if (Set("2.11", "2.12").contains(scalaBinaryVersion.value)) 
-      Seq(baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.11_2.12")
-    else
-      Seq()
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, n)) if n >= 11 =>
+        Seq(baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.11+")
+      case _ =>
+        Seq()
+    }
   }
 
 val derive = crossProject.settings(settings).settings(
   name := "derive",
-  compatible211and212
+  compatible211andAbove
 )
 val deriveJS = derive.js
 val deriveJVM = derive.jvm
@@ -75,7 +77,7 @@ val upickle = crossProject
   .settings(settings:_*)
   .settings(
     name := "upickle",
-    compatible211and212,
+    compatible211andAbove,
     sourceGenerators in Compile += Def.task{
       val dir = (sourceManaged in Compile).value
 
@@ -144,7 +146,7 @@ lazy val pprint = crossProject
   .dependsOn(derive % "compile->compile;test->test")
   .settings(settings:_*)
   .settings(
-    compatible211and212,
+    compatible211andAbove,
     name := "pprint",
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "fansi" % "0.2.3",
@@ -220,7 +222,7 @@ lazy val pprint = crossProject
           "com.twitter" %% "finagle-httpx" % "6.26.0" % "test",
           "org.tpolecat" %% "doobie-core" % "0.2.3" % "test"
         )
-      else Seq() // not yet available for 2.12
+      else Seq() // not yet available for 2.12?
     },
     unmanagedSourceDirectories in Compile ++= {
       if (Set("2.10", "2.11").contains(scalaBinaryVersion.value)) 
