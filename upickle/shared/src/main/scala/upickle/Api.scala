@@ -10,7 +10,7 @@ import language.higherKinds
  * its behavior. Override the `annotate` methods to control how a sealed
  * trait instance is tagged during reading and writing.
  */
-trait Api extends Types with Implicits with Generated with LowPriX{
+trait Api extends Types with Implicits with Generated with GeneratedJava8Time with LowPriX{
   protected[this] def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = Internal.validate(name)(pf)
 
   type key = derive.key
