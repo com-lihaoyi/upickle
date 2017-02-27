@@ -361,6 +361,8 @@ object MacroTests extends TestSuite{
     'varargs{
       rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
+      rw(Varargs.SingleArg("a", "b", "c"), """{"args":["a","b","c"]}""")
+      rw(Varargs.SingleArg("a"), """{"args":["a"]}""")
     }
       'performance{
         import Generic.ADT

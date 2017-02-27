@@ -64,6 +64,7 @@ object DerivationTests extends TestSuite{
     'varargs {
       import derive.Varargs._
       Check(Sentence("omg", "2", "3"), """Sentence("omg", Array("2", "3"))""")
+      Check(SingleArg("omg", "2", "3"), """SingleArg(Array("omg", "2", "3"))""")
     }
     'genericADTs {
       import derive.GenericADTs._
