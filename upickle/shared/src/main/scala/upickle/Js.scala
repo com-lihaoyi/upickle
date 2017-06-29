@@ -85,7 +85,7 @@ object Js {
       */
     def apply(i: Int): Value = this.arr(i)
     /**
-      * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
+      * Looks up the [[Js.Value]] as a [[Js.Obj]] by key, throws
       * otherwise if it's not a [[Js.Obj]]
       */
     def apply(s: java.lang.String): Value = this.obj(s)
