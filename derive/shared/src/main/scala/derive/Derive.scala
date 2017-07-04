@@ -388,7 +388,7 @@ abstract class Derive[M[_]] extends DeriveApi[M]{
       //tickle the companion members -- Not doing this leads to unexpected runtime behavior
       //I wonder if there is an SI related to this?
       companion.tpe.members.foreach(_ => ())
-      tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor) match {
+      tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor && x.asMethod.isPublic && x.asMethod.returnType.typeSymbol == tpe.typeSymbol) match {
         case None => Left("Can't find primary constructor of " + tpe)
         case Some(primaryConstructor) => Right((companion, tpe.typeSymbol.asClass.typeParams, primaryConstructor.asMethod.paramss.flatten))
       }
