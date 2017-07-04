@@ -99,6 +99,8 @@
         @code{UUID}s
       @li
         @hl.scala{null}
+      @li
+        java8 time:@code{LocalDate},@code{LocalTime},@code{LocalDateTime},@code{OffsetTime},@code{OffsetDateTime},@code{ZonedDateTime},@code{Instant}
     @p
       Readability/writability is recursive: a container such as a @code{Tuple} or @hl.scala{case class} is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a @hl.scala{List[Any]}, since uPickle doesn't provide a generic way of serializing @code{Any}. Case classes are only serializable up to 22 fields.
 

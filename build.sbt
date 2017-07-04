@@ -120,7 +120,13 @@ val upickle = crossProject
             ${tuples.mkString("\n")}
           }
         """)
-      Seq(file)
+      val fileExtensions=GeneratedExtension.nameAndSource.map{case (nme,src)=>
+        val f = dir / "upickle" / (nme+".scala")
+        IO.write(f,src)
+        f
+      }
+
+      Seq(file) ++ fileExtensions
     }.taskValue
   ).jsSettings(
     scalaJSStage in Test := FullOptStage,
