@@ -1,9 +1,10 @@
 sudo: false
 language: scala
 scala:
-  - 2.10.4
-  - 2.11.2
-  - 2.11.7
+  - 2.10.6
+  - 2.11.11
+  - 2.12.2
+  - 2.13.0-M1
 
 script:
 - sbt ++$TRAVIS_SCALA_VERSION upickleJVM/test upickleJS/test pprintJVM/test pprintJS/test
