@@ -46,9 +46,18 @@ object Macros {
                   argType: c.Type,
                   targetType: c.Type) = {
       val defaults = deriveDefaults(companion,1)
+      val isVararg = targetType.members.exists {
+        case m: MethodSymbol => m.isPrimaryConstructor && m.isVarargs
+        case _ => false
+      }
+      val applyArg = if (isVararg) {
+        q"x: _*"
+      } else {
+        q"x"
+      }
       q"""
         ${c.prefix}.CaseR[_root_.scala.Tuple1[$argType], $targetType](
-          _ match {case _root_.scala.Tuple1(x) => $companion.apply[..$typeArgs](x)},
+          _ match {case _root_.scala.Tuple1(x) => $companion.apply[..$typeArgs]($applyArg)},
           _root_.scala.Array($arg),
           _root_.scala.Array(..$defaults)
         )(${c.prefix}.Tuple1R)

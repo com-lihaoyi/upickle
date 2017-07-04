@@ -94,6 +94,7 @@ object MixedIn extends MixedIn
 
 object Varargs{
   case class Sentence(a: String, bs: String*)
+  case class SingleArg(args: String*)
 }
 object Covariant{
   case class Tree[+T](value: T)
