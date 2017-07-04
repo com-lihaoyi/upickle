@@ -1,4 +1,6 @@
-This repository is the home of both the uPickle and PPrint projects, and the code shared between them
+**Deprecated repository for uPickle/PPrint**. PPrint now lives at https://github.com/lihaoyi/pprint, and uPickle is deprecated in favor of https://github.com/playframework/play-json
+
+This repository was the home of both the uPickle and PPrint projects, and the code shared between them
 
 - [uPickle](https://lihaoyi.github.io/upickle-pprint/upickle): a no-boilerplate Scala serialization library
 - [PPrint](https://lihaoyi.github.io/upickle-pprint/pprint): pretty-printing common Scala data-structures and case-classes
