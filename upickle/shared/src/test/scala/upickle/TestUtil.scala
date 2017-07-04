@@ -16,8 +16,11 @@ class TestUtil[Api <: upickle.Api](api: Api){
 
     val strings = sIn.map(_.trim)
 
-    if (strings.length > 0)
-      assert(strings.map(upickle.json.read).contains(upickle.json.read(writtenT)))
+    if (strings.nonEmpty) {
+      val expected = strings.map(upickle.json.read)
+      val value = upickle.json.read(writtenT)
+      assert(expected.contains(value), s"Expected: ${expected.mkString(", ")}, Received: $value")
+    }
 
     for (s <- strings) {
       val readS = read[T](s)

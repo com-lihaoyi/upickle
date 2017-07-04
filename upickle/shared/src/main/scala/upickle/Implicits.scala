@@ -139,13 +139,14 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
     case s @ Js.Str(x) => try{func2(x) } catch {case e: NumberFormatException => throw Invalid.Data(s, "Number")}
   }
 
-  private[this] def NumericReadWriter[T: Numeric](func: Double => T, func2: String => T): RW[T] = RW[T](
+  private[this] def NumericReadWriter[T: Numeric](func: Double => T, func2: String => T, writeNumeric: Boolean = true): RW[T] = RW[T](
    {
       case x @ Double.PositiveInfinity => Js.Str(x.toString)
       case x @ Double.NegativeInfinity => Js.Str(x.toString)
       case x: Double if java.lang.Double.isNaN(x) => Js.Str(x.toString)
       case x: Float if java.lang.Double.isNaN(x) => Js.Str(x.toString)
-      case x => Js.Num(implicitly[Numeric[T]].toDouble(x))
+      case x if writeNumeric => Js.Num(implicitly[Numeric[T]].toDouble(x))
+      case x => Js.Str(x.toString)
     },
     numericReaderFunc[T](func, func2)
   )
@@ -166,11 +167,11 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
   implicit val ByteRW = NumericReadWriter(_.toByte, _.toByte)
   implicit val ShortRW = NumericReadWriter(_.toShort, _.toShort)
   implicit val IntRW = NumericReadWriter(_.toInt, _.toInt)
-  implicit val LongRW = NumericStringReadWriter[Long](_.toLong)
+  implicit val LongRW = NumericReadWriter[Long](_.toLong, _.toLong)
   implicit val FloatRW = NumericReadWriter(_.toFloat, _.toFloat)
-  implicit val DoubleRW = NumericReadWriter(_.toDouble, _.toDouble)
-  implicit val BigIntRW = NumericStringReadWriter[BigInt](BigInt(_))
-  implicit val BigDecimalRW = NumericStringReadWriter[BigDecimal](exactBigDecimal)
+  implicit val DoubleRW = NumericReadWriter(d => d, _.toDouble)
+  implicit val BigIntRW = NumericReadWriter[BigInt](d => BigInt(d.toLong), BigInt(_), writeNumeric = false)
+  implicit val BigDecimalRW = NumericReadWriter[BigDecimal](BigDecimal.apply, exactBigDecimal, writeNumeric = false)
 
   import collection.generic.CanBuildFrom
   implicit def SeqishR[V[_], T]
@@ -251,6 +252,7 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
   implicit val FiniteW = W[FiniteDuration](DurationW.write)
   implicit val FiniteR = R[FiniteDuration]{Internal.validate("DurationString"){
     case x: Js.Str => Duration.fromNanos(x.value.toLong)
+    case x: Js.Num => Duration.fromNanos(x.value.toLong)
   }}
 
   implicit val DurationR = R[Duration](Internal.validate("DurationString"){

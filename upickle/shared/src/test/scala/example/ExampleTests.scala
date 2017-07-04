@@ -90,8 +90,8 @@ object ExampleTests extends TestSuite{
         write(12.5: Double)               ==> "12.5"
       }
       'longs{
-        write(12: Long)                   ==> "\"12\""
-        write(4000000000000L: Long)       ==> "\"4000000000000\""
+        write(12: Long)                   ==> "12"
+        write(4000000000000L: Long)       ==> "4000000000000"
       }
       'specialNumbers{
         write(1.0/0: Double)              ==> "\"Infinity\""
