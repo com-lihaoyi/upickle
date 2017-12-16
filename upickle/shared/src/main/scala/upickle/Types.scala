@@ -7,8 +7,6 @@ import language.higherKinds
 import acyclic.file
 
 import scala.reflect.ClassTag
-class ReaderPicker[M[_]]
-class WriterPicker[M[_]]
 
 /**
 * Basic functionality to be able to read and write objects. Kept as a trait so
@@ -70,7 +68,14 @@ trait Types{ types =>
     }
 
     def merge0[T](tryReads: (T => Option[Js.Value])*) = {
-      (v: T) => tryReads.iterator.flatMap(_(v)).next()
+      (v: T) => {
+        val iter = tryReads.iterator.flatMap(_(v))
+        if (iter.hasNext) iter.next()
+        else {
+          throw new Exception("Writer unable to write object " + v)
+        }
+
+      }
     }
     def merge[T](writers: Mergable[T, _]*) = {
       Writer[T](merge0(writers.map(_.tryRead _):_*))

@@ -8,9 +8,9 @@ import acyclic.file
 import scala.reflect.ClassTag
 import language.postfixOps
 
-object StructTests extends TestSuite{
+object StructTests extends TestSuite {
   Seq(1).to[Vector]
-  val tests = TestSuite{
+  val tests = Tests {
     'arrays{
       'empty-rwk(Array[Int](), "[]")(_.toSeq)
       'Boolean-rwk(Array(true, false), "[true,false]")(_.toSeq)

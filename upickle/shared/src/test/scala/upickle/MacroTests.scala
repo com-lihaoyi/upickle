@@ -50,7 +50,7 @@ object TypedFoo{
 }
 // End TypedFoo
 
-object MacroTests extends TestSuite{
+object MacroTests extends TestSuite {
   import Generic.ADT
   import Hierarchy._
   import Recursive._
@@ -77,7 +77,7 @@ object MacroTests extends TestSuite{
 //  println(write(ADTs.ADTc(1, "lol", (1.1, 1.2))))
 //  implicitly[upickle.old.Writer[ADTs.ADTc]]
 
-  val tests = TestSuite{
+  val tests = Tests {
 
     'mixedIn{
       import MixedIn._

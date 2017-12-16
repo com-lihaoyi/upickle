@@ -29,7 +29,9 @@ object All {
   import shared.other._
   sealed trait Outers
   object Outers{
-    implicit def rw: upickle.default.ReadWriter[Outers] = upickle.default.macroRW
+    implicit def rw: upickle.default.ReadWriter[Outers] = upickle.default.ReadWriter.merge(
+      Out1.rw
+    )
   }
   case class Out1(a: Other) extends Outers
   object Out1{
@@ -40,7 +42,10 @@ object All {
   import shared.common._
   sealed trait Inners extends Outers
   object Inners{
-    implicit def rw: upickle.default.ReadWriter[Inners] = upickle.default.macroRW
+    implicit def rw: upickle.default.ReadWriter[Inners] = upickle.default.ReadWriter.merge(
+      Inner1.rw,
+      Inner2.rw
+    )
   }
   case class Inner1(b: That) extends Inners
   object Inner1{
@@ -52,9 +57,9 @@ object All {
   }
 }
 
-object AdvancedTests extends TestSuite{
+object AdvancedTests extends TestSuite {
   import All._
-  val tests = TestSuite{
+  val tests = Tests {
     "complexTraits" - {
       val reader = implicitly[upickle.default.Reader[Outers]]
       val writer = implicitly[upickle.default.Writer[Outers]]

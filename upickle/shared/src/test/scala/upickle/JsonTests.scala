@@ -1,8 +1,8 @@
 package upickle
 import utest._
 import acyclic.file
-object JsonTests extends TestSuite{
-  val tests = TestSuite{
+object JsonTests extends TestSuite {
+  val tests = Tests {
     val ugly =
       """
         |[

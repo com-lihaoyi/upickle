@@ -3,9 +3,9 @@ import utest._
 
 import LegacyTestUtil.rw
 import upickle.legacy.{Reader => R, Writer => W, ReadWriter => RW}
-object LegacyTests extends TestSuite{
+object LegacyTests extends TestSuite {
   
-  val tests = TestSuite{
+  val tests = Tests {
     'sealedHierarchy {
       // objects in sealed case class hierarchies should always read and write
       // the same way (with a tag) regardless of what their static type is when

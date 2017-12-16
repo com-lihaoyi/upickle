@@ -53,7 +53,7 @@ object ADTs {
 object Hierarchy {
   sealed trait A
   object A{
-    implicit def rw: RW[A] = default.macroRW
+    implicit def rw: RW[A] = RW.merge(B.rw, C.rw)
   }
   case class B(i: Int) extends A
   object B{
@@ -70,7 +70,7 @@ object Hierarchy {
 object DeepHierarchy {
   sealed abstract class A
   object A{
-    implicit def rw: RW[A] = default.macroRW
+    implicit def rw: RW[A] = RW.merge(B.rw, C.rw)
   }
   case class B(i: Int) extends A
 
@@ -81,7 +81,7 @@ object DeepHierarchy {
   sealed trait C extends A
 
   object C{
-    implicit def rw: RW[C] = default.macroRW
+    implicit def rw: RW[C] = RW.merge(D.rw, E.rw, F.rw)
   }
   case class D(s: String) extends C
 
@@ -97,7 +97,7 @@ object DeepHierarchy {
   sealed trait Q //new line
 
   object Q{
-    implicit def rw: RW[Q] = default.macroRW
+    implicit def rw: RW[Q] = RW.merge(AnQ.rw)
   }
   case class AnQ(i: Int) extends Q //new line
 
@@ -115,7 +115,10 @@ object Singletons{
   sealed trait AA
 
   object AA{
-    implicit def rw: RW[AA] = default.macroRW
+    implicit def rw: RW[AA] = RW.merge(
+      default.macroRW[BB.type],
+      default.macroRW[CC.type]
+    )
   }
   case object BB extends AA
   case object CC extends AA
@@ -137,7 +140,7 @@ object Generic{
 object Recursive{
   sealed trait LL
   object LL{
-    implicit def rw: RW[LL] = default.macroRW
+    implicit def rw: RW[LL] = RW.merge(default.macroRW[End.type], default.macroRW[Node])
   }
   case object End  extends LL
   case class Node(c: Int, next: LL) extends LL
@@ -150,7 +153,7 @@ object Recursive{
   }
   sealed trait SingleTree
   object SingleTree{
-    implicit def rw: RW[SingleTree] = default.macroRW
+    implicit def rw: RW[SingleTree] = RW.merge(default.macroRW[SingleNode])
   }
   case class SingleNode(value: Int, children: List[SingleTree]) extends SingleTree
   object SingleNode{
@@ -160,7 +163,7 @@ object Recursive{
 object Annotated {
   sealed trait A
   object A{
-    implicit def rw: RW[A] = default.macroRW
+    implicit def rw: RW[A] = RW.merge(default.macroRW[B], default.macroRW[C])
   }
   @key("0") case class B(@key("omg") i: Int) extends A
   object B{
@@ -295,7 +298,7 @@ object Exponential{
 object GenericADTs{
   sealed trait Small[A]
   object Small{
-    implicit def rw[A: R: W]: RW[Small[A]] = default.macroRW
+    implicit def rw[A: R: W]: RW[Small[A]] = RW.merge(Small1.rw[A])
   }
   case class Small1[A](key: A) extends Small[A]
   object Small1{
@@ -304,7 +307,9 @@ object GenericADTs{
 
   sealed trait Delta[+A, +B]
   object Delta {
-    implicit def rw[A: R: W, B: R: W]: RW[Delta[A, B]] = default.macroRW
+    implicit def rw[A: R: W, B: R: W]: RW[Delta[A, B]] = RW.merge(
+      Insert.rw[A, B], Remove.rw[A], Clear.rw
+    )
 
     case class Insert[A, B](key: A, value: B) extends Delta[A, B]
     object Insert{
@@ -321,7 +326,9 @@ object GenericADTs{
   }
   sealed trait DeltaInvariant[A, B]
   object DeltaInvariant {
-    implicit def rw[A: R: W, B: R: W]: RW[DeltaInvariant[A, B]] = default.macroRW
+    implicit def rw[A: R: W, B: R: W]: RW[DeltaInvariant[A, B]] = RW.merge(
+      Insert.rw[A, B], Remove.rw[A, B], Clear.rw[A, B]
+    )
     case class Insert[A, B](key: A, value: B) extends DeltaInvariant[A, B]
     object Insert{
       implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
@@ -399,7 +406,7 @@ sealed trait Ast{
  * sealed traits, which aren't a strict hierarchy
  */
 object Ast{
-  implicit def rw: RW[Ast] = default.macroRW
+  implicit def rw: RW[Ast] = RW.merge(Block.rw, Header.rw)
   /**
    * @param parts The various bits of text and other things which make up this block
    * @param offset
@@ -409,7 +416,7 @@ object Ast{
     implicit def rw: RW[Block] = default.macroRW
     sealed trait Sub extends Ast
     object Sub{
-      implicit def rw: RW[Sub] = default.macroRW
+      implicit def rw: RW[Sub] = RW.merge(Text.rw, For.rw, IfElse.rw, Block.rw, Header.rw)
     }
     case class Text(offset: Int, txt: String) extends Block.Sub
     object Text{

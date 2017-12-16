@@ -5,7 +5,7 @@ import TestUtil._
 
 object PrimitiveTests extends TestSuite with BigDecimalSupport {
 
-  def tests = TestSuite{
+  def tests = Tests {
     'Unit{
       rw((), "{}")
     }

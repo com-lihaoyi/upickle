@@ -16,7 +16,7 @@ object Simple {
 object Sealed{
   sealed trait IntOrTuple
   object IntOrTuple{
-    implicit def rw: RW[IntOrTuple] = macroRW
+    implicit def rw: RW[IntOrTuple] = RW.merge(IntThing.rw, TupleThing.rw)
   }
   case class IntThing(i: Int) extends IntOrTuple
   object IntThing{
@@ -52,7 +52,7 @@ object Keyed{
 object KeyedTag{
   sealed trait A
   object A{
-    implicit def rw: RW[A] = macroRW
+    implicit def rw: RW[A] = RW.merge(B.rw, macroRW[C.type])
   }
   @upickle.key("Bee") case class B(i: Int) extends A
   object B{
@@ -82,10 +82,10 @@ import Simple._
 import Recursive._
 import Defaults._
 
-object ExampleTests extends TestSuite{
+object ExampleTests extends TestSuite {
 
   import TestUtil._
-  val tests = TestSuite{
+  val tests = Tests {
     'simple{
       import upickle.default._
 
