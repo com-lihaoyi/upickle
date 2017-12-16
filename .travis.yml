@@ -3,10 +3,10 @@ language: scala
 scala:
   - 2.10.4
   - 2.11.2
-  - 2.11.7
+  - 2.12.4
 
 script:
-- sbt ++$TRAVIS_SCALA_VERSION upickleJVM/test upickleJS/test pprintJVM/test pprintJS/test
+- sbt ++$TRAVIS_SCALA_VERSION upickleJVM/test upickleJS/test
 # Tricks to avoid unnecessary cache updates, from
 # http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html
 - find $HOME/.sbt -name "*.lock" | xargs rm
