@@ -18,9 +18,9 @@ trait Renderer {
       case Js.Obj(vs@_*) => renderObject(sb, depth, canonicalizeObject(vs), indent)
     }
 
-  def canonicalizeObject(vs: Seq[(String, Js.Value)]): Iterator[(String, Js.Value)]
+  def canonicalizeObject(vs: Seq[(CharSequence, Js.Value)]): Iterator[(CharSequence, Js.Value)]
 
-  def renderString(sb: Writer, s: String): Unit
+  def renderString(sb: Writer, s: CharSequence): Unit
 
   final def renderIndent(sb: Writer, depth: Int, indent: Int) = {
     if (indent == 0) ()
@@ -47,7 +47,7 @@ trait Renderer {
     }
   }
 
-  final def renderObject(sb: Writer, depth: Int, it: Iterator[(String, Js.Value)], indent: Int): Unit = {
+  final def renderObject(sb: Writer, depth: Int, it: Iterator[(CharSequence, Js.Value)], indent: Int): Unit = {
     if (!it.hasNext) return { sb.append("{}"); () }
     val (k0, v0) = it.next
     sb.append('{')
@@ -69,7 +69,7 @@ trait Renderer {
     sb.append('}')
   }
 
-  final def escape(sb: Writer, s: String, unicode: Boolean): Unit = {
+  final def escape(sb: Writer, s: CharSequence, unicode: Boolean): Unit = {
     sb.append('"')
     var i = 0
     val len = s.length
@@ -93,9 +93,9 @@ trait Renderer {
 }
 
 object FastRenderer extends Renderer {
-  def canonicalizeObject(vs: Seq[(String, Js.Value)]): Iterator[(String, Js.Value)] =
+  def canonicalizeObject(vs: Seq[(CharSequence, Js.Value)]): Iterator[(CharSequence, Js.Value)] =
     vs.iterator
-  def renderString(sb: Writer, s: String): Unit =
+  def renderString(sb: Writer, s: CharSequence): Unit =
     escape(sb, s, false)
 }
 trait JsonPackageWriters{

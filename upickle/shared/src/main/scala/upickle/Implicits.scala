@@ -38,9 +38,15 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
 
 
     def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = new PartialFunction[Js.Value, T] {
-      def isDefinedAt(x: Value) = pf.isDefinedAt(x)
+      def isDefinedAt(x: Value) = {
+        println("isDefinedAt " + x)
+        pf.isDefinedAt(x)
+      }
 
-      def apply(v1: Value): T = pf.applyOrElse(v1, (x: Js.Value) => throw Invalid.Data(x, name))
+      def apply(v1: Value): T = {
+        println("validate: " + v1)
+        pf.applyOrElse(v1, (x: Js.Value) => throw Invalid.Data(x, name))
+      }
       override def toString = s"validate($name, $pf)"
     }
     def validateReader[T](name: String)(r: => Reader[T]): Reader[T] = new Reader[T]{
@@ -96,7 +102,7 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
   )
   private[this] def numericReaderFunc[T: Numeric](func: Double => T, func2: String => T): JPF[T] = Internal.validate("Number or String"){
     case n @ Js.Num(x) => try{func(x) } catch {case e: NumberFormatException => throw Invalid.Data(n, "Number")}
-    case s @ Js.Str(x) => try{func2(x) } catch {case e: NumberFormatException => throw Invalid.Data(s, "Number")}
+    case s @ Js.Str(x) => try{func2(x.toString) } catch {case e: NumberFormatException => throw Invalid.Data(s, "Number")}
   }
 
   private[this] def NumericReadWriter[T: Numeric](func: Double => T, func2: String => T): RW[T] = RW[T](
@@ -217,7 +223,7 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
     FiniteR.read orElse InfiniteR.read
   })
 
-  implicit def UuidR: R[UUID] = R[UUID]{case Js.Str(s) => UUID.fromString(s)}
+  implicit def UuidR: R[UUID] = R[UUID]{case Js.Str(s) => UUID.fromString(s.toString)}
   implicit def UuidW: W[UUID] = W[UUID]{case t: UUID => Js.Str(t.toString)}
 
   implicit def JsObjR: R[Js.Obj] = R[Js.Obj]{case v:Js.Obj => v}

@@ -92,8 +92,12 @@ object Js {
 
     override def toString = upickle.json.write(this, indent = 4)
   }
-  case class Str(value: java.lang.String) extends AnyVal with Value
-  case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
+  case class Str(value0: java.lang.CharSequence) extends Value{
+    lazy val value: String = value0.toString
+  }
+  case class Obj(value0: (java.lang.CharSequence, Value)*) extends Value{
+    lazy val value: Seq[(String, Value)] = value0.map{case (k, v) => (k.toString, v)}
+  }
   case class Arr(value: Value*) extends AnyVal with Value
   case class Num(value: Double) extends AnyVal with Value
   case object False extends Value{

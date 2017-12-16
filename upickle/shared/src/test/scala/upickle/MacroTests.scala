@@ -25,7 +25,7 @@ object Custom {
     }
     implicit val thing2Reader = upickle.default.Reader[T]{
       case Js.Str(str) =>
-        val Array(i, s) = str.split(" ")
+        val Array(i, s) = str.toString.split(" ")
         f(i.toInt, s)
     }
   }
