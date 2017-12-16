@@ -161,7 +161,14 @@
     @hl.ref(exampleTests, Seq("'more", "'tuples", ""))
 
     @p
-      Case classes of sizes 1-22 are serialized as JSON dictionaries with the keys being the names of each field
+      Case classes of sizes 1-22 are serialized as JSON dictionaries with the keys being the names of each field.
+      To begin with, you need to define a serializer in the Case Class's companion object:
+
+    @hl.scala
+      import upickle.default.{ReadWriter => RW, macroRW}
+
+    @p
+      After that, you can begin serializing that case class.
 
     @hl.ref(exampleTests, Seq("object Simple", ""))
     @hl.ref(exampleTests, Seq("'more", "'caseClass", ""), "  }")
@@ -329,76 +336,69 @@
       uPickle's JSON API is exposed in two places: in our @hl.scala{upickle.Js.*} AST:
 
     @hl.scala
+      /**
+      * A very small, very simple JSON AST that uPickle uses as part of its
+      * serialization process. A common standard between the Jawn AST (which
+      * we don't use so we don't pull in the bulk of Spire) and the Javascript
+      * JSON AST.
+      */
       object Js {
-        object Js {
 
-          sealed trait Value extends Any {
-            def value: Any
+        sealed trait Value extends Any {
+          def value: Any
 
-            /**
-              * Returns the `String` value of this [[Js.Value]], fails if it is not
-              * a [[Js.Str]]
-              */
-            def str = this match{
-              case Str(value) => value
-              case _ => throw Invalid.Data(this, "Expected Js.Str")
-            }
-            /**
-              * Returns the key/value map of this [[Js.Value]], fails if it is not
-              * a [[Js.Obj]]
-              */
-            def obj = this match{
-              case Obj(value @@ _*) => value.toMap
-              case _ => throw Invalid.Data(this, "Expected Js.Obj")
-            }
-            /**
-              * Returns the elements of this [[Js.Value]], fails if it is not
-              * a [[Js.Arr]]
-              */
-            def arr = this match{
-              case Arr(value @@ _*) => value
-              case _ => throw Invalid.Data(this, "Expected Js.Arr")
-            }
-            /**
-              * Returns the `Double` value of this [[Js.Value]], fails if it is not
-              * a [[Js.Num]]
-              */
-            def num = this match{
-              case Num(value) => value
-              case _ => throw Invalid.Data(this, "Expected Js.Num")
-            }
+          /**
+            * Returns the `String` value of this [[Js.Value]], fails if it is not
+            * a [[Js.Str]]
+            */
+          def str = this match{
+            case Str(value) => value
+            case _ => throw Invalid.Data(this, "Expected Js.Str")
+          }
+          /**
+            * Returns the key/value map of this [[Js.Value]], fails if it is not
+            * a [[Js.Obj]]
+            */
+          def obj = this match{
+            case Obj(value @_*) => value.toMap
+            case _ => throw Invalid.Data(this, "Expected Js.Obj")
+          }
+          /**
+            * Returns the elements of this [[Js.Value]], fails if it is not
+            * a [[Js.Arr]]
+            */
+          def arr = this match{
+            case Arr(value @ _*) => value
+            case _ => throw Invalid.Data(this, "Expected Js.Arr")
+          }
+          /**
+            * Returns the `Double` value of this [[Js.Value]], fails if it is not
+            * a [[Js.Num]]
+            */
+          def num = this match{
+            case Num(value) => value
+            case _ => throw Invalid.Data(this, "Expected Js.Num")
+          }
 
-            /**
-              * Looks up the [[Js.Value]] as a [[Js.Arr]] using an index, throws
-              * otherwise if it's not a [[Js.Arr]]
-              */
-            def apply(i: Int): Value = this.arr(i)
-            /**
-              * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
-              * otherwise if it's not a [[Js.Obj]]
-              */
-            def apply(s: java.lang.String): Value = this.obj(s)
-          }
-          case class Str(value: java.lang.String) extends AnyVal with Value
-          case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
-          case class Arr(value: Value*) extends AnyVal with Value
-          case class Num(value: Double) extends AnyVal with Value
-          case object False extends Value{
-            def value = false
-          }
-          case object True extends Value{
-            def value = true
-          }
-          case object Null extends Value{
-            def value = null
-          }
+          /**
+            * Looks up the [[Js.Value]] as a [[Js.Arr]] using an index, throws
+            * otherwise if it's not a [[Js.Arr]]
+            */
+          def apply(i: Int): Value = this.arr(i)
+          /**
+            * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
+            * otherwise if it's not a [[Js.Obj]]
+            */
+          def apply(s: java.lang.String): Value = this.obj(s)
+
+          override def toString = upickle.json.write(this, indent = 4)
         }
-
-          def apply(i: Int): Value = this.asInstanceOf[Arr].value(i)
-          def apply(s: java.lang.String): Value = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
+        case class Str(value0: java.lang.CharSequence) extends Value{
+          lazy val value: String = value0.toString
         }
-        case class Str(value: java.lang.String) extends AnyVal with Value
-        case class Obj(value: (java.lang.String, Value)*) extends AnyVal with Value
+        case class Obj(value0: (java.lang.CharSequence, Value)*) extends Value{
+          lazy val value: Seq[(String, Value)] = value0.map{case (k, v) => (k.toString, v)}
+        }
         case class Arr(value: Value*) extends AnyVal with Value
         case class Num(value: Double) extends AnyVal with Value
         case object False extends Value{
@@ -434,25 +434,6 @@
       uPickle's @hl.scala{Js.Value} type and subclasses are all themselves
       serializable, and they serialize to themselves.
 
-  @sect{Caching Picklers}
-    @p
-      Synthesizing @hl.scala{case class} picklers at every callsite where you're pickling something can get expensive: at compile-time the compiler is deriving the correct combination of readers of writers over and over at every callsite, and at runtime the JVM is instantiating that same combination over and over.
-
-    @p
-      To speed things up both at compile time and runtime, you can pre-generate picklers inside the @hl.scala{case class}es companion objects. This should greatly speed up compilation in large codebases with lots of different case-classes being pickled, and improve runtime performance. Simply add a @hl.scala{macroRW} implicit into your @hl.scala{case class}'s companion object:
-
-    @hl.ref(autoPickleTests, Seq("CachedCaseClass"))
-
-    @p
-      And then the next time you read and write the case class, things should work as expected:
-
-    @hl.ref(autoPickleTests, Seq("roundTripCachedRW", ""))
-
-    @p
-      Except that the @hl.scala{Reader} and @hl.scala{Writer} is simply taken from the companion object each time instead of being synthesized again and again at every callside
-
-    @hl.ref(autoPickleTests, Seq("reusedCachedRW", ""))
-
 
   @sect{Why uPickle}
     @p
@@ -469,6 +450,22 @@
       uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with @hl.scala{apply}/@hl.scala{unapply} on the companion?") that makes its behavior predictable and simple to understand.
 
   @sect{Version History}
+    @sect{0.5.0}
+      @ul
+        @li
+          Strip out automatic "deep" case-class serialization: you must now
+          define a serializer for each case class you want to deal with, preferably
+          in the companion object
+        @li
+          Upgrade Jawn version to 0.11.0, add helpers in @code{upickle.json} to
+          parse JSON coming from files.
+        @li
+          New @code{upickle.json.writeTo} function for serializing JSON directly
+          to a @code{java.io.Writer}, rather than creating a @code{String}
+
+        @li
+          @code{upickle.json.write} now takes an optional `sortKeys` flag, if
+          you want the JSON dictionaries to rendered in a standardized order
 
     @sect{0.4.3}
       @ul

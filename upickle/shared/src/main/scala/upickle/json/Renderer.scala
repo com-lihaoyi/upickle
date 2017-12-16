@@ -98,13 +98,22 @@ object FastRenderer extends Renderer {
   def renderString(sb: Writer, s: CharSequence): Unit =
     escape(sb, s, false)
 }
+object SortingRenderer extends Renderer {
+  def canonicalizeObject(vs: Seq[(CharSequence, Js.Value)]): Iterator[(CharSequence, Js.Value)] =
+    vs.map{case (k, v) => (k.toString, v)}.sortBy(_._1).iterator
+  def renderString(sb: Writer, s: CharSequence): Unit =
+    escape(sb, s, false)
+}
 trait JsonPackageWriters{
-  def write(v: Js.Value, indent: Int = 0): String = {
+  def write(v: Js.Value, indent: Int = 0, sortKeys: Boolean = false): String = {
     val sb = new StringWriter()
-    writeTo(v, sb, indent)
+    writeTo(v, sb, indent, sortKeys)
     sb.toString()
   }
-  def writeTo(v: Js.Value, sb: Writer, indent: Int = 0): Unit = {
-    FastRenderer.render(sb, 0, v, indent)
+  def writeTo(v: Js.Value, sb: Writer, indent: Int = 0, sortKeys: Boolean = false): Unit = {
+    val renderer =
+      if (!sortKeys) FastRenderer
+      else SortingRenderer
+    renderer.render(sb, 0, v, indent)
   }
 }

@@ -30,7 +30,7 @@ val upickle = crossProject
     testFrameworks += new TestFramework("utest.runner.Framework"),
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
-      "com.lihaoyi" %%% "utest" % "0.4.4" % "test",
+      "com.lihaoyi" %%% "utest" % "0.6.0" % "test",
       "com.lihaoyi" %%% "sourcecode" % "0.1.3",
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
