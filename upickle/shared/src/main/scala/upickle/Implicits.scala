@@ -280,8 +280,19 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
   implicit def JsNullR: R[Js.Null.type] = R[Js.Null.type]{case v:Js.Null.type => v}
   implicit def JsNullW: W[Js.Null.type] = W[Js.Null.type]{case v:Js.Null.type => v}
 
-  implicit def JsValueR: R[Js.Value] = Reader(JsObjR.read orElse JsArrR.read orElse JsStrR.read orElse JsTrueR.read orElse JsFalseR.read orElse JsNullR.read)
-  implicit def JsValueW: W[Js.Value] = Writer(merge(JsObjW.write, merge(JsArrW.write, merge(JsStrW.write, merge(JsTrueW.write, merge(JsFalseW.write, JsNullW.write))))))
+  implicit def JsValueR: R[Js.Value] = Reader[Js.Value](
+    JsObjR.read orElse JsArrR.read orElse JsStrR.read orElse JsTrueR.read orElse JsFalseR.read orElse JsNullR.read
+  )
+  case class pf[T: ClassTag](x: Writer[T]){
+    def tryRead(v: Any) = v match{
+      case t: T => Some(x.write(t))
+      case _ => None
+    }
+  }
+  def mergeW[T](x: pf[_]*) = Writer[T](v => x.iterator.flatMap(_.tryRead(v)).next())
+  implicit def JsValueW: W[Js.Value] = mergeW(
+    pf(JsObjW), pf(JsArrW), pf(JsStrW), pf(JsTrueW), pf(JsFalseW), pf(JsNullW)
+  )
 
 
   def makeReader[T](pf: PartialFunction[Js.Value, T]) = Reader.apply(pf)

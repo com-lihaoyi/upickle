@@ -45,24 +45,26 @@ object Macros {
         tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor) match {
           case None => Left("Can't find primary constructor of " + tpe)
           case Some(primaryConstructor) =>
+            val flattened = primaryConstructor.asMethod.paramss.flatten
             Right((
               companion,
               tpe.typeSymbol.asClass.typeParams,
-              primaryConstructor.asMethod.paramss.flatten
+              flattened,
+              flattened.map(_.asTerm.isParamWithDefault)
             ))
         }
 
       }
     }
 
-    def deriveDefaults(companion: c.Tree, numArgs: Int): Seq[c.Tree] = {
-      val defaults = (0 until numArgs).map { i =>
-        val defaultName = newTermName("apply$default$" + (i + 1))
-        companion.tpe.member(defaultName) match {
-          case NoSymbol => q"null"
-          case _ => q"${c.prefix}.writeJs($companion.$defaultName)"
+    def deriveDefaults(companion: c.Tree, hasDefaults: Seq[Boolean]): Seq[c.Tree] = {
+      val defaults =
+        for((hasDefault, i) <- hasDefaults.zipWithIndex)
+        yield {
+          val defaultName = newTermName("apply$default$" + (i + 1))
+          if (!hasDefault) q"null"
+          else q"${c.prefix}.writeJs($companion.$defaultName)"
         }
-      }
       defaults
     }
     /**
@@ -157,7 +159,7 @@ object Macros {
     def deriveClass(tpe: c.Type) = {
       getArgSyms(tpe) match {
         case Left(msg) => fail(tpe, msg)
-        case Right((companion, typeParams, argSyms)) =>
+        case Right((companion, typeParams, argSyms, hasDefaults)) =>
 
           //    println("argSyms " + argSyms.map(_.typeSignature))
           val args = argSyms.map { p =>
@@ -194,9 +196,23 @@ object Macros {
             if (args.isEmpty) // 0-arg case classes are treated like `object`s
               wrapCase0(companion, tpe)
             else if (args.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
-              wrapCase1(companion, args(0), typeArgs, func(argSyms(0).typeSignature), tpe)
+              wrapCase1(
+                companion,
+                args(0),
+                typeArgs,
+                func(argSyms(0).typeSignature),
+                hasDefaults(0),
+                tpe
+              )
             else // Otherwise, reading and writing are kinda identical
-              wrapCaseN(companion, args, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
+              wrapCaseN(
+                companion,
+                args,
+                typeArgs,
+                argSyms.map(_.typeSignature).map(func),
+                hasDefaults,
+                tpe
+              )
 
           annotate(tpe)(derive)
       }
@@ -220,8 +236,18 @@ object Macros {
 
     def wrapObject(obj: Tree): Tree
     def wrapCase0(companion: Tree, targetType: c.Type): Tree
-    def wrapCase1(companion: Tree, arg: String, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
-    def wrapCaseN(companion: Tree, args: Seq[String], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
+    def wrapCase1(companion: Tree,
+                  arg: String,
+                  typeArgs: Seq[c.Type],
+                  argTypes: Type,
+                  hasDefault: Boolean,
+                  targetType: c.Type): Tree
+    def wrapCaseN(companion: Tree,
+                  args: Seq[String],
+                  typeArgs: Seq[c.Type],
+                  argTypes: Seq[Type],
+                  hasDefaults: Seq[Boolean],
+                  targetType: c.Type): Tree
   }
 
   abstract class Reading[M[_]] extends DeriveDefaults[M] {
@@ -234,8 +260,9 @@ object Macros {
                   arg: String,
                   typeArgs: Seq[c.Type],
                   argType: c.Type,
+                  hasDefault: Boolean,
                   targetType: c.Type) = {
-      val defaults = deriveDefaults(companion,1)
+      val defaults = deriveDefaults(companion, Seq(hasDefault))
       q"""
         ${c.prefix}.CaseR[_root_.scala.Tuple1[$argType], $targetType](
           _ match {case _root_.scala.Tuple1(x) => $companion.apply[..$typeArgs](x)},
@@ -248,11 +275,12 @@ object Macros {
                   args: Seq[String],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
+                  hasDefaults: Seq[Boolean],
                   targetType: c.Type) = {
       val x = q"${c.fresh[TermName]("derive")}"
       val name = newTermName("Tuple"+args.length+"R")
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
-      val defaults = deriveDefaults(companion,argTypes.length)
+      val defaults = deriveDefaults(companion, hasDefaults)
       q"""
         ${c.prefix}.CaseR[(..$argTypes), $targetType](
           ($x: (..$argTypes)) => ($companion.apply: (..$argTypes) => $targetType)(..$argSyms),
@@ -276,7 +304,7 @@ object Macros {
     def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
     def wrapCase0(companion: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($companion.unapply)"
     def findUnapply(tpe: Type) = {
-      val (companion, paramTypes, argSyms) = getArgSyms(tpe).fold(
+      val (companion, paramTypes, argSyms, hasDefaults) = getArgSyms(tpe).fold(
         errMsg => c.abort(c.enclosingPosition, errMsg),
         x => x
       )
@@ -290,8 +318,9 @@ object Macros {
                   arg: String,
                   typeArgs: Seq[c.Type],
                   argType: Type,
+                  hasDefault: Boolean,
                   targetType: c.Type) = {
-      val defaults = deriveDefaults(companion,1)
+      val defaults = deriveDefaults(companion, Seq(hasDefault))
       q"""
         ${c.prefix}.CaseW[_root_.scala.Tuple1[$argType], $targetType](
           $companion.${findUnapply(targetType)}(_).map(_root_.scala.Tuple1.apply),
@@ -306,8 +335,9 @@ object Macros {
                   args: Seq[String],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
+                  hasDefaults: Seq[Boolean],
                   targetType: c.Type) = {
-      val defaults = deriveDefaults(companion,argTypes.length)
+      val defaults = deriveDefaults(companion, hasDefaults)
       val name = newTermName("Tuple"+args.length+"W")
       q"""
         ${c.prefix}.CaseW[(..$argTypes), $targetType](
