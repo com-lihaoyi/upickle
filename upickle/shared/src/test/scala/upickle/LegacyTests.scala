@@ -2,7 +2,7 @@ package upickle
 import utest._
 
 import LegacyTestUtil.rw
-import upickle.legacy.{ReadWriter => RW}
+import upickle.legacy.{Reader => R, Writer => W, ReadWriter => RW}
 object LegacyTests extends TestSuite{
   
   val tests = TestSuite{
@@ -65,9 +65,9 @@ object LegacyTests extends TestSuite{
       * - {
         val pref1 = "derive.GenericADTs.Delta"
         val D1 = Delta
-        implicit def D1rw[A: RW, B: RW]: RW[D1[A, B]] = upickle.legacy.macroRW
-        implicit def Insertrw[A: RW, B: RW]: RW[D1.Insert[A, B]] = upickle.legacy.macroRW
-        implicit def Removerw[A: RW]: RW[D1.Remove[A]] = upickle.legacy.macroRW
+        implicit def D1rw[A: R: W, B: R: W]: RW[D1[A, B]] = upickle.legacy.macroRW
+        implicit def Insertrw[A: R: W, B: R: W]: RW[D1.Insert[A, B]] = upickle.legacy.macroRW
+        implicit def Removerw[A: R: W]: RW[D1.Remove[A]] = upickle.legacy.macroRW
         implicit def Clearrw: RW[D1.Clear] = upickle.legacy.macroRW
         type D1[+A, +B] = Delta[A, B]
         rw(D1.Insert(1, 1), s"""["$pref1.Insert",{"key":1,"value":1}]""")
@@ -81,10 +81,10 @@ object LegacyTests extends TestSuite{
         val pref2 = "derive.GenericADTs.DeltaInvariant"
         val D2 = DeltaInvariant
         type D2[A, B] = DeltaInvariant[A, B]
-        implicit def D2rw[A: RW, B: RW]: RW[D2[A, B]] = upickle.legacy.macroRW
-        implicit def Insertrw[A: RW, B: RW]: RW[D2.Insert[A, B]] = upickle.legacy.macroRW
-        implicit def Removerw[A: RW, B: RW]: RW[D2.Remove[A, B]] = upickle.legacy.macroRW
-        implicit def Clearrw[A: RW, B: RW]: RW[D2.Clear[A, B]] = upickle.legacy.macroRW
+        implicit def D2rw[A: R: W, B: R: W]: RW[D2[A, B]] = upickle.legacy.macroRW
+        implicit def Insertrw[A: R: W, B: R: W]: RW[D2.Insert[A, B]] = upickle.legacy.macroRW
+        implicit def Removerw[A: R: W, B]: RW[D2.Remove[A, B]] = upickle.legacy.macroRW
+        implicit def Clearrw[A, B]: RW[D2.Clear[A, B]] = upickle.legacy.macroRW
         rw(D2.Insert(1, 1), s"""["$pref2.Insert",{"key":1,"value":1}]""")
         rw(D2.Insert(1, 1): D2[Int, Int], s"""["$pref2.Insert",{"key":1,"value":1}]""")
         rw(D2.Remove(1), s"""["$pref2.Remove",{"key":1}]""")
@@ -96,9 +96,9 @@ object LegacyTests extends TestSuite{
         val pref2 = "derive.GenericADTs.DeltaHardcoded"
         val D3 = DeltaHardcoded
         type D3[A, B] = DeltaHardcoded[A, B]
-        implicit def D3rw[A: RW, B: RW]: RW[D3[A, B]] = upickle.legacy.macroRW
-        implicit def Insertrw[A: RW, B: RW]: RW[D3.Insert[A, B]] = upickle.legacy.macroRW
-        implicit def Removerw[A: RW]: RW[D3.Remove[A]] = upickle.legacy.macroRW
+        implicit def D3rw[A: R: W, B: R: W]: RW[D3[A, B]] = upickle.legacy.macroRW
+        implicit def Insertrw[A: R: W, B: R: W]: RW[D3.Insert[A, B]] = upickle.legacy.macroRW
+        implicit def Removerw[A: R: W]: RW[D3.Remove[A]] = upickle.legacy.macroRW
         implicit def Clearrw: RW[D3.Clear] = upickle.legacy.macroRW
         rw(D3.Insert(Seq(1), "1"), s"""["$pref2.Insert",{"key":[1],"value":"1"}]""")
         rw(D3.Insert(Seq(1), "1"): D3[Seq[Int], String], s"""["$pref2.Insert",{"key":[1],"value":"1"}]""")

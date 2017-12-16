@@ -1,7 +1,7 @@
 package upickle
 
 import upickle.ADTs.ADT0
-import default.{ReadWriter => RW}
+import default.{Reader => R, Writer => W, ReadWriter => RW}
 /*
  * A whole bunch of test data that can be used by client libraries to try out
  * their typeclass derivation to make sure it's doing the right thing. Contains
@@ -126,11 +126,11 @@ object Generic{
   case class A[T](t: T)
 
   object A{
-    implicit def rw[T: RW]: RW[A[T]] = default.macroRW
+    implicit def rw[T: R: W]: RW[A[T]] = default.macroRW
   }
   case class ADT[A, B, C, D, E, F](a: A, b: B, c: C, d: D, e: E, f: F)
   object ADT{
-    implicit def rw[A: RW, B: RW, C: RW, D: RW, E: RW, F: RW]: RW[ADT[A, B, C, D, E, F]] =
+    implicit def rw[A: R: W, B: R: W, C: R: W, D: R: W, E: R: W, F: R: W]: RW[ADT[A, B, C, D, E, F]] =
       default.macroRW
   }
 }
@@ -213,7 +213,7 @@ object Varargs{
 object Covariant{
   case class Tree[+T](value: T)
   object Tree{
-    implicit def rw[T: RW]: RW[Tree[T]] = default.macroRW
+    implicit def rw[T: R: W]: RW[Tree[T]] = default.macroRW
   }
 }
 
@@ -295,24 +295,24 @@ object Exponential{
 object GenericADTs{
   sealed trait Small[A]
   object Small{
-    implicit def rw[A: RW]: RW[Small[A]] = default.macroRW
+    implicit def rw[A: R: W]: RW[Small[A]] = default.macroRW
   }
   case class Small1[A](key: A) extends Small[A]
   object Small1{
-    implicit def rw[A: RW]: RW[Small1[A]] = default.macroRW
+    implicit def rw[A: R: W]: RW[Small1[A]] = default.macroRW
   }
 
   sealed trait Delta[+A, +B]
   object Delta {
-    implicit def rw[A: RW, B: RW]: RW[Delta[A, B]] = default.macroRW
+    implicit def rw[A: R: W, B: R: W]: RW[Delta[A, B]] = default.macroRW
 
     case class Insert[A, B](key: A, value: B) extends Delta[A, B]
     object Insert{
-      implicit def rw[A: RW, B: RW]: RW[Insert[A, B]] = default.macroRW
+      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
     }
     case class Remove[A](key: A) extends Delta[A, Nothing]
     object Remove{
-      implicit def rw[A: RW]: RW[Remove[A]] = default.macroRW
+      implicit def rw[A: R: W]: RW[Remove[A]] = default.macroRW
     }
     case class Clear() extends Delta[Nothing, Nothing]
     object Clear{
@@ -321,30 +321,30 @@ object GenericADTs{
   }
   sealed trait DeltaInvariant[A, B]
   object DeltaInvariant {
-    implicit def rw[A: RW, B: RW]: RW[DeltaInvariant[A, B]] = default.macroRW
+    implicit def rw[A: R: W, B: R: W]: RW[DeltaInvariant[A, B]] = default.macroRW
     case class Insert[A, B](key: A, value: B) extends DeltaInvariant[A, B]
     object Insert{
-      implicit def rw[A: RW, B: RW]: RW[Insert[A, B]] = default.macroRW
+      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
     }
     case class Remove[A, B](key: A) extends DeltaInvariant[A, B]
     object Remove{
-      implicit def rw[A: RW, B: RW]: RW[Remove[A, B]] = default.macroRW
+      implicit def rw[A: R: W, B]: RW[Remove[A, B]] = default.macroRW
     }
     case class Clear[A, B]() extends DeltaInvariant[A, B]
     object Clear{
-      implicit def rw[A: RW, B: RW]: RW[Clear[A, B]] = default.macroRW
+      implicit def rw[A, B]: RW[Clear[A, B]] = default.macroRW
     }
   }
   sealed trait DeltaHardcoded[A, B]
   object DeltaHardcoded {
-    implicit def rw[A: RW, B: RW]: RW[DeltaHardcoded[A, B]] = default.macroRW
+    implicit def rw[A: R: W, B: R: W]: RW[DeltaHardcoded[A, B]] = default.macroRW
     case class Insert[A, B](key: A, value: B) extends DeltaHardcoded[A, B]
     object Insert{
-      implicit def rw[A: RW, B: RW]: RW[Insert[A, B]] = default.macroRW
+      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
     }
     case class Remove[A](key: A) extends DeltaHardcoded[A, String]
     object Remove{
-      implicit def rw[A: RW]: RW[Remove[A]] = default.macroRW
+      implicit def rw[A: R: W]: RW[Remove[A]] = default.macroRW
     }
     case class Clear() extends DeltaHardcoded[Seq[Int], String]
     object Clear{

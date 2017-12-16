@@ -225,7 +225,7 @@ object Macros {
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
-      q"${c.prefix}.${newTermName("Case0R")}($t.apply _: () => $targetType)"
+      q"${c.prefix}.${newTermName("Case0R")}(() => $t(): $targetType)"
     def wrapCase1(companion: c.Tree,
                   arg: String,
                   typeArgs: Seq[c.Type],
