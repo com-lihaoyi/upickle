@@ -55,6 +55,12 @@ trait Types{ types =>
       val write0 = _write
       override def toString = src.value
     }
+    implicit def ReaderWriter[T](implicit r: Reader[T], w: Writer[T]): ReadWriter[T] =
+      new Reader[T] with Writer[T]{
+        def read0 = r.read0
+
+        def write0 = w.write0
+      }
   }
 
   type ReadWriter[T] = Reader[T] with Writer[T]
@@ -67,9 +73,14 @@ trait Types{ types =>
   )
   trait Writer[T]{
     def write0: T => Js.Value
-    final val write: T => Js.Value = {
+    final val write: PartialFunction[T, Js.Value] = {
       case null => Js.Null
       case t => write0(t)
+    }
+
+    def orElse[V <: T](other: Writer[V]) = Writer[V]{
+      case t: T => this.write(t)
+      case v: V => other.write(v)
     }
   }
   object Writer{

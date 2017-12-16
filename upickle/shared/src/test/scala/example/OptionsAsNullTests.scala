@@ -7,7 +7,9 @@ import utest._
 import example.Simple.Thing
 
 case class Opt(a: Option[String], b: Option[Int])
-
+object Opt{
+  implicit def rw: OptionPickler.ReadWriter[Opt] = OptionPickler.macroRW
+}
 object OptionPickler extends upickle.AttributeTagged {
   override implicit def OptionW[T: Writer]: Writer[Option[T]] = Writer {
     case None    => Js.Null
@@ -25,7 +27,7 @@ object OptionsAsNullTests extends TestSuite {
 
   import TestUtil._
   import OptionPickler._
-
+  implicit def rw: OptionPickler.ReadWriter[Thing] = OptionPickler.macroRW
   val tests = TestSuite {
     'nullAsNone {
 

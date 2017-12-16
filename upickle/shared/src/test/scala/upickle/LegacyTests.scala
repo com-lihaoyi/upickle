@@ -1,8 +1,10 @@
 package upickle
 import utest._
-import derive._
+
 import LegacyTestUtil.rw
+import upickle.legacy.{ReadWriter => RW}
 object LegacyTests extends TestSuite{
+  
   val tests = TestSuite{
     'sealedHierarchy {
       // objects in sealed case class hierarchies should always read and write
@@ -11,6 +13,9 @@ object LegacyTests extends TestSuite{
       // finite number of cases, so we can just check them all and decide which
       // class the instance belongs to.
       import Hierarchy._
+      implicit def Arw: RW[A] = upickle.legacy.macroRW
+      implicit def Brw: RW[B] = upickle.legacy.macroRW
+      implicit def Crw: RW[C] = upickle.legacy.macroRW
       'shallow {
         * - rw(B(1), """["derive.Hierarchy.B",{"i":1}]""")
         * - rw(C("a", "b"), """["derive.Hierarchy.C",{"s1":"a","s2":"b"}]""")
@@ -23,7 +28,14 @@ object LegacyTests extends TestSuite{
       }
       'deep{
         import DeepHierarchy._
-
+        implicit def Arw: RW[A] = upickle.legacy.macroRW
+        implicit def Brw: RW[B] = upickle.legacy.macroRW
+        implicit def Crw: RW[C] = upickle.legacy.macroRW
+        implicit def AnQrw: RW[AnQ] = upickle.legacy.macroRW
+        implicit def Qrw: RW[Q] = upickle.legacy.macroRW
+        implicit def Drw: RW[D] = upickle.legacy.macroRW
+        implicit def Erw: RW[E] = upickle.legacy.macroRW
+        implicit def Frw: RW[F] = upickle.legacy.macroRW
         * - rw(B(1), """["derive.DeepHierarchy.B",{"i":1}]""")
         * - rw(B(1): A, """["derive.DeepHierarchy.B",{"i":1}]""")
         * - rw(AnQ(1): Q, """["derive.DeepHierarchy.AnQ",{"i":1}]""")
@@ -42,7 +54,7 @@ object LegacyTests extends TestSuite{
     }
     'singleton {
       import Singletons._
-
+      implicit def AArw: RW[AA] = upickle.legacy.macroRW
       rw(BB, """["derive.Singletons.BB",{}]""")
       rw(CC, """["derive.Singletons.CC",{}]""")
       rw(BB: AA, """["derive.Singletons.BB",{}]""")
@@ -53,6 +65,10 @@ object LegacyTests extends TestSuite{
       * - {
         val pref1 = "derive.GenericADTs.Delta"
         val D1 = Delta
+        implicit def D1rw[A: RW, B: RW]: RW[D1[A, B]] = upickle.legacy.macroRW
+        implicit def Insertrw[A: RW, B: RW]: RW[D1.Insert[A, B]] = upickle.legacy.macroRW
+        implicit def Removerw[A: RW]: RW[D1.Remove[A]] = upickle.legacy.macroRW
+        implicit def Clearrw: RW[D1.Clear] = upickle.legacy.macroRW
         type D1[+A, +B] = Delta[A, B]
         rw(D1.Insert(1, 1), s"""["$pref1.Insert",{"key":1,"value":1}]""")
         rw(D1.Insert(1, 1): D1[Int, Int], s"""["$pref1.Insert",{"key":1,"value":1}]""")
@@ -65,6 +81,10 @@ object LegacyTests extends TestSuite{
         val pref2 = "derive.GenericADTs.DeltaInvariant"
         val D2 = DeltaInvariant
         type D2[A, B] = DeltaInvariant[A, B]
+        implicit def D2rw[A: RW, B: RW]: RW[D2[A, B]] = upickle.legacy.macroRW
+        implicit def Insertrw[A: RW, B: RW]: RW[D2.Insert[A, B]] = upickle.legacy.macroRW
+        implicit def Removerw[A: RW, B: RW]: RW[D2.Remove[A, B]] = upickle.legacy.macroRW
+        implicit def Clearrw[A: RW, B: RW]: RW[D2.Clear[A, B]] = upickle.legacy.macroRW
         rw(D2.Insert(1, 1), s"""["$pref2.Insert",{"key":1,"value":1}]""")
         rw(D2.Insert(1, 1): D2[Int, Int], s"""["$pref2.Insert",{"key":1,"value":1}]""")
         rw(D2.Remove(1), s"""["$pref2.Remove",{"key":1}]""")
@@ -76,6 +96,10 @@ object LegacyTests extends TestSuite{
         val pref2 = "derive.GenericADTs.DeltaHardcoded"
         val D3 = DeltaHardcoded
         type D3[A, B] = DeltaHardcoded[A, B]
+        implicit def D3rw[A: RW, B: RW]: RW[D3[A, B]] = upickle.legacy.macroRW
+        implicit def Insertrw[A: RW, B: RW]: RW[D3.Insert[A, B]] = upickle.legacy.macroRW
+        implicit def Removerw[A: RW]: RW[D3.Remove[A]] = upickle.legacy.macroRW
+        implicit def Clearrw: RW[D3.Clear] = upickle.legacy.macroRW
         rw(D3.Insert(Seq(1), "1"), s"""["$pref2.Insert",{"key":[1],"value":"1"}]""")
         rw(D3.Insert(Seq(1), "1"): D3[Seq[Int], String], s"""["$pref2.Insert",{"key":[1],"value":"1"}]""")
         rw(D3.Remove(Seq(1)), s"""["$pref2.Remove",{"key":[1]}]""")
@@ -86,6 +110,12 @@ object LegacyTests extends TestSuite{
     }
     'recursiveDataTypes{
       import Recursive._
+
+      implicit def IntTreerw: RW[IntTree] = upickle.legacy.macroRW
+      implicit def SingleNoderw: RW[SingleNode] = upickle.legacy.macroRW
+
+      implicit def Noderw: RW[Node] = upickle.legacy.macroRW
+      implicit def LLrw: RW[LL] = upickle.legacy.macroRW
       rw(
         IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
         """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""

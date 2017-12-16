@@ -15,7 +15,7 @@ case class key(s: String) extends StaticAnnotation
  */
 object Macros {
 
-  trait DeriveDefaults {
+  trait DeriveDefaults[M[_]] {
     val c: ScalaVersionStubs.Context
     def fail(tpe: c.Type, s: String) = c.abort(c.enclosingPosition, s)
 
@@ -44,7 +44,12 @@ object Macros {
         companion.tpe.members.foreach(_ => ())
         tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor) match {
           case None => Left("Can't find primary constructor of " + tpe)
-          case Some(primaryConstructor) => Right((companion, tpe.typeSymbol.asClass.typeParams, primaryConstructor.asMethod.paramss.flatten))
+          case Some(primaryConstructor) =>
+            Right((
+              companion,
+              tpe.typeSymbol.asClass.typeParams,
+              primaryConstructor.asMethod.paramss.flatten
+            ))
         }
 
       }
@@ -60,6 +65,91 @@ object Macros {
       }
       defaults
     }
+    /**
+      * If a super-type is generic, find all the subtypes, but at the same time
+      * fill in all the generic type parameters that are based on the super-type's
+      * concrete type
+      */
+    def fleshedOutSubtypes(tpe: TypeRef) = {
+      // Get ready to run this twice because for some reason scalac always
+      // drops the type arguments from the subclasses the first time we
+      // run this in 2.10.x
+      def impl =
+        for{
+          subtypeSym <- tpe.typeSymbol.asClass.knownDirectSubclasses.filter(!_.toString.contains("<local child>"))
+          if subtypeSym.isType
+          st = subtypeSym.asType.toType
+          baseClsArgs = st.baseType(tpe.typeSymbol).asInstanceOf[TypeRef].args
+          // If the type arguments don't line up, just give up and fail to find
+          // the subclasses. It should fall back to plain-old-toString
+          if baseClsArgs.size == tpe.args.size
+        } yield {
+
+          val sub2 = st.substituteTypes(baseClsArgs.map(_.typeSymbol), tpe.args)
+          //        println(Console.YELLOW + "sub2 " + Console.RESET + sub2)
+          sub2
+        }
+      impl
+      impl
+    }
+
+    def deriveObject(tpe: c.Type) = {
+      val mod = tpe.typeSymbol.asClass.module
+      val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
+      val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
+      val mod2 = c.universe.treeBuild.mkAttributedRef(pre, mod)
+
+      annotate(tpe)(wrapObject(mod2))
+
+    }
+    def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
+
+    def derive(tpe: c.Type) = {
+      if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) deriveTrait(tpe)
+      else if (tpe.typeSymbol.isModuleClass) deriveObject(tpe)
+      else deriveClass(tpe)
+    }
+    def deriveTrait(tpe: c.Type): c.universe.Tree = {
+      val clsSymbol = tpe.typeSymbol.asClass
+
+      if (!clsSymbol.isSealed) {
+        fail(tpe, s"[error] The referenced trait [[${clsSymbol.name}]] must be sealed.")
+      }else if (clsSymbol.knownDirectSubclasses.filter(!_.toString.contains("<local child>")).isEmpty) {
+        val msg =
+          s"The referenced trait [[${clsSymbol.name}]] does not have any sub-classes. This may " +
+            "happen due to a limitation of scalac (SI-7046). To work around this, " +
+            "try manually specifying the sealed trait picklers as described in " +
+            "http://lihaoyi.github.com/upickle-pprint/upickle/#ManualSealedTraitPicklers"
+        fail(tpe, msg)
+      }else{
+        val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef]).toSeq
+        //    println("deriveTrait")
+        val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
+        //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)
+        mergeTrait(subDerives, subTypes, tpe)
+      }
+    }
+
+    def typeclass: c.WeakTypeTag[M[_]]
+
+    def typeclassFor(t: Type) = {
+      //    println("typeclassFor " + weakTypeOf[M[_]](typeclass))
+
+      weakTypeOf[M[_]](typeclass) match {
+        case TypeRef(a, b, _) =>
+          import compat._
+          TypeRef(a, b, List(t))
+        case ExistentialType(_, TypeRef(a, b, _)) =>
+          import compat._
+          TypeRef(a, b, List(t))
+        case x =>
+          println("Dunno Wad Dis Typeclazz Is " + x)
+          println(x)
+          println(x.getClass)
+          ???
+      }
+    }
+
     def deriveClass(tpe: c.Type) = {
       getArgSyms(tpe) match {
         case Left(msg) => fail(tpe, msg)
@@ -130,7 +220,7 @@ object Macros {
     def wrapCaseN(companion: Tree, args: Seq[String], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
   }
 
-  abstract class Reading[M[_]] extends DeriveDefaults {
+  abstract class Reading[M[_]] extends DeriveDefaults[M] {
     val c: ScalaVersionStubs.Context
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
@@ -155,7 +245,7 @@ object Macros {
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type) = {
-      val x = q"${c.freshName()}"
+      val x = q"${c.fresh[TermName]("derive")}"
       val name = newTermName("Tuple"+args.length+"R")
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
       val defaults = deriveDefaults(companion,argTypes.length)
@@ -176,7 +266,7 @@ object Macros {
     def knot(t: Tree) = q"${c.prefix}.Knot.Reader(() => $t)"
 
   }
-  abstract class Writing[M[_]] extends DeriveDefaults {
+  abstract class Writing[M[_]] extends DeriveDefaults[M] {
     val c: ScalaVersionStubs.Context
     import c.universe._
     def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
@@ -238,7 +328,7 @@ object Macros {
     val res = new Reading[R]{
       val c: c0.type = c0
       def typeclass = e2
-    }.deriveClass(e1.tpe)
+    }.derive(e1.tpe)
     val msg = "Tagged Object " + weakTypeOf[T].typeSymbol.fullName
     c0.Expr[R[T]](q"""${c0.prefix}.Internal.validateReader($msg){$res}""")
   }
@@ -249,7 +339,7 @@ object Macros {
     val res = new Writing[W]{
       val c: c0.type = c0
       def typeclass = e2
-    }.deriveClass(e1.tpe)
+    }.derive(e1.tpe)
     c0.Expr[W[T]](res)
   }
 

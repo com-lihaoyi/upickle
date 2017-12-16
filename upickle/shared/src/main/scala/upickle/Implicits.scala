@@ -76,7 +76,6 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
     }
 
 
-
     def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = new PartialFunction[Js.Value, T] {
       def isDefinedAt(x: Value) = pf.isDefinedAt(x)
 
@@ -280,6 +279,9 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
 
   implicit def JsNullR: R[Js.Null.type] = R[Js.Null.type]{case v:Js.Null.type => v}
   implicit def JsNullW: W[Js.Null.type] = W[Js.Null.type]{case v:Js.Null.type => v}
+
+  implicit def JsValueR: R[Js.Value] = Reader(JsObjR.read orElse JsArrR.read orElse JsStrR.read orElse JsTrueR.read orElse JsFalseR.read orElse JsNullR.read)
+  implicit def JsValueW: W[Js.Value] = Writer(merge(JsObjW.write, merge(JsArrW.write, merge(JsStrW.write, merge(JsTrueW.write, merge(JsFalseW.write, JsNullW.write))))))
 
 
   def makeReader[T](pf: PartialFunction[Js.Value, T]) = Reader.apply(pf)

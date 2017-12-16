@@ -1,6 +1,5 @@
 package upickle
 import acyclic.file
-import derive._
 import utest._
 import upickle.TestUtil._
 import upickle.default.{read, write}
@@ -101,7 +100,7 @@ object MacroTests extends TestSuite{
     'exponential{
 
       // Doesn't even need to execute, as long as it can compile
-      val ww1 = implicitly[upickle.legacy.Writer[Exponential.A1]]
+      val ww1 = implicitly[upickle.default.Writer[Exponential.A1]]
     }
 
 
@@ -413,37 +412,6 @@ object MacroTests extends TestSuite{
           """{"results": [{"name": "a", "whatever": "b", "types": ["c"]}], "status": "d"}"""
         )
       }
-      'issue94{
-
-        implicit val fooW: default.Writer[Issue94.Foo] =
-          default.Writer[Issue94.Foo]{case t: Issue94.Foo => Js.Str(t.x)}
-        implicit val fooR: default.Reader[Issue94.Foo] =
-          default.Reader[Issue94.Foo]{case Js.Str(x) => new Issue94.Foo(x)}
-
-        rw(
-          Issue94.Example(List(new Issue94.Foo("lol"))),
-          """{"ids": ["lol"]}"""
-        )
-        rw(
-          Issue94.Example2(List(List(new Issue94.Foo("lol")))),
-          """{"ids": [["lol"]]}"""
-        )
-      }
-      'issue96{
-        'readOnly - implicitly[default.Reader[Issue96.Trait]]
-
-        val choice = Issue96.ChoiceField(Array("i", "am", "cow"))
-        val expected = """{"$type": "derive.Issue96.ChoiceField", "choices": ["i", "am", "cow"]}"""
-        rwk(choice, expected)(_.choices.toSeq)
-
-        rwk(choice: Issue96.Field, expected)(_.asInstanceOf[Issue96.ChoiceField].choices.toSeq)
-        def f0[T: default.Writer] = implicitly[default.Writer[Array[T]]]
-        def f[T: default.Reader: reflect.ClassTag] = implicitly[default.Reader[Array[T]]]
-        // Doesn't fail elegantly in 2.10. =(
-//        compileError("""
-//          def f[T: default.Reader] = implicitly[default.Reader[Array[T]]]
-//        """)
-      }
       'scalatex{
         val block = Ast.Block(1, Seq(Ast.Block.Text(2, "hello")))
         val blockText = """{
@@ -474,19 +442,7 @@ object MacroTests extends TestSuite{
         rw(header: Ast.Block.Sub, headerText)
         rw(header: Ast.Chain.Sub, headerText)
       }
-      'issue108{
-        object Main{
-          import upickle.default._
-          //import upickle._
-          case class Stuff(lol: String)
-          case class Wat(stuff: Stuff)
-
-          abstract class TakesWriter[T: Writer]
-          class Something extends TakesWriter[Wat]
-        }
-
-      }
-      'companioImplicitPickedUp{
+      'companionImplicitPickedUp{
         assert(implicitly[upickle.default.Reader[TypedFoo]] eq TypedFoo.readWriter)
         assert(implicitly[upickle.default.Writer[TypedFoo]] eq TypedFoo.readWriter)
         assert(implicitly[upickle.default.ReadWriter[TypedFoo]] eq TypedFoo.readWriter)

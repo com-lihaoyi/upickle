@@ -397,7 +397,7 @@ sealed trait Ast{
  * sealed traits, which aren't a strict hierarchy
  */
 object Ast{
-
+  implicit def rw: RW[Ast] = default.macroRW
   /**
    * @param parts The various bits of text and other things which make up this block
    * @param offset

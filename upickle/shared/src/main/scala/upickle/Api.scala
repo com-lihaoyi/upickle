@@ -89,7 +89,12 @@ object Forwarder{
     c.Expr[T](q"${c.prefix}.macroRW0[$e, ${c.prefix}.Reader, ${c.prefix}.Writer]")
   }
 }
-trait LowPriX{ this: Api =>
+trait LowPriX extends LowPriY {this: Api =>
+}
+trait LowPriY{ this: Api =>
+  implicit def macroSingletonR[T <: Singleton]: Reader[T] = macro Forwarder.applyR[T]
+  implicit def macroSingletonW[T <: Singleton]: Writer[T] = macro Forwarder.applyW[T]
+//  implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro Forwarder.applyRW[T]
   def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
   def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
   def macroRW[T]: ReadWriter[T] = macro Forwarder.applyRW[T]
