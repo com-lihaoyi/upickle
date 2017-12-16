@@ -13,7 +13,6 @@ import language.higherKinds
 trait Api extends Types with Implicits with Generated with LowPriX{
   protected[this] def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = Internal.validate(name)(pf)
 
-  type key = derive.key
 
   def annotate[V: ClassTag](rw: Reader[V], n: String): Reader[V]
   def annotate[V: ClassTag](rw: Writer[V], n: String): Writer[V]
@@ -62,7 +61,7 @@ trait AttributeTagged extends Api{
  */
 object Forwarder{
   def dieIfNothing[T: c.WeakTypeTag]
-                  (c: derive.ScalaVersionStubs.Context)
+                  (c: ScalaVersionStubs.Context)
                   (name: String) = {
     if (c.weakTypeOf[T] =:= c.weakTypeOf[Nothing]) {
       c.abort(
@@ -71,19 +70,19 @@ object Forwarder{
       )
     }
   }
-  def applyR[T](c: derive.ScalaVersionStubs.Context)
+  def applyR[T](c: ScalaVersionStubs.Context)
               (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
     dieIfNothing[T](c)("Reader")
     c.Expr[T](q"${c.prefix}.macroR0[$e, ${c.prefix}.Reader]")
   }
-  def applyW[T](c: derive.ScalaVersionStubs.Context)
+  def applyW[T](c: ScalaVersionStubs.Context)
               (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
     dieIfNothing[T](c)("Writer")
     c.Expr[T](q"${c.prefix}.macroW0[$e, ${c.prefix}.Writer]")
   }
-  def applyRW[T](c: derive.ScalaVersionStubs.Context)
+  def applyRW[T](c: ScalaVersionStubs.Context)
                 (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
     dieIfNothing[T](c)("ReadWriter")
@@ -91,8 +90,8 @@ object Forwarder{
   }
 }
 trait LowPriX{ this: Api =>
-  implicit def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
-  implicit def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
+  def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
+  def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
   def macroRW[T]: ReadWriter[T] = macro Forwarder.applyRW[T]
   def macroR0[T, M[_]]: Reader[T] = macro Macros.macroRImpl[T, M]
   def macroW0[T, M[_]]: Writer[T] = macro Macros.macroWImpl[T, M]

@@ -1,81 +1,70 @@
 
-val settings = Seq(
-  organization := "com.lihaoyi",
-  version := upicklePPrint.Constants.version,
 
-  scalaVersion := "2.12.0",
-  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0"),
 
-  scalacOptions := Seq("-unchecked",
-    "-deprecation",
-    "-encoding", "utf8",
-    "-feature"),
-  // Sonatype
-  publishArtifact in Test := false,
-  publishTo := Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
-  
-  testFrameworks += new TestFramework("utest.runner.Framework"),
-  libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
-    "com.lihaoyi" %%% "utest" % "0.4.4" % "test",
-    "com.lihaoyi" %%% "sourcecode" % "0.1.3",
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-    "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
-  ) ++ (
-    if(scalaBinaryVersion.value == "2.10")
-      Seq(
-        compilerPlugin("org.scalamacros" % s"paradise" % "2.1.0" cross CrossVersion.full),
-        "org.scalamacros" %% s"quasiquotes" % "2.1.0"
-      )
-    else Seq()
-  ),
-  scalaJSStage in Global := FullOptStage,
-  autoCompilerPlugins := true,
-//  scalacOptions += "-Xlog-implicits",
-  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
-  pomExtra :=
-    <url>https://github.com/lihaoyi/upickle</url>
-      <licenses>
-        <license>
-          <name>MIT license</name>
-          <url>http://www.opensource.org/licenses/mit-license.php</url>
-        </license>
-      </licenses>
-      <scm>
-        <url>git://github.com/lihaoyi/upickle.git</url>
-        <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
-      </scm>
-      <developers>
-        <developer>
-          <id>lihaoyi</id>
-          <name>Li Haoyi</name>
-          <url>https://github.com/lihaoyi</url>
-        </developer>
-      </developers>
-)
-
-settings
-
-val compatible211and212 = 
-  unmanagedSourceDirectories in Compile ++= {
-    if (Set("2.11", "2.12").contains(scalaBinaryVersion.value)) 
-      Seq(baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.11_2.12")
-    else
-      Seq()
-  }
-
-val derive = crossProject.settings(settings).settings(
-  name := "derive",
-  compatible211and212
-)
-val deriveJS = derive.js
-val deriveJVM = derive.jvm
 val upickle = crossProject
-  .dependsOn(derive % "compile->compile;test->test")
-  .settings(settings:_*)
+
   .settings(
     name := "upickle",
-    compatible211and212,
+    organization := "com.lihaoyi",
+    version := upicklePPrint.Constants.version,
+
+    scalaVersion := "2.12.4",
+    crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.4"),
+
+    unmanagedSourceDirectories in Compile ++= {
+      if (Set("2.11", "2.12").contains(scalaBinaryVersion.value))
+        Seq(baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.11_2.12")
+      else
+        Seq()
+    },
+
+    scalacOptions := Seq("-unchecked",
+      "-deprecation",
+      "-encoding", "utf8",
+      "-feature"),
+    // Sonatype
+    publishArtifact in Test := false,
+    publishTo := Some("releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
+
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
+      "com.lihaoyi" %%% "utest" % "0.4.4" % "test",
+      "com.lihaoyi" %%% "sourcecode" % "0.1.3",
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
+    ) ++ (
+      if(scalaBinaryVersion.value == "2.10")
+        Seq(
+          compilerPlugin("org.scalamacros" % s"paradise" % "2.1.0" cross CrossVersion.full),
+          "org.scalamacros" %% s"quasiquotes" % "2.1.0"
+        )
+      else Seq()
+      ),
+    scalaJSStage in Global := FullOptStage,
+    autoCompilerPlugins := true,
+    //  scalacOptions += "-Xlog-implicits",
+    addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
+    pomExtra :=
+      <url>https://github.com/lihaoyi/upickle</url>
+        <licenses>
+          <license>
+            <name>MIT license</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+          </license>
+        </licenses>
+        <scm>
+          <url>git://github.com/lihaoyi/upickle.git</url>
+          <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
+        </scm>
+        <developers>
+          <developer>
+            <id>lihaoyi</id>
+            <name>Li Haoyi</name>
+            <url>https://github.com/lihaoyi</url>
+          </developer>
+        </developers>,
+
     sourceGenerators in Compile += Def.task{
       val dir = (sourceManaged in Compile).value
 
@@ -137,118 +126,14 @@ lazy val upickleJS = upickle.js
 lazy val upickleJVM = upickle.jvm
 lazy val test = project
   .in(file("test"))
-  .dependsOn(upickleJVM, pprintJVM, deriveJVM % "compile->compile;test->test;test->compile;compile->test")
-  .settings(settings)
-
-lazy val pprint = crossProject
-  .dependsOn(derive % "compile->compile;test->test")
-  .settings(settings:_*)
+  .dependsOn(upickleJVM)
   .settings(
-    compatible211and212,
-    name := "pprint",
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "fansi" % "0.2.3",
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-      "com.chuusai" %%% "shapeless" % "2.3.2" % "test"
-    ),
-    sourceGenerators in Compile += Def.task {
-      val dir = (sourceManaged in Compile).value
-      val file = dir/"pprint"/"PPrintGen.scala"
-      val tuples = (1 to 22).map{ i =>
-        val ts = (1 to i) map ("T" + _)
-        val chunks = 1 to i map { n =>
-          s"render(t._$n, cfg)"
-        }
-        val commaTs = ts.mkString(", ")
-        val tupleType = s"Tuple$i[$commaTs]"
-        val boundedTypes = ts.map(_ + ": PP").mkString(",")
-        s"""
-        implicit def Tuple${i}Chunker[$boundedTypes]: Chunker[$tupleType] = makeChunker{
-          (t: $tupleType, cfg: C) => Iterator(${chunks.mkString(",")})
-        }
-        """
-      }
-      val output = s"""
-        package pprint
-        trait PPrinterGen extends GenUtils{
-          ${tuples.mkString("\n")}
-        }
-
-      """.stripMargin
-      IO.write(file, output)
-      Seq(file)
-    }.taskValue,
-    sourceGenerators in Compile += Def.task {
-      val dir = (sourceManaged in Compile).value
-      val file = dir/"pprint"/"TPrintGen.scala"
-
-      val typeGen = for(i <- 2 to 22) yield {
-        val ts = (1 to i).map("T" + _).mkString(", ")
-        val tsBounded = (1 to i).map("T" + _ + ": Type").mkString(", ")
-        val tsGet = (1 to i).map("get[T" + _ + "](cfg)").mkString(" + \", \" + ")
-        s"""
-          implicit def F${i}TPrint[$tsBounded, R: Type] = make[($ts) => R](cfg =>
-            "(" + $tsGet + ") => " + get[R](cfg)
-          )
-          implicit def T${i}TPrint[$tsBounded] = make[($ts)](cfg =>
-            "(" + $tsGet + ")"
-          )
-        """
-      }
-      val output = s"""
-        package pprint
-        trait TPrintGen[Type[_], Cfg]{
-          def make[T](f: Cfg => String): Type[T]
-          def get[T: Type](cfg: Cfg): String
-          implicit def F0TPrint[R: Type] = make[() => R](cfg => "() => " + get[R](cfg))
-          implicit def F1TPrint[T1: Type, R: Type] = {
-            make[T1 => R](cfg => get[T1](cfg) + " => " + get[R](cfg))
-          }
-          ${typeGen.mkString("\n")}
-        }
-      """.stripMargin
-      IO.write(file, output)
-      Seq(file)
-    }.taskValue
-  )
-  .jvmSettings( 
-    libraryDependencies ++= {
-      if (Set("2.10", "2.11").contains(scalaBinaryVersion.value))
-        Seq(
-          "org.spire-math" %% "spire" % "0.11.0" % "test",
-          "com.typesafe.akka" %% "akka-http-experimental" % "1.0-M3" % "test",
-          "com.twitter" %% "finagle-httpx" % "6.26.0" % "test",
-          "org.tpolecat" %% "doobie-core" % "0.2.3" % "test"
-        )
-      else Seq() // not yet available for 2.12
-    },
-    unmanagedSourceDirectories in Compile ++= {
-      if (Set("2.10", "2.11").contains(scalaBinaryVersion.value)) 
-        Seq(baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.10_2.11")
-      else
-        Seq() // skip 2.12
-    }
+    scalaVersion := "2.12.4"
   )
 
-lazy val pprintJVM = pprint.jvm
-lazy val pprintJS = pprint.js
-lazy val modules = project.settings(settings).aggregate(pprintJVM, pprintJS, upickleJVM, upickleJS, deriveJS, deriveJVM).settings(
-  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo"))),
-  publishArtifact := false
-)
 
 lazy val upickleReadme = scalatex.ScalatexReadme(
   projectId = "upickleReadme",
-  wd = file(""),
-  url = "https://github.com/lihaoyi/upickle/tree/master",
-  source = "Readme"
-).settings(
-  scalaVersion := "2.11.8",
-  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala"
-)
-
-lazy val pprintReadme = scalatex.ScalatexReadme(
-  projectId = "pprintReadme",
   wd = file(""),
   url = "https://github.com/lihaoyi/upickle/tree/master",
   source = "Readme"

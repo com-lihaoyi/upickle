@@ -19,13 +19,11 @@ object Defaults{
   case class FooDefault(i: Int = 10, s: String = "lol")
 }
 object Keyed{
-  import derive.key
   case class KeyBar(@key("hehehe") kekeke: Int)
 }
 object KeyedTag{
-  import derive.key
   sealed trait A
-  @key("Bee") case class B(i: Int) extends A
+  @upickle.key("Bee") case class B(i: Int) extends A
   case object C extends A
 }
 object Custom{

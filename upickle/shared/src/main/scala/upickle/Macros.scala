@@ -1,14 +1,12 @@
 package upickle
 
-import derive.ScalaVersionStubs._
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 import compat._
-import derive._
 import acyclic.file
 import language.higherKinds
 import language.existentials
-
+case class key(s: String) extends StaticAnnotation
 /**
  * Implementation of macros used by uPickle to serialize and deserialize
  * case classes automatically. You probably shouldn't need to use these
@@ -18,9 +16,39 @@ import language.existentials
 object Macros {
 
   trait DeriveDefaults {
-    val c: Context
+    val c: ScalaVersionStubs.Context
+    def fail(tpe: c.Type, s: String) = c.abort(c.enclosingPosition, s)
 
     import c.universe._
+    def companionTree(tpe: c.Type): Either[String, Tree] = {
+      val companionSymbol = tpe.typeSymbol.companionSymbol
+
+      if (companionSymbol == NoSymbol && tpe.typeSymbol.isClass) {
+        val clsSymbol = tpe.typeSymbol.asClass
+        val msg = "[error] The companion symbol could not be determined for " +
+          s"[[${clsSymbol.name}]]. This may be due to a bug in scalac (SI-7567) " +
+          "that arises when a case class within a function is derive. As a " +
+          "workaround, move the declaration to the module-level."
+        Left(msg)
+      }else{
+        val symTab = c.universe.asInstanceOf[reflect.internal.SymbolTable]
+        val pre = tpe.asInstanceOf[symTab.Type].prefix.asInstanceOf[Type]
+        Right(c.universe.treeBuild.mkAttributedRef(pre, companionSymbol))
+      }
+
+    }
+    def getArgSyms(tpe: c.Type) = {
+      companionTree(tpe).right.flatMap { companion =>
+        //tickle the companion members -- Not doing this leads to unexpected runtime behavior
+        //I wonder if there is an SI related to this?
+        companion.tpe.members.foreach(_ => ())
+        tpe.members.find(x => x.isMethod && x.asMethod.isPrimaryConstructor) match {
+          case None => Left("Can't find primary constructor of " + tpe)
+          case Some(primaryConstructor) => Right((companion, tpe.typeSymbol.asClass.typeParams, primaryConstructor.asMethod.paramss.flatten))
+        }
+
+      }
+    }
 
     def deriveDefaults(companion: c.Tree, numArgs: Int): Seq[c.Tree] = {
       val defaults = (0 until numArgs).map { i =>
@@ -32,10 +60,78 @@ object Macros {
       }
       defaults
     }
+    def deriveClass(tpe: c.Type) = {
+      getArgSyms(tpe) match {
+        case Left(msg) => fail(tpe, msg)
+        case Right((companion, typeParams, argSyms)) =>
+
+          //    println("argSyms " + argSyms.map(_.typeSignature))
+          val args = argSyms.map { p =>
+            customKey(p).getOrElse(p.name.toString)
+          }
+
+          val typeArgs = tpe match {
+            case TypeRef(_, _, args) => args
+            case _ => c.abort(
+              c.enclosingPosition,
+              s"Don't know how to derive type $tpe"
+            )
+          }
+
+
+          def func(t: Type) = {
+
+            if (argSyms.length == 0) t
+            else {
+              val base = argSyms.map(_.typeSignature.typeSymbol)
+              val concrete = tpe.normalize.asInstanceOf[TypeRef].args
+              if (t.typeSymbol != definitions.RepeatedParamClass) {
+
+                t.substituteTypes(typeParams, concrete)
+              } else {
+                val TypeRef(pref, sym, args) = typeOf[Seq[Int]]
+                import compat._
+                TypeRef(pref, sym, t.asInstanceOf[TypeRef].args)
+              }
+            }
+          }
+
+          val derive =
+            if (args.isEmpty) // 0-arg case classes are treated like `object`s
+              wrapCase0(companion, tpe)
+            else if (args.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
+              wrapCase1(companion, args(0), typeArgs, func(argSyms(0).typeSignature), tpe)
+            else // Otherwise, reading and writing are kinda identical
+              wrapCaseN(companion, args, typeArgs, argSyms.map(_.typeSignature).map(func), tpe)
+
+          annotate(tpe)(derive)
+      }
+    }
+    /** If there is a sealed base class, annotate the derived tree in the JSON
+      * representation with a class label.
+      */
+    def annotate(tpe: c.Type)(derived: c.universe.Tree) = {
+      val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
+      sealedParent.fold(derived) { parent =>
+        val index = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
+        q"${c.prefix}.annotate($derived, $index)"
+      }
+    }
+    def customKey(sym: c.Symbol): Option[String] = {
+        sym.annotations
+          .find(_.tpe == typeOf[key])
+          .flatMap(_.scalaArgs.headOption)
+          .map{case Literal(Constant(s)) => s.toString}
+    }
+
+    def wrapObject(obj: Tree): Tree
+    def wrapCase0(companion: Tree, targetType: c.Type): Tree
+    def wrapCase1(companion: Tree, arg: String, typeArgs: Seq[c.Type], argTypes: Type, targetType: c.Type): Tree
+    def wrapCaseN(companion: Tree, args: Seq[String], typeArgs: Seq[c.Type], argTypes: Seq[Type],targetType: c.Type): Tree
   }
 
-  abstract class Reading[M[_]] extends Derive[M] with DeriveDefaults {
-    val c: Context
+  abstract class Reading[M[_]] extends DeriveDefaults {
+    val c: ScalaVersionStubs.Context
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
@@ -59,7 +155,7 @@ object Macros {
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   targetType: c.Type) = {
-      val x = q"$freshName"
+      val x = q"${c.freshName()}"
       val name = newTermName("Tuple"+args.length+"R")
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
       val defaults = deriveDefaults(companion,argTypes.length)
@@ -80,8 +176,8 @@ object Macros {
     def knot(t: Tree) = q"${c.prefix}.Knot.Reader(() => $t)"
 
   }
-  abstract class Writing[M[_]] extends Derive[M] with DeriveDefaults {
-    val c: Context
+  abstract class Writing[M[_]] extends DeriveDefaults {
+    val c: ScalaVersionStubs.Context
     import c.universe._
     def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
     def wrapCase0(companion: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($companion.unapply)"
@@ -136,42 +232,36 @@ object Macros {
     }
     def knot(t: Tree) = q"${c.prefix}.Knot.Writer(() => $t)"
   }
-  def macroRImpl[T, R[_]](c0: Context)
+  def macroRImpl[T, R[_]](c0: ScalaVersionStubs.Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
     import c0.universe._
     val res = new Reading[R]{
       val c: c0.type = c0
       def typeclass = e2
-    }.derive[T]
+    }.deriveClass(e1.tpe)
     val msg = "Tagged Object " + weakTypeOf[T].typeSymbol.fullName
     c0.Expr[R[T]](q"""${c0.prefix}.Internal.validateReader($msg){$res}""")
   }
 
-  def macroWImpl[T, W[_]](c0: Context)
+  def macroWImpl[T, W[_]](c0: ScalaVersionStubs.Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
     import c0.universe._
     val res = new Writing[W]{
       val c: c0.type = c0
       def typeclass = e2
-    }.derive[T]
+    }.deriveClass(e1.tpe)
     c0.Expr[W[T]](res)
   }
 
-  def macroRWImpl[T, RM[_], WM[_]](c0: Context)
+  def macroRWImpl[T, RM[_], WM[_]](c0: ScalaVersionStubs.Context)
                                   (implicit e1: c0.WeakTypeTag[T],
                                    e2: c0.WeakTypeTag[RM[_]],
                                    e3: c0.WeakTypeTag[WM[_]] ): c0.Expr[RM[T] with WM[T]] = {
     import c0.universe._
 
-    val rRes = new Reading[RM]{
-      val c: c0.type = c0
-      def typeclass = e2
-    }.derive[T]
+    val rRes = macroRImpl[T, RM](c0)(e1, e2)
 
-    val wRes = new Writing[WM]{
-      val c: c0.type = c0
-      def typeclass = e3
-    }.derive[T]
+    val wRes = macroWImpl[T, WM](c0)(e1, e3)
 
     val msg = "Tagged Object " + weakTypeOf[T].typeSymbol.fullName
     c0.Expr[RM[T] with WM[T]](q"""${c0.prefix}.Internal.validateReaderWithWriter($msg)($rRes,$wRes)""")
