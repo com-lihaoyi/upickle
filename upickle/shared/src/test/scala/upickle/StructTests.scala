@@ -159,7 +159,7 @@ object StructTests extends TestSuite{
     'jsValue{
       'value{
         val value:Js.Value = Js.Str("test")
-        rw(value, """"test"""")
+        rw(value, """ "test" """.trim)
       }
       'str-rw(Js.Str("test"), """"test"""")
       'num-rw(Js.Num(7), """7""")

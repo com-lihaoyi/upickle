@@ -1,11 +1,19 @@
-import upickle.default.{macroRW, ReadWriter => RW}
+import upickle.default
+import upickle.default.{macroRW, ReadWriter => RW, Reader => R, Writer => W}
 
-case class Thing(myFieldA: Int, myFieldB: String)
-object Thing{
-  implicit def rw: RW[Thing] = macroRW
-}
+
 object Main{
+  case class SingleNode(value: Int, children: List[SingleTree]) extends SingleTree
+
+  object SingleNode{
+    implicit def SingleNoderw: R[SingleNode] = upickle.legacy.macroRW[SingleNode]
+  }
+  sealed trait SingleTree
+
+  object SingleTree{
+    implicit def SingleTreerw: R[SingleTree] = upickle.legacy.macroRW[SingleTree]
+  }
+
   def main(args: Array[String]): Unit = {
-    println(upickle.default.write(Thing(1, "2")))
   }
 }

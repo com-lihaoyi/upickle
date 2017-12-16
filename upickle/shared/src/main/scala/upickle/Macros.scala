@@ -27,7 +27,7 @@ object Macros {
         val clsSymbol = tpe.typeSymbol.asClass
         val msg = "[error] The companion symbol could not be determined for " +
           s"[[${clsSymbol.name}]]. This may be due to a bug in scalac (SI-7567) " +
-          "that arises when a case class within a function is derive. As a " +
+          "that arises when a case class within a function is upickle. As a " +
           "workaround, move the declaration to the module-level."
         Left(msg)
       }else{
@@ -105,7 +105,10 @@ object Macros {
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
 
     def derive(tpe: c.Type) = {
-      if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) deriveTrait(tpe)
+      if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) {
+        val derived = deriveTrait(tpe)
+        derived
+      }
       else if (tpe.typeSymbol.isModuleClass) deriveObject(tpe)
       else deriveClass(tpe)
     }
@@ -126,7 +129,8 @@ object Macros {
         //    println("deriveTrait")
         val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
         //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)
-        mergeTrait(subDerives, subTypes, tpe)
+        val merged = mergeTrait(subDerives, subTypes, tpe)
+        merged
       }
     }
 
@@ -348,13 +352,20 @@ object Macros {
                                    e2: c0.WeakTypeTag[RM[_]],
                                    e3: c0.WeakTypeTag[WM[_]] ): c0.Expr[RM[T] with WM[T]] = {
     import c0.universe._
+    val rRes = new Reading[RM]{
+      val c: c0.type = c0
+      def typeclass = e2
+    }.derive(e1.tpe)
 
-    val rRes = macroRImpl[T, RM](c0)(e1, e2)
-
-    val wRes = macroWImpl[T, WM](c0)(e1, e3)
+    val wRes = new Writing[WM]{
+      val c: c0.type = c0
+      def typeclass = e3
+    }.derive(e1.tpe)
 
     val msg = "Tagged Object " + weakTypeOf[T].typeSymbol.fullName
-    c0.Expr[RM[T] with WM[T]](q"""${c0.prefix}.Internal.validateReaderWithWriter($msg)($rRes,$wRes)""")
+
+    val res = c0.Expr[RM[T] with WM[T]](q"""${c0.prefix}.Internal.validateReaderWithWriter($msg)($rRes,$wRes)""")
+    res
   }
 }
 

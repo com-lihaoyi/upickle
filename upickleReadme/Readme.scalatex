@@ -494,7 +494,7 @@
         @li
           Allow custom handling for JSON @hl.scala{null}s via a @sect.ref{Custom Configuration}
         @li
-          Made @hl.scala{derive.key} a @hl.scala{case class}
+          Made @hl.scala{upickle.key} a @hl.scala{case class}
         @li
           Remove unnecessary dependency of @hl.scala{derive} on default arguments #143
         @li

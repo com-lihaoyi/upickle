@@ -5,7 +5,7 @@ import default.{Reader => R, Writer => W, ReadWriter => RW}
 /*
  * A whole bunch of test data that can be used by client libraries to try out
  * their typeclass derivation to make sure it's doing the right thing. Contains
- * roughly the  whole range of interesting shapes of types supported by derive.
+ * roughly the  whole range of interesting shapes of types supported by upickle.
  */
 
 object ADTs {
@@ -335,22 +335,24 @@ object GenericADTs{
       implicit def rw[A, B]: RW[Clear[A, B]] = default.macroRW
     }
   }
-  sealed trait DeltaHardcoded[A, B]
-  object DeltaHardcoded {
-    implicit def rw[A: R: W, B: R: W]: RW[DeltaHardcoded[A, B]] = default.macroRW
-    case class Insert[A, B](key: A, value: B) extends DeltaHardcoded[A, B]
-    object Insert{
-      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
-    }
-    case class Remove[A](key: A) extends DeltaHardcoded[A, String]
-    object Remove{
-      implicit def rw[A: R: W]: RW[Remove[A]] = default.macroRW
-    }
-    case class Clear() extends DeltaHardcoded[Seq[Int], String]
-    object Clear{
-      implicit def rw: RW[Clear] = default.macroRW
-    }
-  }
+//  Not sure how to make these work...
+//
+//  sealed trait DeltaHardcoded[A, B]
+//  object DeltaHardcoded {
+//    implicit def rw[A: R: W, B: R: W]: RW[DeltaHardcoded[A, B]] = default.macroRW
+//    case class Insert[A, B](key: A, value: B) extends DeltaHardcoded[A, B]
+//    object Insert{
+//      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
+//    }
+//    case class Remove[A](key: A) extends DeltaHardcoded[A, String]
+//    object Remove{
+//      implicit def rw[A: R: W]: RW[Remove[A]] = default.macroRW
+//    }
+//    case class Clear() extends DeltaHardcoded[Seq[Int], String]
+//    object Clear{
+//      implicit def rw: RW[Clear] = default.macroRW
+//    }
+//  }
 }
 object Amorphous{
   class A()

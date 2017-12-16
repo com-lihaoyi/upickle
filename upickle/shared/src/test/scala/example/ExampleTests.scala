@@ -60,14 +60,6 @@ object KeyedTag{
   }
   case object C extends A
 }
-object Custom{
-  class CustomThing(val i: Int, val s: String)
-  object CustomThing{
-    implicit def rw: RW[CustomThing] = macroRW
-    def apply(i: Int) = new CustomThing(i + 10, "s" * (i + 10))
-    def unapply(t: CustomThing) = Some(t.i - 10)
-  }
-}
 object Custom2{
   import upickle.Js
   class CustomThing2(val i: Int, val s: String)
