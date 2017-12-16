@@ -110,7 +110,6 @@ trait Types{ types =>
         * calls `read.apply` on some invalid value
         */
       def apply(v1: Js.Value): T = {
-        println("Reader.apply " + v1)
         if (!this.isDefinedAt(v1)) read0(v1)
         else read0.applyOrElse(v1, readNull)
       }

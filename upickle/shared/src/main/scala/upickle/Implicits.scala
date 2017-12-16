@@ -38,15 +38,10 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
 
 
     def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = new PartialFunction[Js.Value, T] {
-      def isDefinedAt(x: Value) = {
-        println("isDefinedAt " + x)
-        pf.isDefinedAt(x)
-      }
+      def isDefinedAt(x: Value) = pf.isDefinedAt(x)
 
-      def apply(v1: Value): T = {
-        println("validate: " + v1)
-        pf.applyOrElse(v1, (x: Js.Value) => throw Invalid.Data(x, name))
-      }
+      def apply(v1: Value): T = pf.applyOrElse(v1, (x: Js.Value) => throw Invalid.Data(x, name))
+
       override def toString = s"validate($name, $pf)"
     }
     def validateReader[T](name: String)(r: => Reader[T]): Reader[T] = new Reader[T]{

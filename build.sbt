@@ -1,12 +1,13 @@
 
 
+crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.4")
 
 val upickle = crossProject
 
   .settings(
     name := "upickle",
     organization := "com.lihaoyi",
-    version := upicklePPrint.Constants.version,
+    version := _root_.upickle.Constants.version,
 
     scalaVersion := "2.12.4",
     crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.4"),
