@@ -290,12 +290,9 @@ object Macros {
       """
     }
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
-      val merged =
-        subtrees.map(p => q"$p.read": Tree)
-          .reduce((a, b) => q"$a orElse $b")
-      q"${c.prefix}.Reader[$targetType]($merged)"
+
+      q"${c.prefix}.Reader.merge[$targetType](..$subtrees)"
     }
-    def knot(t: Tree) = q"${c.prefix}.Knot.Reader(() => $t)"
 
   }
   abstract class Writing[M[_]] extends DeriveDefaults[M] {
@@ -348,13 +345,8 @@ object Macros {
       """
     }
     def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
-      val merged =
-        if (subtree.length == 1) q"$internal.merge0(${subtree(0)}.write)"
-        else subtree.map(p => q"$p.write": Tree)
-          .reduce((a, b) => q"$internal.merge($a, $b)")
-      q"${c.prefix}.Writer[$targetType]($merged)"
+      q"${c.prefix}.Writer.merge[$targetType](..$subtree)"
     }
-    def knot(t: Tree) = q"${c.prefix}.Knot.Writer(() => $t)"
   }
   def macroRImpl[T, R[_]](c0: ScalaVersionStubs.Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {

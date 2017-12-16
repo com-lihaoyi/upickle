@@ -40,8 +40,9 @@ object Custom {
 sealed trait TypedFoo
 object TypedFoo{
   import upickle.default._
-  implicit val readWriter: ReadWriter[TypedFoo] =
-    macroRW[Bar] merge macroRW[Baz] merge macroRW[Quz]
+  implicit val readWriter: ReadWriter[TypedFoo] = ReadWriter.merge(
+    macroRW[Bar], macroRW[Baz], macroRW[Quz]
+  )
 
   case class Bar(i: Int) extends TypedFoo
   case class Baz(s: String) extends TypedFoo

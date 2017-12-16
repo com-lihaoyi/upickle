@@ -26,54 +26,15 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
   implicit def Tuple2W[T1: W, T2: W]: W[(T1, T2)]
 
 
-  implicit class MergeRW[T: ClassTag](a: ReadWriter[T]){
-    def merge[V <: R: ClassTag, R >: T](b: ReadWriter[V]): ReadWriter[R] = {
-      ReadWriter[R](
-        {
-          case r: V => b.write(r)
-          case r: T => a.write(r)
-        },
-        b.read.orElse[Js.Value, R](a.read)
-      )
-    }
-  }
-  implicit class MergeR[T: ClassTag](a: Reader[T]){
-    def merge[V <: R: ClassTag, R >: T](b: Reader[V]): Reader[R] = {
-      Reader[R](b.read.orElse[Js.Value, R](a.read))
-    }
-  }
-
-  implicit class MergeW[T: ClassTag](a: Writer[T]){
-    def merge[V <: R: ClassTag, R >: T](b: Writer[V]): Writer[R] = {
-      Writer[R]{
-        case r: V => b.write(r)
-        case r: T => a.write(r)
-      }
-
-    }
-  }
-
   /**
    * APIs that need to be exposed to the outside world to support Macros
    * which depend on them, but probably should not get used directly.
    */
   object Internal {
-    type Reader[T] = Implicits.this.Reader[T]
-    type Writer[T] = Implicits.this.Writer[T]
-    def makeReader[T](pf: PartialFunction[Js.Value, T]) = imp.Reader(pf)
-    def makeWriter[T](f: T => Js.Value) = imp.Writer(f)
+
     // Have to manually spell out the implicit here otherwise compiler crashes
     def readJs[T](expr: Js.Value)(implicit ev: Reader[T]): T = imp.readJs(expr)(ev)
     def writeJs[T](expr: T)(implicit ev: Writer[T]): Js.Value = imp.writeJs(expr)(ev)
-
-    def merge0[T: ClassTag, R, U](f: T => R): U => R = {
-      case t: T => f(t)
-    }
-
-    def merge[T: ClassTag, R, V: ClassTag, U](f: T => R, g: V => R): U => R = {
-      case v: V => g(v)
-      case t: T => f(t)
-    }
 
 
     def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = new PartialFunction[Js.Value, T] {
@@ -280,18 +241,12 @@ trait Implicits extends Types with BigDecimalSupport { imp: Generated =>
   implicit def JsNullR: R[Js.Null.type] = R[Js.Null.type]{case v:Js.Null.type => v}
   implicit def JsNullW: W[Js.Null.type] = W[Js.Null.type]{case v:Js.Null.type => v}
 
-  implicit def JsValueR: R[Js.Value] = Reader[Js.Value](
-    JsObjR.read orElse JsArrR.read orElse JsStrR.read orElse JsTrueR.read orElse JsFalseR.read orElse JsNullR.read
+  implicit def JsValueR: R[Js.Value] = Reader.merge(
+    JsObjR, JsArrR, JsStrR, JsTrueR, JsFalseR, JsNullR
   )
-  case class pf[T: ClassTag](x: Writer[T]){
-    def tryRead(v: Any) = v match{
-      case t: T => Some(x.write(t))
-      case _ => None
-    }
-  }
-  def mergeW[T](x: pf[_]*) = Writer[T](v => x.iterator.flatMap(_.tryRead(v)).next())
-  implicit def JsValueW: W[Js.Value] = mergeW(
-    pf(JsObjW), pf(JsArrW), pf(JsStrW), pf(JsTrueW), pf(JsFalseW), pf(JsNullW)
+
+  implicit def JsValueW: W[Js.Value] = Writer.merge(
+    JsObjW, JsArrW, JsStrW, JsTrueW, JsFalseW, JsNullW
   )
 
 

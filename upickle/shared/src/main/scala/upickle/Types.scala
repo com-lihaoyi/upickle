@@ -5,6 +5,8 @@ import language.experimental.macros
 import scala.annotation.implicitNotFound
 import language.higherKinds
 import acyclic.file
+
+import scala.reflect.ClassTag
 class ReaderPicker[M[_]]
 class WriterPicker[M[_]]
 
@@ -14,35 +16,6 @@ class WriterPicker[M[_]]
 * package to form the public API1
 */
 trait Types{ types =>
-  /**
-   * Classes that provides a mutable version of [[ReadWriter]], used to
-   * allow serialization and deserialization of recursive data structure
-   */
-  object Knot {
-
-    class RW[T](var _write: T => Js.Value, var _read: PF[Js.Value, T]) extends types.Reader[T] with types.Writer[T] {
-      def read0 = _read
-
-      def write0 = _write
-
-      def copyFrom(rw: types.Reader[T] with types.Writer[T]) = {
-        _write = rw.write
-        _read = rw.read
-      }
-    }
-
-    case class Reader[T](reader0: () => types.Reader[T]) extends types.Reader[T] {
-      lazy val reader = reader0()
-      def read0 = reader.read0
-    }
-
-    case class Writer[T](writer0: () => types.Writer[T]) extends types.Writer[T] {
-      lazy val writer = writer0()
-      def write0 = writer.write0
-    }
-  }
-
-
   /**
    * Helper object that makes it convenient to create instances of bother
    * [[Reader]] and [[Writer]] at the same time.
@@ -55,12 +28,21 @@ trait Types{ types =>
       val write0 = _write
       override def toString = src.value
     }
-    implicit def ReaderWriter[T](implicit r: Reader[T], w: Writer[T]): ReadWriter[T] =
-      new Reader[T] with Writer[T]{
-        def read0 = r.read0
 
-        def write0 = w.write0
+    implicit class Mergable[T, K <: T](val w: Writer[K] with Reader[K])
+                                      (implicit val ct: ClassTag[K]){
+      def tryRead(v: Any) = v match{
+        case t: K => Some(w.write(t))
+        case _ => None
       }
+    }
+    def merge[T](rws: Mergable[T, _]*) = new Writer[T] with Reader[T]{
+      def write0 = Writer.merge0[T](rws.map(_.tryRead _):_*)
+
+      def read0 = Reader.merge0[T](
+        rws.map(_.w.read.asInstanceOf[PF[Js.Value, T]]):_*
+      )
+    }
   }
 
   type ReadWriter[T] = Reader[T] with Writer[T]
@@ -73,18 +55,26 @@ trait Types{ types =>
   )
   trait Writer[T]{
     def write0: T => Js.Value
-    final val write: PartialFunction[T, Js.Value] = {
+    final val write: T => Js.Value = {
       case null => Js.Null
       case t => write0(t)
     }
 
-    def orElse[V <: T](other: Writer[V]) = Writer[V]{
-      case t: T => this.write(t)
-      case v: V => other.write(v)
-    }
   }
   object Writer{
+    implicit class Mergable[T, K <: T](val w: Writer[K])(implicit val ct: ClassTag[K]){
+      def tryRead(v: Any) = v match{
+        case t: K => Some(w.write(t))
+        case _ => None
+      }
+    }
 
+    def merge0[T](tryReads: (T => Option[Js.Value])*) = {
+      (v: T) => tryReads.iterator.flatMap(_(v)).next()
+    }
+    def merge[T](writers: Mergable[T, _]*) = {
+      Writer[T](merge0(writers.map(_.tryRead _):_*))
+    }
     /**
      * Helper class to make it convenient to create instances of [[Writer]]
      * from the equivalent function
@@ -127,6 +117,13 @@ trait Types{ types =>
   }
 
   object Reader{
+    implicit class Mergable[T, K <: T](val r: Reader[K])
+    def merge0[T](readers: PF[Js.Value, T]*) = {
+      readers.iterator.reduceLeft(_.orElse(_))
+    }
+    def merge[T](readers: Mergable[T, _]*) = {
+      Reader[T](merge0[T](readers.map(_.r.read.asInstanceOf[PF[Js.Value, T]]):_*))
+    }
     /**
      * Helper class to make it convenient to create instances of [[Reader]]
      * from the equivalent function
