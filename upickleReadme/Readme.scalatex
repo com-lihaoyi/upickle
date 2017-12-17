@@ -24,7 +24,7 @@
 )
 
 
-@sect("µPickle "+ upicklePPrint.Constants.version)
+@sect("µPickle "+ _root_.upickle.Constants.version)
 
   @p
     uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
@@ -48,7 +48,7 @@
     @p
       Add the following to your SBT config:
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %% "upickle" % "@upicklePPrint.Constants.version"
+      libraryDependencies += "com.lihaoyi" %% "upickle" % "@_root_.upickle.Constants.version"
 
 
     @p
@@ -60,10 +60,10 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        libraryDependencies += "com.lihaoyi" %%% "upickle" % "@upicklePPrint.Constants.version"
+        libraryDependencies += "com.lihaoyi" %%% "upickle" % "@_root_.upickle.Constants.version"
       @p
 
-        Other than that, everything is used the same way. upickle-0.2.8 is only compatible with ScalaJS 0.6.x.
+        Other than that, everything is used the same way. upickle-0.5.0 is only compatible with ScalaJS 0.6.x.
 
     @sect{Scala 2.10}
       @p
@@ -203,14 +203,6 @@
       which sub-types of a sealed trait to consider when pickling:
 
     @hl.ref(macroTests, "sealed trait TypedFoo", "// End TypedFoo")
-
-    @p
-      By placing it in the companion object, we ensure that the pickler is
-      cached and always used by default, even if not explicitly imported.
-      From there you can use it manually:
-
-    @hl.ref(macroTests, "'companioImplicitPickedUp")
-
 
   @sect{Defaults}
 
@@ -353,7 +345,7 @@
             * a [[Js.Obj]]
             */
           def obj = this match{
-            case Obj(value @_*) => value.toMap
+            case Obj(value @@_*) => value.toMap
             case _ => throw Invalid.Data(this, "Expected Js.Obj")
           }
           /**
@@ -361,7 +353,7 @@
             * a [[Js.Arr]]
             */
           def arr = this match{
-            case Arr(value @ _*) => value
+            case Arr(value @@ _*) => value
             case _ => throw Invalid.Data(this, "Expected Js.Arr")
           }
           /**
@@ -490,7 +482,7 @@
         @li
           Remove unnecessary dependency of @hl.scala{derive} on default arguments #143
         @li
-          Fixed derivation allowing @sect.ref{Caching Picklers} in a @hl.scala{case class}'s companion object, potentially speeding up compilation times and runtimes
+          Fixed derivation allowing Caching Picklers in a @hl.scala{case class}'s companion object, potentially speeding up compilation times and runtimes
     @sect{0.3.9}
       @ul
         @li
