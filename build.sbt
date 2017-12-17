@@ -10,14 +10,7 @@ val upickle = crossProject
     version := _root_.upickle.Constants.version,
 
     scalaVersion := "2.12.4",
-    crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.4"),
-
-    unmanagedSourceDirectories in Compile ++= {
-      if (Set("2.11", "2.12").contains(scalaBinaryVersion.value))
-        Seq(baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.11_2.12")
-      else
-        Seq()
-    },
+    crossScalaVersions := Seq("2.11.11", "2.12.4"),
 
     scalacOptions := Seq("-unchecked",
       "-deprecation",

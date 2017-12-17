@@ -16,7 +16,7 @@ case class key(s: String) extends StaticAnnotation
 object Macros {
 
   trait DeriveDefaults[M[_]] {
-    val c: ScalaVersionStubs.Context
+    val c: scala.reflect.macros.blackbox.Context
     def fail(tpe: c.Type, s: String) = c.abort(c.enclosingPosition, s)
 
     import c.universe._
@@ -251,7 +251,7 @@ object Macros {
   }
 
   abstract class Reading[M[_]] extends DeriveDefaults[M] {
-    val c: ScalaVersionStubs.Context
+    val c: scala.reflect.macros.blackbox.Context
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
@@ -296,7 +296,7 @@ object Macros {
 
   }
   abstract class Writing[M[_]] extends DeriveDefaults[M] {
-    val c: ScalaVersionStubs.Context
+    val c: scala.reflect.macros.blackbox.Context
     import c.universe._
     def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
     def wrapCase0(companion: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($companion.unapply)"
@@ -348,7 +348,7 @@ object Macros {
       q"${c.prefix}.Writer.merge[$targetType](..$subtree)"
     }
   }
-  def macroRImpl[T, R[_]](c0: ScalaVersionStubs.Context)
+  def macroRImpl[T, R[_]](c0: scala.reflect.macros.blackbox.Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
     import c0.universe._
     val res = new Reading[R]{
@@ -359,7 +359,7 @@ object Macros {
     c0.Expr[R[T]](q"""${c0.prefix}.Internal.validateReader($msg){$res}""")
   }
 
-  def macroWImpl[T, W[_]](c0: ScalaVersionStubs.Context)
+  def macroWImpl[T, W[_]](c0: scala.reflect.macros.blackbox.Context)
                          (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
     import c0.universe._
     val res = new Writing[W]{
@@ -369,7 +369,7 @@ object Macros {
     c0.Expr[W[T]](res)
   }
 
-  def macroRWImpl[T, RM[_], WM[_]](c0: ScalaVersionStubs.Context)
+  def macroRWImpl[T, RM[_], WM[_]](c0: scala.reflect.macros.blackbox.Context)
                                   (implicit e1: c0.WeakTypeTag[T],
                                    e2: c0.WeakTypeTag[RM[_]],
                                    e3: c0.WeakTypeTag[WM[_]] ): c0.Expr[RM[T] with WM[T]] = {

@@ -61,7 +61,7 @@ trait AttributeTagged extends Api{
  */
 object Forwarder{
   def dieIfNothing[T: c.WeakTypeTag]
-                  (c: ScalaVersionStubs.Context)
+                  (c: scala.reflect.macros.blackbox.Context)
                   (name: String) = {
     if (c.weakTypeOf[T] =:= c.weakTypeOf[Nothing]) {
       c.abort(
@@ -70,19 +70,19 @@ object Forwarder{
       )
     }
   }
-  def applyR[T](c: ScalaVersionStubs.Context)
+  def applyR[T](c: scala.reflect.macros.blackbox.Context)
               (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
     dieIfNothing[T](c)("Reader")
     c.Expr[T](q"${c.prefix}.macroR0[$e, ${c.prefix}.Reader]")
   }
-  def applyW[T](c: ScalaVersionStubs.Context)
+  def applyW[T](c: scala.reflect.macros.blackbox.Context)
               (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
     dieIfNothing[T](c)("Writer")
     c.Expr[T](q"${c.prefix}.macroW0[$e, ${c.prefix}.Writer]")
   }
-  def applyRW[T](c: ScalaVersionStubs.Context)
+  def applyRW[T](c: scala.reflect.macros.blackbox.Context)
                 (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
     import c.universe._
     dieIfNothing[T](c)("ReadWriter")

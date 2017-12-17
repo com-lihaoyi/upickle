@@ -3,7 +3,7 @@ import utest._
 import upickle.legacy.read
 import TestUtil._
 
-object PrimitiveTests extends TestSuite with BigDecimalSupport {
+object PrimitiveTests extends TestSuite {
 
   def tests = Tests {
     'Unit{
@@ -48,7 +48,7 @@ object PrimitiveTests extends TestSuite with BigDecimalSupport {
       'fractional-rw(BigDecimal("125123.1542312"), """ "125123.1542312" """)
       'negative-rw(BigDecimal("-125123.1542312"), """ "-125123.1542312" """)
       'big-rw(
-        exactBigDecimal("234207440984302304980238412.15423127402740234"),
+        BigDecimal("234207440984302304980238412.15423127402740234"),
           """ "234207440984302304980238412.15423127402740234" """)
       'null-rw(null: BigDecimal, "null")
     }
