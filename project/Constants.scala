@@ -1,4 +1,4 @@
 package upickle
 object Constants{
-  val version = "0.5.0"
+  val version = "0.5.1"
 }

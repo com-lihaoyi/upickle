@@ -243,11 +243,11 @@ trait Implicits extends Types { imp: Generated =>
   implicit def JsNullW: W[Js.Null.type] = W[Js.Null.type]{case v:Js.Null.type => v}
 
   implicit def JsValueR: R[Js.Value] = Reader.merge(
-    JsObjR, JsArrR, JsStrR, JsTrueR, JsFalseR, JsNullR
+    JsObjR, JsArrR, JsStrR, JsTrueR, JsFalseR, JsNullR, JsNumR
   )
 
   implicit def JsValueW: W[Js.Value] = Writer.merge(
-    JsObjW, JsArrW, JsStrW, JsTrueW, JsFalseW, JsNullW
+    JsObjW, JsArrW, JsStrW, JsTrueW, JsFalseW, JsNullW, JsNumW
   )
 
 
