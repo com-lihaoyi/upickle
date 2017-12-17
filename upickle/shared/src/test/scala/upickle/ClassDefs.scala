@@ -446,7 +446,7 @@ object Ast{
     implicit def rw: RW[Chain] = default.macroRW
     sealed trait Sub extends Ast
     object Sub{
-      implicit def rw: RW[Sub] = default.macroRW
+      implicit def rw: RW[Sub] = RW.merge(Prop.rw, TypeArgs.rw, Args.rw, Block.rw, Header.rw)
     }
     case class Prop(offset: Int, str: String) extends Sub
     object Prop{

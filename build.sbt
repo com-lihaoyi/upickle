@@ -1,6 +1,6 @@
 
 
-crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.4")
+crossScalaVersions := Seq("2.11.11", "2.12.4")
 
 val upickle = crossProject
 
@@ -30,7 +30,7 @@ val upickle = crossProject
     testFrameworks += new TestFramework("utest.runner.Framework"),
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
-      "com.lihaoyi" %%% "utest" % "0.6.0" % "test",
+      "com.lihaoyi" %%% "utest" % "0.5.4" % "test",
       "com.lihaoyi" %%% "sourcecode" % "0.1.3",
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
