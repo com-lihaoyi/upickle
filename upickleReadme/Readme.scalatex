@@ -464,7 +464,8 @@
           @lnk("Felix Dietze", "https://github.com/fdietze")
         @li
           Made it easy to write @sect.ref{Manual Sealed Trait Picklers}
-          in order to work around problems with SI-7046
+          in order to work around problems with @link("SI-7046", "https://issues.scala-lang.org/browse/SI-7046") 
+          (Fixed in Scala 2.11.9 and Scala 2.12.1)
     @sect{0.4.1}
       @ul
         @li
