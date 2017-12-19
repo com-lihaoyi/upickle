@@ -10,6 +10,8 @@ import scala.language.higherKinds
 import scala.language.experimental.macros
 import java.util.UUID
 
+import scala.collection.immutable.ListMap
+
 
 /**
 * Typeclasses to allow read/writing of all the common
@@ -169,12 +171,12 @@ trait Implicits extends Types { imp: Generated =>
 
   implicit def MapR[K: R, V: R]: R[Map[K, V]] =
     if (implicitly[R[K]] == implicitly[R[String]])
-      R[Map[K, V]](Internal.validate("Object"){
-        case x: Js.Obj => x.value.map{case (k, v) => (k.asInstanceOf[K], readJs[V](v))}.toMap
+      R[Map[K, V]](Internal.validate("Object") {
+        case x: Js.Obj => x.value.map{case (k, v) => (k.asInstanceOf[K], readJs[V](v))}(collection.breakOut):ListMap[K,V]
       })
     else
       R[Map[K, V]](Internal.validate("Array(n)"){
-        case x: Js.Arr => x.value.map(readJs[(K, V)]).toMap
+        case x: Js.Arr => x.value.map(readJs[(K, V)])(collection.breakOut):ListMap[K,V]
       })
 
   implicit def EitherR[A: R, B: R]: R[Either[A, B]] = R[Either[A, B]](
