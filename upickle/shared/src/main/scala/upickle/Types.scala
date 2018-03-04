@@ -57,7 +57,9 @@ trait Types{ types =>
       case null => Js.Null
       case t => write0(t)
     }
-
+    def comap[V](f: V => T) = new Writer[V] {
+      def write0 = f.andThen(Writer.this.write0)
+    }
   }
   object Writer{
     implicit class Mergable[T, K <: T](val w: Writer[K])(implicit val ct: ClassTag[K]){
@@ -118,6 +120,9 @@ trait Types{ types =>
         if (!this.isDefinedAt(v1)) read0(v1)
         else read0.applyOrElse(v1, readNull)
       }
+    }
+    def map[V](f: T => V) = new Reader[V] {
+      def read0 = Reader.this.read0.andThen(f)
     }
   }
 
