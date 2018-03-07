@@ -45,13 +45,16 @@ trait Writers extends Types{
   implicit def NoneWriter[T: Writer]: Writer[None.type] = SeqLikeWriter[Seq, T].comap[None.type](_.toSeq)
   implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]) = new Writer[C[T]] {
     def write(out: jawn.Facade[Unit], v: C[T]) = {
-      val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
-      val x = v.iterator
-      while(x.nonEmpty){
-        ctx.add((), -1)
-        r.write(out, x.next().asInstanceOf[T])
+      if (v == null) out.jnull()
+      else{
+        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
+        val x = v.iterator
+        while(x.nonEmpty){
+          ctx.add((), -1)
+          r.write(out, x.next().asInstanceOf[T])
+        }
+        ctx.finish(-1)
       }
-      ctx.finish(-1)
     }
   }
   implicit def ArrayWriter[T](implicit r: Writer[T]) = new Writer[Array[T]] {
@@ -87,12 +90,10 @@ trait Writers extends Types{
       if (v == null) out.jnull(-1)
       else{
 
-        val ctx = out.arrayContext()
-        var first = true
+        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
 
         for((item, w) <- f(v).zip(writers)){
-          if (!first) ctx.asInstanceOf[jawn.FContext[Unit]].add(null, -1)
-          first = false
+          ctx.add((), -1)
           w.asInstanceOf[Writer[Any]].write(out, item)
         }
         ctx.finish(-1)
@@ -111,9 +112,7 @@ trait Writers extends Types{
       case Duration.Inf => out.jstring("inf", -1)
       case Duration.MinusInf => out.jstring("-inf", -1)
       case x if x eq Duration.Undefined => out.jstring("undef", -1)
-      case _ =>
-        println(v)
-        out.jstring(v.toNanos.toString, -1)
+      case _ => out.jstring(v.toNanos.toString, -1)
     }
   }
 

@@ -383,7 +383,6 @@ abstract class Parser[J] {
   protected[this] final def rparse(state: Int, j: Int, stack: List[RawFContext[_, J]]) : (J, Int) = {
     val i = reset(j)
     checkpoint(state, i, stack)
-
     implicit val facade: RawFacade[J] = stack.head.facade.asInstanceOf[RawFacade[J]]
     val c = at(i)
 

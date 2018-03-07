@@ -94,18 +94,17 @@ trait Readers extends Types{
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
-      def add(v: Any, index: Int): Unit = b += v
+      def add(v: Any, index: Int): Unit = {
+        facades = facades.tail
+        if (facades.isEmpty) facades = readers
+        b += v
+      }
 
       def finish(index: Int) = f(b)
 
       def isObj = false
 
-      def facade = {
-        if (facades.isEmpty) facades = readers
-        val head :: rest = facades
-        facades = rest
-        head.asInstanceOf[jawn.RawFacade[Any]]
-      }
+      def facade = facades.head.asInstanceOf[jawn.RawFacade[Any]]
     }
   }
   implicit def Tuple1Reader[T1](implicit t1: Reader[T1]): Reader[Tuple1[T1]] =

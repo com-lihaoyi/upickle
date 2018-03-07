@@ -84,17 +84,9 @@ trait Types{ types =>
 
       def visitKey(s: CharSequence, index: Int): Unit = src.visitKey(s, index)
 
-      def add(v: T, index: Int): Unit = {
-        println("MapFContext.add " + v + " " + v.getClass)
-        src.add(v, index)
-      }
+      def add(v: T, index: Int): Unit = src.add(v, index)
 
-      def finish(index: Int) = {
-        val srcRes = src.finish(index)
-        val res = f(srcRes)
-        println("MapFContext.finish " + srcRes + " " + srcRes.getClass + " " + res + " " + res.getClass)
-        res
-      }
+      def finish(index: Int) = f(src.finish(index))
 
       def isObj = src.isObj
     }

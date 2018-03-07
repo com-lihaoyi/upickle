@@ -19,8 +19,8 @@ class Renderer(out: java.io.Writer,
     def facade = Renderer.this
     def visitKey(s: CharSequence, index: Int): Unit = ???
     def add(v: Unit, index: Int): Unit = {
-       if (first) first = false
-       else out.append(", ")
+      if (first) first = false
+      else out.append(", ")
       renderIndent()
     }
     def finish(index: Int): Unit = {
