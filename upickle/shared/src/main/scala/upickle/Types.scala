@@ -47,22 +47,6 @@ trait Types{ types =>
   }
 
   object BaseReader {
-    class MapFContext[T, V, Z](src: jawn.RawFContext[T, V],
-                               f: V => Z) extends jawn.RawFContext[T, Z]{
-      def facade = src.facade
-
-      def visitKey(s: CharSequence, index: Int): Unit = src.visitKey(s, index)
-
-      def add(v: T, index: Int): Unit = src.add(v, index)
-
-      def finish(index: Int) = {
-        val srcRes = src.finish(index)
-        println("srcRes " + srcRes + " " + srcRes.getClass)
-        f(srcRes)
-      }
-
-      def isObj = src.isObj
-    }
     class MapReader[T, V, Z](src: BaseReader[T, V], f: V => Z) extends BaseReader[T, Z] {
       def f1(v: V): Z = {
         println("F1 " + v + " " + v.getClass)
@@ -89,6 +73,27 @@ trait Types{ types =>
       override def singleContext(index: Int): jawn.RawFContext[T, Z] = {
         new MapFContext[T, V, Z](src.singleContext(index), f)
       }
+    }
+
+    class MapFContext[T, V, Z](src: jawn.RawFContext[T, V],
+                               f: V => Z) extends jawn.RawFContext[T, Z]{
+      def facade = src.facade
+
+      def visitKey(s: CharSequence, index: Int): Unit = src.visitKey(s, index)
+
+      def add(v: T, index: Int): Unit = {
+        println("MapFContext.add " + v + " " + v.getClass)
+        src.add(v, index)
+      }
+
+      def finish(index: Int) = {
+        val srcRes = src.finish(index)
+        val res = f(srcRes)
+        println("MapFContext.finish " + srcRes + " " + srcRes.getClass + " " + res + " " + res.getClass)
+        res
+      }
+
+      def isObj = src.isObj
     }
   }
   trait Writer[T]{

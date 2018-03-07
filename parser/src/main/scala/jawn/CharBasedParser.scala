@@ -37,7 +37,9 @@ trait CharBasedParser[J] extends Parser[J] {
   /**
    * Parse a string that is known to have escape sequences.
    */
-  protected[this] final def parseStringComplex(i: Int, ctxt: RawFContext[_, J], key: Boolean): Int = {
+  protected[this] final def parseStringComplex(i: Int, ctxt: RawFContext[_, J], key: Boolean)
+                                              (implicit facade: RawFacade[J]): Int = {
+
     var j = i + 1
     val sb = charBuilder.reset()
 
@@ -75,7 +77,7 @@ trait CharBasedParser[J] extends Parser[J] {
       c = at(j)
     }
     if (key) ctxt.visitKey(sb.makeString, i)
-    else ctxt.asInstanceOf[RawFContext[CharSequence, J]].add(sb.makeString, i)
+    else ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(sb.makeString, i), i)
     j + 1
   }
 
@@ -87,11 +89,13 @@ trait CharBasedParser[J] extends Parser[J] {
    * Char. It performs the correct checks to make sure that we don't
    * interpret a multi-char code point incorrectly.
    */
-  protected[this] final def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean): Int = {
+  protected[this] final def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)
+                                       (implicit facade: RawFacade[J]): Int = {
+
     val k = parseStringSimple(i + 1, ctxt)
     if (k != -1) {
       if (key) ctxt.visitKey(at(i + 1, k - 1), i)
-      else ctxt.asInstanceOf[RawFContext[CharSequence, J]].add(at(i + 1, k - 1), i)
+      else ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(at(i + 1, k - 1), i), i)
       k
     } else {
       parseStringComplex(i, ctxt, key)

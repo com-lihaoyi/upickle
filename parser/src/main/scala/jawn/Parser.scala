@@ -286,7 +286,7 @@ abstract class Parser[J] {
   /**
    * Parse the JSON string starting at 'i' and save it into 'ctxt'.
    */
-  protected[this] def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean): Int
+  protected[this] def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)(implicit facade: RawFacade[J]): Int
 
   /**
    * Parse the JSON constant "true".

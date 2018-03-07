@@ -25,6 +25,7 @@ trait Readers extends Types{
 
   object NumStringReader extends Reader[String] {
     override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      println("NumStringReader.jnum")
       s.toString
     }
   }
@@ -43,11 +44,7 @@ trait Readers extends Types{
   implicit val LongReader: Reader[Long] = StringReader.map(_.toLong)
   implicit val BigIntReader: Reader[BigInt] = StringReader.map(BigInt(_))
   implicit val BigDecimalReader: Reader[BigDecimal] = StringReader.map(BigDecimal(_))
-  implicit val SymbolReader: Reader[Symbol] = StringReader.map{
-    x =>
-      println("X: " + x)
-      Symbol.apply(x)
-  }
+  implicit val SymbolReader: Reader[Symbol] = StringReader.map(Symbol.apply(_))
 
   implicit def MapReader[K, V](implicit k: Reader[K], v: Reader[V]): Reader[Map[K, V]] = {
     if (k eq StringReader) new BaseReader[V, Map[String, V]]{

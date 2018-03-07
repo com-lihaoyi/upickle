@@ -42,11 +42,12 @@ trait ByteBasedParser[J] extends Parser[J] {
    *
    * This method expects the data to be in UTF-8 and accesses it as bytes.
    */
-  protected[this] final def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean): Int = {
+  protected[this] final def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)
+                                       (implicit facade: RawFacade[J]): Int = {
     val k = parseStringSimple(i + 1, ctxt)
     if (k != -1) {
       if (key) ctxt.visitKey(at(i + 1, k - 1), i)
-      else ctxt.asInstanceOf[RawFContext[CharSequence, J]].add(at(i + 1, k - 1), i)
+      else ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(at(i + 1, k - 1), i), i)
       return k
     }
 
@@ -100,7 +101,7 @@ trait ByteBasedParser[J] extends Parser[J] {
       c = byte(j) & 0xff
     }
     if (key) ctxt.visitKey(sb.makeString, i)
-    else ctxt.asInstanceOf[RawFContext[CharSequence, J]].add(sb.makeString, i)
+    else ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(sb.makeString, i), i)
     j + 1
   }
 }
