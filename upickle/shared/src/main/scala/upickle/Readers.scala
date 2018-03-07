@@ -1,6 +1,7 @@
 package upickle
 
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 import jawn.{RawFContext, RawFacade}
 
@@ -118,6 +119,7 @@ trait Readers extends Types{
         case "inf" => Duration.Inf
         case "-inf" => Duration.MinusInf
         case "undef" => Duration.Undefined
+        case x => Duration(x.toLong, TimeUnit.NANOSECONDS)
       }
     }
   }

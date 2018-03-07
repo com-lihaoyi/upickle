@@ -84,30 +84,36 @@ trait Writers extends Types{
 
   def TupleNWriter[V](writers: List[Writer[_]], f: V => Seq[Any]) = new Writer[V]{
     def write(out: jawn.Facade[Unit], v: V) = {
-      val ctx = out.arrayContext()
-      var first = true
+      if (v == null) out.jnull(-1)
+      else{
 
-      for((item, w) <- f(v).zip(writers)){
-        if (!first) ctx.asInstanceOf[jawn.FContext[Unit]].add(null, -1)
-        first = false
-        w.asInstanceOf[Writer[Any]].write(out, item)
+        val ctx = out.arrayContext()
+        var first = true
+
+        for((item, w) <- f(v).zip(writers)){
+          if (!first) ctx.asInstanceOf[jawn.FContext[Unit]].add(null, -1)
+          first = false
+          w.asInstanceOf[Writer[Any]].write(out, item)
+        }
+        ctx.finish(-1)
       }
-      ctx.finish(-1)
     }
   }
 
   implicit def Tuple1Writer[T1](implicit t1: Writer[T1]): Writer[Tuple1[T1]] =
-    TupleNWriter[Tuple1[T1]](List(t1), _.productIterator.toSeq)
+    TupleNWriter[Tuple1[T1]](List(t1), x => if (x == null) null else x.productIterator.toSeq)
 
   implicit def Tuple2Writer[T1, T2](implicit t1: Writer[T2], t2: Writer[T2]): Writer[Tuple2[T1, T2]] =
-    TupleNWriter[Tuple2[T1, T2]](List(t1, t2), _.productIterator.toSeq)
+    TupleNWriter[Tuple2[T1, T2]](List(t1, t2), x => if (x == null) null else x.productIterator.toSeq)
 
   implicit object DurationWriter extends Writer[Duration]{
     def write(out: jawn.Facade[Unit], v: Duration) = v match{
       case Duration.Inf => out.jstring("inf", -1)
       case Duration.MinusInf => out.jstring("-inf", -1)
-      case Duration.Undefined => out.jstring("undef", -1)
-      case _ => out.jstring(v.toNanos.toString, -1)
+      case x if x eq Duration.Undefined => out.jstring("undef", -1)
+      case _ =>
+        println(v)
+        out.jstring(v.toNanos.toString, -1)
     }
   }
 
