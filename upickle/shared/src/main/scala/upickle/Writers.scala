@@ -103,7 +103,7 @@ trait Writers extends Types{
   implicit def Tuple1Writer[T1](implicit t1: Writer[T1]): Writer[Tuple1[T1]] =
     TupleNWriter[Tuple1[T1]](List(t1), x => if (x == null) null else x.productIterator.toSeq)
 
-  implicit def Tuple2Writer[T1, T2](implicit t1: Writer[T2], t2: Writer[T2]): Writer[Tuple2[T1, T2]] =
+  implicit def Tuple2Writer[T1, T2](implicit t1: Writer[T1], t2: Writer[T2]): Writer[Tuple2[T1, T2]] =
     TupleNWriter[Tuple2[T1, T2]](List(t1, t2), x => if (x == null) null else x.productIterator.toSeq)
 
   implicit object DurationWriter extends Writer[Duration]{
