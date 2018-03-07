@@ -43,52 +43,52 @@ trait UpickleModule extends CrossSbtModule with PublishModule{
     millSourcePath / "shared" / "src" / "main"
   )
 
-  def generatedSources = T{
-    val dir = T.ctx().dest
-    val file = dir / "upickle" / "Generated.scala"
-    ammonite.ops.mkdir(dir / "upickle")
-    val tuplesAndCases = (1 to 22).map{ i =>
-      def commaSeparated(s: Int => String) = (1 to i).map(s).mkString(", ")
-      val writerTypes = commaSeparated(j => s"T$j: Writer")
-      val readerTypes = commaSeparated(j => s"T$j: Reader")
-      val typeTuple = commaSeparated(j => s"T$j")
-      val written = commaSeparated(j => s"writeJs(x._$j)")
-      val pattern = commaSeparated(j => s"x$j")
-      val read = commaSeparated(j => s"readJs[T$j](x$j)")
-      val caseReader =
-        if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
-        else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
-      (s"""
-          implicit def Tuple${i}W[$writerTypes] = makeWriter[Tuple${i}[$typeTuple]](
-            x => Js.Arr($written)
-          )
-          implicit def Tuple${i}R[$readerTypes] = makeReader[Tuple${i}[$typeTuple]](
-            validate("Array(${i})"){case Js.Arr($pattern) => Tuple${i}($read)}
-          )
-          """, s"""
-          def Case${i}R[$readerTypes, V]
-                       (f: ($typeTuple) => V, names: Array[String], defaults: Array[Js.Value])
-            = RCase[V](names, defaults, {case x => $caseReader})
-          def Case${i}W[$writerTypes, V]
-                       (g: V => Option[Tuple${i}[$typeTuple]], names: Array[String], defaults: Array[Js.Value])
-            = WCase[V](names, defaults, x => writeJs(g(x).get))
-          """)
-    }
-    val (tuples, cases) = tuplesAndCases.unzip
-    ammonite.ops.write(file, s"""
-      package upickle
-      import acyclic.file
-      import language.experimental.macros
-      /**
-       * Auto-generated picklers and unpicklers, used for creating the 22
-       * versions of tuple-picklers and case-class picklers
-       */
-      trait Generated extends GeneratedUtil{
-        ${tuples.mkString("\n")}
-      }
-    """)
-    Seq(PathRef(dir))
-  }
+//  def generatedSources = T{
+//    val dir = T.ctx().dest
+//    val file = dir / "upickle" / "Generated.scala"
+//    ammonite.ops.mkdir(dir / "upickle")
+//    val tuplesAndCases = (1 to 22).map{ i =>
+//      def commaSeparated(s: Int => String) = (1 to i).map(s).mkString(", ")
+//      val writerTypes = commaSeparated(j => s"T$j: Writer")
+//      val readerTypes = commaSeparated(j => s"T$j: Reader")
+//      val typeTuple = commaSeparated(j => s"T$j")
+//      val written = commaSeparated(j => s"writeJs(x._$j)")
+//      val pattern = commaSeparated(j => s"x$j")
+//      val read = commaSeparated(j => s"readJs[T$j](x$j)")
+//      val caseReader =
+//        if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
+//        else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
+//      (s"""
+//          implicit def Tuple${i}W[$writerTypes] = makeWriter[Tuple${i}[$typeTuple]](
+//            x => Js.Arr($written)
+//          )
+//          implicit def Tuple${i}R[$readerTypes] = makeReader[Tuple${i}[$typeTuple]](
+//            validate("Array(${i})"){case Js.Arr($pattern) => Tuple${i}($read)}
+//          )
+//          """, s"""
+//          def Case${i}R[$readerTypes, V]
+//                       (f: ($typeTuple) => V, names: Array[String], defaults: Array[Js.Value])
+//            = RCase[V](names, defaults, {case x => $caseReader})
+//          def Case${i}W[$writerTypes, V]
+//                       (g: V => Option[Tuple${i}[$typeTuple]], names: Array[String], defaults: Array[Js.Value])
+//            = WCase[V](names, defaults, x => writeJs(g(x).get))
+//          """)
+//    }
+//    val (tuples, cases) = tuplesAndCases.unzip
+//    ammonite.ops.write(file, s"""
+//      package upickle
+//      import acyclic.file
+//      import language.experimental.macros
+//      /**
+//       * Auto-generated picklers and unpicklers, used for creating the 22
+//       * versions of tuple-picklers and case-class picklers
+//       */
+//      trait Generated extends GeneratedUtil{
+//        ${tuples.mkString("\n")}
+//      }
+//    """)
+//    Seq(PathRef(dir))
+//  }
 
   def platformSegment: String
 }
@@ -108,7 +108,19 @@ trait UpickleTestModule extends TestModule{
   def testFrameworks = Seq("utest.runner.Framework")
 }
 
-object parser extends Cross[JawnJvmModule]("2.11.11", "2.12.4")
+object parserJs extends Cross[JawnJsModule]("2.11.11", "2.12.4")
+class JawnJsModule(val crossScalaVersion: String) extends UpickleModule{
+  def platformSegment = "js"
+  def millSourcePath = build.millSourcePath / "parser"
+  def generatedSources = Nil
+  def sources = T.sources(millSourcePath / "src" / "main")
+  object test extends Tests with UpickleTestModule{
+    def platformSegment = "js"
+    def millSourcePath = build.millSourcePath / "parser"
+  }
+}
+
+object parserJvm extends Cross[JawnJvmModule]("2.11.11", "2.12.4")
 class JawnJvmModule(val crossScalaVersion: String) extends UpickleModule{
   def platformSegment = "jvm"
   def millSourcePath = build.millSourcePath / "parser"
@@ -122,7 +134,7 @@ class JawnJvmModule(val crossScalaVersion: String) extends UpickleModule{
 
 object upickleJvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
 class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
-  def moduleDeps = Seq(parser())
+  def moduleDeps = Seq(parserJvm())
   def platformSegment = "jvm"
 
   object test extends Tests with UpickleTestModule{
@@ -133,6 +145,7 @@ class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
 
 object upickleJs extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
 class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
+  def moduleDeps = Seq(parserJs())
   def platformSegment = "js"
 
   def scalaJSVersion = "0.6.22"

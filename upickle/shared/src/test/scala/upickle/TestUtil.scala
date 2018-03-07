@@ -11,21 +11,23 @@ class TestUtil[Api <: upickle.Api](api: Api){
   def rw[T: Reader: Writer](t: T, s: String*) = {
     rwk[T, T](t, s:_*)(x => x)
   }
-  def rwk[T: Reader: Writer, V](t: T, sIn: String*)(k: T => V) = {
+  def rwk[T: Reader: Writer, V](t: T, sIn: String*)(normalize: T => V) = {
     val writtenT = write(t)
 
     val strings = sIn.map(_.trim)
 
-    if (strings.length > 0) {
-      val inputs = strings.map(upickle.json.read)
-      val output = upickle.json.read(writtenT)
-      assert(inputs.contains(output))
-    }
+//    if (strings.length > 0) {
+//      val inputs = strings.map(api.read)
+//      val output = api.read(writtenT)
+//      assert(inputs.contains(output))
+//    }
     for (s <- strings) {
       val readS = read[T](s)
-      assert(k(readS) == k(t))
+      val normalizedReadS = normalize(readS)
+      val normalizedT = normalize(t)
+      assert(normalizedReadS == normalizedT)
     }
 
-    assert(k(read[T](writtenT)) == k(t))
+    assert(normalize(read[T](writtenT)) == normalize(t))
   }
 }

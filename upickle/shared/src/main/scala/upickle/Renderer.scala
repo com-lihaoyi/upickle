@@ -1,11 +1,100 @@
-//package upickle.json
-//
-//import java.io.{ByteArrayOutputStream, StringWriter, Writer}
-//
-//import upickle.Js
-//
-//import scala.annotation.switch
-//
+package upickle
+
+
+import java.io.{ByteArrayOutputStream, StringWriter, Writer}
+
+import jawn.RawFContext
+
+import scala.annotation.switch
+
+class Renderer(out: java.io.Writer,
+               var indent: Int = -1,
+               var depth: Int = 0) extends jawn.Facade[Unit]{
+  def singleContext() = ???
+
+  def arrayContext() = new RawFContext[Unit, Unit] {
+    out.append("[")
+    var first = true
+    depth += 1
+    def facade = Renderer.this
+    def visitKey(s: CharSequence, index: Int): Unit = ???
+    def add(v: Unit, index: Int): Unit = {
+       if (first) first = false
+       else out.append(", ")
+      renderIndent()
+    }
+    def finish(index: Int): Unit = {
+      depth -= 1
+      renderIndent()
+      out.append("]")
+    }
+    def isObj = false
+  }
+
+  def objectContext() = new RawFContext[Unit, Unit] {
+    out.append("{")
+    var first = true
+    depth += 1
+    def facade = Renderer.this
+    def visitKey(s: CharSequence, index: Int): Unit = {
+      if (first) first = false
+      else out.append(", ")
+      renderIndent()
+      Renderer.escape(out, s, true)
+      out.append(": ")
+    }
+    def add(v: Unit, index: Int): Unit = {}
+    def finish(index: Int): Unit = {
+      depth -= 1
+      renderIndent()
+      out.append("}")
+    }
+    def isObj = false
+  }
+
+  def jnull() = out.append("null")
+
+  def jfalse() = out.append("false")
+
+  def jtrue() = out.append("true")
+
+  def jnum(s: CharSequence, decIndex: Int, expIndex: Int) = out.append(s)
+
+  def jstring(s: CharSequence) =
+    if (s == null) out.append("null")
+    else Renderer.escape(out, s, true)
+
+  final def renderIndent() = {
+    if (indent == -1) ()
+    else {
+      out.append('\n')
+      for(_ <- 0 until (indent * depth)) out.append(' ')
+    }
+  }
+}
+object Renderer{
+  final def escape(sb: java.io.Writer, s: CharSequence, unicode: Boolean): Unit = {
+    sb.append('"')
+    var i = 0
+    val len = s.length
+    while (i < len) {
+      (s.charAt(i): @switch) match {
+        case '"' => sb.append("\\\"")
+        case '\\' => sb.append("\\\\")
+        case '\b' => sb.append("\\b")
+        case '\f' => sb.append("\\f")
+        case '\n' => sb.append("\\n")
+        case '\r' => sb.append("\\r")
+        case '\t' => sb.append("\\t")
+        case c =>
+          if (c < ' ' || (c > '~' && unicode)) sb.append("\\u%04x" format c.toInt)
+          else sb.append(c)
+      }
+      i += 1
+    }
+    sb.append('"')
+  }
+}
 //trait Renderer {
 //  final def render(sb: Writer, depth: Int, jv: Js.Value, indent: Int): Unit =
 //    jv match {

@@ -13,14 +13,15 @@ package jawn
 object NullFacade extends Facade[Unit] {
 
   case class NullContext(isObj: Boolean) extends FContext[Unit] {
-    def add(s: CharSequence): Unit = ()
+    def facade = NullFacade.this
+    def visitKey(s: CharSequence): Unit = ()
     def add(v: Unit): Unit = ()
     def finish: Unit = ()
   }
 
-  val singleContext: RawFContext[Unit] = NullContext(false)
-  val arrayContext: RawFContext[Unit] = NullContext(false)
-  val objectContext: RawFContext[Unit] = NullContext(true)
+  val singleContext: RawFContext[_, Unit] = NullContext(false)
+  val arrayContext: RawFContext[_, Unit] = NullContext(false)
+  val objectContext: RawFContext[_, Unit] = NullContext(true)
 
   def jnull(): Unit = ()
   def jfalse(): Unit = ()

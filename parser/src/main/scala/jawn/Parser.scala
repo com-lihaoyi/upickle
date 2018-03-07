@@ -66,7 +66,7 @@ abstract class Parser[J] {
    * The checkpoint() method is used to allow some parsers to store
    * their progress.
    */
-  protected[this] def checkpoint(state: Int, i: Int, stack: List[RawFContext[J]]): Unit
+  protected[this] def checkpoint(state: Int, i: Int, stack: List[RawFContext[_, J]]): Unit
 
   /**
    * Should be called when parsing is finished.
@@ -126,7 +126,7 @@ abstract class Parser[J] {
    * side-effect that we know exactly how the user represented the
    * number.
    */
-  protected[this] final def parseNum(i: Int, ctxt: RawFContext[J])(implicit facade: RawFacade[J]): Int = {
+  protected[this] final def parseNum(i: Int, ctxt: RawFContext[Any, J])(implicit facade: RawFacade[J]): Int = {
     var j = i
     var c = at(j)
     var decIndex = -1
@@ -189,7 +189,7 @@ abstract class Parser[J] {
    *
    * This method has all the same caveats as the previous method.
    */
-  protected[this] final def parseNumSlow(i: Int, ctxt: RawFContext[J])(implicit facade: RawFacade[J]): Int = {
+  protected[this] final def parseNumSlow(i: Int, ctxt: RawFContext[Any, J])(implicit facade: RawFacade[J]): Int = {
     var j = i
     var c = at(j)
     var decIndex = -1
@@ -286,7 +286,7 @@ abstract class Parser[J] {
   /**
    * Parse the JSON string starting at 'i' and save it into 'ctxt'.
    */
-  protected[this] def parseString(i: Int, ctxt: RawFContext[J]): Int
+  protected[this] def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean): Int
 
   /**
    * Parse the JSON constant "true".
@@ -342,14 +342,14 @@ abstract class Parser[J] {
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-        val ctxt = facade.singleContext(i)
+        val ctxt = facade.singleContext(i).asInstanceOf[RawFContext[Any, J]]
         val j = parseNumSlow(i, ctxt)
         (ctxt.finish(i), j)
 
       // we have a single top-level string
       case '"' =>
         val ctxt = facade.singleContext(i)
-        val j = parseString(i, ctxt)
+        val j = parseString(i, ctxt, false)
         (ctxt.finish(i), j)
 
       // we have a single top-level constant
@@ -380,10 +380,11 @@ abstract class Parser[J] {
    * improvements.
    */
   @tailrec
-  protected[this] final def rparse(state: Int, j: Int, stack: List[RawFContext[J]])(implicit facade: RawFacade[J]): (J, Int) = {
+  protected[this] final def rparse(state: Int, j: Int, stack: List[RawFContext[_, J]]) : (J, Int) = {
     val i = reset(j)
     checkpoint(state, i, stack)
 
+    implicit val facade: RawFacade[J] = stack.head.facade.asInstanceOf[RawFacade[J]]
     val c = at(i)
 
     if (c == '\n') {
@@ -398,13 +399,13 @@ abstract class Parser[J] {
       } else if (c == '{') {
         rparse(OBJBEG, i + 1, facade.objectContext(i) :: stack)
       } else {
-        val ctxt = stack.head
+        val ctxt = stack.head.asInstanceOf[RawFContext[Any, J]]
 
         if ((c >= '0' && c <= '9') || c == '-') {
           val j = parseNum(i, ctxt)
           rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack)
         } else if (c == '"') {
-          val j = parseString(i, ctxt)
+          val j = parseString(i, ctxt, false)
           rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack)
         } else if (c == 't') {
           ctxt.add(parseTrue(i), i)
@@ -434,7 +435,7 @@ abstract class Parser[J] {
         if (tail.isEmpty) {
           (ctxt1.finish(i), i + 1)
         } else {
-          val ctxt2 = tail.head
+          val ctxt2 = tail.head.asInstanceOf[RawFContext[Any, J]]
           ctxt2.add(ctxt1.finish(i), i)
           rparse(if (ctxt2.isObj) OBJEND else ARREND, i + 1, tail)
         }
@@ -442,7 +443,7 @@ abstract class Parser[J] {
     } else if (state == KEY) {
       // we are in an object expecting to see a key.
       if (c == '"') {
-        val j = parseString(i, stack.head)
+        val j = parseString(i, stack.head, true)
         rparse(SEP, j, stack)
       } else {
         die(i, "expected \"")

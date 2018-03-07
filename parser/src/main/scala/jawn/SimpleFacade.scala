@@ -14,25 +14,28 @@ trait SimpleFacade[J] extends Facade[J] {
   def jobject(vs: Map[String, J]): J
 
   def singleContext() = new FContext[J] {
+    def facade = SimpleFacade.this
     var value: J = _
-    def add(s: CharSequence) { value = jstring(s) }
+    def visitKey(s: CharSequence) { value = jstring(s) }
     def add(v: J) { value = v }
     def finish: J = value
     def isObj: Boolean = false
   }
 
   def arrayContext() = new FContext[J] {
+    def facade = SimpleFacade.this
     val vs = mutable.ListBuffer.empty[J]
-    def add(s: CharSequence) { vs += jstring(s) }
+    def visitKey(s: CharSequence) { vs += jstring(s) }
     def add(v: J) { vs += v }
     def finish: J = jarray(vs.toList)
     def isObj: Boolean = false
   }
 
   def objectContext() = new FContext[J] {
+    def facade = SimpleFacade.this
     var key: String = null
     var vs = Map.empty[String, J]
-    def add(s: CharSequence): Unit =
+    def visitKey(s: CharSequence): Unit =
       if (key == null) { key = s.toString } else { vs = vs.updated(key, jstring(s)); key = null }
     def add(v: J): Unit =
       { vs = vs.updated(key, v); key = null }

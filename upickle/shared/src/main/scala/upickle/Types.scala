@@ -5,6 +5,7 @@ import language.experimental.macros
 import scala.annotation.implicitNotFound
 import language.higherKinds
 import acyclic.file
+import jawn.RawFContext
 
 import scala.reflect.ClassTag
 
@@ -14,166 +15,110 @@ import scala.reflect.ClassTag
 * package to form the public API1
 */
 trait Types{ types =>
-  /**
-   * Helper object that makes it convenient to create instances of bother
-   * [[Reader]] and [[Writer]] at the same time.
-   */
-  object ReadWriter {
-    def apply[T](_write: T => Js.Value, _read: PF[Js.Value, T])
-                (implicit src: sourcecode.Enclosing)
-                : Writer[T] with Reader[T] = new Writer[T] with Reader[T]{
-      val read0 = _read
-      val write0 = _write
-      override def toString = src.value
-    }
+  type Reader[T] = BaseReader[Any, T]
+  trait BaseReader[T, V] extends jawn.RawFacade[V] {
+    var empty: V = _
+    def jnull(index: Int): V = empty
+    def jtrue(index: Int): V =  throw new Exception(index.toString)
+    def jfalse(index: Int): V = throw new Exception(index.toString)
 
-    implicit class Mergable[T, K <: T](val w: Writer[K] with Reader[K])
-                                      (implicit val ct: ClassTag[K]){
-      def tryRead(v: Any) = v match{
-        case t: K => Some(w.write(t))
-        case _ => None
+    def jstring(s: CharSequence, index: Int): V = throw new Exception(index.toString)
+    def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): V = throw new Exception(index.toString)
+
+    def objectContext(index: Int): jawn.RawFContext[T, V] = throw new Exception(index.toString)
+    def arrayContext(index: Int): jawn.RawFContext[T, V] = throw new Exception(index.toString)
+    def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z](this, f)
+    def singleContext(index: Int): jawn.RawFContext[T, V] = new RawFContext[T, V] {
+      var res: V = _
+
+      def facade = BaseReader.this.asInstanceOf[jawn.RawFacade[T]]
+
+      def visitKey(s: CharSequence, index: Int): Unit = ???
+
+      def add(v: T, index: Int): Unit = {
+        println("singleContext.add " + v + " " + v.getClass)
+        res = v.asInstanceOf[V]
       }
-    }
-    def merge[T](rws: Mergable[T, _]*) = new Writer[T] with Reader[T]{
-      def write0 = Writer.merge0[T](rws.map(_.tryRead _):_*)
 
-      def read0 = Reader.merge0[T](
-        rws.map(_.w.read.asInstanceOf[PF[Js.Value, T]]):_*
-      )
+      def finish(index: Int) = res
+
+      def isObj = false
     }
   }
 
-  type ReadWriter[T] = Reader[T] with Writer[T]
-  /**
-   * A typeclass that allows you to serialize a type [[T]] to JSON, and
-   * eventually to a string
-   */
-  @implicitNotFound(
-    "uPickle does not know how to write [${T}]s; define an implicit Writer[${T}] to teach it how"
-  )
+  object BaseReader {
+    class MapFContext[T, V, Z](src: jawn.RawFContext[T, V],
+                               f: V => Z) extends jawn.RawFContext[T, Z]{
+      def facade = src.facade
+
+      def visitKey(s: CharSequence, index: Int): Unit = src.visitKey(s, index)
+
+      def add(v: T, index: Int): Unit = src.add(v, index)
+
+      def finish(index: Int) = {
+        val srcRes = src.finish(index)
+        println("srcRes " + srcRes + " " + srcRes.getClass)
+        f(srcRes)
+      }
+
+      def isObj = src.isObj
+    }
+    class MapReader[T, V, Z](src: BaseReader[T, V], f: V => Z) extends BaseReader[T, Z] {
+      def f1(v: V): Z = {
+        println("F1 " + v + " " + v.getClass)
+        if(v == null) null.asInstanceOf[Z] else f(v)
+      }
+      override def jfalse(index: Int) = f1(src.jfalse(index))
+      override def jnull(index: Int) = f1(src.jnull(index))
+      override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+        println("MapReader.jnum")
+        f1(src.jnum(s, decIndex, expIndex, index))
+      }
+      override def jstring(s: CharSequence, index: Int) = {
+        println("MapReader.jstring")
+        f1(src.jstring(s, index))
+      }
+      override def jtrue(index: Int) = f(src.jtrue(index))
+
+      override def objectContext(index: Int): jawn.RawFContext[T, Z] = {
+        new MapFContext[T, V, Z](src.objectContext(index), f)
+      }
+      override def arrayContext(index: Int): jawn.RawFContext[T, Z] = {
+        new MapFContext[T, V, Z](src.arrayContext(index), f)
+      }
+      override def singleContext(index: Int): jawn.RawFContext[T, Z] = {
+        new MapFContext[T, V, Z](src.singleContext(index), f)
+      }
+    }
+  }
   trait Writer[T]{
-    def write0: T => Js.Value
-    final val write: T => Js.Value = {
-      case null => Js.Null
-      case t => write0(t)
-    }
-    def comap[V](f: V => T) = new Writer[V] {
-      def write0 = f.andThen(Writer.this.write0)
-    }
+    def write(out: jawn.Facade[Unit], v: T): Unit
+    def comap[U](f: U => T) = new Writer.MapWriter[U, T](this, f)
   }
-  object Writer{
-    implicit class Mergable[T, K <: T](val w: Writer[K])(implicit val ct: ClassTag[K]){
-      def tryRead(v: Any) = v match{
-        case t: K => Some(w.write(t))
-        case _ => None
-      }
-    }
+  object Writer {
 
-    def merge0[T](tryReads: (T => Option[Js.Value])*) = {
-      (v: T) => {
-        val iter = tryReads.iterator.flatMap(_(v))
-        if (iter.hasNext) iter.next()
-        else {
-          throw new Exception("Writer unable to write object " + v)
-        }
-
-      }
-    }
-    def merge[T](writers: Mergable[T, _]*) = {
-      Writer[T](merge0(writers.map(_.tryRead _):_*))
-    }
-    /**
-     * Helper class to make it convenient to create instances of [[Writer]]
-     * from the equivalent function
-     */
-    def apply[T](_write: T => Js.Value)
-                (implicit src: sourcecode.Enclosing): Writer[T] = new Writer[T]{
-      val write0 = _write
-      override def toString = src.value
+    class MapWriter[U, T](src: Writer[T], f: U => T) extends Writer[U] {
+      def write(out: jawn.Facade[Unit], v: U) =
+        src.write(out, if(v == null) null.asInstanceOf[T] else f(v))
     }
 
   }
-  /**
-   * A typeclass that allows you to deserialize a type [[T]] from JSON,
-   * which can itself be read from a String
-   */
-  @implicitNotFound(
-    "uPickle does not know how to read [${T}]s; define an implicit Reader[${T}] to teach it how"
-  )
-  trait Reader[T] {
-
-    def read0: PF[Js.Value, T]
-
-    private val readNull: PF[Js.Value, T] = {
-      case Js.Null => null.asInstanceOf[T]
-    }
-
-    final val read: PF[Js.Value, T] = new PartialFunction[Js.Value, T] {
-      def isDefinedAt(x: Js.Value) = x == Js.Null || read0.isDefinedAt(x)
-
-      /**
-        * Do this `isDefinedAt` dance to make sure we throw the correct error
-        * message (that of `read0` instead of `readNull` in the case where someone
-        * calls `read.apply` on some invalid value
-        */
-      def apply(v1: Js.Value): T = {
-        if (!this.isDefinedAt(v1)) read0(v1)
-        else read0.applyOrElse(v1, readNull)
-      }
-    }
-    def map[V](f: T => V) = new Reader[V] {
-      def read0 = Reader.this.read0.andThen(f)
-    }
-  }
-
-  object Reader{
-    implicit class Mergable[T, K <: T](val r: Reader[K])
-    def merge0[T](readers: PF[Js.Value, T]*) = {
-      readers.iterator.reduceLeft(_.orElse(_))
-    }
-    def merge[T](readers: Mergable[T, _]*) = {
-      Reader[T](merge0[T](readers.map(_.r.read.asInstanceOf[PF[Js.Value, T]]):_*))
-    }
-    /**
-     * Helper class to make it convenient to create instances of [[Reader]]
-     * from the equivalent function
-     */
-    def apply[T](_read: PF[Js.Value, T])
-                (implicit src: sourcecode.Enclosing): Reader[T] = new Reader[T]{
-      val read0 = _read
-      override def toString = src.value
-    }
-  }
-
-  /**
-   * Handy shorthands for Reader and Writer
-   */
-  object Aliases{
-    type R[T] = Reader[T]
-    val R = Reader
-
-    type W[T] = Writer[T]
-    val W = Writer
-
-    type RW[T] = R[T] with W[T]
-    val RW = ReadWriter
-  }
 
 
-  /**
-   * Serialize an object of type [[T]] to a `String`
-   */
-  def write[T: Writer](expr: T, indent: Int = 0): String = json.write(writeJs(expr), indent)
-  /**
-   * Serialize an object of type [[T]] to a `Js.Value`
-   */
-  def writeJs[T: Writer](expr: T): Js.Value = implicitly[Writer[T]].write(expr)
-  /**
-   * Deserialize a `String` object of type [[T]]
-   */
-  def read[T: Reader](expr: String): T = readJs[T](json.read(expr))
-  /**
-   * Deserialize a `Js.Value` object of type [[T]]
-   */
-  def readJs[T: Reader](expr: Js.Value): T = implicitly[Reader[T]].read(expr)
+//  /**
+//   * Serialize an object of type [[T]] to a `String`
+//   */
+//  def write[T: Writer](expr: T, indent: Int = 0): String = json.write(writeJs(expr), indent)
+//  /**
+//   * Serialize an object of type [[T]] to a `Js.Value`
+//   */
+//  def writeJs[T: Writer](expr: T): Js.Value = implicitly[Writer[T]].write(expr)
+//  /**
+//   * Deserialize a `String` object of type [[T]]
+//   */
+//  def read[T: Reader](expr: String): T = readJs[T](json.read(expr))
+//  /**
+//   * Deserialize a `Js.Value` object of type [[T]]
+//   */
+//  def readJs[T: Reader](expr: Js.Value): T = implicitly[Reader[T]].read(expr)
 }

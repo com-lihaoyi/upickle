@@ -8,9 +8,9 @@ package jawn
  * usually want to define both.
  */
 trait Facade[J] extends RawFacade[J]{
-  def singleContext(): RawFContext[J]
-  def arrayContext(): RawFContext[J]
-  def objectContext(): RawFContext[J]
+  def singleContext(): RawFContext[_, J]
+  def arrayContext(): RawFContext[_, J]
+  def objectContext(): RawFContext[_, J]
 
   def jnull(): J
   def jfalse(): J
@@ -37,9 +37,9 @@ trait Facade[J] extends RawFacade[J]{
  * usually want to define both.
  */
 trait RawFacade[J] {
-  def singleContext(index: Int): RawFContext[J]
-  def arrayContext(index: Int): RawFContext[J]
-  def objectContext(index: Int): RawFContext[J]
+  def singleContext(index: Int): RawFContext[_, J]
+  def arrayContext(index: Int): RawFContext[_, J]
+  def objectContext(index: Int): RawFContext[_, J]
 
   def jnull(index: Int): J
   def jfalse(index: Int): J
@@ -55,13 +55,13 @@ trait RawFacade[J] {
  * this type is also used to build a single top-level JSON element, in
  * cases where the entire JSON document consists of "333.33".
  */
-trait FContext[J] extends RawFContext[J]{
-  def add(s: CharSequence): Unit
+trait FContext[J] extends RawFContext[J, J]{
+  def visitKey(s: CharSequence): Unit
   def add(v: J): Unit
   def finish(): J
 
 
-  def add(s: CharSequence, index: Int) = add(s)
+  def visitKey(s: CharSequence, index: Int) = visitKey(s)
   def add(v: J, index: Int) = add(v)
   def finish(index: Int) = finish()
 
@@ -75,9 +75,10 @@ trait FContext[J] extends RawFContext[J]{
  * this type is also used to build a single top-level JSON element, in
  * cases where the entire JSON document consists of "333.33".
  */
-trait RawFContext[J] {
-  def add(s: CharSequence, index: Int): Unit
+trait RawFContext[J, T] {
+  def facade: RawFacade[J]
+  def visitKey(s: CharSequence, index: Int): Unit
   def add(v: J, index: Int): Unit
-  def finish(index: Int): J
+  def finish(index: Int): T
   def isObj: Boolean
 }

@@ -10,7 +10,7 @@ private[jawn] final class CharSequenceParser[J](cs: CharSequence) extends SyncPa
   final def column(i: Int) = i
   final def newline(i: Int) { line += 1 }
   final def reset(i: Int): Int = i
-  final def checkpoint(state: Int, i: Int, stack: List[RawFContext[J]]): Unit = ()
+  final def checkpoint(state: Int, i: Int, stack: List[RawFContext[_, J]]): Unit = ()
   final def at(i: Int): Char = cs.charAt(i)
   final def at(i: Int, j: Int): CharSequence = cs.subSequence(i, j)
   final def atEof(i: Int) = i == cs.length

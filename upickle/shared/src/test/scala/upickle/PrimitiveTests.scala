@@ -21,7 +21,7 @@ object PrimitiveTests extends TestSuite {
       'null-rw(null: String, "null")
     }
     'Symbol{
-      'plain-rw('i_am_a_cow, """ "i_am_a_cow" """)
+      'plain-rw('i_am_a_cow, """ "i_am_a_cow" """)(upickle.default.SymbolReader, upickle.default.SymbolWriter)
       'unicode-rw('叉烧包, """ "叉烧包" """)
       'null-rw(null: Symbol, "null")
     }

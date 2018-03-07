@@ -60,7 +60,7 @@ object AsyncParser {
 final class AsyncParser[J] protected[jawn] (
   protected[jawn] var state: Int,
   protected[jawn] var curr: Int,
-  protected[jawn] var stack: List[RawFContext[J]],
+  protected[jawn] var stack: List[RawFContext[_, J]],
   protected[jawn] var data: Array[Byte],
   protected[jawn] var len: Int,
   protected[jawn] var allocated: Int,
@@ -267,7 +267,7 @@ final class AsyncParser[J] protected[jawn] (
    * arguments are the exact arguments we can pass to rparse to
    * continue where we left off.
    */
-  protected[this] final def checkpoint(state: Int, i: Int, stack: List[RawFContext[J]]) {
+  protected[this] final def checkpoint(state: Int, i: Int, stack: List[RawFContext[_, J]]) {
     this.state = state
     this.curr = i
     this.stack = stack

@@ -10,12 +10,17 @@ import language.higherKinds
  * its behavior. Override the `annotate` methods to control how a sealed
  * trait instance is tagged during reading and writing.
  */
-trait Api extends Types with Implicits with Generated with LowPriX{
-  protected[this] def validate[T](name: String)(pf: PartialFunction[Js.Value, T]) = Internal.validate(name)(pf)
-
-
-  def annotate[V: ClassTag](rw: Reader[V], n: String): Reader[V]
-  def annotate[V: ClassTag](rw: Writer[V], n: String): Writer[V]
+trait Api extends Types with Implicits with LowPriX{
+  def read[T: Reader](s: String) = {
+    jawn.Parser.parseUnsafe(s)(implicitly[Reader[T]])
+  }
+  def write[T: Writer](t: T) = {
+    val out = new java.io.StringWriter()
+    implicitly[Writer[T]].write(new Renderer(out), t)
+    out.toString
+  }
+//  def annotate[V: ClassTag](rw: Reader[V], n: String): Reader[V]
+//  def annotate[V: ClassTag](rw: Writer[V], n: String): Writer[V]
 }
 
 /**
@@ -29,13 +34,13 @@ object default extends AttributeTagged{
  * tagged instances of sealed traits.
  */
 object legacy extends Api{
-  def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V]{
-    case Js.Arr(Js.Str(`n`), x) => rw.read(x)
-  }
-
-  def annotate[V: ClassTag](rw: Writer[V], n: String) = Writer[V]{
-    case x: V => Js.Arr(Js.Str(n), rw.write(x))
-  }
+//  def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V]{
+//    case Js.Arr(Js.Str(`n`), x) => rw.read(x)
+//  }
+//
+//  def annotate[V: ClassTag](rw: Writer[V], n: String) = Writer[V]{
+//    case x: V => Js.Arr(Js.Str(n), rw.write(x))
+//  }
 }
 
 /**
@@ -45,15 +50,15 @@ object legacy extends Api{
  */
 trait AttributeTagged extends Api{
   def tagName = "$type"
-  def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V]{
-    case Js.Obj(x@_*) if x.contains((tagName, Js.Str(n))) =>
-    rw.read(Js.Obj(x.filter(_._1 != tagName):_*))
-
-  }
-
-  def annotate[V: ClassTag](rw: Writer[V], n: String) = Writer[V]{ case x: V =>
-    Js.Obj((tagName, Js.Str(n)) +: rw.write(x).asInstanceOf[Js.Obj].value:_*)
-  }
+//  def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader[V]{
+//    case Js.Obj(x@_*) if x.contains((tagName, Js.Str(n))) =>
+//    rw.read(Js.Obj(x.filter(_._1 != tagName):_*))
+//
+//  }
+//
+//  def annotate[V: ClassTag](rw: Writer[V], n: String) = Writer[V]{ case x: V =>
+//    Js.Obj((tagName, Js.Str(n)) +: rw.write(x).asInstanceOf[Js.Obj].value:_*)
+//  }
 }
 
 /**
@@ -92,13 +97,13 @@ object Forwarder{
 trait LowPriX extends LowPriY {this: Api =>
 }
 trait LowPriY{ this: Api =>
-  implicit def macroSingletonR[T <: Singleton]: Reader[T] = macro Forwarder.applyR[T]
-  implicit def macroSingletonW[T <: Singleton]: Writer[T] = macro Forwarder.applyW[T]
+//  implicit def macroSingletonR[T <: Singleton]: Reader[T] = macro Forwarder.applyR[T]
+//  implicit def macroSingletonW[T <: Singleton]: Writer[T] = macro Forwarder.applyW[T]
 //  implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro Forwarder.applyRW[T]
   def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
   def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
-  def macroRW[T]: ReadWriter[T] = macro Forwarder.applyRW[T]
+//  def macroRW[T]: ReadWriter[T] = macro Forwarder.applyRW[T]
   def macroR0[T, M[_]]: Reader[T] = macro Macros.macroRImpl[T, M]
   def macroW0[T, M[_]]: Writer[T] = macro Macros.macroWImpl[T, M]
-  def macroRW0[T, RM[_], WM[_]]: ReadWriter[T] = macro Macros.macroRWImpl[T, RM, WM]
+//  def macroRW0[T, RM[_], WM[_]]: ReadWriter[T] = macro Macros.macroRWImpl[T, RM, WM]
 }
