@@ -22,13 +22,10 @@ class TestUtil[Api <: upickle.Api](api: Api){
 //      assert(inputs.contains(output))
 //    }
     for (s <- strings) {
-      println("-"*40 + "PARSING" + "-" * 40)
       val readS = read[T](s)
-      println("-"*40 + "NORMALIZING" + "-" * 40)
-      val normalizedReadS = normalize(readS)
-      val normalizedT = normalize(t)
-      println("-"*40 + "COMPARISON" + "-" * 40)
-      assert(normalizedReadS == normalizedT)
+      val normalizedReadString = normalize(readS)
+      val normalizedValue = normalize(t)
+      assert(normalizedReadString == normalizedValue)
     }
 
     assert(normalize(read[T](writtenT)) == normalize(t))

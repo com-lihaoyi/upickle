@@ -17,7 +17,10 @@ trait Writers extends Types{
   }
 
   object NumStringWriter extends Writer[String] {
-    def write(out: jawn.Facade[Unit], v: String) = out.jnum(v, -1, -1)
+    def write(out: jawn.Facade[Unit], v: String) = v match{
+      case "-Infinity" | "Infinity" | "NaN" => out.jstring(v)
+      case _ => out.jnum(v, -1, -1)
+    }
   }
   implicit val DoubleWriter: Writer[Double] = NumStringWriter.comap[Double](_.toString)
   implicit val IntWriter: Writer[Int] = NumStringWriter.comap[Int](_.toString)
@@ -35,10 +38,7 @@ trait Writers extends Types{
   implicit val LongWriter: Writer[Long] = StringWriter.comap[Long](_.toString)
   implicit val BigIntWriter: Writer[BigInt] = StringWriter.comap[BigInt](_.toString)
   implicit val BigDecimalWriter: Writer[BigDecimal] = StringWriter.comap[BigDecimal](_.toString)
-  implicit val SymbolWriter: Writer[Symbol] = StringWriter.comap[Symbol]{x =>
-    println("Y: " + x.name)
-    x.name
-  }
+  implicit val SymbolWriter: Writer[Symbol] = StringWriter.comap[Symbol](_.name)
 
   implicit def OptionWriter[T: Writer]: Writer[Option[T]] = SeqLikeWriter[Seq, T].comap[Option[T]](_.toSeq)
   implicit def SomeWriter[T: Writer]: Writer[Some[T]] = SeqLikeWriter[Seq, T].comap[Some[T]](_.toSeq)

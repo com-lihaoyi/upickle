@@ -36,7 +36,6 @@ trait Types{ types =>
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
       def add(v: T, index: Int): Unit = {
-        println("singleContext.add " + v + " " + v.getClass)
         res = v.asInstanceOf[V]
       }
 
@@ -49,17 +48,14 @@ trait Types{ types =>
   object BaseReader {
     class MapReader[T, V, Z](src: BaseReader[T, V], f: V => Z) extends BaseReader[T, Z] {
       def f1(v: V): Z = {
-        println("F1 " + v + " " + v.getClass)
         if(v == null) null.asInstanceOf[Z] else f(v)
       }
       override def jfalse(index: Int) = f1(src.jfalse(index))
       override def jnull(index: Int) = f1(src.jnull(index))
       override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-        println("MapReader.jnum")
         f1(src.jnum(s, decIndex, expIndex, index))
       }
       override def jstring(s: CharSequence, index: Int) = {
-        println("MapReader.jstring")
         f1(src.jstring(s, index))
       }
       override def jtrue(index: Int) = f(src.jtrue(index))
@@ -70,9 +66,16 @@ trait Types{ types =>
       override def arrayContext(index: Int): jawn.RawFContext[T, Z] = {
         new MapFContext[T, V, Z](src.arrayContext(index), f)
       }
-      override def singleContext(index: Int): jawn.RawFContext[T, Z] = {
-        new MapFContext[T, V, Z](src.singleContext(index), f)
-      }
+
+      // We do not override the singleContext with a MapFContext, because
+      // unlike array/object-Contexts, the value being returned by the `finish`
+      // of singleContext is the same as the value being `add`ed to it. That
+      // value has already been transformed by `f` when it was added, and so
+      // does not need to be transformed again by the MapFContext
+      //
+      // override def singleContext(index: Int): jawn.RawFContext[T, Z] = {
+      //   new MapFContext[T, V, Z](src.singleContext(index), f)
+      // }
     }
 
     class MapFContext[T, V, Z](src: jawn.RawFContext[T, V],

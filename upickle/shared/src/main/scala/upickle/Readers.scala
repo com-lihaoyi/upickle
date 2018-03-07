@@ -2,7 +2,7 @@ package upickle
 
 import java.util.UUID
 
-import jawn.RawFContext
+import jawn.{RawFContext, RawFacade}
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
@@ -11,12 +11,17 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Readers extends Types{
   implicit object UnitReader extends Reader[Unit] {
-    override def jnull(index: Int) = ()
-    override def jtrue(index: Int) = ()
-    override def jfalse(index: Int) = ()
+    override def objectContext(index: Int) = new RawFContext[Any, Unit] {
+      def facade = UnitReader.asInstanceOf[RawFacade[Any]]
 
-    override def jstring(s: CharSequence, index: Int) = ()
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = ()
+      def visitKey(s: CharSequence, index: Int): Unit = ???
+
+      def add(v: Any, index: Int): Unit = ???
+
+      def finish(index: Int) = ()
+
+      def isObj = true
+    }
   }
   implicit object BooleanReader extends Reader[Boolean] {
     override def jtrue(index: Int) = true
@@ -24,10 +29,8 @@ trait Readers extends Types{
   }
 
   object NumStringReader extends Reader[String] {
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      println("NumStringReader.jnum")
-      s.toString
-    }
+    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = s.toString
+    override def jstring(s: CharSequence, index: Int) = s.toString
   }
   implicit val DoubleReader: Reader[Double] = NumStringReader.map(_.toDouble)
   implicit val IntReader: Reader[Int] = NumStringReader.map(_.toInt)
