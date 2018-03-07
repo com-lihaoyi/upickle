@@ -71,7 +71,7 @@ trait Writers extends Types{
         val ctx = out.objectContext().asInstanceOf[RawFContext[Unit, Unit]]
         for((k1, v1) <- v){
 
-          ctx.add(k1, -1)
+          ctx.visitKey(k1, -1)
 
           ctx.add(vw.write(out, v1), -1)
 
