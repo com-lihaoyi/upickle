@@ -59,11 +59,14 @@ private[upickle] trait GeneratedUtil extends Types{
       def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
 
       def add(v: Any, index: Int): Unit = {
+        facades = facades.tail
+        if (facades.isEmpty) facades = r.readers
         val i = names.indexOf(currentKey)
         if (i == -1) ???
         else{
           b(i) = v
         }
+
       }
 
       def finish(index: Int) = f(r.f(b))
@@ -71,9 +74,9 @@ private[upickle] trait GeneratedUtil extends Types{
       def isObj = true
     }
   }
-  def Case0R[V](f: () => V): Reader[V] = new Reader[V]{
+  def Case0R[V](f: () => V): Reader[V] = new Reader[V]{ outer =>
     override def objectContext(index: Int) = new RawFContext[Any, V] {
-      def facade = ???
+      def facade = outer.asInstanceOf[jawn.RawFacade[Any]]
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
@@ -91,14 +94,21 @@ private[upickle] trait GeneratedUtil extends Types{
                  (implicit w: TupleNWriter[T]): Writer[V] = new Writer[V]{
     def write(out: Facade[Unit], v: V): Unit = {
       val writers = w.writers.asInstanceOf[Seq[Writer[Any]]]
+      val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
       val items = w.f(f(v).get)
-      for((i, w1) <- items zip writers){
-        w1.write(out, i)
+      for(i <- 0 until names.length){
+        ctx.add((), -1)
+        ctx.visitKey(names(i), -1)
+        writers(i).write(out, items(i))
       }
+      ctx.finish(-1)
+
 
     }
   }
   def Case0W[T](f: T => Boolean) = new Writer[T] {
-    def write(out: jawn.Facade[Unit], v: T) = out.jnull()
+    def write(out: jawn.Facade[Unit], v: T) = {
+      out.objectContext(-1).finish(-1)
+    }
   }
 }

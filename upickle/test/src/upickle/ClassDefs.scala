@@ -18,38 +18,38 @@ object ADTs {
     implicit def rw: RW[ADTa] = default.macroRW
   }
 
-//  case class ADTb(i: Int, s: String)
-//  object ADTb{
-//    implicit def rw: RW[ADTb] = default.macroRW
-//  }
-//  case class ADTc(i: Int, s: String, t: (Double, Double))
-//  object ADTc{
-//    implicit def rw: RW[ADTc] = default.macroRW
-//  }
-//  case class ADTd(i: Int, s: String, t: (Double, Double), a: ADTa)
-//  object ADTd{
-//    implicit def rw: RW[ADTd] = default.macroRW
-//  }
-//  case class ADTe(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double])
-//  object ADTe{
-//    implicit def rw: RW[ADTe] = default.macroRW
-//  }
-//  case class ADTf(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double], o: Option[Option[Boolean]])
-//  object ADTf{
-//    implicit def rw: RW[ADTf] = default.macroRW
-//  }
-//  case class ADTz(t1: Int, t2: String,
-//                  t3: Int, t4: String,
-//                  t5: Int, t6: String,
-//                  t7: Int, t8: String,
-//                  t9: Int, t10: String,
-//                  t11: Int, t12: String,
-//                  t13: Int, t14: String,
-//                  t15: Int, t16: String,
-//                  t17: Int, t18: String)
-//  object ADTz{
-//    implicit def rw: RW[ADTz] = default.macroRW
-//  }
+  case class ADTb(i: Int, s: String)
+  object ADTb{
+    implicit def rw: RW[ADTb] = default.macroRW
+  }
+  case class ADTc(i: Int, s: String, t: (Double, Double))
+  object ADTc{
+    implicit def rw: RW[ADTc] = default.macroRW
+  }
+  case class ADTd(i: Int, s: String, t: (Double, Double), a: ADTa)
+  object ADTd{
+    implicit def rw: RW[ADTd] = default.macroRW
+  }
+  case class ADTe(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double])
+  object ADTe{
+    implicit def rw: RW[ADTe] = default.macroRW
+  }
+  case class ADTf(i: Int, s: String, t: (Double, Double), a: ADTa, q: Seq[Double], o: Option[Option[Boolean]])
+  object ADTf{
+    implicit def rw: RW[ADTf] = default.macroRW
+  }
+  case class ADTz(t1: Int, t2: String,
+                  t3: Int, t4: String,
+                  t5: Int, t6: String,
+                  t7: Int, t8: String,
+                  t9: Int, t10: String,
+                  t11: Int, t12: String,
+                  t13: Int, t14: String,
+                  t15: Int, t16: String,
+                  t17: Int, t18: String)
+  object ADTz{
+    implicit def rw: RW[ADTz] = default.macroRW
+  }
 }
 //object Hierarchy {
 //  sealed trait A

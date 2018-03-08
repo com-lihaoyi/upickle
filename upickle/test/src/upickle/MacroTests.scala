@@ -1,9 +1,9 @@
-//package upickle
-//import acyclic.file
-//import utest._
-//import upickle.TestUtil._
-//import upickle.default.{read, write}
-//
+package upickle
+import acyclic.file
+import utest._
+import upickle.TestUtil._
+import upickle.default.{read, write}
+
 //object Custom {
 //  trait ThingBase{
 //    val i: Int
@@ -49,8 +49,8 @@
 //  case class Quz(b: Boolean) extends TypedFoo
 //}
 //// End TypedFoo
-//
-//object MacroTests extends TestSuite {
+
+object MacroTests extends TestSuite {
 //  import Generic.ADT
 //  import Hierarchy._
 //  import Recursive._
@@ -69,16 +69,16 @@
 //    ADTc(i = 1234567890, s = "i am a strange loop"),
 //    ADT0()
 //  )
-//  // Doesn't work :(
-////  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
-//
-////  implicitly[Reader[A_]]
-////  implicitly[upickle.old.Writer[upickle.MixedIn.Obj.ClsB]]
-////  println(write(ADTs.ADTc(1, "lol", (1.1, 1.2))))
-////  implicitly[upickle.old.Writer[ADTs.ADTc]]
-//
-//  val tests = Tests {
-//
+  // Doesn't work :(
+//  case class A_(objects: Option[C_]); case class C_(nodes: Option[C_])
+
+//  implicitly[Reader[A_]]
+//  implicitly[upickle.old.Writer[upickle.MixedIn.Obj.ClsB]]
+//  println(write(ADTs.ADTc(1, "lol", (1.1, 1.2))))
+//  implicitly[upickle.old.Writer[ADTs.ADTc]]
+
+  val tests = Tests {
+
 //    'mixedIn{
 //      import MixedIn._
 //      * - rw(Obj.ClsB(1), """{"i":1}""")
@@ -103,43 +103,43 @@
 //      // Doesn't even need to execute, as long as it can compile
 //      val ww1 = implicitly[upickle.default.Writer[Exponential.A1]]
 //    }
-//
-//
-//    'commonCustomStructures{
-//      'simpleAdt {
-//
-//        * - rw(ADTs.ADT0(), """{
-//        }""")
-//        * - rw(ADTs.ADTa(1), """{"i":1}""")
-//        * - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
-//
-//        * - rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
-//        * - rw(
-//          ADTs.ADTd(1, "lol", (1.1, 1.2), ADTs.ADTa(1)),
-//          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1}}"""
-//        )
-//
-//        * - rw(
-//          ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
-//          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14]}"""
-//        )
-//
-//        * - rw(
-//          ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
-//          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
-//        )
-//        val chunks = for (i <- 1 to 18) yield {
-//          val rhs = if (i % 2 == 1) "1" else "\"1\""
-//          val lhs = '"' + s"t$i" + '"'
-//          s"$lhs:$rhs"
-//        }
-//
-//        val expected = s"""{${chunks.mkString(",")}}"""
-//        * - rw(
-//          ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
-//          expected
-//        )
-//      }
+
+
+    'commonCustomStructures{
+      'simpleAdt {
+
+        * - rw(ADTs.ADT0(), """{
+        }""")
+        * - rw(ADTs.ADTa(1), """{"i":1}""")
+        * - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
+
+        * - rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
+        * - rw(
+          ADTs.ADTd(1, "lol", (1.1, 1.2), ADTs.ADTa(1)),
+          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1}}"""
+        )
+
+        * - rw(
+          ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
+          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14]}"""
+        )
+
+        * - rw(
+          ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
+          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
+        )
+        val chunks = for (i <- 1 to 18) yield {
+          val rhs = if (i % 2 == 1) "1" else "\"1\""
+          val lhs = '"' + s"t$i" + '"'
+          s"$lhs:$rhs"
+        }
+
+        val expected = s"""{${chunks.mkString(",")}}"""
+        * - rw(
+          ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
+          expected
+        )
+      }
 //      'sealedHierarchy {
 //        // objects in sealed case class hierarchies should always read and write
 //        // the same way (with a tag) regardless of what their static type is when
@@ -184,7 +184,7 @@
 //        rw(BB: AA, """{"$type":"upickle.Singletons.BB"}""")
 //        rw(CC: AA, """{"$type":"upickle.Singletons.CC"}""")
 //      }
-//    }
+    }
 //    'robustnessAgainstVaryingSchemas {
 //      'renameKeysViaAnnotations {
 //        import Annotated._
@@ -216,7 +216,7 @@
 //        assert(r2 == ADTb(123, "kk"))
 //      }
 //    }
-//
+
 //    'GenericDataTypes{
 //      'simple {
 //        import Generic.A
@@ -266,7 +266,7 @@
 //        }
 //      }
 //    }
-//
+
 //    'recursiveDataTypes{
 //      import Recursive._
 //      rw(
@@ -336,7 +336,7 @@
 //        }""")
 //
 //    }
-//
+
 //    'custom {
 //      'clsReaderWriter {
 //        rw(new Custom.Thing2(1, "s"), """ "1 s" """)
@@ -444,5 +444,5 @@
 //        rw(TypedFoo.Quz(true): TypedFoo, """{"$type": "upickle.TypedFoo.Quz", "b": true}""")
 //      }
 //    }
-//  }
-//}
+  }
+}

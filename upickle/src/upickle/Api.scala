@@ -90,6 +90,13 @@ object Forwarder{
     c.Expr[T](q"${c.prefix}.macroW0[$e, ${c.prefix}.Writer]")
   }
 
+  def applyRW[T](c: scala.reflect.macros.blackbox.Context)
+              (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
+    import c.universe._
+    dieIfNothing[T](c)("Writer")
+    c.Expr[T](q"${c.prefix}.macroRW0(${c.prefix}.macroR, ${c.prefix}.macroW)")
+  }
+
 }
 trait LowPriX extends LowPriY {this: Api =>
 }
@@ -99,7 +106,8 @@ trait LowPriY{ this: Api =>
 //  implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro Forwarder.applyRW[T]
   def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
   def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
-  def macroRW[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] {
+  def macroRW[T]: Reader[T] with Writer[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
+  def macroRW0[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] {
     override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
     override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
     override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)

@@ -278,7 +278,7 @@ object Macros {
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type) = {
       val x = q"${c.fresh[TermName]("derive")}"
-      val name = newTermName("Tuple"+args.length+"R")
+      val name = newTermName("Tuple"+args.length+"Reader")
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
       val defaults = deriveDefaults(companion, hasDefaults)
       q"""
@@ -335,7 +335,7 @@ object Macros {
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type) = {
       val defaults = deriveDefaults(companion, hasDefaults)
-      val name = newTermName("Tuple"+args.length+"W")
+      val name = newTermName("Tuple"+args.length+"Writer")
       q"""
         ${c.prefix}.CaseW[(..$argTypes), $targetType](
           $companion.${findUnapply(targetType)}[..$typeArgs],
