@@ -15,6 +15,7 @@ import scala.reflect.ClassTag
 * package to form the public API1
 */
 trait Types{ types =>
+  type ReadWriter[T] = Reader[T] with Writer[T]
   type Reader[T] = BaseReader[Any, T]
   trait BaseReader[T, V] extends jawn.RawFacade[V] {
     var empty: V = _

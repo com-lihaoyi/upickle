@@ -1,22 +1,23 @@
-//package upickle
-//
-//import upickle.ADTs.ADT0
-//import default.{Reader => R, Writer => W, ReadWriter => RW}
-///*
-// * A whole bunch of test data that can be used by client libraries to try out
-// * their typeclass derivation to make sure it's doing the right thing. Contains
-// * roughly the  whole range of interesting shapes of types supported by upickle.
-// */
-//
-//object ADTs {
-//  case class ADT0()
-//  object ADT0{
-//    implicit def rw: RW[ADT0] = default.macroRW
-//  }
-//  case class ADTa(i: Int)
-//  object ADTa{
-//    implicit def rw: RW[ADTa] = default.macroRW
-//  }
+package upickle
+
+import upickle.ADTs.ADT0
+import default.{Reader => R, Writer => W, ReadWriter => RW}
+/*
+ * A whole bunch of test data that can be used by client libraries to try out
+ * their typeclass derivation to make sure it's doing the right thing. Contains
+ * roughly the  whole range of interesting shapes of types supported by upickle.
+ */
+
+object ADTs {
+  case class ADT0()
+  object ADT0{
+    implicit def rw: RW[ADT0] = default.macroRW
+  }
+  case class ADTa(i: Int)
+  object ADTa{
+    implicit def rw: RW[ADTa] = default.macroRW
+  }
+
 //  case class ADTb(i: Int, s: String)
 //  object ADTb{
 //    implicit def rw: RW[ADTb] = default.macroRW
@@ -49,7 +50,7 @@
 //  object ADTz{
 //    implicit def rw: RW[ADTz] = default.macroRW
 //  }
-//}
+}
 //object Hierarchy {
 //  sealed trait A
 //  object A{

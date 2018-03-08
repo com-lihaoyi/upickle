@@ -268,7 +268,7 @@ object Macros {
           _ match {case _root_.scala.Tuple1(x) => $companion.apply[..$typeArgs](x)},
           _root_.scala.Array($arg),
           _root_.scala.Array(..$defaults)
-        )(${c.prefix}.Tuple1R)
+        )(${c.prefix}.Tuple1Reader)
         """
     }
     def wrapCaseN(companion: c.Tree,
@@ -323,7 +323,7 @@ object Macros {
           $companion.${findUnapply(targetType)}(_).map(_root_.scala.Tuple1.apply),
           _root_.scala.Array($arg),
           _root_.scala.Array(..$defaults)
-        )(${c.prefix}.Tuple1W)
+        )(${c.prefix}.Tuple1Writer)
         """
     }
 
@@ -355,8 +355,7 @@ object Macros {
       val c: c0.type = c0
       def typeclass = e2
     }.derive(e1.tpe)
-    val msg = "Tagged Object " + weakTypeOf[T].typeSymbol.fullName
-    c0.Expr[R[T]](q"""${c0.prefix}.Internal.validateReader($msg){$res}""")
+    c0.Expr[R[T]](res)
   }
 
   def macroWImpl[T, W[_]](c0: scala.reflect.macros.blackbox.Context)
