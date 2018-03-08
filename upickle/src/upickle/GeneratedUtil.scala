@@ -3,6 +3,7 @@ import jawn.{Facade, RawFContext, RawFacade}
 
 import language.higherKinds
 import scala.collection.mutable
+import scala.reflect.ClassTag
 /**
 * Stuff that generated code depends on but I don't want
 * to put in the stringly typed code-generator
@@ -47,8 +48,9 @@ private[upickle] trait GeneratedUtil extends Types{
 
   class CaseR[T, V](f: T => V,
                     names: Array[String],
-                    defaults: Array[Any])
-                   (implicit r: TupleNReader[T]) extends Reader[V]{
+                    defaults: Array[Any],
+                    val tags: Seq[String])
+                   (implicit r: TupleNReader[T]) extends TaggedReader[V]{
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       val b = new Array[Any](names.length)
       var facades = r.readers
@@ -74,7 +76,7 @@ private[upickle] trait GeneratedUtil extends Types{
       def isObj = true
     }
   }
-  class Case0R[V](f: () => V) extends Reader[V]{ outer =>
+  class Case0R[V](f: () => V, val tags: Seq[String]) extends TaggedReader[V]{ outer =>
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       def facade = outer.asInstanceOf[jawn.RawFacade[Any]]
 
@@ -89,9 +91,10 @@ private[upickle] trait GeneratedUtil extends Types{
   }
 
   class CaseW[T, V](f: V => Option[T],
-                  names: Array[String],
-                  defaults: Array[Any])
-                 (implicit w: TupleNWriter[T]) extends Writer[V]{
+                    names: Array[String],
+                    defaults: Array[Any],
+                    val tags: Seq[String])
+                   (implicit w: TupleNWriter[T]) extends TaggedWriter[V]{
     def write(out: Facade[Unit], v: V): Unit = {
       val writers = w.writers.asInstanceOf[Seq[Writer[Any]]]
       val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
@@ -106,9 +109,52 @@ private[upickle] trait GeneratedUtil extends Types{
 
     }
   }
-  class Case0W[T](f: T => Boolean) extends Writer[T] {
+  class Case0W[T](f: T => Boolean, val tags: Seq[String]) extends TaggedWriter[T] {
     def write(out: jawn.Facade[Unit], v: T) = {
       out.objectContext(-1).finish(-1)
     }
   }
+
+
+  def annotate[V: ClassTag](rw: TaggedReader[V], n: String) = new TaggedReader[V]{outer =>
+    def tags = Seq(implicitly[ClassTag[V]].runtimeClass.getName)
+    override def jnull(index: Int) = rw.jnull(index)
+
+    override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[V]
+    override def objectContext(index: Int) = new RawFContext[Any, V] {
+      val outerCtx = rw.objectContext(index)
+
+      var nextKeyType = false
+
+      def facade = {
+        (if (nextKeyType) outer else outerCtx.facade).asInstanceOf[RawFacade[Any]]
+      }
+      def visitKey(s: CharSequence, index: Int) = {
+        if (s.toString == "$type")nextKeyType = true
+        else outerCtx.visitKey(s, index)
+      }
+
+      def add(v: Any, index: Int) = {
+        if (nextKeyType) nextKeyType = false
+        else outerCtx.add(v, index)
+      }
+
+      def finish(index: Int) = {
+        outerCtx.finish(index)
+      }
+
+      def isObj = true
+    }
+  }
+
+  def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
+    def tags = Seq(implicitly[ClassTag[V]].runtimeClass.getName)
+
+    def write(out: Facade[Unit], v: V) = {
+
+      rw.write(out, v)
+    }
+  }
+
+
 }

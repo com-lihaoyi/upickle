@@ -5,8 +5,9 @@ import language.experimental.macros
 import scala.annotation.implicitNotFound
 import language.higherKinds
 import acyclic.file
-import jawn.RawFContext
+import jawn.{Facade, RawFContext}
 
+import scala.collection.mutable
 import scala.reflect.ClassTag
 
 /**
@@ -16,10 +17,93 @@ import scala.reflect.ClassTag
 */
 trait Types{ types =>
   type ReadWriter[T] = Reader[T] with Writer[T]
+  type TaggedReadWriter[T] = TaggedReader[T] with TaggedWriter[T]
+  trait TaggedReader[T] extends Reader[T]{
+    def tags: Seq[String]
+  }
+  trait TaggedWriter[T] extends Writer[T]{
+    def tags: Seq[String]
+  }
+  object ReadWriter{
+    implicit class Mergable[T, K <: T](val w: TaggedReadWriter[K])
+                                      (implicit val ct: ClassTag[K])
+    def merge[T](rws: Mergable[T, _]*): TaggedReadWriter[T] = {
+      mergeRW(
+        Reader.merge[T](
+          rws.map(x =>
+            new Reader.Mergable[T, T](
+              x.w.asInstanceOf[TaggedReadWriter[T]])(x.ct.asInstanceOf[ClassTag[T]]
+            )
+          ):_*
+        ),
+        Writer.merge[T](
+          rws.map(x =>
+            new Writer.Mergable[T, T](
+              x.w.asInstanceOf[TaggedReadWriter[T]])(x.ct.asInstanceOf[ClassTag[T]]
+            )
+          ):_*
+        )
+      )
+    }
+    def mergeRW[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = new TaggedReader[T] with TaggedWriter[T] {
+      def tags = implicitly[TaggedReader[T]].tags
+      override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
+      override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
+      override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)
+
+      override def jstring(s: CharSequence, index: Int) = implicitly[Reader[T]].jstring(s, index)
+      override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+        implicitly[Reader[T]].jnum(s, decIndex, expIndex, index)
+      }
+
+      override def objectContext(index: Int) = implicitly[Reader[T]].objectContext(index)
+      override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
+      override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
+
+      def write(out: Facade[Unit], v: T): Unit = {
+        implicitly[Writer[T]].write(out, v)
+      }
+    }
+  }
+  object Reader{
+    implicit class Mergable[T, K <: T](val r: TaggedReader[K])(implicit val ct: ClassTag[K])
+    def merge[T](readers: Mergable[T, _]*) = new TaggedReader[T]{ outer =>
+      def tags = readers.flatMap(_.r.tags)
+      override def objectContext(index: Int) = new RawFContext[Any, T] {
+        val keys = mutable.Buffer.empty[String]
+        val values = mutable.Buffer.empty[Any]
+        var nextValueType = false
+        var typeName: String = null
+        def facade = outer.asInstanceOf[Reader[Any]]
+
+        def visitKey(s: CharSequence, index: Int): Unit = {
+
+          if (s.toString == "$type") nextValueType = true
+          else keys.append(s.toString)
+        }
+
+        def add(v: Any, index: Int): Unit = {
+          if (nextValueType) typeName = v.toString
+          else values.append(v)
+        }
+
+        def finish(index: Int) = {
+          val delegate = readers.find(_.ct.runtimeClass.getName == typeName).get
+          val ctx = delegate.r.objectContext(index)
+          for((k, v) <- keys.zip(values)) {
+            ctx.visitKey(k, index)
+            ctx.add(v, index)
+          }
+          ctx.finish(index).asInstanceOf[T]
+        }
+
+        def isObj = true
+      }
+    }
+  }
   type Reader[T] = BaseReader[Any, T]
   trait BaseReader[T, V] extends jawn.RawFacade[V] {
-    var empty: V = _
-    def jnull(index: Int): V = empty
+    def jnull(index: Int): V = null.asInstanceOf[V]
     def jtrue(index: Int): V =  throw new Exception(index.toString)
     def jfalse(index: Int): V = throw new Exception(index.toString)
 
@@ -102,7 +186,14 @@ trait Types{ types =>
       def write(out: jawn.Facade[Unit], v: U) =
         src.write(out, if(v == null) null.asInstanceOf[T] else f(v))
     }
-
+    implicit class Mergable[T, K <: T](val w: TaggedWriter[K])(implicit val ct: ClassTag[K])
+    def merge[T](writers: Mergable[T, _]*) = new TaggedWriter[T] {
+      def tags = writers.flatMap(_.w.tags)
+      def write(out: Facade[Unit], v: T): Unit = {
+        val w = writers.find(_.ct.runtimeClass.isInstance(v)).get.w
+        w.asInstanceOf[Writer[Any]].write(out, v)
+      }
+    }
   }
 
 

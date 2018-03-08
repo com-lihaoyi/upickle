@@ -78,7 +78,6 @@ object MacroTests extends TestSuite {
 //  implicitly[upickle.old.Writer[ADTs.ADTc]]
 
   val tests = Tests {
-
 //    'mixedIn{
 //      import MixedIn._
 //      * - rw(Obj.ClsB(1), """{"i":1}""")
@@ -140,23 +139,23 @@ object MacroTests extends TestSuite {
           expected
         )
       }
-//      'sealedHierarchy {
-//        // objects in sealed case class hierarchies should always read and write
-//        // the same way (with a tag) regardless of what their static type is when
-//        // written. This is feasible because sealed hierarchies can only have a
-//        // finite number of cases, so we can just check them all and decide which
-//        // class the instance belongs to.
-//        import Hierarchy._
-//        'shallow {
-//          * - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
-//          * - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
-////Doesn't work in 2.10.4
-////          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
-////          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
-//
-//          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
-//          * - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
-//        }
+      'sealedHierarchy {
+        // objects in sealed case class hierarchies should always read and write
+        // the same way (with a tag) regardless of what their static type is when
+        // written. This is feasible because sealed hierarchies can only have a
+        // finite number of cases, so we can just check them all and decide which
+        // class the instance belongs to.
+        import Hierarchy._
+        'shallow {
+          * - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
+          * - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
+//Doesn't work in 2.10.4
+//          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
+//          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
+
+          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
+          * - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
+        }
 //        'deep{
 //          import DeepHierarchy._
 //
@@ -175,7 +174,7 @@ object MacroTests extends TestSuite {
 //          * - rw(E(true): C, """{"$type": "upickle.DeepHierarchy.E","b":true}""")
 //          * - rw(E(true): A, """{"$type": "upickle.DeepHierarchy.E", "b":true}""")
 //        }
-//      }
+      }
 //      'singleton {
 //        import Singletons._
 //

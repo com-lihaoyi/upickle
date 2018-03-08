@@ -13,7 +13,9 @@ trait Writers extends Types with Generated{
     def write(out: jawn.Facade[Unit], v: String) = out.jstring(v)
   }
   implicit object UnitWriter extends Writer[Unit] {
-    def write(out: jawn.Facade[Unit], v: Unit) = out.jnull()
+    def write(out: jawn.Facade[Unit], v: Unit) = {
+      out.objectContext(-1).finish(-1)
+    }
   }
 
   object NumStringWriter extends Writer[String] {

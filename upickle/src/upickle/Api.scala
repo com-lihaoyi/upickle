@@ -104,27 +104,10 @@ trait LowPriY{ this: Api =>
 //  implicit def macroSingletonR[T <: Singleton]: Reader[T] = macro Forwarder.applyR[T]
 //  implicit def macroSingletonW[T <: Singleton]: Writer[T] = macro Forwarder.applyW[T]
 //  implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro Forwarder.applyRW[T]
-  def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
-  def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
-  def macroRW[T]: Reader[T] with Writer[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
-  def macroRW0[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] {
-    override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
-    override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
-    override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)
-
-    override def jstring(s: CharSequence, index: Int) = implicitly[Reader[T]].jstring(s, index)
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      implicitly[Reader[T]].jnum(s, decIndex, expIndex, index)
-    }
-
-    override def objectContext(index: Int) = implicitly[Reader[T]].objectContext(index)
-    override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
-    override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
-
-    def write(out: Facade[Unit], v: T): Unit = {
-      implicitly[Writer[T]].write(out, v)
-    }
-  }
-  def macroR0[T, M[_]]: Reader[T] = macro Macros.macroRImpl[T, M]
-  def macroW0[T, M[_]]: Writer[T] = macro Macros.macroWImpl[T, M]
+  def macroR[T]: TaggedReader[T] = macro Forwarder.applyR[T]
+  def macroW[T]: TaggedWriter[T] = macro Forwarder.applyW[T]
+  def macroRW[T]: TaggedReader[T] with TaggedWriter[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
+  def macroRW0[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = ReadWriter.mergeRW[T]
+  def macroR0[T, M[_]]: TaggedReader[T] = macro Macros.macroRImpl[T, M]
+  def macroW0[T, M[_]]: TaggedWriter[T] = macro Macros.macroWImpl[T, M]
 }
