@@ -10,7 +10,7 @@ import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 
-trait Readers extends Types{
+trait Readers extends Types with Generated{
   implicit object UnitReader extends Reader[Unit] {
     override def objectContext(index: Int) = new RawFContext[Any, Unit] {
       def facade = UnitReader.asInstanceOf[RawFacade[Any]]
@@ -87,30 +87,6 @@ trait Readers extends Types{
       def facade = r.asInstanceOf[jawn.RawFacade[Any]]
     }
   }
-  def TupleNReader[V](readers: List[Reader[_]], f: Seq[Any] => V) = new Reader[V]{
-    override def arrayContext(index: Int) = new jawn.RawFContext[Any, V] {
-      val b = mutable.Buffer.empty[Any]
-      var facades = readers
-
-      def visitKey(s: CharSequence, index: Int): Unit = ???
-
-      def add(v: Any, index: Int): Unit = {
-        facades = facades.tail
-        if (facades.isEmpty) facades = readers
-        b += v
-      }
-
-      def finish(index: Int) = f(b)
-
-      def isObj = false
-
-      def facade = facades.head.asInstanceOf[jawn.RawFacade[Any]]
-    }
-  }
-  implicit def Tuple1Reader[T1](implicit t1: Reader[T1]): Reader[Tuple1[T1]] =
-    TupleNReader(List(t1), x => Tuple1(x(0)).asInstanceOf[Tuple1[T1]])
-  implicit def Tuple2Reader[T1, T2](implicit t1: Reader[T1], t2: Reader[T2]): Reader[Tuple2[T1, T2]] =
-    TupleNReader(List(t1, t2), x => Tuple2(x(0), x(1)).asInstanceOf[Tuple2[T1, T2]])
 
   implicit object DurationReader extends Reader[Duration]{
     override def jstring(s: CharSequence, index: Int) = {

@@ -8,7 +8,7 @@ import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-trait Writers extends Types{
+trait Writers extends Types with Generated{
   implicit object StringWriter extends Writer[String] {
     def write(out: jawn.Facade[Unit], v: String) = out.jstring(v)
   }
@@ -84,28 +84,6 @@ trait Writers extends Types{
     }.asInstanceOf[Writer[Map[K, V]]]
     else SeqLikeWriter[Seq, (K, V)].comap[Map[K, V]](_.toSeq)
   }
-
-  def TupleNWriter[V](writers: List[Writer[_]], f: V => Seq[Any]) = new Writer[V]{
-    def write(out: jawn.Facade[Unit], v: V) = {
-      if (v == null) out.jnull(-1)
-      else{
-
-        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
-
-        for((item, w) <- f(v).zip(writers)){
-          ctx.add((), -1)
-          w.asInstanceOf[Writer[Any]].write(out, item)
-        }
-        ctx.finish(-1)
-      }
-    }
-  }
-
-  implicit def Tuple1Writer[T1](implicit t1: Writer[T1]): Writer[Tuple1[T1]] =
-    TupleNWriter[Tuple1[T1]](List(t1), x => if (x == null) null else x.productIterator.toSeq)
-
-  implicit def Tuple2Writer[T1, T2](implicit t1: Writer[T1], t2: Writer[T2]): Writer[Tuple2[T1, T2]] =
-    TupleNWriter[Tuple2[T1, T2]](List(t1, t2), x => if (x == null) null else x.productIterator.toSeq)
 
   implicit object DurationWriter extends Writer[Duration]{
     def write(out: jawn.Facade[Unit], v: Duration) = v match{
