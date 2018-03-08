@@ -5,7 +5,7 @@ import language.experimental.macros
 import scala.annotation.implicitNotFound
 import language.higherKinds
 import acyclic.file
-import jawn.{Facade, RawFContext}
+import jawn.{Facade, RawFContext, RawFacade}
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
@@ -65,43 +65,99 @@ trait Types{ types =>
       }
     }
   }
+  class CachingFContext(isObj0: Boolean, out: jawn.RawFacade[Unit] => jawn.RawFContext[_, Unit])
+    extends jawn.RawFContext[Unit, Unit] with (jawn.RawFacade[Unit] => Unit) {
+
+    val output = mutable.Buffer.empty[jawn.RawFContext[Any, Unit] => Unit]
+    val facade = new CachingFacade
+
+    def visitKey(s: CharSequence, index: Int): Unit = output.append(_.visitKey(s, index))
+
+    def add(v: Unit, index: Int): Unit = output.append(_.add(v, index))
+
+    def finish(index: Int): Unit = output.append(_.finish(index))
+
+    def isObj = isObj0
+
+    def apply(v1: RawFacade[Unit]) = {
+      val ctx = out(v1)
+      output.foreach(_(ctx.asInstanceOf[jawn.RawFContext[Any, Unit]]))
+    }
+  }
+  class CachingFacade extends jawn.RawFacade[Unit] {
+    val output = mutable.Buffer.empty[jawn.RawFacade[Unit] => Unit]
+    override def singleContext(index: Int) = {
+      val cc = new CachingFContext(false, _.singleContext(index))
+      output.append(cc)
+      cc
+    }
+
+    override def arrayContext(index: Int) = {
+      val cc = new CachingFContext(false, _.arrayContext(index))
+      output.append(cc)
+      cc
+    }
+
+    override def objectContext(index: Int) = {
+      val cc = new CachingFContext(true, _.objectContext(index))
+      output.append(cc)
+      cc
+    }
+
+    override def jnull(index: Int) = output.append(_.jnull(index))
+
+    override def jfalse(index: Int) = output.append(_.jfalse(index))
+
+    override def jtrue(index: Int) = output.append(_.jtrue(index))
+
+    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      output.append(_.jnum(s, decIndex, expIndex, index))
+    }
+
+    override def jstring(s: CharSequence, index: Int) = output.append(_.jstring(s, index))
+  }
   object Reader{
     implicit class Mergable[T, K <: T](val r: TaggedReader[K])(implicit val ct: ClassTag[K])
     def merge[T](readers: Mergable[T, _]*) = new TaggedReader[T]{ outer =>
       def tags = readers.flatMap(_.r.tags)
       override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[T]
       override def objectContext(index: Int) = new RawFContext[Any, T] {
-        val keys = mutable.Buffer.empty[String]
-        val values = mutable.Buffer.empty[Any]
+
         var nextValueType = false
         var typeName: String = null
-        def facade =
-          if (nextValueType) outer.asInstanceOf[Reader[Any]]
-          else readers(0).r.objectContext(index).facade.asInstanceOf[Reader[Any]]
+        var delegate: Reader[Any] = null
+        var delegateCtx: RawFContext[_, Unit] = null
+        val cache = new CachingFacade
+        val cacheCtx = cache.objectContext(index)
+        def facade = (nextValueType, delegateCtx) match{
+          case (true, _) => outer.asInstanceOf[Reader[Any]]
+          case (false, null) => cacheCtx.facade.asInstanceOf[RawFacade[Any]]
+          case (false, t) => t.facade.asInstanceOf[Reader[Any]]
+        }
 
         def visitKey(s: CharSequence, index: Int): Unit = {
 
           if (s.toString == "$type") nextValueType = true
-          else keys.append(s.toString)
+          else if (delegateCtx == null) cacheCtx.visitKey(s, index)
+          else delegateCtx.visitKey(s, index)
         }
 
         def add(v: Any, index: Int): Unit = {
-          println("Reader.merge add " + v)
-          if (nextValueType) typeName = v.toString
-          else values.append(v)
-          nextValueType = false
+          if (nextValueType) {
+            nextValueType = false
+            typeName = v.toString
+            delegate = readers.find(_.r.tags.contains(typeName)).get.r.asInstanceOf[Reader[Any]]
+            delegateCtx = delegate.objectContext(index).asInstanceOf[RawFContext[_, Unit]]
+            cacheCtx.output.foreach(_(delegateCtx.asInstanceOf[RawFContext[Any, Unit]]))
+          } else {
+            if (delegateCtx == null) cacheCtx.add(v, index)
+            else delegateCtx.asInstanceOf[RawFContext[Any, Unit]].add(v, index)
+          }
+
         }
 
         def finish(index: Int) = {
-          println(typeName)
-          println(readers.map(_.r.tags))
-          val delegate = readers.find(_.r.tags.contains(typeName)).get
-          val ctx = delegate.r.objectContext(index)
-          for((k, v) <- keys.zip(values)) {
-            ctx.visitKey(k, index)
-            ctx.add(v, index)
-          }
-          ctx.finish(index).asInstanceOf[T]
+          delegateCtx.finish(index).asInstanceOf[T]
         }
 
         def isObj = true

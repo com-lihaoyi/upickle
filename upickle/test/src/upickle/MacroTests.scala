@@ -149,6 +149,7 @@ object MacroTests extends TestSuite {
         import Hierarchy._
         'shallow {
           * - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
+          * - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
           * - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
 //Doesn't work in 2.10.4
 //          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
@@ -156,6 +157,7 @@ object MacroTests extends TestSuite {
 
           * - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
           * - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
+          * - rw(C("a", "b"): A, """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
         }
 //        'deep{
 //          import DeepHierarchy._
