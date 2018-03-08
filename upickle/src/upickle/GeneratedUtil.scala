@@ -90,11 +90,11 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
-  class CaseW[T, V](f: V => Option[T],
-                    names: Array[String],
-                    defaults: Array[Any],
+  class CaseW[T, V](val f: V => Option[T],
+                    val names: Array[String],
+                    val defaults: Array[Any],
                     val tags: Seq[String])
-                   (implicit w: TupleNWriter[T]) extends TaggedWriter[V]{
+                   (implicit val w: TupleNWriter[T]) extends TaggedWriter[V]{
     def write(out: Facade[Unit], v: V): Unit = {
       val writers = w.writers.asInstanceOf[Seq[Writer[Any]]]
       val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
@@ -105,8 +105,6 @@ private[upickle] trait GeneratedUtil extends Types{
         writers(i).write(out, items(i))
       }
       ctx.finish(-1)
-
-
     }
   }
   class Case0W[T](f: T => Boolean, val tags: Seq[String]) extends TaggedWriter[T] {
@@ -117,7 +115,7 @@ private[upickle] trait GeneratedUtil extends Types{
 
 
   def annotate[V: ClassTag](rw: TaggedReader[V], n: String) = new TaggedReader[V]{outer =>
-    def tags = Seq(implicitly[ClassTag[V]].runtimeClass.getName)
+    def tags = Seq(n)
     override def jnull(index: Int) = rw.jnull(index)
 
     override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[V]
@@ -147,12 +145,23 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
-  def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
-    def tags = Seq(implicitly[ClassTag[V]].runtimeClass.getName)
+  def annotate[V: ClassTag](rw: CaseW[_, V], n: String) = new TaggedWriter[V]{
+    def tags = Seq(n)
 
     def write(out: Facade[Unit], v: V) = {
-
-      rw.write(out, v)
+      val writers = rw.w.writers.asInstanceOf[Seq[Writer[Any]]]
+      val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
+      ctx.visitKey("$type", -1)
+      out.jstring(n, -1)
+      ctx.add((), -1)
+      val get = rw.f(v).get
+      val items = rw.w.f.asInstanceOf[Any => Seq[Any]].apply(get)
+      for(i <- rw.names.indices){
+        ctx.add((), -1)
+        ctx.visitKey(rw.names(i), -1)
+        writers(i).write(out, items(i))
+      }
+      ctx.finish(-1)
     }
   }
 

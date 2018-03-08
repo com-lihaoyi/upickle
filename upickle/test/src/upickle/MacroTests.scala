@@ -139,6 +139,7 @@ object MacroTests extends TestSuite {
           expected
         )
       }
+
       'sealedHierarchy {
         // objects in sealed case class hierarchies should always read and write
         // the same way (with a tag) regardless of what their static type is when

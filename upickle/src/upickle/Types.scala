@@ -69,12 +69,15 @@ trait Types{ types =>
     implicit class Mergable[T, K <: T](val r: TaggedReader[K])(implicit val ct: ClassTag[K])
     def merge[T](readers: Mergable[T, _]*) = new TaggedReader[T]{ outer =>
       def tags = readers.flatMap(_.r.tags)
+      override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[T]
       override def objectContext(index: Int) = new RawFContext[Any, T] {
         val keys = mutable.Buffer.empty[String]
         val values = mutable.Buffer.empty[Any]
         var nextValueType = false
         var typeName: String = null
-        def facade = outer.asInstanceOf[Reader[Any]]
+        def facade =
+          if (nextValueType) outer.asInstanceOf[Reader[Any]]
+          else readers(0).r.objectContext(index).facade.asInstanceOf[Reader[Any]]
 
         def visitKey(s: CharSequence, index: Int): Unit = {
 
@@ -83,12 +86,16 @@ trait Types{ types =>
         }
 
         def add(v: Any, index: Int): Unit = {
+          println("Reader.merge add " + v)
           if (nextValueType) typeName = v.toString
           else values.append(v)
+          nextValueType = false
         }
 
         def finish(index: Int) = {
-          val delegate = readers.find(_.ct.runtimeClass.getName == typeName).get
+          println(typeName)
+          println(readers.map(_.r.tags))
+          val delegate = readers.find(_.r.tags.contains(typeName)).get
           val ctx = delegate.r.objectContext(index)
           for((k, v) <- keys.zip(values)) {
             ctx.visitKey(k, index)
