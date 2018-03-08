@@ -8,7 +8,7 @@ import scala.collection.mutable
 * to put in the stringly typed code-generator
 */
 private[upickle] trait GeneratedUtil extends Types{
-  case class TupleNWriter[V](writers: List[Writer[_]], f: V => Seq[Any]) extends Writer[V]{
+  class TupleNWriter[V](val writers: List[Writer[_]], val f: V => Seq[Any]) extends Writer[V]{
     def write(out: jawn.Facade[Unit], v: V) = {
       if (v == null) out.jnull(-1)
       else{
@@ -24,7 +24,7 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
-  case class TupleNReader[V](readers: List[Reader[_]], f: Seq[Any] => V) extends Reader[V]{
+  class TupleNReader[V](val readers: List[Reader[_]], val f: Seq[Any] => V) extends Reader[V]{
     override def arrayContext(index: Int) = new jawn.RawFContext[Any, V] {
       val b = mutable.Buffer.empty[Any]
       var facades = readers
@@ -45,10 +45,10 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
-  def CaseR[T, V](f: T => V,
-                  names: Array[String],
-                  defaults: Array[Any])
-                 (implicit r: TupleNReader[T]): Reader[V] = new Reader[V]{
+  class CaseR[T, V](f: T => V,
+                    names: Array[String],
+                    defaults: Array[Any])
+                   (implicit r: TupleNReader[T]) extends Reader[V]{
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       val b = new Array[Any](names.length)
       var facades = r.readers
@@ -74,7 +74,7 @@ private[upickle] trait GeneratedUtil extends Types{
       def isObj = true
     }
   }
-  def Case0R[V](f: () => V): Reader[V] = new Reader[V]{ outer =>
+  class Case0R[V](f: () => V) extends Reader[V]{ outer =>
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       def facade = outer.asInstanceOf[jawn.RawFacade[Any]]
 
@@ -88,15 +88,15 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
-  def CaseW[T, V](f: V => Option[T],
+  class CaseW[T, V](f: V => Option[T],
                   names: Array[String],
                   defaults: Array[Any])
-                 (implicit w: TupleNWriter[T]): Writer[V] = new Writer[V]{
+                 (implicit w: TupleNWriter[T]) extends Writer[V]{
     def write(out: Facade[Unit], v: V): Unit = {
       val writers = w.writers.asInstanceOf[Seq[Writer[Any]]]
       val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
       val items = w.f(f(v).get)
-      for(i <- 0 until names.length){
+      for(i <- names.indices){
         ctx.add((), -1)
         ctx.visitKey(names(i), -1)
         writers(i).write(out, items(i))
@@ -106,7 +106,7 @@ private[upickle] trait GeneratedUtil extends Types{
 
     }
   }
-  def Case0W[T](f: T => Boolean) = new Writer[T] {
+  class Case0W[T](f: T => Boolean) extends Writer[T] {
     def write(out: jawn.Facade[Unit], v: T) = {
       out.objectContext(-1).finish(-1)
     }

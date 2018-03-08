@@ -54,9 +54,9 @@ trait UpickleModule extends CrossScalaModule with PublishModule{
         else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
         s"""
         implicit def Tuple${i}Writer[$writerTypes]: TupleNWriter[Tuple$i[$typeTuple]] =
-          TupleNWriter[Tuple$i[$typeTuple]](List($implicitWriterTuple), x => if (x == null) null else x.productIterator.toSeq)
+          new TupleNWriter[Tuple$i[$typeTuple]](List($implicitWriterTuple), x => if (x == null) null else x.productIterator.toSeq)
         implicit def Tuple${i}Reader[$readerTypes]: TupleNReader[Tuple$i[$typeTuple]] =
-            TupleNReader(List($implicitReaderTuple), x => Tuple$i($lookupTuple).asInstanceOf[Tuple$i[$typeTuple]])
+          new TupleNReader(List($implicitReaderTuple), x => Tuple$i($lookupTuple).asInstanceOf[Tuple$i[$typeTuple]])
         """
     }
 

@@ -255,7 +255,7 @@ object Macros {
     import c.universe._
     def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
-      q"${c.prefix}.${newTermName("Case0R")}(() => $t(): $targetType)"
+      q"new ${c.prefix}.Case0R(() => $t(): $targetType)"
     def wrapCase1(companion: c.Tree,
                   arg: String,
                   typeArgs: Seq[c.Type],
@@ -264,7 +264,7 @@ object Macros {
                   targetType: c.Type) = {
       val defaults = deriveDefaults(companion, Seq(hasDefault))
       q"""
-        ${c.prefix}.CaseR[_root_.scala.Tuple1[$argType], $targetType](
+        new ${c.prefix}.CaseR[_root_.scala.Tuple1[$argType], $targetType](
           _ match {case _root_.scala.Tuple1(x) => $companion.apply[..$typeArgs](x)},
           _root_.scala.Array($arg),
           _root_.scala.Array(..$defaults)
@@ -282,7 +282,7 @@ object Macros {
       val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
       val defaults = deriveDefaults(companion, hasDefaults)
       q"""
-        ${c.prefix}.CaseR[(..$argTypes), $targetType](
+        new ${c.prefix}.CaseR[(..$argTypes), $targetType](
           ($x: (..$argTypes)) => ($companion.apply: (..$argTypes) => $targetType)(..$argSyms),
           _root_.scala.Array(..$args),
           _root_.scala.Array(..$defaults)
@@ -291,7 +291,7 @@ object Macros {
     }
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
 
-      q"${c.prefix}.Reader.merge[$targetType](..$subtrees)"
+      q"${c.prefix}.mergeR[$targetType](..$subtrees)"
     }
 
   }
@@ -299,7 +299,7 @@ object Macros {
     val c: scala.reflect.macros.blackbox.Context
     import c.universe._
     def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
-    def wrapCase0(companion: c.Tree, targetType: c.Type) = q"${c.prefix}.${newTermName("Case0W")}($companion.unapply)"
+    def wrapCase0(companion: c.Tree, targetType: c.Type) = q"new ${c.prefix}.Case0W($companion.unapply)"
     def findUnapply(tpe: Type) = {
       val (companion, paramTypes, argSyms, hasDefaults) = getArgSyms(tpe).fold(
         errMsg => c.abort(c.enclosingPosition, errMsg),
@@ -319,7 +319,7 @@ object Macros {
                   targetType: c.Type) = {
       val defaults = deriveDefaults(companion, Seq(hasDefault))
       q"""
-        ${c.prefix}.CaseW[_root_.scala.Tuple1[$argType], $targetType](
+        new ${c.prefix}.CaseW[_root_.scala.Tuple1[$argType], $targetType](
           $companion.${findUnapply(targetType)}(_).map(_root_.scala.Tuple1.apply),
           _root_.scala.Array($arg),
           _root_.scala.Array(..$defaults)
@@ -337,7 +337,7 @@ object Macros {
       val defaults = deriveDefaults(companion, hasDefaults)
       val name = newTermName("Tuple"+args.length+"Writer")
       q"""
-        ${c.prefix}.CaseW[(..$argTypes), $targetType](
+        new ${c.prefix}.CaseW[(..$argTypes), $targetType](
           $companion.${findUnapply(targetType)}[..$typeArgs],
           _root_.scala.Array(..$args),
           _root_.scala.Array(..$defaults)
@@ -345,7 +345,7 @@ object Macros {
       """
     }
     def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
-      q"${c.prefix}.Writer.merge[$targetType](..$subtree)"
+      q"${c.prefix}.mergeW[$targetType](..$subtree)"
     }
   }
   def macroRImpl[T, R[_]](c0: scala.reflect.macros.blackbox.Context)
