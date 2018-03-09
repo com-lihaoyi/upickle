@@ -126,41 +126,41 @@ object Singletons{
 
   case object Standalone
 }
-//object Generic{
-//  case class A[T](t: T)
-//
-//  object A{
-//    implicit def rw[T: R: W]: RW[A[T]] = default.macroRW
-//  }
-//  case class ADT[A, B, C, D, E, F](a: A, b: B, c: C, d: D, e: E, f: F)
-//  object ADT{
-//    implicit def rw[A: R: W, B: R: W, C: R: W, D: R: W, E: R: W, F: R: W]: RW[ADT[A, B, C, D, E, F]] =
-//      default.macroRW
-//  }
-//}
-//object Recursive{
-//  sealed trait LL
-//  object LL{
-//    implicit def rw: RW[LL] = RW.merge(default.macroRW[End.type], default.macroRW[Node])
-//  }
-//  case object End  extends LL
-//  case class Node(c: Int, next: LL) extends LL
-//  object Node{
-//    implicit def rw: RW[Node] = default.macroRW
-//  }
-//  case class IntTree(value: Int, children: List[IntTree])
-//  object IntTree{
-//    implicit def rw: RW[IntTree] = default.macroRW
-//  }
-//  sealed trait SingleTree
-//  object SingleTree{
-//    implicit def rw: RW[SingleTree] = RW.merge(default.macroRW[SingleNode])
-//  }
-//  case class SingleNode(value: Int, children: List[SingleTree]) extends SingleTree
-//  object SingleNode{
-//    implicit def rw: RW[SingleNode] = default.macroRW
-//  }
-//}
+object Generic{
+  case class A[T](t: T)
+
+  object A{
+    implicit def rw[T: R: W]: RW[A[T]] = default.macroRW
+  }
+  case class ADT[A, B, C, D, E, F](a: A, b: B, c: C, d: D, e: E, f: F)
+  object ADT{
+    implicit def rw[A: R: W, B: R: W, C: R: W, D: R: W, E: R: W, F: R: W]: RW[ADT[A, B, C, D, E, F]] =
+      default.macroRW
+  }
+}
+object Recursive{
+  sealed trait LL
+  object LL{
+    implicit def rw: RW[LL] = RW.merge(default.macroRW[End.type], default.macroRW[Node])
+  }
+  case object End  extends LL
+  case class Node(c: Int, next: LL) extends LL
+  object Node{
+    implicit def rw: RW[Node] = default.macroRW
+  }
+  case class IntTree(value: Int, children: List[IntTree])
+  object IntTree{
+    implicit def rw: RW[IntTree] = default.macroRW
+  }
+  sealed trait SingleTree
+  object SingleTree{
+    implicit def rw: RW[SingleTree] = RW.merge(default.macroRW[SingleNode])
+  }
+  case class SingleNode(value: Int, children: List[SingleTree]) extends SingleTree
+  object SingleNode{
+    implicit def rw: RW[SingleNode] = default.macroRW
+  }
+}
 //object Annotated {
 //  sealed trait A
 //  object A{
@@ -296,53 +296,53 @@ object Singletons{
 //  }
 //}
 //
-//object GenericADTs{
-//  sealed trait Small[A]
-//  object Small{
-//    implicit def rw[A: R: W]: RW[Small[A]] = RW.merge(Small1.rw[A])
-//  }
-//  case class Small1[A](key: A) extends Small[A]
-//  object Small1{
-//    implicit def rw[A: R: W]: RW[Small1[A]] = default.macroRW
-//  }
-//
-//  sealed trait Delta[+A, +B]
-//  object Delta {
-//    implicit def rw[A: R: W, B: R: W]: RW[Delta[A, B]] = RW.merge(
-//      Insert.rw[A, B], Remove.rw[A], Clear.rw
-//    )
-//
-//    case class Insert[A, B](key: A, value: B) extends Delta[A, B]
-//    object Insert{
-//      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
-//    }
-//    case class Remove[A](key: A) extends Delta[A, Nothing]
-//    object Remove{
-//      implicit def rw[A: R: W]: RW[Remove[A]] = default.macroRW
-//    }
-//    case class Clear() extends Delta[Nothing, Nothing]
-//    object Clear{
-//      implicit def rw: RW[Clear] = default.macroRW
-//    }
-//  }
-//  sealed trait DeltaInvariant[A, B]
-//  object DeltaInvariant {
-//    implicit def rw[A: R: W, B: R: W]: RW[DeltaInvariant[A, B]] = RW.merge(
-//      Insert.rw[A, B], Remove.rw[A, B], Clear.rw[A, B]
-//    )
-//    case class Insert[A, B](key: A, value: B) extends DeltaInvariant[A, B]
-//    object Insert{
-//      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
-//    }
-//    case class Remove[A, B](key: A) extends DeltaInvariant[A, B]
-//    object Remove{
-//      implicit def rw[A: R: W, B]: RW[Remove[A, B]] = default.macroRW
-//    }
-//    case class Clear[A, B]() extends DeltaInvariant[A, B]
-//    object Clear{
-//      implicit def rw[A, B]: RW[Clear[A, B]] = default.macroRW
-//    }
-//  }
+object GenericADTs{
+  sealed trait Small[A]
+  object Small{
+    implicit def rw[A: R: W]: RW[Small[A]] = RW.merge(Small1.rw[A])
+  }
+  case class Small1[A](key: A) extends Small[A]
+  object Small1{
+    implicit def rw[A: R: W]: RW[Small1[A]] = default.macroRW
+  }
+
+  sealed trait Delta[+A, +B]
+  object Delta {
+    implicit def rw[A: R: W, B: R: W]: RW[Delta[A, B]] = RW.merge(
+      Insert.rw[A, B], Remove.rw[A], Clear.rw
+    )
+
+    case class Insert[A, B](key: A, value: B) extends Delta[A, B]
+    object Insert{
+      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
+    }
+    case class Remove[A](key: A) extends Delta[A, Nothing]
+    object Remove{
+      implicit def rw[A: R: W]: RW[Remove[A]] = default.macroRW
+    }
+    case class Clear() extends Delta[Nothing, Nothing]
+    object Clear{
+      implicit def rw: RW[Clear] = default.macroRW
+    }
+  }
+  sealed trait DeltaInvariant[A, B]
+  object DeltaInvariant {
+    implicit def rw[A: R: W, B: R: W]: RW[DeltaInvariant[A, B]] = RW.merge(
+      Insert.rw[A, B], Remove.rw[A, B], Clear.rw[A, B]
+    )
+    case class Insert[A, B](key: A, value: B) extends DeltaInvariant[A, B]
+    object Insert{
+      implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW
+    }
+    case class Remove[A, B](key: A) extends DeltaInvariant[A, B]
+    object Remove{
+      implicit def rw[A: R: W, B]: RW[Remove[A, B]] = default.macroRW
+    }
+    case class Clear[A, B]() extends DeltaInvariant[A, B]
+    object Clear{
+      implicit def rw[A, B]: RW[Clear[A, B]] = default.macroRW
+    }
+  }
 ////  Not sure how to make these work...
 ////
 ////  sealed trait DeltaHardcoded[A, B]
@@ -361,7 +361,7 @@ object Singletons{
 ////      implicit def rw: RW[Clear] = default.macroRW
 ////    }
 ////  }
-//}
+}
 //object Amorphous{
 //  class A()
 //  class B(i: Int){

@@ -55,47 +55,46 @@ object LegacyTests extends TestSuite {
     }
     'singleton {
       import Singletons._
-      implicit def BBrw: RW[BB.type] = legacy.macroRW[BB.type]
-      implicit def CCrw: RW[CC.type] = legacy.macroRW[CC.type]
-      implicit def AArw: RW[AA] = RW.merge(BBrw, CCrw)
+
+      implicit def AArw: RW[AA] = legacy.macroRW
       rw(BB, """["upickle.Singletons.BB",{}]""")
       rw(CC, """["upickle.Singletons.CC",{}]""")
       rw(BB: AA, """["upickle.Singletons.BB",{}]""")
       rw(CC: AA, """["upickle.Singletons.CC",{}]""")
     }
-//    'ADT{
-//      import GenericADTs._
-//      * - {
-//        val pref1 = "upickle.GenericADTs.Delta"
-//        val D1 = Delta
-//        implicit def D1rw[A: R: W, B: R: W]: RW[D1[A, B]] = upickle.legacy.macroRW
-//        implicit def Insertrw[A: R: W, B: R: W]: RW[D1.Insert[A, B]] = upickle.legacy.macroRW
-//        implicit def Removerw[A: R: W]: RW[D1.Remove[A]] = upickle.legacy.macroRW
-//        implicit def Clearrw: RW[D1.Clear] = upickle.legacy.macroRW
-//        type D1[+A, +B] = Delta[A, B]
-//        rw(D1.Insert(1, 1), s"""["$pref1.Insert",{"key":1,"value":1}]""")
-//        rw(D1.Insert(1, 1): D1[Int, Int], s"""["$pref1.Insert",{"key":1,"value":1}]""")
-//        rw(D1.Remove(1), s"""["$pref1.Remove",{"key":1}]""")
-//        rw(D1.Remove(1): D1[Int, Int], s"""["$pref1.Remove",{"key":1}]""")
-//        rw(D1.Clear(), s"""["$pref1.Clear",{}]""")
-//        rw(D1.Clear(): D1[Int, Int], s"""["$pref1.Clear",{}]""")
-//      }
-//      * - {
-//        val pref2 = "upickle.GenericADTs.DeltaInvariant"
-//        val D2 = DeltaInvariant
-//        type D2[A, B] = DeltaInvariant[A, B]
-//        implicit def D2rw[A: R: W, B: R: W]: RW[D2[A, B]] = upickle.legacy.macroRW
-//        implicit def Insertrw[A: R: W, B: R: W]: RW[D2.Insert[A, B]] = upickle.legacy.macroRW
-//        implicit def Removerw[A: R: W, B]: RW[D2.Remove[A, B]] = upickle.legacy.macroRW
-//        implicit def Clearrw[A, B]: RW[D2.Clear[A, B]] = upickle.legacy.macroRW
-//        rw(D2.Insert(1, 1), s"""["$pref2.Insert",{"key":1,"value":1}]""")
-//        rw(D2.Insert(1, 1): D2[Int, Int], s"""["$pref2.Insert",{"key":1,"value":1}]""")
-//        rw(D2.Remove(1), s"""["$pref2.Remove",{"key":1}]""")
-//        rw(D2.Remove(1): D2[Int, Int], s"""["$pref2.Remove",{"key":1}]""")
-//        rw(D2.Clear(), s"""["$pref2.Clear",{}]""")
-//        rw(D2.Clear(): D2[Int, Int], s"""["$pref2.Clear",{}]""")
-//      }
-//    }
+    'ADT{
+      import GenericADTs._
+      * - {
+        val pref1 = "upickle.GenericADTs.Delta"
+        val D1 = Delta
+        implicit def D1rw[A: R: W, B: R: W]: RW[D1[A, B]] = upickle.legacy.macroRW
+        implicit def Insertrw[A: R: W, B: R: W]: RW[D1.Insert[A, B]] = upickle.legacy.macroRW
+        implicit def Removerw[A: R: W]: RW[D1.Remove[A]] = upickle.legacy.macroRW
+        implicit def Clearrw: RW[D1.Clear] = upickle.legacy.macroRW
+        type D1[+A, +B] = Delta[A, B]
+        rw(D1.Insert(1, 1), s"""["$pref1.Insert",{"key":1,"value":1}]""")
+        rw(D1.Insert(1, 1): D1[Int, Int], s"""["$pref1.Insert",{"key":1,"value":1}]""")
+        rw(D1.Remove(1), s"""["$pref1.Remove",{"key":1}]""")
+        rw(D1.Remove(1): D1[Int, Int], s"""["$pref1.Remove",{"key":1}]""")
+        rw(D1.Clear(), s"""["$pref1.Clear",{}]""")
+        rw(D1.Clear(): D1[Int, Int], s"""["$pref1.Clear",{}]""")
+      }
+      * - {
+        val pref2 = "upickle.GenericADTs.DeltaInvariant"
+        val D2 = DeltaInvariant
+        type D2[A, B] = DeltaInvariant[A, B]
+        implicit def D2rw[A: R: W, B: R: W]: RW[D2[A, B]] = upickle.legacy.macroRW
+        implicit def Insertrw[A: R: W, B: R: W]: RW[D2.Insert[A, B]] = upickle.legacy.macroRW
+        implicit def Removerw[A: R: W, B]: RW[D2.Remove[A, B]] = upickle.legacy.macroRW
+        implicit def Clearrw[A, B]: RW[D2.Clear[A, B]] = upickle.legacy.macroRW
+        rw(D2.Insert(1, 1), s"""["$pref2.Insert",{"key":1,"value":1}]""")
+        rw(D2.Insert(1, 1): D2[Int, Int], s"""["$pref2.Insert",{"key":1,"value":1}]""")
+        rw(D2.Remove(1), s"""["$pref2.Remove",{"key":1}]""")
+        rw(D2.Remove(1): D2[Int, Int], s"""["$pref2.Remove",{"key":1}]""")
+        rw(D2.Clear(), s"""["$pref2.Clear",{}]""")
+        rw(D2.Clear(): D2[Int, Int], s"""["$pref2.Clear",{}]""")
+      }
+    }
 //    'recursiveDataTypes{
 //      import Recursive._
 //
