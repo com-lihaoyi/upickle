@@ -13,45 +13,45 @@ object LegacyTests extends TestSuite {
       // finite number of cases, so we can just check them all and decide which
       // class the instance belongs to.
       import Hierarchy._
-      implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(Crw, Brw)
       implicit def Brw: RW[B] = upickle.legacy.macroRW
       implicit def Crw: RW[C] = upickle.legacy.macroRW
+      implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(Crw, Brw)
       'shallow {
-//        * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
-//        * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
-        //Doesn't work in 2.10.4
-        //          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
-        //          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
+        * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
+        * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+
+//        * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
+//        * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
 
         * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i":1}]""")
-//        * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+        * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
       }
 
-//      'deep{
-//        import DeepHierarchy._
-//        implicit def Arw: RW[A] = upickle.legacy.macroRW
-//        implicit def Brw: RW[B] = upickle.legacy.macroRW
-//        implicit def Crw: RW[C] = upickle.legacy.macroRW
-//        implicit def AnQrw: RW[AnQ] = upickle.legacy.macroRW
-//        implicit def Qrw: RW[Q] = upickle.legacy.macroRW
-//        implicit def Drw: RW[D] = upickle.legacy.macroRW
-//        implicit def Erw: RW[E] = upickle.legacy.macroRW
-//        implicit def Frw: RW[F] = upickle.legacy.macroRW
-//        * - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
-//        * - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
-//        * - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
-//        * - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
-//
-//        * - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
-//        * - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
-//        * - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
-//        * - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-//        * - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-//        * - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-//        * - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
-//        * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
-//        * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
-//      }
+      'deep{
+        import DeepHierarchy._
+        implicit def Arw: RW[A] = upickle.legacy.macroRW
+        implicit def Brw: RW[B] = upickle.legacy.macroRW
+        implicit def Crw: RW[C] = upickle.legacy.macroRW
+        implicit def AnQrw: RW[AnQ] = upickle.legacy.macroRW
+        implicit def Qrw: RW[Q] = upickle.legacy.macroRW
+        implicit def Drw: RW[D] = upickle.legacy.macroRW
+        implicit def Erw: RW[E] = upickle.legacy.macroRW
+        implicit def Frw: RW[F] = upickle.legacy.macroRW
+        * - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
+        * - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
+        * - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+        * - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+
+        * - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
+        * - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
+        * - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
+        * - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+        * - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+        * - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+        * - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
+        * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
+        * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
+      }
     }
 //    'singleton {
 //      import Singletons._

@@ -222,7 +222,9 @@ object Macros {
       */
     def annotate(tpe: c.Type)(derived: c.universe.Tree) = {
       val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
+      println("Annotate " + tpe)
       sealedParent.fold(derived) { parent =>
+        println("Annotate!")
         val index = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
         q"${c.prefix}.annotate($derived, $index)"
       }

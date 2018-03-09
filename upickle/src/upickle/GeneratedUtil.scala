@@ -114,7 +114,11 @@ private[upickle] trait GeneratedUtil extends Types{
   }
 
 
-  def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader.merge(rw)
+  def annotate[V: ClassTag](rw: Reader[V], n: String) = new TaggedReader[V] {
+    def tags = Seq(n)
+
+    def readers = Seq(rw)
+  }
 
   def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
     def tags = Seq(n)

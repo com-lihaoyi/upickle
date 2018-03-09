@@ -63,15 +63,15 @@ trait Types{ types =>
         Reader.merge[T](
           rws.map(x =>
             new Reader.Mergable[T, T](
-              x.w.asInstanceOf[TaggedReadWriter[T]])(x.ct.asInstanceOf[ClassTag[T]]
-            )
+              x.w.asInstanceOf[TaggedReadWriter[T]]
+            )(x.ct.asInstanceOf[ClassTag[T]])
           ):_*
         ),
         Writer.merge[T](
           rws.map(x =>
             new Writer.Mergable[T, T](
-              x.w.asInstanceOf[TaggedReadWriter[T]])(x.ct.asInstanceOf[ClassTag[T]]
-            )
+              x.w.asInstanceOf[TaggedReadWriter[T]]
+            )(x.ct.asInstanceOf[ClassTag[T]])
           ):_*
         )
       )

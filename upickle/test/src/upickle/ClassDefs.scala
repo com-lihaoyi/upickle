@@ -68,49 +68,49 @@ object Hierarchy {
 //  sealed trait Z //new line
 //  case object AnZ extends Z //new line
 }
-//object DeepHierarchy {
-//  sealed abstract class A
-//  object A{
-//    implicit def rw: RW[A] = RW.merge(B.rw, C.rw)
-//  }
-//  case class B(i: Int) extends A
-//
-//  object B{
-//    implicit def rw: RW[B] = default.macroRW
-//  }
-//
-//  sealed trait C extends A
-//
-//  object C{
-//    implicit def rw: RW[C] = RW.merge(D.rw, E.rw, F.rw)
-//  }
-//  case class D(s: String) extends C
-//
-//  object D{
-//    implicit def rw: RW[D] = default.macroRW
-//  }
-//  case class E(b: Boolean) extends C
-//
-//  object E{
-//    implicit def rw: RW[E] = default.macroRW
-//  }
-//
-//  sealed trait Q //new line
-//
-//  object Q{
-//    implicit def rw: RW[Q] = RW.merge(AnQ.rw)
-//  }
-//  case class AnQ(i: Int) extends Q //new line
-//
-//  object AnQ{
-//    implicit def rw: RW[AnQ] = default.macroRW
-//  }
-//  case class F(q: Q) extends C //new line
-//
-//  object F{
-//    implicit def rw: RW[F] = default.macroRW
-//  }
-//}
+object DeepHierarchy {
+  sealed abstract class A
+  object A{
+    implicit def rw: RW[A] = RW.merge(B.rw, C.rw)
+  }
+  case class B(i: Int) extends A
+
+  object B{
+    implicit def rw: RW[B] = default.macroRW
+  }
+
+  sealed trait C extends A
+
+  object C{
+    implicit def rw: RW[C] = RW.merge(D.rw, E.rw, F.rw)
+  }
+  case class D(s: String) extends C
+
+  object D{
+    implicit def rw: RW[D] = default.macroRW
+  }
+  case class E(b: Boolean) extends C
+
+  object E{
+    implicit def rw: RW[E] = default.macroRW
+  }
+
+  sealed trait Q //new line
+
+  object Q{
+    implicit def rw: RW[Q] = RW.merge(AnQ.rw)
+  }
+  case class AnQ(i: Int) extends Q //new line
+
+  object AnQ{
+    implicit def rw: RW[AnQ] = default.macroRW
+  }
+  case class F(q: Q) extends C //new line
+
+  object F{
+    implicit def rw: RW[F] = default.macroRW
+  }
+}
 //
 //object Singletons{
 //  sealed trait AA
