@@ -95,15 +95,32 @@ object LegacyTests extends TestSuite {
         rw(D2.Clear(): D2[Int, Int], s"""["$pref2.Clear",{}]""")
       }
     }
-//    'recursiveDataTypes{
-//      import Recursive._
-//
+    'recursiveDataTypes{
+      import Recursive._
+
 //      implicit def IntTreerw: RW[IntTree] = upickle.legacy.macroRW
 //      implicit def SingleNoderw: RW[SingleNode] = upickle.legacy.macroRW[SingleNode]
 //      implicit def SingleTreerw: RW[SingleTree] = upickle.legacy.macroRW[SingleTree]
-//
-//      implicit def Noderw: RW[Node] = upickle.legacy.macroRW
-//      implicit def LLrw: RW[LL] = upickle.legacy.macroRW
+
+      implicit def Noderw: RW[Node] = upickle.legacy.ReadWriter.join(
+        new upickle.legacy.CaseR[(Int, LL), Node](
+          Node.apply _ tupled,
+          Array("c", "next"),
+          Array(null, null),
+          Seq("upickle.Recursive.Node")
+        ),
+        new upickle.legacy.CaseW[(Int, LL), Node](
+          Node.unapply(_),
+          Array("c", "next"),
+          Array(null, null),
+          Seq("upickle.Recursive.Node")
+        )
+      )
+      implicit def LLrw: RW[LL] = upickle.legacy.ReadWriter.merge[LL](
+        new upickle.legacy.ReadWriter.Mergable[LL, Node](Noderw),
+        new upickle.legacy.ReadWriter.Mergable[LL, End.type](implicitly)
+
+      )
 //      rw(
 //        IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
 //        """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
@@ -116,11 +133,11 @@ object LegacyTests extends TestSuite {
 //        SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))): SingleTree,
 //        """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
 //      )
-//      rw(End: LL, """["upickle.Recursive.End",{}]""")
-//      rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
-//      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
-//
-//    }
+      rw(End: LL, """["upickle.Recursive.End",{}]""")
+      rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
+      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
+
+    }
   }
 
 
