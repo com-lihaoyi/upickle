@@ -113,6 +113,22 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
+  class SingletonR[T](t: T) extends Reader[T]{
+    override def objectContext(index: Int) = new RawFContext[Any, T] {
+      def facade = SingletonR.this.asInstanceOf[RawFacade[Any]]
+
+      def visitKey(s: CharSequence, index: Int): Unit = ???
+
+      def add(v: Any, index: Int): Unit = ???
+
+      def finish(index: Int) = t
+
+      def isObj = true
+    }
+  }
+  class SingletonW[T](f: T) extends Writer[T] {
+    def write(out: Facade[Unit], v: T): Unit = out.objectContext().finish(-1)
+  }
 
   def annotate[V: ClassTag](rw: Reader[V], n: String) = new TaggedReader[V] {
     def tags = Seq(n)

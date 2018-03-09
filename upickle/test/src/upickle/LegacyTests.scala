@@ -53,14 +53,16 @@ object LegacyTests extends TestSuite {
         * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
       }
     }
-//    'singleton {
-//      import Singletons._
-//      implicit def AArw: RW[AA] = upickle.legacy.macroRW
-//      rw(BB, """["upickle.Singletons.BB",{}]""")
-//      rw(CC, """["upickle.Singletons.CC",{}]""")
-//      rw(BB: AA, """["upickle.Singletons.BB",{}]""")
-//      rw(CC: AA, """["upickle.Singletons.CC",{}]""")
-//    }
+    'singleton {
+      import Singletons._
+      implicit def BBrw: RW[BB.type] = legacy.macroRW[BB.type]
+      implicit def CCrw: RW[CC.type] = legacy.macroRW[CC.type]
+      implicit def AArw: RW[AA] = RW.merge(BBrw, CCrw)
+      rw(BB, """["upickle.Singletons.BB",{}]""")
+      rw(CC, """["upickle.Singletons.CC",{}]""")
+      rw(BB: AA, """["upickle.Singletons.BB",{}]""")
+      rw(CC: AA, """["upickle.Singletons.CC",{}]""")
+    }
 //    'ADT{
 //      import GenericADTs._
 //      * - {

@@ -111,21 +111,21 @@ object DeepHierarchy {
     implicit def rw: RW[F] = default.macroRW
   }
 }
-//
-//object Singletons{
-//  sealed trait AA
-//
-//  object AA{
-//    implicit def rw: RW[AA] = RW.merge(
-//      default.macroRW[BB.type],
-//      default.macroRW[CC.type]
-//    )
-//  }
-//  case object BB extends AA
-//  case object CC extends AA
-//
-//  case object Standalone
-//}
+
+object Singletons{
+  sealed trait AA
+
+  object AA{
+    implicit def rw: RW[AA] = RW.merge(
+      default.macroRW[BB.type],
+      default.macroRW[CC.type]
+    )
+  }
+  case object BB extends AA
+  case object CC extends AA
+
+  case object Standalone
+}
 //object Generic{
 //  case class A[T](t: T)
 //

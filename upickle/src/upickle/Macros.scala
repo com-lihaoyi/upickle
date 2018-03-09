@@ -222,9 +222,7 @@ object Macros {
       */
     def annotate(tpe: c.Type)(derived: c.universe.Tree) = {
       val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
-      println("Annotate " + tpe)
       sealedParent.fold(derived) { parent =>
-        println("Annotate!")
         val index = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
         q"${c.prefix}.annotate($derived, $index)"
       }
@@ -255,7 +253,7 @@ object Macros {
   abstract class Reading[M[_]] extends DeriveDefaults[M] {
     val c: scala.reflect.macros.blackbox.Context
     import c.universe._
-    def wrapObject(t: c.Tree) = q"${c.prefix}.SingletonR($t)"
+    def wrapObject(t: c.Tree) = q"new ${c.prefix}.SingletonR($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
       q"new ${c.prefix}.Case0R(() => $t(): $targetType, Seq(${targetType.typeSymbol.fullName}))"
     def wrapCase1(companion: c.Tree,
@@ -301,7 +299,7 @@ object Macros {
   abstract class Writing[M[_]] extends DeriveDefaults[M] {
     val c: scala.reflect.macros.blackbox.Context
     import c.universe._
-    def wrapObject(obj: c.Tree) = q"${c.prefix}.SingletonW($obj)"
+    def wrapObject(obj: c.Tree) = q"new ${c.prefix}.SingletonW($obj)"
     def wrapCase0(companion: c.Tree, targetType: c.Type) =
       q"new ${c.prefix}.Case0W($companion.unapply, Seq(${targetType.typeSymbol.fullName}))"
     def findUnapply(tpe: Type) = {
