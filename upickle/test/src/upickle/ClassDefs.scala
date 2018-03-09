@@ -54,15 +54,15 @@ object ADTs {
 object Hierarchy {
   sealed trait A
   object A{
-    implicit def rw: upickle.default.TaggedReadWriter[A] = RW.merge(B.rw, C.rw)
+//    implicit def rw: upickle.default.TaggedReadWriter[A] = RW.merge(B.rw, C.rw)
   }
   case class B(i: Int) extends A
   object B{
-    implicit def rw: upickle.default.TaggedReadWriter[B] = default.macroRW
+//    implicit def rw: upickle.default.TaggedReadWriter[B] = default.macroRW
   }
   case class C(s1: String, s2: String) extends A
   object C{
-    implicit def rw: upickle.default.TaggedReadWriter[C] = default.macroRW
+//    implicit def rw: upickle.default.TaggedReadWriter[C] = default.macroRW
   }
 
 //  sealed trait Z //new line

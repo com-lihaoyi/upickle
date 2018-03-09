@@ -292,8 +292,7 @@ object Macros {
       """
     }
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
-
-      q"${c.prefix}.mergeR[$targetType](..$subtrees)"
+      q"${c.prefix}.Reader.merge[$targetType](..${subtrees.map(x => q"new ${c.prefix}.Reader.Mergable($x)")})"
     }
 
   }
@@ -350,7 +349,7 @@ object Macros {
       """
     }
     def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
-      q"${c.prefix}.mergeW[$targetType](..$subtree)"
+      q"${c.prefix}.Writer.merge[$targetType](..$subtree)"
     }
   }
   def macroRImpl[T, R[_]](c0: scala.reflect.macros.blackbox.Context)
@@ -371,27 +370,6 @@ object Macros {
       def typeclass = e2
     }.derive(e1.tpe)
     c0.Expr[W[T]](res)
-  }
-
-  def macroRWImpl[T, RM[_], WM[_]](c0: scala.reflect.macros.blackbox.Context)
-                                  (implicit e1: c0.WeakTypeTag[T],
-                                   e2: c0.WeakTypeTag[RM[_]],
-                                   e3: c0.WeakTypeTag[WM[_]] ): c0.Expr[RM[T] with WM[T]] = {
-    import c0.universe._
-    val rRes = new Reading[RM]{
-      val c: c0.type = c0
-      def typeclass = e2
-    }.derive(e1.tpe)
-
-    val wRes = new Writing[WM]{
-      val c: c0.type = c0
-      def typeclass = e3
-    }.derive(e1.tpe)
-
-    val msg = "Tagged Object " + weakTypeOf[T].typeSymbol.fullName
-
-    val res = c0.Expr[RM[T] with WM[T]](q"""${c0.prefix}.Internal.validateReaderWithWriter($msg)($rRes,$wRes)""")
-    res
   }
 }
 

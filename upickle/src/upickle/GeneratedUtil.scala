@@ -50,7 +50,7 @@ private[upickle] trait GeneratedUtil extends Types{
                     names: Array[String],
                     defaults: Array[Any],
                     val tags: Seq[String])
-                   (implicit r: TupleNReader[T]) extends TaggedReader[V]{
+                   (implicit r: TupleNReader[T]) extends Reader[V]{
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       val b = new Array[Any](names.length)
       var facades = r.readers
@@ -76,7 +76,7 @@ private[upickle] trait GeneratedUtil extends Types{
       def isObj = true
     }
   }
-  class Case0R[V](f: () => V, val tags: Seq[String]) extends TaggedReader[V]{ outer =>
+  class Case0R[V](f: () => V, val tags: Seq[String]) extends Reader[V]{ outer =>
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       def facade = outer.asInstanceOf[jawn.RawFacade[Any]]
 
@@ -94,7 +94,7 @@ private[upickle] trait GeneratedUtil extends Types{
                     val names: Array[String],
                     val defaults: Array[Any],
                     val tags: Seq[String])
-                   (implicit val w: TupleNWriter[T]) extends TaggedWriter[V]{
+                   (implicit val w: TupleNWriter[T]) extends Writer[V]{
     def write(out: Facade[Unit], v: V): Unit = {
       val writers = w.writers.asInstanceOf[Seq[Writer[Any]]]
       val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
@@ -107,60 +107,24 @@ private[upickle] trait GeneratedUtil extends Types{
       ctx.finish(-1)
     }
   }
-  class Case0W[T](f: T => Boolean, val tags: Seq[String]) extends TaggedWriter[T] {
+  class Case0W[T](f: T => Boolean, val tags: Seq[String]) extends Writer[T] {
     def write(out: jawn.Facade[Unit], v: T) = {
       out.objectContext(-1).finish(-1)
     }
   }
 
 
-  def annotate[V: ClassTag](rw: TaggedReader[V], n: String) = new TaggedReader[V]{outer =>
-    def tags = Seq(n)
-    override def jnull(index: Int) = rw.jnull(index)
+  def annotate[V: ClassTag](rw: Reader[V], n: String) = Reader.merge(rw)
 
-    override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[V]
-    override def objectContext(index: Int) = new RawFContext[Any, V] {
-      val outerCtx = rw.objectContext(index)
-
-      var nextKeyType = false
-
-      def facade = {
-        (if (nextKeyType) outer else outerCtx.facade).asInstanceOf[RawFacade[Any]]
-      }
-      def visitKey(s: CharSequence, index: Int) = {
-        if (s.toString == "$type")nextKeyType = true
-        else outerCtx.visitKey(s, index)
-      }
-
-      def add(v: Any, index: Int) = {
-        if (nextKeyType) nextKeyType = false
-        else outerCtx.add(v, index)
-      }
-
-      def finish(index: Int) = {
-        outerCtx.finish(index)
-      }
-
-      def isObj = true
-    }
-  }
-
-  def annotate[V: ClassTag](rw: CaseW[_, V], n: String) = new TaggedWriter[V]{
+  def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
     def tags = Seq(n)
 
     def write(out: Facade[Unit], v: V) = {
-      val writers = rw.w.writers.asInstanceOf[Seq[Writer[Any]]]
-      val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
-      ctx.visitKey("$type", -1)
+      val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, _]]
+      ctx.add((), -1)
       out.jstring(n, -1)
       ctx.add((), -1)
-      val get = rw.f(v).get
-      val items = rw.w.f.asInstanceOf[Any => Seq[Any]].apply(get)
-      for(i <- rw.names.indices){
-        ctx.add((), -1)
-        ctx.visitKey(rw.names(i), -1)
-        writers(i).write(out, items(i))
-      }
+      rw.write(out, v)
       ctx.finish(-1)
     }
   }

@@ -1,31 +1,32 @@
-//package upickle
-//import utest._
-//
-//import LegacyTestUtil.rw
-//import upickle.legacy.{Reader => R, Writer => W, ReadWriter => RW}
-//object LegacyTests extends TestSuite {
-//
-//  val tests = Tests {
-//    'sealedHierarchy {
-//      // objects in sealed case class hierarchies should always read and write
-//      // the same way (with a tag) regardless of what their static type is when
-//      // written. This is feasible because sealed hierarchies can only have a
-//      // finite number of cases, so we can just check them all and decide which
-//      // class the instance belongs to.
-//      import Hierarchy._
-//      implicit def Arw: RW[A] = upickle.legacy.macroRW
-//      implicit def Brw: RW[B] = upickle.legacy.macroRW
-//      implicit def Crw: RW[C] = upickle.legacy.macroRW
-//      'shallow {
+package upickle
+import utest._
+
+import LegacyTestUtil.rw
+import upickle.legacy.{Reader => R, Writer => W, ReadWriter => RW}
+object LegacyTests extends TestSuite {
+
+  val tests = Tests {
+    'sealedHierarchy {
+      // objects in sealed case class hierarchies should always read and write
+      // the same way (with a tag) regardless of what their static type is when
+      // written. This is feasible because sealed hierarchies can only have a
+      // finite number of cases, so we can just check them all and decide which
+      // class the instance belongs to.
+      import Hierarchy._
+      implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(Crw, Brw)
+      implicit def Brw: RW[B] = upickle.legacy.macroRW
+      implicit def Crw: RW[C] = upickle.legacy.macroRW
+      'shallow {
 //        * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
 //        * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
-//        //Doesn't work in 2.10.4
-//        //          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
-//        //          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
-//
-//        * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B",{"i":1}]""")
+        //Doesn't work in 2.10.4
+        //          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
+        //          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
+
+        * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i":1}]""")
 //        * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
-//      }
+      }
+
 //      'deep{
 //        import DeepHierarchy._
 //        implicit def Arw: RW[A] = upickle.legacy.macroRW
@@ -51,7 +52,7 @@
 //        * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
 //        * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
 //      }
-//    }
+    }
 //    'singleton {
 //      import Singletons._
 //      implicit def AArw: RW[AA] = upickle.legacy.macroRW
@@ -119,7 +120,7 @@
 //      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
 //
 //    }
-//  }
-//
-//
-//}
+  }
+
+
+}

@@ -20,15 +20,46 @@ trait Types{ types =>
   type TaggedReadWriter[T] = TaggedReader[T] with TaggedWriter[T]
   trait TaggedReader[T] extends Reader[T]{
     def tags: Seq[String]
+    def readers: Seq[Reader[T]]
+
+    override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[T]
+    override def arrayContext(index: Int) = new RawFContext[Any, T] {
+      var typeName: String = null
+      var delegate: Reader[_] = null
+      var delegateCtx: RawFContext[_, T] = null
+
+      var res: T = _
+      def visitKey(s: CharSequence, index: Int): Unit = ???
+      def facade =
+        if (typeName == null) TaggedReader.this.asInstanceOf[RawFacade[Any]]
+        else delegate.asInstanceOf[RawFacade[Any]]
+
+      def add(v: Any, index: Int): Unit = {
+        if (typeName == null){
+          typeName = v.toString
+          delegate = readers(tags.indexOf(typeName))
+        }else{
+          res = v.asInstanceOf[T]
+        }
+      }
+
+      def finish(index: Int) = {
+        res
+      }
+
+      def isObj = false
+    }
   }
   trait TaggedWriter[T] extends Writer[T]{
     def tags: Seq[String]
   }
   object ReadWriter{
-    implicit class Mergable[T, K <: T](val w: TaggedReadWriter[K])
-                                      (implicit val ct: ClassTag[K])
+    implicit class Mergable[T, K <: T](val w0: ReadWriter[K])
+                                      (implicit val ct: ClassTag[K]){
+      def w = w0.asInstanceOf[TaggedReadWriter[K]]
+    }
     def merge[T](rws: Mergable[T, _]*): TaggedReadWriter[T] = {
-      mergeRW(
+      joinTagged(
         Reader.merge[T](
           rws.map(x =>
             new Reader.Mergable[T, T](
@@ -45,8 +76,28 @@ trait Types{ types =>
         )
       )
     }
-    def mergeRW[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = new TaggedReader[T] with TaggedWriter[T] {
+
+    def join[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] {
+      override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
+      override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
+      override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)
+
+      override def jstring(s: CharSequence, index: Int) = implicitly[Reader[T]].jstring(s, index)
+      override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+        implicitly[Reader[T]].jnum(s, decIndex, expIndex, index)
+      }
+
+      override def objectContext(index: Int) = implicitly[Reader[T]].objectContext(index)
+      override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
+      override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
+
+      def write(out: Facade[Unit], v: T): Unit = {
+        implicitly[Writer[T]].write(out, v)
+      }
+    }
+    def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = new TaggedReader[T] with TaggedWriter[T] {
       def tags = implicitly[TaggedReader[T]].tags
+      def readers = implicitly[TaggedReader[T]].readers
       override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
       override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
       override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)
@@ -65,103 +116,13 @@ trait Types{ types =>
       }
     }
   }
-  class CachingFContext(isObj0: Boolean, out: jawn.RawFacade[Unit] => jawn.RawFContext[_, Unit])
-    extends jawn.RawFContext[Unit, Unit] with (jawn.RawFacade[Unit] => Unit) {
-
-    val output = mutable.Buffer.empty[jawn.RawFContext[Any, Unit] => Unit]
-    val facade = new CachingFacade
-
-    def visitKey(s: CharSequence, index: Int): Unit = output.append(_.visitKey(s, index))
-
-    def add(v: Unit, index: Int): Unit = output.append(_.add(v, index))
-
-    def finish(index: Int): Unit = output.append(_.finish(index))
-
-    def isObj = isObj0
-
-    def apply(v1: RawFacade[Unit]) = {
-      val ctx = out(v1)
-      output.foreach(_(ctx.asInstanceOf[jawn.RawFContext[Any, Unit]]))
-    }
-  }
-  class CachingFacade extends jawn.RawFacade[Unit] {
-    val output = mutable.Buffer.empty[jawn.RawFacade[Unit] => Unit]
-    override def singleContext(index: Int) = {
-      val cc = new CachingFContext(false, _.singleContext(index))
-      output.append(cc)
-      cc
-    }
-
-    override def arrayContext(index: Int) = {
-      val cc = new CachingFContext(false, _.arrayContext(index))
-      output.append(cc)
-      cc
-    }
-
-    override def objectContext(index: Int) = {
-      val cc = new CachingFContext(true, _.objectContext(index))
-      output.append(cc)
-      cc
-    }
-
-    override def jnull(index: Int) = output.append(_.jnull(index))
-
-    override def jfalse(index: Int) = output.append(_.jfalse(index))
-
-    override def jtrue(index: Int) = output.append(_.jtrue(index))
-
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      output.append(_.jnum(s, decIndex, expIndex, index))
-    }
-
-    override def jstring(s: CharSequence, index: Int) = output.append(_.jstring(s, index))
-  }
   object Reader{
-    implicit class Mergable[T, K <: T](val r: TaggedReader[K])(implicit val ct: ClassTag[K])
-    def merge[T](readers: Mergable[T, _]*) = new TaggedReader[T]{ outer =>
-      def tags = readers.flatMap(_.r.tags)
-      override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[T]
-      override def objectContext(index: Int) = new RawFContext[Any, T] {
-
-        var nextValueType = false
-        var typeName: String = null
-        var delegate: Reader[Any] = null
-        var delegateCtx: RawFContext[_, Unit] = null
-        val cache = new CachingFacade
-        val cacheCtx = cache.objectContext(index)
-        def facade = (nextValueType, delegateCtx) match{
-          case (true, _) => outer.asInstanceOf[Reader[Any]]
-          case (false, null) => cacheCtx.facade.asInstanceOf[RawFacade[Any]]
-          case (false, t) => t.facade.asInstanceOf[Reader[Any]]
-        }
-
-        def visitKey(s: CharSequence, index: Int): Unit = {
-
-          if (s.toString == "$type") nextValueType = true
-          else if (delegateCtx == null) cacheCtx.visitKey(s, index)
-          else delegateCtx.visitKey(s, index)
-        }
-
-        def add(v: Any, index: Int): Unit = {
-          if (nextValueType) {
-            nextValueType = false
-            typeName = v.toString
-            delegate = readers.find(_.r.tags.contains(typeName)).get.r.asInstanceOf[Reader[Any]]
-            delegateCtx = delegate.objectContext(index).asInstanceOf[RawFContext[_, Unit]]
-            cacheCtx.output.foreach(_(delegateCtx.asInstanceOf[RawFContext[Any, Unit]]))
-          } else {
-            if (delegateCtx == null) cacheCtx.add(v, index)
-            else delegateCtx.asInstanceOf[RawFContext[Any, Unit]].add(v, index)
-          }
-
-        }
-
-        def finish(index: Int) = {
-          delegateCtx.finish(index).asInstanceOf[T]
-        }
-
-        def isObj = true
-      }
+    implicit class Mergable[T, K <: T](val r0: Reader[K])(implicit val ct: ClassTag[K]){
+      def r = r0.asInstanceOf[TaggedReader[K]]
+    }
+    def merge[T](readers0: Mergable[T, _]*) = new TaggedReader[T]{ outer =>
+      val tags: Seq[String] = readers0.flatMap(_.r.tags)
+      val readers: Seq[Reader[T]] = readers0.flatMap(_.r.readers.asInstanceOf[Seq[Reader[T]]])
     }
   }
   type Reader[T] = BaseReader[Any, T]
@@ -249,7 +210,9 @@ trait Types{ types =>
       def write(out: jawn.Facade[Unit], v: U) =
         src.write(out, if(v == null) null.asInstanceOf[T] else f(v))
     }
-    implicit class Mergable[T, K <: T](val w: TaggedWriter[K])(implicit val ct: ClassTag[K])
+    implicit class Mergable[T, K <: T](val w0: Writer[K])(implicit val ct: ClassTag[K]){
+      def w = w0.asInstanceOf[TaggedWriter[T]]
+    }
     def merge[T](writers: Mergable[T, _]*) = new TaggedWriter[T] {
       def tags = writers.flatMap(_.w.tags)
       def write(out: Facade[Unit], v: T): Unit = {

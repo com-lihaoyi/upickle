@@ -146,19 +146,19 @@ object MacroTests extends TestSuite {
         // written. This is feasible because sealed hierarchies can only have a
         // finite number of cases, so we can just check them all and decide which
         // class the instance belongs to.
-        import Hierarchy._
-        'shallow {
-          * - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
-          * - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
-          * - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
+//        import Hierarchy._
+//        'shallow {
+//          * - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
+//          * - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
+//          * - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
 //Doesn't work in 2.10.4
 //          * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
 //          * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
-
-          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
-          * - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
-          * - rw(C("a", "b"): A, """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
-        }
+//
+//          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
+//          * - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
+//          * - rw(C("a", "b"): A, """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
+//        }
 //        'deep{
 //          import DeepHierarchy._
 //
