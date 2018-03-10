@@ -1,11 +1,52 @@
 package upickle
 import utest._
-
 import LegacyTestUtil.rw
-import upickle.legacy.{Reader => R, Writer => W, ReadWriter => RW}
+import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
 object LegacyTests extends TestSuite {
 
   val tests = Tests {
+    'simpleAdt {
+      implicit def ADT0rw: RW[ADTs.ADT0] = upickle.legacy.macroRW
+      implicit def ADTarw: RW[ADTs.ADTa] = upickle.legacy.macroRW
+      implicit def ADTbrw: RW[ADTs.ADTb] = upickle.legacy.macroRW
+      implicit def ADTcrw: RW[ADTs.ADTc] = upickle.legacy.macroRW
+      implicit def ADTdrw: RW[ADTs.ADTd] = upickle.legacy.macroRW
+      implicit def ADTerw: RW[ADTs.ADTe] = upickle.legacy.macroRW
+      implicit def ADTfrw: RW[ADTs.ADTf] = upickle.legacy.macroRW
+      implicit def ADTzrw: RW[ADTs.ADTz] = upickle.legacy.macroRW
+
+      * - rw(ADTs.ADT0(), """{}""")
+      * - rw(ADTs.ADTa(1), """{"i":1}""")
+      * - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
+
+      * - rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
+      * - rw(
+        ADTs.ADTd(1, "lol", (1.1, 1.2), ADTs.ADTa(1)),
+        """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1}}"""
+      )
+
+      * - rw(
+        ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
+        """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14]}"""
+      )
+
+      * - rw(
+        ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
+        """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
+      )
+      val chunks = for (i <- 1 to 18) yield {
+        val rhs = if (i % 2 == 1) "1" else "\"1\""
+        val lhs = '"' + s"t$i" + '"'
+        s"$lhs:$rhs"
+      }
+
+      val expected = s"""{${chunks.mkString(",")}}"""
+      * - rw(
+        ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
+        expected
+      )
+    }
+
     'sealedHierarchy {
       // objects in sealed case class hierarchies should always read and write
       // the same way (with a tag) regardless of what their static type is when
@@ -64,7 +105,40 @@ object LegacyTests extends TestSuite {
       rw(BB: AA, """["upickle.Singletons.BB",{}]""")
       rw(CC: AA, """["upickle.Singletons.CC",{}]""")
     }
-    'ADT{
+    'robustnessAgainstVaryingSchemas {
+      'renameKeysViaAnnotations {
+        import Annotated._
+        implicit def Arw: RW[A] = upickle.legacy.macroRW
+        implicit def Brw: RW[B] = upickle.legacy.macroRW
+        implicit def Crw: RW[C] = upickle.legacy.macroRW
+        * - rw(B(1), """["0", {"omg":1}]""")
+        * - rw(C("a", "b"), """["1", {"lol":"a","wtf":"b"}]""")
+
+        * - rw(B(1): A, """["0", {"omg":1}]""")
+        * - rw(C("a", "b"): A, """["1", {"lol":"a","wtf":"b"}]""")
+      }
+//      'useDefaults {
+//        // Ignore the values which match the default when writing and
+//        // substitute in defaults when reading if the key is missing
+//        import Defaults._
+//        * - rw(ADTa(), "{}")
+//        * - rw(ADTa(321), """{"i":321}""")
+//        * - rw(ADTb(s = "123"), """{"s":"123"}""")
+//        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+//        * - rw(ADTc(s = "123"), """{"s":"123"}""")
+//        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+//        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
+//        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
+//      }
+//      'ignoreExtraFieldsWhenDeserializing {
+//        import ADTs._
+//        val r1 = read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
+//        assert(r1 == ADTa(123))
+//        val r2 = read[ADTb]( """{"i":123, "j":false, "k":"haha", "s":"kk", "l":true, "z":[1, 2, 3]}""")
+//        assert(r2 == ADTb(123, "kk"))
+//      }
+    }
+    'generics{
       import GenericADTs._
       * - {
         val pref1 = "upickle.GenericADTs.Delta"

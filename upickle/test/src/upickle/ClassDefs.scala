@@ -161,20 +161,20 @@ object Recursive{
     implicit def rw: RW[SingleNode] = default.macroRW
   }
 }
-//object Annotated {
-//  sealed trait A
-//  object A{
-//    implicit def rw: RW[A] = RW.merge(default.macroRW[B], default.macroRW[C])
-//  }
-//  @key("0") case class B(@key("omg") i: Int) extends A
-//  object B{
-//    implicit def rw: RW[B] = default.macroRW
-//  }
-//  @key("1") case class C(@key("lol") s1: String, @key("wtf") s2: String) extends A
-//  object C{
-//    implicit def rw: RW[C] = default.macroRW
-//  }
-//}
+object Annotated {
+  sealed trait A
+  object A{
+    implicit def rw: RW[A] = RW.merge(default.macroRW[B], default.macroRW[C])
+  }
+  @key("0") case class B(@key("omg") i: Int) extends A
+  object B{
+    implicit def rw: RW[B] = default.macroRW
+  }
+  @key("1") case class C(@key("lol") s1: String, @key("wtf") s2: String) extends A
+  object C{
+    implicit def rw: RW[C] = default.macroRW
+  }
+}
 //object Defaults {
 //  case class ADTa(i: Int = 0)
 //  object ADTa{

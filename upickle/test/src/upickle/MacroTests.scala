@@ -107,8 +107,7 @@ object MacroTests extends TestSuite {
     'commonCustomStructures{
       'simpleAdt {
 
-        * - rw(ADTs.ADT0(), """{
-        }""")
+        * - rw(ADTs.ADT0(), """{}""")
         * - rw(ADTs.ADTa(1), """{"i":1}""")
         * - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
 
