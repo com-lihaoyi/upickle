@@ -50,7 +50,8 @@ private[upickle] trait GeneratedUtil extends Types{
                     names: Array[String],
                     defaults: Array[Any],
                     val tags: Seq[String])
-                   (implicit r: TupleNReader[T]) extends Reader[V]{
+                   (r0: => TupleNReader[T]) extends Reader[V]{
+    lazy val r = r0
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       val b = new Array[Any](names.length)
       var facades = r.readers
@@ -94,7 +95,8 @@ private[upickle] trait GeneratedUtil extends Types{
                     val names: Array[String],
                     val defaults: Array[Any],
                     val tags: Seq[String])
-                   (implicit val w: TupleNWriter[T]) extends Writer[V]{
+                   (w0: => TupleNWriter[T]) extends Writer[V]{
+    lazy val w = w0
     def write(out: Facade[Unit], v: V): Unit = {
       val writers = w.writers.asInstanceOf[Seq[Writer[Any]]]
       val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]

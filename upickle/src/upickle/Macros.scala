@@ -359,6 +359,7 @@ object Macros {
       val c: c0.type = c0
       def typeclass = e2
     }.derive(e1.tpe)
+//    println(res)
     c0.Expr[R[T]](res)
   }
 
@@ -369,6 +370,7 @@ object Macros {
       val c: c0.type = c0
       def typeclass = e2
     }.derive(e1.tpe)
+//    println(res)
     c0.Expr[W[T]](res)
   }
 }

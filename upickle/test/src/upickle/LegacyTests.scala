@@ -16,12 +16,14 @@ object LegacyTests extends TestSuite {
       implicit def Brw: RW[B] = upickle.legacy.macroRW
       implicit def Crw: RW[C] = upickle.legacy.macroRW
       implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(Crw, Brw)
+
+      implicit def Zrw: RW[Z] = upickle.legacy.macroRW
       'shallow {
         * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
         * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
 
-//        * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
-//        * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
+        * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
+        * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
 
         * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i":1}]""")
         * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
@@ -97,7 +99,7 @@ object LegacyTests extends TestSuite {
     }
     'recursiveDataTypes{
       import Recursive._
-//      implicit def IntTreerw: RW[IntTree] = upickle.legacy.macroRW
+      implicit def IntTreerw: RW[IntTree] = upickle.legacy.macroRW
       implicit def SingleNoderw: RW[SingleNode] = upickle.legacy.macroRW
 
       implicit def SingleTreerw: RW[SingleTree] = upickle.legacy.macroRW
@@ -106,10 +108,10 @@ object LegacyTests extends TestSuite {
 
 
       implicit def LLrw: RW[LL] = upickle.legacy.macroRW
-//      rw(
-//        IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
-//        """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
-//      )
+      rw(
+        IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
+        """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
+      )
       rw(
         SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))),
         """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""

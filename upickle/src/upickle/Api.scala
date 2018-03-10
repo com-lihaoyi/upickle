@@ -107,8 +107,8 @@ trait LowPriY{ this: Api =>
   def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
   def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
   def macroRW[T]: Reader[T] with Writer[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
-  def macroRW0[T: Reader: Writer]: ReadWriter[T] = {
-    (implicitly[Reader[T]], implicitly[Writer[T]]) match{
+  def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = {
+    (r, w) match{
       case (x: TaggedReader[T], y: TaggedWriter[T]) => ReadWriter.joinTagged[T](x, y)
       case (x, y) => ReadWriter.join[T](x, y)
     }
