@@ -28,6 +28,8 @@ class TestUtil[Api <: upickle.Api](api: Api){
       assert(normalizedReadString == normalizedValue)
     }
 
-    assert(normalize(read[T](writtenT)) == normalize(t))
+    val normalizedReadWrittenT = normalize(read[T](writtenT))
+    val normalizedT = normalize(t)
+    assert(normalizedReadWrittenT == normalizedT)
   }
 }

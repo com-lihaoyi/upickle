@@ -463,3 +463,5 @@ object Ast{
     }
   }
 }
+
+case class CaseClassWithJson(json:Js.Value)

@@ -293,5 +293,11 @@ object LegacyTests extends TestSuite {
   //      rw(TypedFoo.Quz(true): TypedFoo, """{"$type": "upickle.TypedFoo.Quz", "b": true}""")
   //    }
     }
+    'jsonInCaseClass{
+
+      implicit def arw: RW[CaseClassWithJson] = upickle.legacy.macroRW
+      rw(new CaseClassWithJson(Js.Num(7)), """{"json":7}""")
+      rw(new CaseClassWithJson(Js.Arr(Js.Num(7), Js.Str("lol"))), """{"json":[7,"lol"]}""")
+    }
   }
 }

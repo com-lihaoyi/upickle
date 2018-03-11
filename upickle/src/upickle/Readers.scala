@@ -10,7 +10,7 @@ import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 
-trait Readers extends Types with Generated{
+trait Readers extends Types with Generated with LowPriImplicits{
   implicit object UnitReader extends Reader[Unit] {
     override def objectContext(index: Int) = new RawFContext[Any, Unit] {
       def facade = UnitReader.asInstanceOf[RawFacade[Any]]

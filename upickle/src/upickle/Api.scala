@@ -12,7 +12,7 @@ import language.higherKinds
  * its behavior. Override the `annotate` methods to control how a sealed
  * trait instance is tagged during reading and writing.
  */
-trait Api extends Types with Implicits with LowPriX{
+trait Api extends Types with Implicits {
   def read[T: Reader](s: String) = {
     jawn.Parser.parseUnsafe(s)(implicitly[Reader[T]])
   }
@@ -61,58 +61,4 @@ trait AttributeTagged extends Api{
 //  def annotate[V: ClassTag](rw: Writer[V], n: String) = Writer[V]{ case x: V =>
 //    Js.Obj((tagName, Js.Str(n)) +: rw.write(x).asInstanceOf[Js.Obj].value:_*)
 //  }
-}
-
-/**
- * Stupid hacks to work around scalac not forwarding macro type params properly
- */
-object Forwarder{
-  def dieIfNothing[T: c.WeakTypeTag]
-                  (c: scala.reflect.macros.blackbox.Context)
-                  (name: String) = {
-    if (c.weakTypeOf[T] =:= c.weakTypeOf[Nothing]) {
-      c.abort(
-        c.enclosingPosition,
-        s"uPickle is trying to infer a $name[Nothing]. That probably means you messed up"
-      )
-    }
-  }
-  def applyR[T](c: scala.reflect.macros.blackbox.Context)
-              (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
-    import c.universe._
-    dieIfNothing[T](c)("Reader")
-    c.Expr[T](q"${c.prefix}.macroR0[$e, ${c.prefix}.Reader]")
-  }
-  def applyW[T](c: scala.reflect.macros.blackbox.Context)
-              (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
-    import c.universe._
-    dieIfNothing[T](c)("Writer")
-    c.Expr[T](q"${c.prefix}.macroW0[$e, ${c.prefix}.Writer]")
-  }
-
-  def applyRW[T](c: scala.reflect.macros.blackbox.Context)
-              (implicit e: c.WeakTypeTag[T]): c.Expr[T] = {
-    import c.universe._
-    dieIfNothing[T](c)("Writer")
-    c.Expr[T](q"${c.prefix}.macroRW0(${c.prefix}.macroR, ${c.prefix}.macroW)")
-  }
-
-}
-trait LowPriX extends LowPriY {this: Api =>
-}
-trait LowPriY{ this: Api =>
-  implicit def macroSingletonR[T <: Singleton]: Reader[T] = macro Forwarder.applyR[T]
-  implicit def macroSingletonW[T <: Singleton]: Writer[T] = macro Forwarder.applyW[T]
-  implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro Forwarder.applyRW[T]
-  def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
-  def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
-  def macroRW[T]: Reader[T] with Writer[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
-  def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = {
-    (r, w) match{
-      case (x: TaggedReader[T], y: TaggedWriter[T]) => ReadWriter.joinTagged[T](x, y)
-      case (x, y) => ReadWriter.join[T](x, y)
-    }
-  }
-  def macroR0[T, M[_]]: Reader[T] = macro Macros.macroRImpl[T, M]
-  def macroW0[T, M[_]]: Writer[T] = macro Macros.macroWImpl[T, M]
 }

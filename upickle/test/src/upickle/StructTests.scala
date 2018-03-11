@@ -171,13 +171,10 @@ object StructTests extends TestSuite {
         'nonEmpty-rw(Js.Arr(Js.Num(5), Js.Num(6)), """[5,6]""")
         'empty-rw(Js.Arr(), """[]""")
       }
-//      'true-rw(Js.True, """true""")
-//      'false-rw(Js.False, """false""")
-//      'null-rw(Js.Null, """null""")
-//       'inCaseClass{
-//         case class A(json:Js.Value)
-//         rw(new A(Js.Num(7)), """{json:7}""")
-//       }
+      'true-rw(Js.True, """true""")
+      'false-rw(Js.False, """false""")
+      'null-rw(Js.Null, """null""")
     }
   }
 }
+

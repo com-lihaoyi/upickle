@@ -8,7 +8,7 @@ import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-trait Writers extends Types with Generated{
+trait Writers extends Types with Generated with LowPriImplicits{
   implicit object StringWriter extends Writer[String] {
     def write(out: jawn.Facade[Unit], v: String) = out.jstring(v)
   }
@@ -151,8 +151,8 @@ trait Writers extends Types with Generated{
           ctx.finish(-1)
         case v: Js.Str => out.jstring(v.value)
         case v: Js.Num => out.jnum(v.value.toString, -1, -1)
-        case v: Js.False.type => out.jtrue(-1)
-        case v: Js.True.type => out.jfalse(-1)
+        case v: Js.False.type => out.jfalse(-1)
+        case v: Js.True.type => out.jtrue(-1)
         case v: Js.Null.type => out.jnull(-1)
       }
     }
