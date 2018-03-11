@@ -17,9 +17,9 @@ trait Api extends Types with Implicits {
   def read[T: Reader](s: String) = {
     jawn.Parser.parseUnsafe(s)(implicitly[Reader[T]])
   }
-  def write[T: Writer](t: T) = {
+  def write[T: Writer](t: T, indent: Int = -1) = {
     val out = new java.io.StringWriter()
-    implicitly[Writer[T]].write(new Renderer(out), t)
+    implicitly[Writer[T]].write(new Renderer(out, indent = indent), t)
     out.toString
   }
 //  def annotate[V: ClassTag](rw: Reader[V], n: String): Reader[V]

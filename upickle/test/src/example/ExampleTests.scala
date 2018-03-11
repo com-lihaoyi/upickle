@@ -81,54 +81,54 @@ import Sealed._
 import Simple._
 import Recursive._
 import Defaults._
-//
-//object ExampleTests extends TestSuite {
-//
-//  import TestUtil._
-//  val tests = Tests {
-//    'simple{
-//      import upickle.default._
-//
-//      write(1)                          ==> "1"
-//
-//      write(Seq(1, 2, 3))               ==> "[1,2,3]"
-//
-//      read[Seq[Int]]("[1, 2, 3]")       ==> List(1, 2, 3)
-//
-//      write((1, "omg", true))           ==> """[1,"omg",true]"""
-//
-//      type Tup = (Int, String, Boolean)
-//
-//      read[Tup]("""[1, "omg", true]""") ==> (1, "omg", true)
-//    }
-//    'more{
-//      import upickle.default._
-//      'booleans{
-//        write(true: Boolean)              ==> "true"
-//        write(false: Boolean)             ==> "false"
-//      }
-//      'numbers{
-//        write(12: Int)                    ==> "12"
-//        write(12: Short)                  ==> "12"
-//        write(12: Byte)                   ==> "12"
-//        write(12.5f: Float)               ==> "12.5"
-//        write(12.5: Double)               ==> "12.5"
-//      }
-//      'longs{
-//        write(12: Long)                   ==> "\"12\""
-//        write(4000000000000L: Long)       ==> "\"4000000000000\""
-//      }
-//      'specialNumbers{
-//        write(1.0/0: Double)              ==> "\"Infinity\""
-//        write(Float.PositiveInfinity)     ==> "\"Infinity\""
-//        write(Float.NegativeInfinity)     ==> "\"-Infinity\""
-//      }
-//      'charStrings{
-//        write('o')                        ==> "\"o\""
-//        write("omg")                      ==> "\"omg\""
-//      }
+
+object ExampleTests extends TestSuite {
+
+  import TestUtil._
+  val tests = Tests {
+    'simple{
+      import upickle.default._
+
+      write(1)                          ==> "1"
+
+      write(Seq(1, 2, 3))               ==> "[1, 2, 3]"
+
+      read[Seq[Int]]("[1, 2, 3]")       ==> List(1, 2, 3)
+
+      write((1, "omg", true))           ==> """[1, "omg", true]"""
+
+      type Tup = (Int, String, Boolean)
+
+      read[Tup]("""[1, "omg", true]""") ==> (1, "omg", true)
+    }
+    'more{
+      import upickle.default._
+      'booleans{
+        write(true: Boolean)              ==> "true"
+        write(false: Boolean)             ==> "false"
+      }
+      'numbers{
+        write(12: Int)                    ==> "12"
+        write(12: Short)                  ==> "12"
+        write(12: Byte)                   ==> "12"
+        write(12.5f: Float)               ==> "12.5"
+        write(12.5: Double)               ==> "12.5"
+      }
+      'longs{
+        write(12: Long)                   ==> "\"12\""
+        write(4000000000000L: Long)       ==> "\"4000000000000\""
+      }
+      'specialNumbers{
+        write(1.0/0: Double)              ==> "\"Infinity\""
+        write(Float.PositiveInfinity)     ==> "\"Infinity\""
+        write(Float.NegativeInfinity)     ==> "\"-Infinity\""
+      }
+      'charStrings{
+        write('o')                        ==> "\"o\""
+        write("omg")                      ==> "\"omg\""
+      }
 //      'seqs{
-//        write(Array(1, 2, 3))             ==> "[1,2,3]"
+//        write(Array(1, 2, 3))             ==> "[1, 2, 3]"
 //
 //        // You can pass in an `indent` parameter to format it nicely
 //        write(Array(1, 2, 3), indent = 4)  ==>
@@ -138,26 +138,26 @@ import Defaults._
 //            |    3
 //            |]""".stripMargin
 //
-//        write(Seq(1, 2, 3))               ==> "[1,2,3]"
-//        write(Vector(1, 2, 3))            ==> "[1,2,3]"
-//        write(List(1, 2, 3))              ==> "[1,2,3]"
+//        write(Seq(1, 2, 3))               ==> "[1, 2, 3]"
+//        write(Vector(1, 2, 3))            ==> "[1, 2, 3]"
+//        write(List(1, 2, 3))              ==> "[1, 2, 3]"
 //        import collection.immutable.SortedSet
-//        write(SortedSet(1, 2, 3))         ==> "[1,2,3]"
+//        write(SortedSet(1, 2, 3))         ==> "[1, 2, 3]"
 //      }
-//      'options{
-//        write(Some(1))                    ==> "[1]"
-//        write(None)                       ==> "[]"
-//      }
-//      'tuples{
-//        write((1, "omg"))                 ==> """[1,"omg"]"""
-//        write((1, "omg", true))           ==> """[1,"omg",true]"""
-//      }
-//
+      'options{
+        write(Some(1))                    ==> "[1]"
+        write(None)                       ==> "[]"
+      }
+      'tuples{
+        write((1, "omg"))                 ==> """[1, "omg"]"""
+        write((1, "omg", true))           ==> """[1, "omg", true]"""
+      }
+
 //      'caseClass{
 //        import upickle._
-//        write(Thing(1, "gg"))             ==> """{"myFieldA":1,"myFieldB":"gg"}"""
+//        write(Thing(1, "gg"))             ==> """{"myFieldA": 1, "myFieldB": "gg"}"""
 //        write(Big(1, true, "lol", 'Z', Thing(7, ""))) ==>
-//          """{"i":1,"b":true,"str":"lol","c":"Z","t":{"myFieldA":7,"myFieldB":""}}"""
+//          """{"i": 1, "b": true, "str": "lol", "c": "Z", "t": {"myFieldA": 7, "myFieldB": ""}}"""
 //
 //        write(Big(1, true, "lol", 'Z', Thing(7, "")), indent = 4) ==>
 //          """{
@@ -171,60 +171,60 @@ import Defaults._
 //            |    }
 //            |}""".stripMargin
 //        }
-//
-//
+
+
 //      'sealed{
-//        write(IntThing(1)) ==> """{"$type":"example.Sealed.IntThing","i":1}"""
+//        write(IntThing(1)) ==> """{"$type": "example.Sealed.IntThing", "i": 1}"""
 //
 //        write(TupleThing("naeem", (1, 2))) ==>
-//          """{"$type":"example.Sealed.TupleThing","name":"naeem","t":[1,2]}"""
+//          """{"$type": "example.Sealed.TupleThing", "name": "naeem", "t": [1, 2]}"""
 //
 //        // You can read tagged value without knowing its
 //        // type in advance, just use type of the sealed trait
-//        read[IntOrTuple]("""{"$type":"example.Sealed.IntThing","i": 1}""") ==> IntThing(1)
+//        read[IntOrTuple]("""{"$type": "example.Sealed.IntThing", "i": 1}""") ==> IntThing(1)
 //
 //      }
-//      'recursive{
-//        write((((1, 2), (3, 4)), ((5, 6), (7, 8)))) ==>
-//          """[[[1,2],[3,4]],[[5,6],[7,8]]]"""
-//
-//        write(Seq(Thing(1, "g"), Thing(2, "k"))) ==>
-//          """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
-//
-//        write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3)))) ==>
-//          """{"name":"bearrr","foos":[{"i":1},{"i":2},{"i":3}]}"""
-//
-//      }
+      'recursive{
+        write((((1, 2), (3, 4)), ((5, 6), (7, 8)))) ==>
+          """[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]"""
+
+        write(Seq(Thing(1, "g"), Thing(2, "k"))) ==>
+          """[{"myFieldA": 1, "myFieldB": "g"}, {"myFieldA": 2, "myFieldB": "k"}]"""
+
+        write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3)))) ==>
+          """{"name": "bearrr", "foos": [{"i": 1}, {"i": 2}, {"i": 3}]}"""
+
+      }
 //      'null{
 //        write(Bar(null, Seq(Foo(1), null, Foo(3)))) ==>
-//          """{"name":null,"foos":[{"i":1},null,{"i":3}]}"""
+//          """{"name": null, "foos": [{"i": 1}, null, {"i": 3}]}"""
 //      }
-//    }
-//    'defaults{
-//      import upickle.default._
-//      'reading{
-//
-//        read[FooDefault]("{}")                ==> FooDefault(10, "lol")
-//        read[FooDefault]("""{"i": 123}""")    ==> FooDefault(123,"lol")
-//
-//      }
+    }
+    'defaults{
+      import upickle.default._
+      'reading{
+
+        read[FooDefault]("{}")                ==> FooDefault(10, "lol")
+        read[FooDefault]("""{"i": 123}""")    ==> FooDefault(123,"lol")
+
+      }
 //      'writing{
-//        write(FooDefault(i = 11, s = "lol"))  ==> """{"i":11}"""
+//        write(FooDefault(i = 11, s = "lol"))  ==> """{"i": 11}"""
 //        write(FooDefault(i = 10, s = "lol"))  ==> """{}"""
 //        write(FooDefault())                   ==> """{}"""
 //      }
-//    }
-//    'keyed{
-//      import upickle.default._
-//      'attrs{
-//        write(KeyBar(10))                     ==> """{"hehehe":10}"""
-//        read[KeyBar]("""{"hehehe": 10}""")    ==> KeyBar(10)
-//      }
+    }
+    'keyed{
+      import upickle.default._
+      'attrs{
+        write(KeyBar(10))                     ==> """{"hehehe": 10}"""
+        read[KeyBar]("""{"hehehe": 10}""")    ==> KeyBar(10)
+      }
 //      'tag{
-//        write(B(10))                          ==> """{"$type":"Bee","i":10}"""
-//        read[B]("""{"$type":"Bee","i":10}""") ==> B(10)
+//        write(B(10))                          ==> """{"$type": "Bee", "i": 10}"""
+//        read[B]("""{"$type": "Bee", "i": 10}""") ==> B(10)
 //      }
-//      'snakeCase{
+      'snakeCase{
 //        object SnakePickle extends upickle.AttributeTagged{
 //          def camelToSnake(s: String) = {
 //            val res = s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
@@ -243,17 +243,17 @@ import Defaults._
 //            super.CaseW[T, V](f, names.map(camelToSnake), defaults)
 //          }
 //        }
-//        // Default read-writing
-//        upickle.default.write(Thing(1, "gg")) ==> """{"myFieldA":1,"myFieldB":"gg"}"""
-//        upickle.default.read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> Thing(1, "gg")
-//
+        // Default read-writing
+        upickle.default.write(Thing(1, "gg")) ==> """{"myFieldA": 1, "myFieldB": "gg"}"""
+        upickle.default.read[Thing]("""{"myFieldA": 1, "myFieldB": "gg"}""") ==> Thing(1, "gg")
+
 //        implicit def thingRW: SnakePickle.ReadWriter[Thing] = SnakePickle.macroRW
-//        // snake_case_keys read-writing
+        // snake_case_keys read-writing
 //        SnakePickle.write(Thing(1, "gg")) ==> """{"my_field_a":1,"my_field_b":"gg"}"""
 //        SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") ==> Thing(1, "gg")
-//      }
-//    }
-//  }
-//}
-//
-//
+      }
+    }
+  }
+}
+
+
