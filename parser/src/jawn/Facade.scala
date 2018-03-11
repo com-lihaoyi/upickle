@@ -76,7 +76,7 @@ trait FContext[J] extends RawFContext[J, J]{
  * cases where the entire JSON document consists of "333.33".
  */
 trait RawFContext[J, T] {
-  def facade: RawFacade[J]
+  def facade: RawFacade[_]
   def visitKey(s: CharSequence, index: Int): Unit
   def add(v: J, index: Int): Unit
   def finish(index: Int): T

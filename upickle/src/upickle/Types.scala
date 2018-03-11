@@ -79,6 +79,7 @@ trait Types{ types =>
   }
   type Reader[T] = BaseReader[Any, T]
   trait BaseReader[T, V] extends jawn.RawFacade[V] {
+    def narrow[K <: V] = this.asInstanceOf[BaseReader[T, K]]
     def jnull(index: Int): V = null.asInstanceOf[V]
     def jtrue(index: Int): V =  throw new Exception(index.toString)
     def jfalse(index: Int): V = throw new Exception(index.toString)

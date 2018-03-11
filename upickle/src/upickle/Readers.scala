@@ -13,7 +13,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 trait Readers extends Types with Generated with LowPriImplicits{
   implicit object UnitReader extends Reader[Unit] {
     override def objectContext(index: Int) = new RawFContext[Any, Unit] {
-      def facade = UnitReader.asInstanceOf[RawFacade[Any]]
+      def facade = UnitReader
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
@@ -51,26 +51,29 @@ trait Readers extends Types with Generated with LowPriImplicits{
   implicit val SymbolReader: Reader[Symbol] = StringReader.map(Symbol.apply(_))
 
   implicit def MapReader[K, V](implicit k: Reader[K], v: Reader[V]): Reader[Map[K, V]] = {
-    if (k eq StringReader) new BaseReader[V, Map[String, V]]{
-      override def objectContext(index: Int) = new RawFContext[V, Map[String, V]] {
-        val strings = mutable.Buffer.empty[String]
+    if (k ne StringReader) SeqLikeReader[Array, (K, V)].map(_.toMap)
+    else new Reader[Map[K, V]]{
+      override def objectContext(index: Int) = new RawFContext[Any, Map[K, V]] {
+        val strings = mutable.Buffer.empty[K]
         val values = mutable.Buffer.empty[V]
         def facade = v
 
-        def visitKey(s: CharSequence, index: Int): Unit = strings.append(s.toString)
+        def visitKey(s: CharSequence, index: Int): Unit = {
+          strings.append(s.toString.asInstanceOf[K])
+        }
 
-        def add(v: V, index: Int): Unit = values.append(v)
+        def add(v: Any, index: Int): Unit = values.append(v.asInstanceOf[V])
 
         def finish(index: Int) = strings.zip(values).toMap
 
         def isObj = true
       }
-    }.asInstanceOf[Reader[Map[K, V]]]
-    else SeqLikeReader[Array, (K, V)].map(_.toMap).asInstanceOf[Reader[Map[K, V]]]
+    }
   }
+
   implicit def OptionReader[T: Reader]: Reader[Option[T]] = SeqLikeReader[Seq, T].map(_.headOption)
-  implicit def SomeReader[T: Reader]: Reader[Some[T]] = OptionReader[T].asInstanceOf[Reader[Some[T]]]
-  implicit def NoneReader: Reader[None.type] = OptionReader[Unit].asInstanceOf[Reader[None.type]]
+  implicit def SomeReader[T: Reader]: Reader[Some[T]] = OptionReader[T].narrow[Some[T]]
+  implicit def NoneReader: Reader[None.type] = OptionReader[Unit].narrow[None.type]
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def arrayContext(index: Int) = new jawn.RawFContext[Any, C[T]] {
@@ -84,7 +87,7 @@ trait Readers extends Types with Generated with LowPriImplicits{
 
       def isObj = false
 
-      def facade = r.asInstanceOf[jawn.RawFacade[Any]]
+      def facade = r
     }
   }
 
@@ -98,8 +101,8 @@ trait Readers extends Types with Generated with LowPriImplicits{
       }
     }
   }
-  implicit val InfiniteDurationReader = DurationReader.asInstanceOf[Reader[Duration.Infinite]]
-  implicit val FiniteDurationReader = DurationReader.asInstanceOf[Reader[FiniteDuration]]
+  implicit val InfiniteDurationReader = DurationReader.narrow[Duration.Infinite]
+  implicit val FiniteDurationReader = DurationReader.narrow[FiniteDuration]
 
   implicit def EitherReader[T1: Reader, T2: Reader] = new Reader[Either[T1, T2]]{
     override def arrayContext(index: Int) = new jawn.RawFContext[Any, Either[T1, T2]] {
@@ -121,16 +124,16 @@ trait Readers extends Types with Generated with LowPriImplicits{
       def isObj = false
 
       def facade = right match{
-        case null => IntReader.asInstanceOf[jawn.RawFacade[Any]]
-        case java.lang.Boolean.TRUE => implicitly[Reader[T2]].asInstanceOf[jawn.RawFacade[Any]]
-        case java.lang.Boolean.FALSE => implicitly[Reader[T1]].asInstanceOf[jawn.RawFacade[Any]]
+        case null => IntReader
+        case java.lang.Boolean.TRUE => implicitly[Reader[T2]]
+        case java.lang.Boolean.FALSE => implicitly[Reader[T1]]
       }
     }
   }
   implicit def RightReader[T1: Reader, T2: Reader] =
-    EitherReader[T1, T2].asInstanceOf[Reader[Right[T1, T2]]]
+    EitherReader[T1, T2].narrow[Right[T1, T2]]
   implicit def LeftReader[T1: Reader, T2: Reader] =
-    EitherReader[T1, T2].asInstanceOf[Reader[Left[T1, T2]]]
+    EitherReader[T1, T2].narrow[Left[T1, T2]]
 
   implicit object JsValueR extends Reader[Js.Value]{
     override def objectContext(index: Int) = {
@@ -173,23 +176,23 @@ trait Readers extends Types with Generated with LowPriImplicits{
     override def jnull(index: Int) = Js.Null
   }
 
-  implicit def JsObjR: Reader[Js.Obj] = JsValueR.asInstanceOf[Reader[Js.Obj]]
+  implicit def JsObjR: Reader[Js.Obj] = JsValueR.narrow[Js.Obj]
 
 
-  implicit def JsArrR: Reader[Js.Arr] = JsValueR.asInstanceOf[Reader[Js.Arr]]
+  implicit def JsArrR: Reader[Js.Arr] = JsValueR.narrow[Js.Arr]
 
 
 
-  implicit def JsStrR: Reader[Js.Str] = JsValueR.asInstanceOf[Reader[Js.Str]]
+  implicit def JsStrR: Reader[Js.Str] = JsValueR.narrow[Js.Str]
 
 
-  implicit def JsNumR: Reader[Js.Num] = JsValueR.asInstanceOf[Reader[Js.Num]]
+  implicit def JsNumR: Reader[Js.Num] = JsValueR.narrow[Js.Num]
 
 
-  implicit def JsTrueR: Reader[Js.True.type] = JsValueR.asInstanceOf[Reader[Js.True.type]]
+  implicit def JsTrueR: Reader[Js.True.type] = JsValueR.narrow[Js.True.type]
 
-  implicit def JsFalseR: Reader[Js.False.type] = JsValueR.asInstanceOf[Reader[Js.False.type]]
+  implicit def JsFalseR: Reader[Js.False.type] = JsValueR.narrow[Js.False.type]
 
 
-  implicit def JsNullR: Reader[Js.Null.type] = JsValueR.asInstanceOf[Reader[Js.Null.type]]
+  implicit def JsNullR: Reader[Js.Null.type] = JsValueR.narrow[Js.Null.type]
 }

@@ -42,7 +42,7 @@ private[upickle] trait GeneratedUtil extends Types{
 
       def isObj = false
 
-      def facade = facades.head.asInstanceOf[jawn.RawFacade[Any]]
+      def facade = facades.head
     }
   }
 
@@ -57,15 +57,15 @@ private[upickle] trait GeneratedUtil extends Types{
       val found = new Array[Boolean](names.length)
 
       var currentKey: String = null
-      var facade = null.asInstanceOf[RawFacade[Any]]
+      var facade: jawn.RawFacade[_] = null
 
       def visitKey(s: CharSequence, index: Int): Unit = {
         currentKey = s.toString
         val index = names.indexOf(currentKey)
 
         facade =
-          if (index == -1) jawn.NullFacade.asInstanceOf[RawFacade[Any]]
-          else r.readers(index).asInstanceOf[RawFacade[Any]]
+          if (index == -1) jawn.NullFacade
+          else r.readers(index)
       }
 
       def add(v: Any, index: Int): Unit = {
@@ -88,7 +88,7 @@ private[upickle] trait GeneratedUtil extends Types{
   }
   class Case0R[V](f: () => V, val tags: Seq[String]) extends Reader[V]{ outer =>
     override def objectContext(index: Int) = new RawFContext[Any, V] {
-      def facade = outer.asInstanceOf[jawn.RawFacade[Any]]
+      def facade = outer
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
@@ -127,7 +127,7 @@ private[upickle] trait GeneratedUtil extends Types{
 
   class SingletonR[T](t: T) extends Reader[T]{
     override def objectContext(index: Int) = new RawFContext[Any, T] {
-      def facade = SingletonR.this.asInstanceOf[RawFacade[Any]]
+      def facade = SingletonR.this
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
