@@ -1,10 +1,8 @@
 package upickle
 
 
-import jawn.Facade
 
 import language.experimental.macros
-import scala.reflect.ClassTag
 import language.higherKinds
 /**
  * An instance of the upickle API. There's a default instance at
@@ -61,4 +59,16 @@ trait AttributeTagged extends Api{
 //  def annotate[V: ClassTag](rw: Writer[V], n: String) = Writer[V]{ case x: V =>
 //    Js.Obj((tagName, Js.Str(n)) +: rw.write(x).asInstanceOf[Js.Obj].value:_*)
 //  }
+}
+
+object json{
+  val jsRW = upickle.default.macroRW0[Js.Value](implicitly, implicitly)
+  def read(s: String) = jawn.Parser.parseUnsafe(s)(jsRW)
+  def read(s: java.nio.ByteBuffer) = jawn.Parser.parseFromByteBuffer(s)(jsRW).get
+  def read(s: java.io.File) = jawn.Parser.parseFromFile(s)(jsRW).get
+  def write(t: Js.Value): String = {
+    val out = new java.io.StringWriter()
+    jsRW.write(new Renderer(out), t)
+    out.toString
+  }
 }
