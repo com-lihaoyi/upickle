@@ -208,12 +208,12 @@ object Defaults {
 //object MixedIn extends MixedIn
 //
 //
-//object Varargs{
-//  case class Sentence(a: String, bs: String*)
-//  object Sentence{
-//    implicit def rw: RW[Sentence] = default.macroRW
-//  }
-//}
+object Varargs{
+  case class Sentence(a: String, bs: String*)
+  object Sentence{
+    implicit def rw: RW[Sentence] = default.macroRW
+  }
+}
 //object Covariant{
 //  case class Tree[+T](value: T)
 //  object Tree{
@@ -372,94 +372,94 @@ object GenericADTs{
 //// For some reason this stuff must live top-level; the test fails to
 //// go red when the case classes are moved inside a wrapper object even
 //// when the fix is backed out
-//case class C1(name : String, types : List[String])
-//object C1{
-//  implicit def rw: RW[C1] = default.macroRW
-//}
-//case class C2(results : List[C1])
-//object C2{
-//  implicit def rw: RW[C2] = default.macroRW
-//}
-//case class Result2(name : String,
-//                   whatever : String,
-//                   types : List[String])
-//object Result2{
-//  implicit def rw: RW[Result2] = default.macroRW
-//}
-//
-//case class GeoCoding2(results : List[Result2], status: String)
-//object GeoCoding2{
-//  implicit def rw: RW[GeoCoding2] = default.macroRW
-//}
-//
-//
-//
-//sealed trait Ast{
-//  def offset: Int
-//}
-//
-///**
-// * Sample AST taken from the Scalatex project
-// *
-// * https://github.com/lihaoyi/Scalatex/
-// *
-// * It's a use case where each case class inherits from multiple distinct
-// * sealed traits, which aren't a strict hierarchy
-// */
-//object Ast{
+case class C1(name : String, types : List[String])
+object C1{
+  implicit def rw: RW[C1] = default.macroRW
+}
+case class C2(results : List[C1])
+object C2{
+  implicit def rw: RW[C2] = default.macroRW
+}
+case class Result2(name : String,
+                   whatever : String,
+                   types : List[String])
+object Result2{
+  implicit def rw: RW[Result2] = default.macroRW
+}
+
+case class GeoCoding2(results : List[Result2], status: String)
+object GeoCoding2{
+  implicit def rw: RW[GeoCoding2] = default.macroRW
+}
+
+
+
+sealed trait Ast{
+  def offset: Int
+}
+
+/**
+ * Sample AST taken from the Scalatex project
+ *
+ * https://github.com/lihaoyi/Scalatex/
+ *
+ * It's a use case where each case class inherits from multiple distinct
+ * sealed traits, which aren't a strict hierarchy
+ */
+object Ast{
 //  implicit def rw: RW[Ast] = RW.merge(Block.rw, Header.rw)
-//  /**
-//   * @param parts The various bits of text and other things which make up this block
-//   * @param offset
-//   */
-//  case class Block(offset: Int, parts: Seq[Block.Sub]) extends Chain.Sub with Block.Sub
-//  object Block{
+  /**
+   * @param parts The various bits of text and other things which make up this block
+   * @param offset
+   */
+  case class Block(offset: Int, parts: Seq[Block.Sub]) extends Chain.Sub with Block.Sub
+  object Block{
 //    implicit def rw: RW[Block] = default.macroRW
-//    sealed trait Sub extends Ast
-//    object Sub{
+    sealed trait Sub extends Ast
+    object Sub{
 //      implicit def rw: RW[Sub] = RW.merge(Text.rw, For.rw, IfElse.rw, Block.rw, Header.rw)
-//    }
-//    case class Text(offset: Int, txt: String) extends Block.Sub
-//    object Text{
+    }
+    case class Text(offset: Int, txt: String) extends Block.Sub
+    object Text{
 //      implicit def rw: RW[Text] = default.macroRW
-//    }
-//    case class For(offset: Int, generators: String, block: Block) extends Block.Sub
-//    object For{
+    }
+    case class For(offset: Int, generators: String, block: Block) extends Block.Sub
+    object For{
 //      implicit def rw: RW[For] = default.macroRW
-//    }
-//    case class IfElse(offset: Int, condition: String, block: Block, elseBlock: Option[Block]) extends Block.Sub
-//    object IfElse{
+    }
+    case class IfElse(offset: Int, condition: String, block: Block, elseBlock: Option[Block]) extends Block.Sub
+    object IfElse{
 //      implicit def rw: RW[IfElse] = default.macroRW
-//    }
-//  }
-//  case class Header(offset: Int, front: String, block: Block) extends Block.Sub with Chain.Sub
-//  object Header{
+    }
+  }
+  case class Header(offset: Int, front: String, block: Block) extends Block.Sub with Chain.Sub
+  object Header{
 //    implicit def rw: RW[Header] = default.macroRW
-//  }
-//
-//  /**
-//   * @param lhs The first expression in this method-chain
-//   * @param parts A list of follow-on items chained to the first
-//   * @param offset
-//   */
-//  case class Chain(offset: Int, lhs: String, parts: Seq[Chain.Sub]) extends Block.Sub
-//  object Chain{
+  }
+
+  /**
+   * @param lhs The first expression in this method-chain
+   * @param parts A list of follow-on items chained to the first
+   * @param offset
+   */
+  case class Chain(offset: Int, lhs: String, parts: Seq[Chain.Sub]) extends Block.Sub
+  object Chain{
 //    implicit def rw: RW[Chain] = default.macroRW
-//    sealed trait Sub extends Ast
-//    object Sub{
+    sealed trait Sub extends Ast
+    object Sub{
 //      implicit def rw: RW[Sub] = RW.merge(Prop.rw, TypeArgs.rw, Args.rw, Block.rw, Header.rw)
-//    }
-//    case class Prop(offset: Int, str: String) extends Sub
-//    object Prop{
+    }
+    case class Prop(offset: Int, str: String) extends Sub
+    object Prop{
 //      implicit def rw: RW[Prop] = default.macroRW
-//    }
-//    case class TypeArgs(offset: Int, str: String) extends Sub
-//    object TypeArgs{
+    }
+    case class TypeArgs(offset: Int, str: String) extends Sub
+    object TypeArgs{
 //      implicit def rw: RW[TypeArgs] = default.macroRW
-//    }
-//    case class Args(offset: Int, str: String) extends Sub
-//    object Args{
+    }
+    case class Args(offset: Int, str: String) extends Sub
+    object Args{
 //      implicit def rw: RW[Args] = default.macroRW
-//    }
-//  }
-//}
+    }
+  }
+}

@@ -206,7 +206,92 @@ object LegacyTests extends TestSuite {
       rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
 
     }
+    'varargs{
+      implicit def IntTreerw: RW[Varargs.Sentence] = upickle.legacy.macroRW
+      rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
+      rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
+    }
+
+
+    'issues - {
+      'issue95 {
+        implicit def rw1: RW[C1] = legacy.macroRW
+        implicit def rw2: RW[C2] = legacy.macroRW
+        implicit def rw3: RW[GeoCoding2] = legacy.macroRW
+        implicit def rw4: RW[Result2] = legacy.macroRW
+        rw(
+          Tuple1(List(C1("hello", List("world")))),
+          """[[{"name": "hello", "types": ["world"]}]]"""
+        )
+        rw(
+          C2(List(C1("hello", List("world")))),
+          """{"results": [{"name": "hello", "types": ["world"]}]}"""
+        )
+
+        rw(
+          GeoCoding2(List(Result2("a", "b", List("c"))), "d"),
+          """{"results": [{"name": "a", "whatever": "b", "types": ["c"]}], "status": "d"}"""
+        )
+      }
+      'scalatex - {
+        implicit def rw1: RW[Ast] = legacy.macroRW
+        implicit def rw2: RW[Ast.Block] = legacy.macroRW
+        implicit def rw3: RW[Ast.Block.Sub] = legacy.macroRW
+        implicit def rw4: RW[Ast.Block.Text] = legacy.macroRW
+        implicit def rw5: RW[Ast.Block.For] = legacy.macroRW
+        implicit def rw6: RW[Ast.Block.IfElse] = legacy.macroRW
+        implicit def rw7: RW[Ast.Header] = legacy.macroRW
+        implicit def rw8: RW[Ast.Chain] = legacy.macroRW
+        implicit def rw9: RW[Ast.Chain.Sub] = legacy.macroRW
+        implicit def rw10: RW[Ast.Chain.Prop] = legacy.macroRW
+        implicit def rw11: RW[Ast.Chain.TypeArgs] = legacy.macroRW
+        implicit def rw12: RW[Ast.Chain.Args] = legacy.macroRW
+        val block = Ast.Block(1, Seq(Ast.Block.Text(2, "hello")))
+        val blockText = """[
+          "upickle.Ast.Block",
+          {
+            "offset":1,
+            "parts":[
+              [
+                "upickle.Ast.Block.Text",
+                {
+                  "offset":2,
+                  "txt":"hello"
+                }
+              ]
+            ]
+          }
+        ]"""
+        rw(block: Ast, blockText)
+        rw(block: Ast.Block, blockText)
+        rw(block: Ast.Block.Sub, blockText)
+        rw(block: Ast.Chain.Sub, blockText)
+
+        val header = Ast.Header(0, "Hello", block)
+        val headerText = s"""[
+          "upickle.Ast.Header",
+          {
+            "offset": 0,
+            "front": "Hello",
+            "block": $blockText
+          }
+        ]"""
+        rw(header: Ast, headerText)
+        rw(header: Ast.Header, headerText)
+        rw(header: Ast.Block.Sub, headerText)
+        rw(header: Ast.Chain.Sub, headerText)
+      }
+//      'companionImplicitPickedUp{
+//        assert(implicitly[upickle.default.Reader[TypedFoo]] eq TypedFoo.readWriter)
+//        assert(implicitly[upickle.default.Writer[TypedFoo]] eq TypedFoo.readWriter)
+//        assert(implicitly[upickle.default.ReadWriter[TypedFoo]] eq TypedFoo.readWriter)
+//      }
+  //    'companionImplicitWorks{
+  //
+  //      rw(TypedFoo.Bar(1): TypedFoo, """{"$type": "upickle.TypedFoo.Bar", "i": 1}""")
+  //      rw(TypedFoo.Baz("lol"): TypedFoo, """{"$type": "upickle.TypedFoo.Baz", "s": "lol"}""")
+  //      rw(TypedFoo.Quz(true): TypedFoo, """{"$type": "upickle.TypedFoo.Quz", "b": true}""")
+  //    }
+    }
   }
-
-
 }
