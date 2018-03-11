@@ -131,4 +131,65 @@ trait Readers extends Types with Generated{
     EitherReader[T1, T2].asInstanceOf[Reader[Right[T1, T2]]]
   implicit def LeftReader[T1: Reader, T2: Reader] =
     EitherReader[T1, T2].asInstanceOf[Reader[Left[T1, T2]]]
+
+  implicit object JsValueR extends Reader[Js.Value]{
+    override def objectContext(index: Int) = {
+      new RawFContext[Js.Value, Js.Obj] {
+        val output = mutable.Buffer.empty[(String, Js.Value)]
+        var lastKey: String = null
+        def facade = JsValueR
+
+        def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
+
+        def add(v: Js.Value, index: Int): Unit = {
+          output.append((lastKey, v))
+        }
+
+        def finish(index: Int) = Js.Obj(output:_*)
+
+        def isObj = true
+      }.asInstanceOf[RawFContext[Any, Js.Value]]
+    }
+    override def arrayContext(index: Int) = {
+      new RawFContext[Js.Value, Js.Arr] {
+        val output = mutable.Buffer.empty[Js.Value]
+        def facade = JsValueR
+
+        def visitKey(s: CharSequence, index: Int): Unit = ???
+
+        def add(v: Js.Value, index: Int): Unit = {
+          output.append(v)
+        }
+
+        def finish(index: Int) = Js.Arr(output:_*)
+
+        def isObj = false
+      }.asInstanceOf[RawFContext[Any, Js.Value]]
+    }
+    override def jstring(s: CharSequence, index: Int) = Js.Str(s)
+    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = Js.Num(s.toString.toDouble)
+    override def jtrue(index: Int) = Js.True
+    override def jfalse(index: Int) = Js.False
+    override def jnull(index: Int) = Js.Null
+  }
+
+  implicit def JsObjR: Reader[Js.Obj] = JsValueR.asInstanceOf[Reader[Js.Obj]]
+
+
+  implicit def JsArrR: Reader[Js.Arr] = JsValueR.asInstanceOf[Reader[Js.Arr]]
+
+
+
+  implicit def JsStrR: Reader[Js.Str] = JsValueR.asInstanceOf[Reader[Js.Str]]
+
+
+  implicit def JsNumR: Reader[Js.Num] = JsValueR.asInstanceOf[Reader[Js.Num]]
+
+
+  implicit def JsTrueR: Reader[Js.True.type] = JsValueR.asInstanceOf[Reader[Js.True.type]]
+
+  implicit def JsFalseR: Reader[Js.False.type] = JsValueR.asInstanceOf[Reader[Js.False.type]]
+
+
+  implicit def JsNullR: Reader[Js.Null.type] = JsValueR.asInstanceOf[Reader[Js.Null.type]]
 }

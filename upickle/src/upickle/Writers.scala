@@ -121,4 +121,40 @@ trait Writers extends Types with Generated{
     EitherWriter[T1, T2].asInstanceOf[Writer[Right[T1, T2]]]
   implicit def LeftWriter[T1: Writer, T2: Writer] =
     EitherWriter[T1, T2].asInstanceOf[Writer[Left[T1, T2]]]
+
+  implicit def JsObjW: Writer[Js.Obj] = JsValueW.asInstanceOf[Writer[Js.Obj]]
+  implicit def JsArrW: Writer[Js.Arr] = JsValueW.asInstanceOf[Writer[Js.Arr]]
+  implicit def JsStrW: Writer[Js.Str] = JsValueW.asInstanceOf[Writer[Js.Str]]
+  implicit def JsNumW: Writer[Js.Num] = JsValueW.asInstanceOf[Writer[Js.Num]]
+  implicit def JsTrueW: Writer[Js.True.type] = JsValueW.asInstanceOf[Writer[Js.True.type]]
+  implicit def JsFalseW: Writer[Js.False.type] = JsValueW.asInstanceOf[Writer[Js.False.type]]
+  implicit def JsNullW: Writer[Js.Null.type] = JsValueW.asInstanceOf[Writer[Js.Null.type]]
+  implicit object JsValueW extends Writer[Js.Value] {
+    def write(out: jawn.Facade[Unit], v: Js.Value) = {
+      v match{
+        case v: Js.Obj =>
+          val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Unit]]
+          for((k, item) <- v.value){
+            ctx.add((), -1)
+            ctx.visitKey(k, -1)
+            JsValueW.write(out, item)
+          }
+
+          ctx.finish(-1)
+        case v: Js.Arr =>
+          val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, Unit]]
+          for(item <- v.value){
+            ctx.add((), -1)
+            JsValueW.write(out, item)
+          }
+
+          ctx.finish(-1)
+        case v: Js.Str => out.jstring(v.value)
+        case v: Js.Num => out.jnum(v.value.toString, -1, -1)
+        case v: Js.False.type => out.jtrue(-1)
+        case v: Js.True.type => out.jfalse(-1)
+        case v: Js.Null.type => out.jnull(-1)
+      }
+    }
+  }
 }
