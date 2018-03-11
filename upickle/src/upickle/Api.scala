@@ -132,13 +132,12 @@ trait AttributeTagged extends Api{
     def tags = Seq(n)
 
     def write(out: Facade[Unit], v: V) = {
-//      rw.write(JsB, v)
-//      val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, _]]
-//      ctx.add((), -1)
-//      out.jstring(n, -1)
-//      ctx.add((), -1)
-//      rw.write(out, v)
-//      ctx.finish(-1)
+      val s = new java.io.StringWriter()
+      rw.write(new Renderer(s), v)
+      val Js.Obj(kvs @ _*) = jawn.Parser.parseUnsafe(s.toString)(JsBuilder)
+      val tagged = Js.Obj((tagName -> Js.Str(n)) +: kvs: _*)
+      JsVisitor.visit(tagged, out)
+
     }
   }
 
