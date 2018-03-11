@@ -71,7 +71,7 @@ object legacy extends Api{
 
       var res: T = _
       def visitKey(s: CharSequence, index: Int): Unit = ???
-      def facade: RawFacade[_] =
+      def facade =
         if (typeName == null) TaggedReaderImpl.this
         else delegate
 

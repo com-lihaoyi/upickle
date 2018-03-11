@@ -38,7 +38,7 @@ trait CharBasedParser[J] extends Parser[J] {
    * Parse a string that is known to have escape sequences.
    */
   protected[this] final def parseStringComplex(i: Int, ctxt: RawFContext[_, J], key: Boolean)
-                                              (implicit facade: RawFacade[J]): Int = {
+                                              (implicit facade: RawFacade[_, J]): Int = {
 
     var j = i + 1
     val sb = charBuilder.reset()
@@ -90,7 +90,7 @@ trait CharBasedParser[J] extends Parser[J] {
    * interpret a multi-char code point incorrectly.
    */
   protected[this] final def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)
-                                       (implicit facade: RawFacade[J]): Int = {
+                                       (implicit facade: RawFacade[_, J]): Int = {
 
     val k = parseStringSimple(i + 1, ctxt)
     if (k != -1) {

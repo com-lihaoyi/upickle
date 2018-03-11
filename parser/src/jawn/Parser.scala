@@ -126,7 +126,7 @@ abstract class Parser[J] {
    * side-effect that we know exactly how the user represented the
    * number.
    */
-  protected[this] final def parseNum(i: Int, ctxt: RawFContext[Any, J])(implicit facade: RawFacade[J]): Int = {
+  protected[this] final def parseNum(i: Int, ctxt: RawFContext[Any, J])(implicit facade: RawFacade[_, J]): Int = {
     var j = i
     var c = at(j)
     var decIndex = -1
@@ -189,7 +189,7 @@ abstract class Parser[J] {
    *
    * This method has all the same caveats as the previous method.
    */
-  protected[this] final def parseNumSlow(i: Int, ctxt: RawFContext[Any, J])(implicit facade: RawFacade[J]): Int = {
+  protected[this] final def parseNumSlow(i: Int, ctxt: RawFContext[Any, J])(implicit facade: RawFacade[_, J]): Int = {
     var j = i
     var c = at(j)
     var decIndex = -1
@@ -286,14 +286,14 @@ abstract class Parser[J] {
   /**
    * Parse the JSON string starting at 'i' and save it into 'ctxt'.
    */
-  protected[this] def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)(implicit facade: RawFacade[J]): Int
+  protected[this] def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)(implicit facade: RawFacade[_, J]): Int
 
   /**
    * Parse the JSON constant "true".
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseTrue(i: Int)(implicit facade: RawFacade[J]): J =
+  protected[this] final def parseTrue(i: Int)(implicit facade: RawFacade[_, J]): J =
     if (at(i + 1) == 'r' && at(i + 2) == 'u' && at(i + 3) == 'e') {
       facade.jtrue(i)
     } else {
@@ -305,7 +305,7 @@ abstract class Parser[J] {
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseFalse(i: Int)(implicit facade: RawFacade[J]): J =
+  protected[this] final def parseFalse(i: Int)(implicit facade: RawFacade[_, J]): J =
     if (at(i + 1) == 'a' && at(i + 2) == 'l' && at(i + 3) == 's' && at(i + 4) == 'e') {
       facade.jfalse(i)
     } else {
@@ -317,7 +317,7 @@ abstract class Parser[J] {
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseNull(i: Int)(implicit facade: RawFacade[J]): J =
+  protected[this] final def parseNull(i: Int)(implicit facade: RawFacade[_, J]): J =
     if (at(i + 1) == 'u' && at(i + 2) == 'l' && at(i + 3) == 'l') {
       facade.jnull(i)
     } else {
@@ -327,7 +327,7 @@ abstract class Parser[J] {
   /**
    * Parse and return the next JSON value and the position beyond it.
    */
-  protected[this] final def parse(i: Int)(implicit facade: RawFacade[J]): (J, Int) = try {
+  protected[this] final def parse(i: Int)(implicit facade: RawFacade[_, J]): (J, Int) = try {
     (at(i): @switch) match {
       // ignore whitespace
       case ' ' => parse(i + 1)
@@ -383,7 +383,7 @@ abstract class Parser[J] {
   protected[this] final def rparse(state: Int, j: Int, stack: List[RawFContext[_, J]]) : (J, Int) = {
     val i = reset(j)
     checkpoint(state, i, stack)
-    implicit val facade: RawFacade[J] = stack.head.facade.asInstanceOf[RawFacade[J]]
+    implicit val facade: RawFacade[_, J] = stack.head.facade.asInstanceOf[RawFacade[_, J]]
     val c = at(i)
 
     if (c == '\n') {
@@ -481,27 +481,27 @@ abstract class Parser[J] {
 
 object Parser {
 
-  def parseUnsafe[J](s: String)(implicit facade: RawFacade[J]): J =
+  def parseUnsafe[J](s: String)(implicit facade: RawFacade[_, J]): J =
     new StringParser(s).parse()
 
-  def parseFromString[J](s: String)(implicit facade: RawFacade[J]): Try[J] =
+  def parseFromString[J](s: String)(implicit facade: RawFacade[_, J]): Try[J] =
     Try(new StringParser[J](s).parse)
 
-  def parseFromCharSequence[J](cs: CharSequence)(implicit facade: RawFacade[J]): Try[J] =
+  def parseFromCharSequence[J](cs: CharSequence)(implicit facade: RawFacade[_, J]): Try[J] =
     Try(new CharSequenceParser[J](cs).parse)
 
-  def parseFromPath[J](path: String)(implicit facade: RawFacade[J]): Try[J] =
+  def parseFromPath[J](path: String)(implicit facade: RawFacade[_, J]): Try[J] =
     Try(ChannelParser.fromFile[J](new File(path)).parse)
 
-  def parseFromFile[J](file: File)(implicit facade: RawFacade[J]): Try[J] =
+  def parseFromFile[J](file: File)(implicit facade: RawFacade[_, J]): Try[J] =
     Try(ChannelParser.fromFile[J](file).parse)
 
-  def parseFromChannel[J](ch: ReadableByteChannel)(implicit facade: RawFacade[J]): Try[J] =
+  def parseFromChannel[J](ch: ReadableByteChannel)(implicit facade: RawFacade[_, J]): Try[J] =
     Try(ChannelParser.fromChannel[J](ch).parse)
 
-  def parseFromByteBuffer[J](buf: ByteBuffer)(implicit facade: RawFacade[J]): Try[J] =
+  def parseFromByteBuffer[J](buf: ByteBuffer)(implicit facade: RawFacade[_, J]): Try[J] =
     Try(new ByteBufferParser[J](buf).parse)
 
-  def async[J](mode: AsyncParser.Mode)(implicit facade: RawFacade[J]): AsyncParser[J] =
+  def async[J](mode: AsyncParser.Mode)(implicit facade: RawFacade[_, J]): AsyncParser[J] =
     AsyncParser[J](mode)
 }

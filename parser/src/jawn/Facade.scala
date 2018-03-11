@@ -7,7 +7,7 @@ package jawn
  * Facade[J] also uses FContext[J] instances, so implementors will
  * usually want to define both.
  */
-trait Facade[J] extends RawFacade[J]{
+trait Facade[J] extends RawFacade[Nothing, J]{
   def singleContext(): RawFContext[J, J]
   def arrayContext(): RawFContext[J, J]
   def objectContext(): RawFContext[J, J]
@@ -36,10 +36,10 @@ trait Facade[J] extends RawFacade[J]{
  * Facade[J] also uses FContext[J] instances, so implementors will
  * usually want to define both.
  */
-trait RawFacade[J] {
-  def singleContext(index: Int): RawFContext[_, J]
-  def arrayContext(index: Int): RawFContext[_, J]
-  def objectContext(index: Int): RawFContext[_, J]
+trait RawFacade[-T, +J] {
+  def singleContext(index: Int): RawFContext[T, J]
+  def arrayContext(index: Int): RawFContext[T, J]
+  def objectContext(index: Int): RawFContext[T, J]
 
   def jnull(index: Int): J
   def jfalse(index: Int): J
@@ -75,8 +75,8 @@ trait FContext[J] extends RawFContext[J, J]{
  * this type is also used to build a single top-level JSON element, in
  * cases where the entire JSON document consists of "333.33".
  */
-trait RawFContext[J, T] {
-  def facade: RawFacade[_]
+trait RawFContext[-J, +T] {
+  def facade: RawFacade[Nothing, Any]
   def visitKey(s: CharSequence, index: Int): Unit
   def add(v: J, index: Int): Unit
   def finish(index: Int): T

@@ -57,7 +57,7 @@ private[upickle] trait GeneratedUtil extends Types{
       val found = new Array[Boolean](names.length)
 
       var currentKey: String = null
-      var facade: jawn.RawFacade[_] = null
+      var facade: jawn.RawFacade[_, _] = null
 
       def visitKey(s: CharSequence, index: Int): Unit = {
         currentKey = s.toString

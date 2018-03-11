@@ -77,7 +77,7 @@ final class AsyncParser[J] protected[jawn] (
   final def copy() =
     new AsyncParser(state, curr, stack, data.clone, len, allocated, offset, done, streamMode)
 
-  final def absorb(buf: ByteBuffer)(implicit facade: RawFacade[J]): Either[ParseException, Seq[J]] = {
+  final def absorb(buf: ByteBuffer)(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] = {
     done = false
     val buflen = buf.limit - buf.position
     val need = len + buflen
@@ -87,13 +87,13 @@ final class AsyncParser[J] protected[jawn] (
     churn()
   }
 
-  final def absorb(bytes: Array[Byte])(implicit facade: RawFacade[J]): Either[ParseException, Seq[J]] =
+  final def absorb(bytes: Array[Byte])(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] =
     absorb(ByteBuffer.wrap(bytes))
 
-  final def absorb(s: String)(implicit facade: RawFacade[J]): Either[ParseException, Seq[J]] =
+  final def absorb(s: String)(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] =
     absorb(ByteBuffer.wrap(s.getBytes(utf8)))
 
-  final def finish()(implicit facade: RawFacade[J]): Either[ParseException, Seq[J]] = {
+  final def finish()(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] = {
     done = true
     churn()
   }
@@ -140,7 +140,7 @@ final class AsyncParser[J] protected[jawn] (
   @inline private[this] final def ASYNC_POSTVAL = -2
   @inline private[this] final def ASYNC_PREVAL = -1
 
-  protected[jawn] def churn()(implicit facade: RawFacade[J]): Either[ParseException, Seq[J]] = {
+  protected[jawn] def churn()(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] = {
 
     // accumulates json values
     val results = mutable.ArrayBuffer.empty[J]

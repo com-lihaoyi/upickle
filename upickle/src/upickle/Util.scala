@@ -1,6 +1,6 @@
 package upickle
 
-import jawn.RawFContext
+import jawn.{RawFContext, RawFacade}
 
 object Util {
   def mapContext[T, V, Z](in: RawFContext[T, V])(f: V => Z) = new RawFContext[T, Z] {

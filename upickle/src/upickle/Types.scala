@@ -78,7 +78,7 @@ trait Types{ types =>
     )
   }
   type Reader[T] = BaseReader[Any, T]
-  trait BaseReader[T, V] extends jawn.RawFacade[V] {
+  trait BaseReader[-T, V] extends jawn.RawFacade[T, V] {
     def narrow[K <: V] = this.asInstanceOf[BaseReader[T, K]]
     def jnull(index: Int): V = null.asInstanceOf[V]
     def jtrue(index: Int): V =  throw new Exception(index.toString)
@@ -93,7 +93,7 @@ trait Types{ types =>
     def singleContext(index: Int): jawn.RawFContext[T, V] = new RawFContext[T, V] {
       var res: V = _
 
-      def facade = BaseReader.this.asInstanceOf[jawn.RawFacade[T]]
+      def facade = BaseReader.this
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
@@ -124,7 +124,7 @@ trait Types{ types =>
       override def arrayContext(index: Int) = delegatedReader.arrayContext(index)
       override def singleContext(index: Int) = delegatedReader.singleContext(index)
     }
-    class MapReader[T, V, Z](src: BaseReader[T, V], f: V => Z) extends BaseReader[T, Z] {
+    class MapReader[-T, V, Z](src: BaseReader[T, V], f: V => Z) extends BaseReader[T, Z] {
       def f1(v: V): Z = {
         if(v == null) null.asInstanceOf[Z] else f(v)
       }
