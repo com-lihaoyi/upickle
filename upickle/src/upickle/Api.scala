@@ -22,8 +22,6 @@ trait Api extends Types with Implicits {
     implicitly[Writer[T]].write(new Renderer(out, indent = indent), t)
     out.toString
   }
-//  def annotate[V: ClassTag](rw: Reader[V], n: String): Reader[V]
-//  def annotate[V: ClassTag](rw: Writer[V], n: String): Writer[V]
 }
 
 /**
@@ -93,24 +91,12 @@ object legacy extends Api{
       def isObj = false
     }
   }
-  def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = new TaggedReaderImpl[T] with TaggedWriter[T] {
-    def tags = implicitly[TaggedReader[T]].tags
-    def readers = implicitly[TaggedReader[T]].readers
-    override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
-    override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
-    override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)
-
-    override def jstring(s: CharSequence, index: Int) = implicitly[Reader[T]].jstring(s, index)
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      implicitly[Reader[T]].jnum(s, decIndex, expIndex, index)
-    }
-
-    override def objectContext(index: Int) = implicitly[Reader[T]].objectContext(index)
-    override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
-    override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
-
-    def write[R](out: Facade[R], v: T): R = {
-      implicitly[Writer[T]].write(out, v)
+  def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = {
+    new TaggedReaderImpl[T] with TaggedWriter[T] {
+      def delegateReader = implicitly[TaggedReader[T]]
+      def tags = delegateReader.tags
+      def readers = delegateReader.readers
+      def write[R](out: Facade[R], v: T): R = implicitly[Writer[T]].write(out, v)
     }
   }
 }
@@ -162,24 +148,13 @@ trait AttributeTagged extends Api{
       ctx.finish(index)
     }
   }
-  def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = new TaggedReaderImpl[T] with TaggedWriter[T] {
-    def tags = implicitly[TaggedReader[T]].tags
-    def readers = implicitly[TaggedReader[T]].readers
-    override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
-    override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
-    override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)
+  def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = {
+    new TaggedReaderImpl[T] with TaggedWriter[T] with BaseReader.Delegate[Any, T]{
+      def delegatedReader = implicitly[TaggedReader[T]]
+      def tags = delegatedReader.tags
+      def readers = delegatedReader.readers
 
-    override def jstring(s: CharSequence, index: Int) = implicitly[Reader[T]].jstring(s, index)
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      implicitly[Reader[T]].jnum(s, decIndex, expIndex, index)
-    }
-
-    override def objectContext(index: Int) = implicitly[Reader[T]].objectContext(index)
-    override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
-    override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
-
-    def write[R](out: Facade[R], v: T): R = {
-      implicitly[Writer[T]].write(out, v)
+      def write[R](out: Facade[R], v: T): R = implicitly[Writer[T]].write(out, v)
     }
   }
 }

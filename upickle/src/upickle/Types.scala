@@ -58,25 +58,13 @@ trait Types{ types =>
       )
     }
 
-    def join[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] {
-      override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
-      override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
-      override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)
-
-      override def jstring(s: CharSequence, index: Int) = implicitly[Reader[T]].jstring(s, index)
-      override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-        implicitly[Reader[T]].jnum(s, decIndex, expIndex, index)
-      }
-
-      override def objectContext(index: Int) = implicitly[Reader[T]].objectContext(index)
-      override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
-      override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
+    def join[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] with BaseReader.Delegate[Any, T]{
+      def delegatedReader = implicitly[Reader[T]]
 
       def write[R](out: Facade[R], v: T): R = {
         implicitly[Writer[T]].write(out, v)
       }
     }
-
   }
   def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T]
   object Reader{
@@ -119,6 +107,22 @@ trait Types{ types =>
   }
 
   object BaseReader {
+    trait Delegate[T, V] extends BaseReader[T, V]{
+      def delegatedReader: BaseReader[T, V]
+
+      override def jnull(index: Int) = delegatedReader.jnull(index)
+      override def jtrue(index: Int) = delegatedReader.jtrue(index)
+      override def jfalse(index: Int) = delegatedReader.jfalse(index)
+
+      override def jstring(s: CharSequence, index: Int) = delegatedReader.jstring(s, index)
+      override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+        delegatedReader.jnum(s, decIndex, expIndex, index)
+      }
+
+      override def objectContext(index: Int) = delegatedReader.objectContext(index)
+      override def arrayContext(index: Int) = delegatedReader.arrayContext(index)
+      override def singleContext(index: Int) = delegatedReader.singleContext(index)
+    }
     class MapReader[T, V, Z](src: BaseReader[T, V], f: V => Z) extends BaseReader[T, Z] {
       def f1(v: V): Z = {
         if(v == null) null.asInstanceOf[Z] else f(v)
