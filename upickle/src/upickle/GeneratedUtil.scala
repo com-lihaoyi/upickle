@@ -141,24 +141,5 @@ private[upickle] trait GeneratedUtil extends Types{
     def write(out: Facade[Unit], v: T): Unit = out.objectContext().finish(-1)
   }
 
-  def annotate[V: ClassTag](rw: Reader[V], n: String) = new TaggedReader[V] {
-    def tags = Seq(n)
-
-    def readers = Seq(rw)
-  }
-
-  def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
-    def tags = Seq(n)
-
-    def write(out: Facade[Unit], v: V) = {
-      val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, _]]
-      ctx.add((), -1)
-      out.jstring(n, -1)
-      ctx.add((), -1)
-      rw.write(out, v)
-      ctx.finish(-1)
-    }
-  }
-
 
 }

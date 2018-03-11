@@ -18,38 +18,12 @@ import scala.reflect.ClassTag
 trait Types{ types =>
   type ReadWriter[T] = Reader[T] with Writer[T]
   type TaggedReadWriter[T] = TaggedReader[T] with TaggedWriter[T]
-  trait TaggedReader[T] extends Reader[T]{
+  type TaggedReader[T] <: TaggedReader0[T]
+  trait TaggedReader0[T] extends Reader[T] {
     def tags: Seq[String]
     def readers: Seq[Reader[T]]
-
-    override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[T]
-    override def arrayContext(index: Int) = new RawFContext[Any, T] {
-      var typeName: String = null
-      var delegate: Reader[_] = null
-      var delegateCtx: RawFContext[_, T] = null
-
-      var res: T = _
-      def visitKey(s: CharSequence, index: Int): Unit = ???
-      def facade =
-        if (typeName == null) TaggedReader.this.asInstanceOf[RawFacade[Any]]
-        else delegate.asInstanceOf[RawFacade[Any]]
-
-      def add(v: Any, index: Int): Unit = {
-        if (typeName == null){
-          typeName = v.toString
-          delegate = readers(tags.indexOf(typeName))
-        }else{
-          res = v.asInstanceOf[T]
-        }
-      }
-
-      def finish(index: Int) = {
-        res
-      }
-
-      def isObj = false
-    }
   }
+  def newTaggedReader[T](tags0: Seq[String], readers0: Seq[Reader[T]]): TaggedReader[T]
   trait TaggedWriter[T] extends Writer[T]{
     def tags: Seq[String]
   }
@@ -57,7 +31,7 @@ trait Types{ types =>
     implicit class Mergable[T, K <: T](w0: => ReadWriter[K])
                                       (implicit val ct: ClassTag[K]){
       lazy val w1 = w0.asInstanceOf[TaggedReadWriter[K]]
-      val w = new TaggedReader[K] with TaggedWriter[K]{
+      val w = new TaggedReader0[K] with TaggedWriter[K]{
         def tags = w1.tags
 
         def readers = w1.asInstanceOf[TaggedReadWriter[K]].readers
@@ -102,40 +76,18 @@ trait Types{ types =>
         implicitly[Writer[T]].write(out, v)
       }
     }
-    def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = new TaggedReader[T] with TaggedWriter[T] {
-      def tags = implicitly[TaggedReader[T]].tags
-      def readers = implicitly[TaggedReader[T]].readers
-      override def jnull(index: Int) = implicitly[Reader[T]].jnull(index)
-      override def jtrue(index: Int) = implicitly[Reader[T]].jtrue(index)
-      override def jfalse(index: Int) = implicitly[Reader[T]].jfalse(index)
 
-      override def jstring(s: CharSequence, index: Int) = implicitly[Reader[T]].jstring(s, index)
-      override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-        implicitly[Reader[T]].jnum(s, decIndex, expIndex, index)
-      }
-
-      override def objectContext(index: Int) = implicitly[Reader[T]].objectContext(index)
-      override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
-      override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
-
-      def write(out: Facade[Unit], v: T): Unit = {
-        implicitly[Writer[T]].write(out, v)
-      }
-    }
   }
+  def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T]
   object Reader{
     implicit class Mergable[T, K <: T](r0: => Reader[K])(implicit val ct: ClassTag[K]){
       lazy val r1 = r0.asInstanceOf[TaggedReader[K]]
-      val r = new TaggedReader[K] {
-        def tags = r1.tags
-
-        def readers = r1.readers
-      }
+      val r = newTaggedReader[K] (r1.tags, r1.readers)
     }
-    def merge[T](readers0: Mergable[T, _]*) = new TaggedReader[T]{ outer =>
-      def tags: Seq[String] = readers0.flatMap(_.r.tags)
-      def readers: Seq[Reader[T]] = readers0.flatMap(_.r.readers.asInstanceOf[Seq[Reader[T]]])
-    }
+    def merge[T](readers0: Mergable[T, _]*) = newTaggedReader[T](
+      readers0.flatMap(_.r.tags),
+      readers0.flatMap(_.r.readers.asInstanceOf[Seq[Reader[T]]])
+    )
   }
   type Reader[T] = BaseReader[Any, T]
   trait BaseReader[T, V] extends jawn.RawFacade[V] {
