@@ -49,14 +49,15 @@ trait UpickleModule extends CrossScalaModule with PublishModule{
       val implicitWriterTuple = commaSeparated(j => s"implicitly[Writer[T$j]]")
       val implicitReaderTuple = commaSeparated(j => s"implicitly[Reader[T$j]]")
       val lookupTuple = commaSeparated(j => s"x(${j-1})")
+      val fieldTuple = commaSeparated(j => s"x._$j")
       val caseReader =
         if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
         else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
         s"""
         implicit def Tuple${i}Writer[$writerTypes]: TupleNWriter[Tuple$i[$typeTuple]] =
-          new TupleNWriter[Tuple$i[$typeTuple]](List($implicitWriterTuple), x => if (x == null) null else x.productIterator.toSeq)
+          new TupleNWriter[Tuple$i[$typeTuple]](Array($implicitWriterTuple), x => if (x == null) null else Array($fieldTuple))
         implicit def Tuple${i}Reader[$readerTypes]: TupleNReader[Tuple$i[$typeTuple]] =
-          new TupleNReader(List($implicitReaderTuple), x => Tuple$i($lookupTuple).asInstanceOf[Tuple$i[$typeTuple]])
+          new TupleNReader(Array($implicitReaderTuple), x => Tuple$i($lookupTuple).asInstanceOf[Tuple$i[$typeTuple]])
         """
     }
 

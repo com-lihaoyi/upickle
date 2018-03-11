@@ -6,7 +6,7 @@ import acyclic.file
 */
 object TestUtil extends TestUtil[upickle.default.type](upickle.default)
 object LegacyTestUtil extends TestUtil[upickle.legacy.type](upickle.legacy)
-class TestUtil[Api <: upickle.Api](api: Api){
+class TestUtil[Api <: upickle.Api](val api: Api){
   import api._
   def rw[T: Reader: Writer](t: T, s: String*) = {
     rwk[T, T](t, s:_*)(x => x)

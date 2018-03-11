@@ -4,8 +4,6 @@ import java.util.UUID
 
 import jawn.RawFContext
 
-import scala.collection.generic.CanBuildFrom
-import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Writers extends Types with Generated with LowPriImplicits{
@@ -64,8 +62,10 @@ trait Writers extends Types with Generated with LowPriImplicits{
   implicit def ArrayWriter[T](implicit r: Writer[T]) = new Writer[Array[T]] {
     def write[R](out: jawn.Facade[R], v: Array[T]): R = {
       val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
-      for(item <- v){
-        ctx.add(r.write(out, item), -1)
+      var i = 0
+      while(i < v.length){
+        ctx.add(r.write(out, v(i)), -1)
+        i += 1
       }
 
       ctx.finish(-1)
@@ -76,10 +76,9 @@ trait Writers extends Types with Generated with LowPriImplicits{
     if (kw eq StringWriter) new Writer[Map[String, V]]{
       def write[R](out: jawn.Facade[R], v: Map[String, V]): R = {
         val ctx = out.objectContext().asInstanceOf[RawFContext[Any, R]]
-        for((k1, v1) <- v){
-
+        for(pair <- v){
+          val (k1, v1) = pair
           ctx.visitKey(k1, -1)
-
           ctx.add(vw.write(out, v1), -1)
 
         }

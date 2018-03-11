@@ -255,7 +255,7 @@ object Macros {
     import c.universe._
     def wrapObject(t: c.Tree) = q"new ${c.prefix}.SingletonR($t)"
     def wrapCase0(t: c.Tree, targetType: c.Type) =
-      q"new ${c.prefix}.Case0R(() => $t(): $targetType, Seq(${targetType.typeSymbol.fullName}))"
+      q"new ${c.prefix}.Case0R(() => $t(): $targetType)"
     def wrapCase1(companion: c.Tree,
                   arg: String,
                   typeArgs: Seq[c.Type],
@@ -267,8 +267,7 @@ object Macros {
         new ${c.prefix}.CaseR[_root_.scala.Tuple1[$argType], $targetType](
           _ match {case _root_.scala.Tuple1(x) => $companion.apply[..$typeArgs](x)},
           _root_.scala.Array($arg),
-          _root_.scala.Array(..$defaults),
-          Seq(${targetType.typeSymbol.fullName})
+          _root_.scala.Array(..$defaults)
         )(${c.prefix}.Tuple1Reader)
         """
     }
@@ -286,8 +285,7 @@ object Macros {
         new ${c.prefix}.CaseR[(..$argTypes), $targetType](
           ($x: (..$argTypes)) => ($companion.apply: (..$argTypes) => $targetType)(..$argSyms),
           _root_.scala.Array(..$args),
-          _root_.scala.Array(..$defaults),
-          Seq(${targetType.typeSymbol.fullName})
+          _root_.scala.Array(..$defaults)
         )(${c.prefix}.$name)
       """
     }
@@ -301,7 +299,7 @@ object Macros {
     import c.universe._
     def wrapObject(obj: c.Tree) = q"new ${c.prefix}.SingletonW($obj)"
     def wrapCase0(companion: c.Tree, targetType: c.Type) =
-      q"new ${c.prefix}.Case0W($companion.unapply, Seq(${targetType.typeSymbol.fullName}))"
+      q"new ${c.prefix}.Case0W($companion.unapply)"
     def findUnapply(tpe: Type) = {
       val (companion, paramTypes, argSyms, hasDefaults) = getArgSyms(tpe).fold(
         errMsg => c.abort(c.enclosingPosition, errMsg),
@@ -324,8 +322,7 @@ object Macros {
         new ${c.prefix}.CaseW[_root_.scala.Tuple1[$argType], $targetType](
           $companion.${findUnapply(targetType)}(_).map(_root_.scala.Tuple1.apply),
           _root_.scala.Array($arg),
-          _root_.scala.Array(..$defaults),
-          Seq(${targetType.typeSymbol.fullName})
+          _root_.scala.Array(..$defaults)
         )(${c.prefix}.Tuple1Writer)
         """
     }
@@ -343,8 +340,7 @@ object Macros {
         new ${c.prefix}.CaseW[(..$argTypes), $targetType](
           $companion.${findUnapply(targetType)}[..$typeArgs],
           _root_.scala.Array(..$args),
-          _root_.scala.Array(..$defaults),
-          Seq(${targetType.typeSymbol.fullName})
+          _root_.scala.Array(..$defaults)
         )(${c.prefix}.$name)
       """
     }

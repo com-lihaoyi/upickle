@@ -9,76 +9,75 @@ import scala.reflect.ClassTag
 * to put in the stringly typed code-generator
 */
 private[upickle] trait GeneratedUtil extends Types{
-  class TupleNWriter[V](val writers: List[Writer[_]], val f: V => Seq[Any]) extends Writer[V]{
+  class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{
     def write[R](out: jawn.Facade[R], v: V): R = {
       if (v == null) out.jnull(-1)
       else{
-
         val ctx = out.arrayContext()
-
-        for((item, w) <- f(v).zip(writers)){
-          ctx.add(w.asInstanceOf[Writer[Any]].write(out, item), -1)
-
+        val vs = f(v)
+        var i = 0
+        while(i < writers.length){
+          ctx.add(writers(i).asInstanceOf[Writer[Any]].write(out, vs(i)), -1)
+          i += 1
         }
         ctx.finish(-1)
       }
     }
   }
 
-  class TupleNReader[V](val readers: List[Reader[_]], val f: Seq[Any] => V) extends Reader[V]{
+  class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends Reader[V]{
     override def arrayContext(index: Int) = new jawn.RawFContext[Any, V] {
-      val b = mutable.Buffer.empty[Any]
-      var facades = readers
+      val b = new Array[Any](readers.length)
+      var facadesIndex = 0
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
       def add(v: Any, index: Int): Unit = {
-        facades = facades.tail
-        if (facades.isEmpty) facades = readers
-        b += v
+        b(facadesIndex) = v
+        facadesIndex = (facadesIndex + 1) % readers.length
       }
 
       def finish(index: Int) = f(b)
 
       def isObj = false
 
-      def facade = facades.head
+      def facade = readers(facadesIndex)
     }
   }
 
   class CaseR[T, V](f: T => V,
                     names: Array[String],
-                    defaults: Array[Any],
-                    val tags: Seq[String])
+                    defaults: Array[Any])
                    (r0: => TupleNReader[T]) extends Reader[V]{
     lazy val r = r0
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       val aggregated = new Array[Any](names.length)
       val found = new Array[Boolean](names.length)
-
-      var currentKey: String = null
+      var currentIndex = -1
+      var currentKeyIndex: String = null
       var facade: jawn.RawFacade[_, _] = null
 
       def visitKey(s: CharSequence, index: Int): Unit = {
-        currentKey = s.toString
-        val index = names.indexOf(currentKey)
+        currentKeyIndex = s.toString
+        currentIndex = names.indexOf(currentKeyIndex)
 
         facade =
-          if (index == -1) jawn.NullFacade
-          else r.readers(index)
+          if (currentIndex == -1) jawn.NullFacade
+          else r.readers(currentIndex)
       }
 
       def add(v: Any, index: Int): Unit = {
-        val index = names.indexOf(currentKey)
-        if (index != -1) {
-          aggregated(index) = v
-          found(index) = true
+        if (currentIndex != -1) {
+          aggregated(currentIndex) = v
+          found(currentIndex) = true
         }
       }
 
       def finish(index: Int) = {
-        for(i <- found.indices){
+        var i = 0
+        while(i < found.length){
           if (!found(i)) aggregated(i) = defaults(i)
+          i += 1
         }
         f(r.f(aggregated))
       }
@@ -86,7 +85,7 @@ private[upickle] trait GeneratedUtil extends Types{
       def isObj = true
     }
   }
-  class Case0R[V](f: () => V, val tags: Seq[String]) extends Reader[V]{ outer =>
+  class Case0R[V](f: () => V) extends Reader[V]{ outer =>
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       def facade = outer
 
@@ -102,24 +101,24 @@ private[upickle] trait GeneratedUtil extends Types{
 
   class CaseW[T, V](val f: V => Option[T],
                     val names: Array[String],
-                    val defaults: Array[Any],
-                    val tags: Seq[String])
+                    val defaults: Array[Any])
                    (w0: => TupleNWriter[T]) extends Writer[V]{
     lazy val w = w0
     def write[R](out: Facade[R], v: V): R = {
 
       val ctx = out.objectContext(-1)
       val items = w.f(f(v).get)
-      for(i <- names.indices){
-
+      var i = 0
+      while(i < names.length){
         ctx.visitKey(names(i), -1)
         ctx.add(w.writers(i).asInstanceOf[Writer[Any]].write(out, items(i)), -1)
+        i += 1
       }
 
       ctx.finish(-1)
     }
   }
-  class Case0W[T](f: T => Boolean, val tags: Seq[String]) extends Writer[T] {
+  class Case0W[T](f: T => Boolean) extends Writer[T] {
     def write[R](out: jawn.Facade[R], v: T): R = {
       out.objectContext(-1).finish(-1)
     }

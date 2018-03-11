@@ -36,13 +36,13 @@ object default extends AttributeTagged{
  */
 object legacy extends Api{
   def annotate[V: ClassTag](rw: Reader[V], n: String) = new TaggedReader[V] {
-    def tags = Seq(n)
+    def tags: Seq[String] = Array(n)
 
-    def readers = Seq(rw)
+    def readers: Seq[Reader[V]] = Array(rw)
   }
 
   def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
-    def tags = Seq(n)
+    def tags: Seq[String] = Array(n)
 
     def write[R](out: Facade[R], v: V): R = {
       val ctx = out.arrayContext(-1)
@@ -108,13 +108,13 @@ object legacy extends Api{
 trait AttributeTagged extends Api{
   def tagName = "$type"
   def annotate[V: ClassTag](rw: Reader[V], n: String) = new TaggedReader[V] {
-    def tags = Seq(n)
+    def tags: Seq[String] = Array(n)
 
-    def readers = Seq(rw)
+    def readers: Seq[Reader[V]] = Array(rw)
   }
 
   def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
-    def tags = Seq(n)
+    def tags: Seq[String] = Array(n)
 
     def write[R](out: Facade[R], v: V): R = {
       val s = new java.io.StringWriter()
