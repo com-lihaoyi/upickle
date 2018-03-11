@@ -1,65 +1,65 @@
-//package example
-//import acyclic.file
-//import upickle.{Js, TestUtil}
-//import utest._
-//import upickle.default.{ReadWriter => RW, macroRW}
-//object Simple {
-//  case class Thing(myFieldA: Int, myFieldB: String)
-//  object Thing{
-//    implicit def rw: RW[Thing] = macroRW
-//  }
-//  case class Big(i: Int, b: Boolean, str: String, c: Char, t: Thing)
-//  object Big{
-//    implicit def rw: RW[Big] = macroRW
-//  }
-//}
-//object Sealed{
-//  sealed trait IntOrTuple
-//  object IntOrTuple{
-//    implicit def rw: RW[IntOrTuple] = RW.merge(IntThing.rw, TupleThing.rw)
-//  }
-//  case class IntThing(i: Int) extends IntOrTuple
-//  object IntThing{
-//    implicit def rw: RW[IntThing] = macroRW
-//  }
-//  case class TupleThing(name: String, t: (Int, Int)) extends IntOrTuple
-//  object TupleThing{
-//    implicit def rw: RW[TupleThing] = macroRW
-//  }
-//}
-//object Recursive{
-//  case class Foo(i: Int)
-//  object Foo{
-//    implicit def rw: RW[Foo] = macroRW
-//  }
-//  case class Bar(name: String, foos: Seq[Foo])
-//  object Bar{
-//    implicit def rw: RW[Bar] = macroRW
-//  }
-//}
-//object Defaults{
-//  case class FooDefault(i: Int = 10, s: String = "lol")
-//  object FooDefault{
-//    implicit def rw: RW[FooDefault] = macroRW
-//  }
-//}
-//object Keyed{
-//  case class KeyBar(@upickle.key("hehehe") kekeke: Int)
-//  object KeyBar{
-//    implicit def rw: RW[KeyBar] = macroRW
-//  }
-//}
-//object KeyedTag{
-//  sealed trait A
-//  object A{
-//    implicit def rw: RW[A] = RW.merge(B.rw, macroRW[C.type])
-//  }
-//  @upickle.key("Bee") case class B(i: Int) extends A
-//  object B{
-//    implicit def rw: RW[B] = macroRW
-//  }
-//  case object C extends A
-//}
+package example
+import acyclic.file
+import upickle.{Js, TestUtil}
+import utest._
+import upickle.default.{ReadWriter => RW, macroRW}
+object Simple {
+  case class Thing(myFieldA: Int, myFieldB: String)
+  object Thing{
+    implicit def rw: RW[Thing] = macroRW
+  }
+  case class Big(i: Int, b: Boolean, str: String, c: Char, t: Thing)
+  object Big{
+    implicit def rw: RW[Big] = macroRW
+  }
+}
+object Sealed{
+  sealed trait IntOrTuple
+  object IntOrTuple{
+    implicit def rw: RW[IntOrTuple] = RW.merge(IntThing.rw, TupleThing.rw)
+  }
+  case class IntThing(i: Int) extends IntOrTuple
+  object IntThing{
+    implicit def rw: RW[IntThing] = macroRW
+  }
+  case class TupleThing(name: String, t: (Int, Int)) extends IntOrTuple
+  object TupleThing{
+    implicit def rw: RW[TupleThing] = macroRW
+  }
+}
+object Recursive{
+  case class Foo(i: Int)
+  object Foo{
+    implicit def rw: RW[Foo] = macroRW
+  }
+  case class Bar(name: String, foos: Seq[Foo])
+  object Bar{
+    implicit def rw: RW[Bar] = macroRW
+  }
+}
+object Defaults{
+  case class FooDefault(i: Int = 10, s: String = "lol")
+  object FooDefault{
+    implicit def rw: RW[FooDefault] = macroRW
+  }
+}
+object Keyed{
+  case class KeyBar(@upickle.key("hehehe") kekeke: Int)
+  object KeyBar{
+    implicit def rw: RW[KeyBar] = macroRW
+  }
+}
+object KeyedTag{
+  sealed trait A
+  object A{
+    implicit def rw: RW[A] = RW.merge(B.rw, macroRW[C.type])
+  }
+  @upickle.key("Bee") case class B(i: Int) extends A
+  object B{
+    implicit def rw: RW[B] = macroRW
+  }
+  case object C extends A
+}
 //object Custom2{
 //  import upickle.Js
 //  class CustomThing2(val i: Int, val s: String)
@@ -74,13 +74,13 @@
 //    }
 //  }
 //}
-//
-//import KeyedTag._
-//import Keyed._
-//import Sealed._
-//import Simple._
-//import Recursive._
-//import Defaults._
+
+import KeyedTag._
+import Keyed._
+import Sealed._
+import Simple._
+import Recursive._
+import Defaults._
 //
 //object ExampleTests extends TestSuite {
 //

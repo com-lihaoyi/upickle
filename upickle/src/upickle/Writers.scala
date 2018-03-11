@@ -44,7 +44,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
 
   implicit def OptionWriter[T: Writer]: Writer[Option[T]] = SeqLikeWriter[Seq, T].comap[Option[T]](_.toSeq)
   implicit def SomeWriter[T: Writer]: Writer[Some[T]] = SeqLikeWriter[Seq, T].comap[Some[T]](_.toSeq)
-  implicit def NoneWriter[T: Writer]: Writer[None.type] = SeqLikeWriter[Seq, T].comap[None.type](_.toSeq)
+  implicit def NoneWriter: Writer[None.type] = SeqLikeWriter[Seq, Unit].comap[None.type](_.toSeq)
   implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]) = new Writer[C[T]] {
     def write(out: jawn.Facade[Unit], v: C[T]) = {
       if (v == null) out.jnull()

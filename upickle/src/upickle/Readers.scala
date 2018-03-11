@@ -68,9 +68,9 @@ trait Readers extends Types with Generated with LowPriImplicits{
     }.asInstanceOf[Reader[Map[K, V]]]
     else SeqLikeReader[Array, (K, V)].map(_.toMap).asInstanceOf[Reader[Map[K, V]]]
   }
-  implicit def OptionReader[C[_], T: Reader]: Reader[Option[T]] = SeqLikeReader[Seq, T].map(_.headOption)
-  implicit def SomeReader[C[_], T: Reader]: Reader[Some[T]] = SeqLikeReader[Seq, T].map(_.headOption.asInstanceOf[Some[T]])
-  implicit def NoneReader[C[_], T: Reader]: Reader[None.type] = SeqLikeReader[Seq, T].map(_.headOption.asInstanceOf[None.type])
+  implicit def OptionReader[T: Reader]: Reader[Option[T]] = SeqLikeReader[Seq, T].map(_.headOption)
+  implicit def SomeReader[T: Reader]: Reader[Some[T]] = OptionReader[T].asInstanceOf[Reader[Some[T]]]
+  implicit def NoneReader: Reader[None.type] = OptionReader[Unit].asInstanceOf[Reader[None.type]]
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def arrayContext(index: Int) = new jawn.RawFContext[Any, C[T]] {

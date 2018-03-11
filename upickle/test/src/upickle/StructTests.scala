@@ -81,8 +81,8 @@ object StructTests extends TestSuite {
 
     'option{
       'Some-rw(Some(123), "[123]")
-      'None-rw(None: Option[String], "[]")
-      'Option{
+      'None - rw(None, "[]")
+      'Option - {
         rw(Some(123): Option[Int], "[123]")
         rw(None: Option[Int], "[]")
       }
