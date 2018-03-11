@@ -119,7 +119,7 @@ object Singletons{
     implicit def rw: RW[AA] = RW.merge(
       default.macroRW[BB.type],
       default.macroRW[CC.type]
-    )
+   )
   }
   case object BB extends AA
   case object CC extends AA
@@ -221,81 +221,81 @@ object Varargs{
 //  }
 //}
 //
-//object Exponential{
-//  case class A1 (x: A2 , y: A2 )
-//  object A1{
-//    implicit def rw: RW[A1] = default.macroRW
-//  }
-//  case class A2 (x: A3 , y: A3 )
-//  object A2{
-//    implicit def rw: RW[A2] = default.macroRW
-//  }
-//  case class A3 (x: A4 , y: A4 )
-//  object A3{
-//    implicit def rw: RW[A3] = default.macroRW
-//  }
-//  case class A4 (x: A5 , y: A5 )
-//  object A4{
-//    implicit def rw: RW[A4] = default.macroRW
-//  }
-//  case class A5 (x: A6 , y: A6 )
-//  object A5{
-//    implicit def rw: RW[A5] = default.macroRW
-//  }
-//  case class A6 (x: A7 , y: A7 )
-//  object A6{
-//    implicit def rw: RW[A6] = default.macroRW
-//  }
-//  case class A7 (x: A8 , y: A8 )
-//  object A7{
-//    implicit def rw: RW[A7] = default.macroRW
-//  }
-//  case class A8 (x: A9 , y: A9 )
-//  object A8{
-//    implicit def rw: RW[A8] = default.macroRW
-//  }
-//  case class A9 (x: A10, y: A10)
-//  object A9{
-//    implicit def rw: RW[A9] = default.macroRW
-//  }
-//  case class A10(x: A11, y: A11)
-//  object A10{
-//    implicit def rw: RW[A10] = default.macroRW
-//  }
-//  case class A11(x: A12, y: A12)
-//  object A11{
-//    implicit def rw: RW[A11] = default.macroRW
-//  }
-//  case class A12(x: A13, y: A13)
-//  object A12{
-//    implicit def rw: RW[A12] = default.macroRW
-//  }
-//  case class A13(x: A14, y: A14)
-//  object A13{
-//    implicit def rw: RW[A13] = default.macroRW
-//  }
-//  case class A14(x: A15, y: A15)
-//  object A14{
-//    implicit def rw: RW[A14] = default.macroRW
-//  }
-//  case class A15(x: A16, y: A16)
-//  object A15{
-//    implicit def rw: RW[A15] = default.macroRW
-//  }
-//  case class A16(x: A17, y: A17)
-//  object A16{
-//    implicit def rw: RW[A16] = default.macroRW
-//  }
-//  case class A17(x: A18, y: A18)
-//  object A17{
-//    implicit def rw: RW[A17] = default.macroRW
-//  }
-//  case class A18()
-//  object A18{
-//    implicit def rw: RW[A18] = default.macroRW
-//  }
-//}
-//
+object Exponential{
+  case class A1 (x: A2, y: A2)
+  object A1{
+    implicit def rw: RW[A1] = default.macroRW
+  }
+  case class A2 (x: A3, y: A3)
+  object A2{
+    implicit def rw: RW[A2] = default.macroRW
+  }
+  case class A3 (x: A4, y: A4)
+  object A3{
+    implicit def rw: RW[A3] = default.macroRW
+  }
+  case class A4 (x: A5, y: A5)
+  object A4{
+    implicit def rw: RW[A4] = default.macroRW
+  }
+  case class A5 (x: A6, y: A6)
+  object A5{
+    implicit def rw: RW[A5] = default.macroRW
+  }
+  case class A6 (x: A7, y: A7)
+  object A6{
+    implicit def rw: RW[A6] = default.macroRW
+  }
+  case class A7 (x: A8, y: A8)
+  object A7{
+    implicit def rw: RW[A7] = default.macroRW
+  }
+  case class A8 (x: A9, y: A9)
+  object A8{
+    implicit def rw: RW[A8] = default.macroRW
+  }
+  case class A9 (x: A10, y: A10)
+  object A9{
+    implicit def rw: RW[A9] = default.macroRW
+  }
+  case class A10(x: A11, y: A11)
+  object A10{
+    implicit def rw: RW[A10] = default.macroRW
+  }
+  case class A11(x: A12, y: A12)
+  object A11{
+    implicit def rw: RW[A11] = default.macroRW
+  }
+  case class A12(x: A13, y: A13)
+  object A12{
+    implicit def rw: RW[A12] = default.macroRW
+  }
+  case class A13(x: A14, y: A14)
+  object A13{
+    implicit def rw: RW[A13] = default.macroRW
+  }
+  case class A14(x: A15, y: A15)
+  object A14{
+    implicit def rw: RW[A14] = default.macroRW
+  }
+  case class A15(x: A16, y: A16)
+  object A15{
+    implicit def rw: RW[A15] = default.macroRW
+  }
+  case class A16(x: A17, y: A17)
+  object A16{
+    implicit def rw: RW[A16] = default.macroRW
+  }
+  case class A17(x: A18, y: A18)
+  object A17{
+    implicit def rw: RW[A17] = default.macroRW
+  }
+  case class A18()
+  object A18{
+    implicit def rw: RW[A18] = default.macroRW
+  }
+}
+
 object GenericADTs{
   sealed trait Small[A]
   object Small{
@@ -310,7 +310,7 @@ object GenericADTs{
   object Delta {
     implicit def rw[A: R: W, B: R: W]: RW[Delta[A, B]] = RW.merge(
       Insert.rw[A, B], Remove.rw[A], Clear.rw
-    )
+   )
 
     case class Insert[A, B](key: A, value: B) extends Delta[A, B]
     object Insert{
@@ -329,7 +329,7 @@ object GenericADTs{
   object DeltaInvariant {
     implicit def rw[A: R: W, B: R: W]: RW[DeltaInvariant[A, B]] = RW.merge(
       Insert.rw[A, B], Remove.rw[A, B], Clear.rw[A, B]
-    )
+   )
     case class Insert[A, B](key: A, value: B) extends DeltaInvariant[A, B]
     object Insert{
       implicit def rw[A: R: W, B: R: W]: RW[Insert[A, B]] = default.macroRW

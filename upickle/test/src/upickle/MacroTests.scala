@@ -97,11 +97,11 @@ object MacroTests extends TestSuite {
 //      * - upickle.write(subpackage.Wrapper(subpackage.Base.Child))
 //    }
 //    */
-//    'exponential{
-//
-//      // Doesn't even need to execute, as long as it can compile
-//      val ww1 = implicitly[upickle.default.Writer[Exponential.A1]]
-//    }
+    'exponential{
+
+      // Doesn't even need to execute, as long as it can compile
+      val ww1 = implicitly[upickle.default.Writer[Exponential.A1]]
+    }
 
 
     'commonCustomStructures{
