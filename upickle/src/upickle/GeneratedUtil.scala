@@ -14,7 +14,7 @@ private[upickle] trait GeneratedUtil extends Types{
       if (v == null) out.jnull(-1)
       else{
 
-        val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
+        val ctx = out.arrayContext()
 
         for((item, w) <- f(v).zip(writers)){
           ctx.add(w.asInstanceOf[Writer[Any]].write(out, item), -1)
@@ -107,13 +107,13 @@ private[upickle] trait GeneratedUtil extends Types{
                    (w0: => TupleNWriter[T]) extends Writer[V]{
     lazy val w = w0
     def write[R](out: Facade[R], v: V): R = {
-      val writers = w.writers.asInstanceOf[Seq[Writer[Any]]]
-      val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, R]]
+
+      val ctx = out.objectContext(-1)
       val items = w.f(f(v).get)
       for(i <- names.indices){
 
         ctx.visitKey(names(i), -1)
-        ctx.add(writers(i).write(out, items(i)), -1)
+        ctx.add(w.writers(i).asInstanceOf[Writer[Any]].write(out, items(i)), -1)
       }
 
       ctx.finish(-1)
@@ -127,7 +127,7 @@ private[upickle] trait GeneratedUtil extends Types{
 
   class SingletonR[T](t: T) extends Reader[T]{
     override def objectContext(index: Int) = new RawFContext[Any, T] {
-      def facade = SingletonR.this
+      def facade = jawn.NullFacade
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 

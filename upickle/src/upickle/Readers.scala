@@ -137,37 +137,37 @@ trait Readers extends Types with Generated with LowPriImplicits{
 
   implicit object JsValueR extends Reader[Js.Value]{
     override def objectContext(index: Int) = {
-      new RawFContext[Js.Value, Js.Obj] {
+      new RawFContext[Any, Js.Obj] {
         val output = mutable.Buffer.empty[(String, Js.Value)]
         var lastKey: String = null
         def facade = JsValueR
 
         def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
 
-        def add(v: Js.Value, index: Int): Unit = {
-          output.append((lastKey, v))
+        def add(v: Any, index: Int): Unit = {
+          output.append((lastKey, v.asInstanceOf[Js.Value]))
         }
 
         def finish(index: Int) = Js.Obj(output:_*)
 
         def isObj = true
-      }.asInstanceOf[RawFContext[Any, Js.Value]]
+      }
     }
     override def arrayContext(index: Int) = {
-      new RawFContext[Js.Value, Js.Arr] {
+      new RawFContext[Any, Js.Arr] {
         val output = mutable.Buffer.empty[Js.Value]
         def facade = JsValueR
 
         def visitKey(s: CharSequence, index: Int): Unit = ???
 
-        def add(v: Js.Value, index: Int): Unit = {
-          output.append(v)
+        def add(v: Any, index: Int): Unit = {
+          output.append(v.asInstanceOf[Js.Value])
         }
 
         def finish(index: Int) = Js.Arr(output:_*)
 
         def isObj = false
-      }.asInstanceOf[RawFContext[Any, Js.Value]]
+      }
     }
     override def jstring(s: CharSequence, index: Int) = Js.Str(s)
     override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = Js.Num(s.toString.toDouble)

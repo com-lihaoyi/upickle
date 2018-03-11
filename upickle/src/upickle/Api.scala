@@ -45,7 +45,7 @@ object legacy extends Api{
     def tags = Seq(n)
 
     def write[R](out: Facade[R], v: V): R = {
-      val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, R]]
+      val ctx = out.arrayContext(-1)
       ctx.add(out.jstring(n, -1), -1)
 
       ctx.add(rw.write(out, v), -1)
@@ -63,7 +63,6 @@ object legacy extends Api{
     def tags: Seq[String]
     def readers: Seq[Reader[T]]
 
-    override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[T]
     override def arrayContext(index: Int) = new RawFContext[Any, T] {
       var typeName: String = null
       var delegate: Reader[_] = null
@@ -72,7 +71,7 @@ object legacy extends Api{
       var res: T = _
       def visitKey(s: CharSequence, index: Int): Unit = ???
       def facade =
-        if (typeName == null) TaggedReaderImpl.this
+        if (typeName == null) StringReader
         else delegate
 
       def add(v: Any, index: Int): Unit = {
