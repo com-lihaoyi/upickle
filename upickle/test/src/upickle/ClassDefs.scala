@@ -175,20 +175,20 @@ object Annotated {
     implicit def rw: RW[C] = default.macroRW
   }
 }
-//object Defaults {
-//  case class ADTa(i: Int = 0)
-//  object ADTa{
-//    implicit def rw: RW[ADTa] = default.macroRW
-//  }
-//  case class ADTb(i: Int = 1, s: String)
-//  object ADTb{
-//    implicit def rw: RW[ADTb] = default.macroRW
-//  }
-//  case class ADTc(i: Int = 2, s: String, t: (Double, Double) = (1, 2))
-//  object ADTc{
-//    implicit def rw: RW[ADTc] = default.macroRW
-//  }
-//}
+object Defaults {
+  case class ADTa(i: Int = 0)
+  object ADTa{
+    implicit def rw: RW[ADTa] = default.macroRW
+  }
+  case class ADTb(i: Int = 1, s: String)
+  object ADTb{
+    implicit def rw: RW[ADTb] = default.macroRW
+  }
+  case class ADTc(i: Int = 2, s: String, t: (Double, Double) = (1, 2))
+  object ADTc{
+    implicit def rw: RW[ADTc] = default.macroRW
+  }
+}
 //trait MixedIn{
 //  trait Trt1{
 //    case class ClsA(s: String)

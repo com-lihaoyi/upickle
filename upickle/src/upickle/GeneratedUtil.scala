@@ -53,26 +53,28 @@ private[upickle] trait GeneratedUtil extends Types{
                    (r0: => TupleNReader[T]) extends Reader[V]{
     lazy val r = r0
     override def objectContext(index: Int) = new RawFContext[Any, V] {
-      val b = new Array[Any](names.length)
-      var facades = r.readers
+      val aggregated = new Array[Any](names.length)
+      val found = new Array[Boolean](names.length)
 
       var currentKey: String = null
-      def facade = facades.head.asInstanceOf[RawFacade[Any]]
+      var facade = null.asInstanceOf[RawFacade[Any]]
 
-      def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
-
-      def add(v: Any, index: Int): Unit = {
-        facades = facades.tail
-        if (facades.isEmpty) facades = r.readers
-        val i = names.indexOf(currentKey)
-        if (i == -1) ???
-        else{
-          b(i) = v
-        }
-
+      def visitKey(s: CharSequence, index: Int): Unit = {
+        currentKey = s.toString
+        facade = r.readers(names.indexOf(currentKey)).asInstanceOf[RawFacade[Any]]
       }
 
-      def finish(index: Int) = f(r.f(b))
+      def add(v: Any, index: Int): Unit = {
+        aggregated(names.indexOf(currentKey)) = v
+        found(names.indexOf(currentKey)) = true
+      }
+
+      def finish(index: Int) = {
+        for(i <- 0 until found.length){
+          if (!found(i)) aggregated(i) = defaults(i)
+        }
+        f(r.f(aggregated))
+      }
 
       def isObj = true
     }

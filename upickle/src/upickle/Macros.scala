@@ -63,7 +63,7 @@ object Macros {
         yield {
           val defaultName = newTermName("apply$default$" + (i + 1))
           if (!hasDefault) q"null"
-          else q"${c.prefix}.writeJs($companion.$defaultName)"
+          else q"$companion.$defaultName"
         }
       defaults
     }

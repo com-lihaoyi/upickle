@@ -117,27 +117,34 @@ object LegacyTests extends TestSuite {
         * - rw(B(1): A, """["0", {"omg":1}]""")
         * - rw(C("a", "b"): A, """["1", {"lol":"a","wtf":"b"}]""")
       }
-//      'useDefaults {
-//        // Ignore the values which match the default when writing and
-//        // substitute in defaults when reading if the key is missing
-//        import Defaults._
-//        * - rw(ADTa(), "{}")
-//        * - rw(ADTa(321), """{"i":321}""")
-//        * - rw(ADTb(s = "123"), """{"s":"123"}""")
-//        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-//        * - rw(ADTc(s = "123"), """{"s":"123"}""")
-//        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-//        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
-//        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
-//      }
-//      'ignoreExtraFieldsWhenDeserializing {
-//        import ADTs._
-//        val r1 = read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
-//        assert(r1 == ADTa(123))
-//        val r2 = read[ADTb]( """{"i":123, "j":false, "k":"haha", "s":"kk", "l":true, "z":[1, 2, 3]}""")
-//        assert(r2 == ADTb(123, "kk"))
-//      }
+      'useDefaults {
+        // Ignore the values which match the default when writing and
+        // substitute in defaults when reading if the key is missing
+        import Defaults._
+        implicit def Arw: RW[ADTa] = upickle.legacy.macroRW
+        implicit def Brw: RW[ADTb] = upickle.legacy.macroRW
+        implicit def Crw: RW[ADTc] = upickle.legacy.macroRW
+        * - rw(ADTa(), "{}")
+        * - rw(ADTa(321), """{"i":321}""")
+        * - rw(ADTb(s = "123"), """{"s":"123"}""")
+        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        * - rw(ADTc(s = "123"), """{"s":"123"}""")
+        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
+        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
+      }
+      'ignoreExtraFieldsWhenDeserializing {
+        import ADTs._
+        implicit def ADTarw: RW[ADTs.ADTa] = upickle.legacy.macroRW
+        implicit def ADTbrw: RW[ADTs.ADTb] = upickle.legacy.macroRW
+
+        val r1 = upickle.legacy.read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
+        assert(r1 == ADTa(123))
+        val r2 = upickle.legacy.read[ADTb]( """{"i":123, "j":false, "k":"haha", "s":"kk", "l":true, "z":[1, 2, 3]}""")
+        assert(r2 == ADTb(123, "kk"))
+      }
     }
+
     'generics{
       import GenericADTs._
       * - {
