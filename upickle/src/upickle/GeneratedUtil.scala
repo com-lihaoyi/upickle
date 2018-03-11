@@ -45,6 +45,16 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
+  abstract class CaseR[V](val names: Array[String],
+                          val defaults: Array[Any])  extends Reader[V]{
+//    val aggregated = new Array[Any](names.length)
+//    val found = new Array[Boolean](names.length)
+//    def currentIndex: Int
+//    def add(v: Any, index: Int): Unit = {
+//      aggregated(currentIndex) = v
+//      found(currentIndex) = true
+//    }
+  }
   class Case0R[V](f: () => V) extends Reader[V]{ outer =>
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       def facade = outer

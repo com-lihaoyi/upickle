@@ -206,7 +206,6 @@ object ExampleTests extends TestSuite {
 
         read[FooDefault]("{}")                ==> FooDefault(10, "lol")
         read[FooDefault]("""{"i": 123}""")    ==> FooDefault(123,"lol")
-
       }
 //      'writing{
 //        write(FooDefault(i = 11, s = "lol"))  ==> """{"i": 11}"""

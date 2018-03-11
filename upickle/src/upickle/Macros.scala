@@ -257,43 +257,51 @@ object Macros {
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type,
                   varargs: Boolean) = {
+      val x = q"${c.fresh[TermName]("derive")}"
+      val name = newTermName("Tuple"+mappedArgs.length+"Reader")
+      val tupleName = newTypeName("Tuple"+mappedArgs.length)
+      val argSyms = (1 to mappedArgs.length).map(t => q"$x.${newTermName("_"+t)}")
       val defaults = deriveDefaults(companion, hasDefaults)
       q"""
-      val defaults = Array(..$defaults)
-      new ${c.prefix}.Reader[$targetType]{
-        override def objectContext(index: Int) = new jawn.RawFContext[Any, $targetType] {
-          val aggregated = new Array[Any](${rawArgs.length})
-          val found = new Array[Boolean](${rawArgs.length})
-          var currentIndex = 0
-          var facade: jawn.RawFacade[_, _] = currentIndex match{
-            case ..${
-              for(i <- rawArgs.indices)
-              yield cq"$i => implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
+        new ${c.prefix}.CaseR[$targetType](
+          _root_.scala.Array(..$mappedArgs),
+          _root_.scala.Array(..$defaults)
+        ){
+          override def objectContext(index: Int) = new jawn.RawFContext[Any, $targetType] {
+            val aggregated = new Array[Any](names.length)
+            val found = new Array[Boolean](names.length)
+            var currentIndex = -1
+            def visitKey(s: CharSequence, index: Int): Unit = {
+              currentIndex = names.indexOf(s.toString)
             }
-          }
 
-          def visitKey(s: CharSequence, index: Int): Unit = {
-            currentIndex = s.toString match{
-              case ..${
-                for (i <- mappedArgs.indices)
-                yield cq"${mappedArgs(i)} => $i"
+            def add(v: Any, index: Int): Unit = {
+              if (currentIndex != -1) {
+                aggregated(currentIndex) = v
+                found(currentIndex) = true
               }
             }
-          }
 
-          def add(v: Any, index: Int): Unit = {
-            aggregated(currentIndex) = v
-            found(currentIndex) = true
-          }
-
-          def finish(index: Int) = {
-
-            var i = 0
-            while(i < found.length){
-              if (!found(i)) aggregated(i) = defaults(i)
-              i += 1
+            def finish(index: Int) = {
+              var i = 0
+              while(i < found.length){
+                if (!found(i)) aggregated(i) = defaults(i)
+                i += 1
+              }
+              f(aggregated)
             }
-            $companion.apply(
+
+            def isObj = true
+
+            def facade: jawn.RawFacade[_, _] = currentIndex match{
+              case -1 => jawn.NullFacade
+              case ..${
+                for(i <- rawArgs.indices)
+                yield cq"$i => implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
+              }
+            }
+
+            def f(x: Seq[Any]): $targetType = $companion.apply(
               ..${
                 for(i <- rawArgs.indices)
                 yield
@@ -302,17 +310,14 @@ object Macros {
               }
             )
           }
-
-          def isObj = true
         }
-      }
       """
     }
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       q"${c.prefix}.Reader.merge[$targetType](..${subtrees.map(x => q"new ${c.prefix}.Reader.Mergable($x)")})"
     }
-
   }
+
   abstract class Writing[M[_]] extends DeriveDefaults[M] {
     val c: scala.reflect.macros.blackbox.Context
     import c.universe._

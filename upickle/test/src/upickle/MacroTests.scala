@@ -333,6 +333,7 @@ object MacroTests extends TestSuite {
       rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
     }
+
 //    'performance{
 //      import Generic.ADT
 //      import Hierarchy._
