@@ -78,11 +78,11 @@ object MacroTests extends TestSuite {
 //  implicitly[upickle.old.Writer[ADTs.ADTc]]
 
   val tests = Tests {
-//    'mixedIn{
-//      import MixedIn._
-//      * - rw(Obj.ClsB(1), """{"i":1}""")
-//      * - rw(Obj.ClsA("omg"), """{"s":"omg"}""")
-//     }
+    'mixedIn{
+      import MixedIn._
+      * - rw(Obj.ClsB(1), """{"i":1}""")
+      * - rw(Obj.ClsA("omg"), """{"s":"omg"}""")
+     }
 //
 //    /*
 //    // TODO Currently not supported
@@ -93,9 +93,7 @@ object MacroTests extends TestSuite {
 //      * - upickle.write(Wrapper(Child))
 //    }
 //
-//    'traitFromOtherPackage {
-//      * - upickle.write(subpackage.Wrapper(subpackage.Base.Child))
-//    }
+
 //    */
     'exponential{
 
@@ -186,7 +184,7 @@ object MacroTests extends TestSuite {
 //        rw(CC: AA, """{"$type":"upickle.Singletons.CC"}""")
 //      }
     }
-//    'robustnessAgainstVaryingSchemas {
+    'robustnessAgainstVaryingSchemas {
 //      'renameKeysViaAnnotations {
 //        import Annotated._
 //
@@ -196,27 +194,27 @@ object MacroTests extends TestSuite {
 //        * - rw(B(1): A, """{"$type": "0", "omg":1}""")
 //        * - rw(C("a", "b"): A, """{"$type": "1", "lol":"a","wtf":"b"}""")
 //      }
-//      'useDefaults {
-//        // Ignore the values which match the default when writing and
-//        // substitute in defaults when reading if the key is missing
-//        import Defaults._
-//        * - rw(ADTa(), "{}")
-//        * - rw(ADTa(321), """{"i":321}""")
-//        * - rw(ADTb(s = "123"), """{"s":"123"}""")
-//        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-//        * - rw(ADTc(s = "123"), """{"s":"123"}""")
-//        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-//        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
-//        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
-//      }
-//      'ignoreExtraFieldsWhenDeserializing {
-//        import ADTs._
-//        val r1 = read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
-//        assert(r1 == ADTa(123))
-//        val r2 = read[ADTb]( """{"i":123, "j":false, "k":"haha", "s":"kk", "l":true, "z":[1, 2, 3]}""")
-//        assert(r2 == ADTb(123, "kk"))
-//      }
-//    }
+      'useDefaults {
+        // Ignore the values which match the default when writing and
+        // substitute in defaults when reading if the key is missing
+        import Defaults._
+        * - rw(ADTa(), "{}")
+        * - rw(ADTa(321), """{"i":321}""")
+        * - rw(ADTb(s = "123"), """{"s":"123"}""")
+        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        * - rw(ADTc(s = "123"), """{"s":"123"}""")
+        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
+        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
+      }
+      'ignoreExtraFieldsWhenDeserializing {
+        import ADTs._
+        val r1 = read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
+        assert(r1 == ADTa(123))
+        val r2 = read[ADTb]( """{"i":123, "j":false, "k":"haha", "s":"kk", "l":true, "z":[1, 2, 3]}""")
+        assert(r2 == ADTb(123, "kk"))
+      }
+    }
 
 //    'GenericDataTypes{
 //      'simple {
@@ -348,10 +346,10 @@ object MacroTests extends TestSuite {
 //        rw(new Custom.Thing3(10, "sss"), """ "10 sss" """)
 //      }
 //    }
-//    'varargs{
-//      rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
-//      rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
-//    }
+    'varargs{
+      rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
+      rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
+    }
 //      'performance{
 //        import Generic.ADT
 //        import Hierarchy._
@@ -388,21 +386,21 @@ object MacroTests extends TestSuite {
 //        }
 //      }
 //    'issues {
-//      'issue95 {
-//        rw(
-//          Tuple1(List(C1("hello", List("world")))),
-//          """[[{"name": "hello", "types": ["world"]}]]"""
-//        )
-//        rw(
-//          C2(List(C1("hello", List("world")))),
-//          """{"results": [{"name": "hello", "types": ["world"]}]}"""
-//        )
-//
-//        rw(
-//          GeoCoding2(List(Result2("a", "b", List("c"))), "d"),
-//          """{"results": [{"name": "a", "whatever": "b", "types": ["c"]}], "status": "d"}"""
-//        )
-//      }
+      'issue95 {
+        rw(
+          Tuple1(List(C1("hello", List("world")))),
+          """[[{"name": "hello", "types": ["world"]}]]"""
+        )
+        rw(
+          C2(List(C1("hello", List("world")))),
+          """{"results": [{"name": "hello", "types": ["world"]}]}"""
+        )
+
+        rw(
+          GeoCoding2(List(Result2("a", "b", List("c"))), "d"),
+          """{"results": [{"name": "a", "whatever": "b", "types": ["c"]}], "status": "d"}"""
+        )
+      }
 //      'scalatex{
 //        val block = Ast.Block(1, Seq(Ast.Block.Text(2, "hello")))
 //        val blockText = """{
