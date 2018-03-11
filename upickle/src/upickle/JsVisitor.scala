@@ -14,13 +14,13 @@ object JsVisitor {
       case Js.Num(d) => f.jnum(d.toString, -1, -1, -1)
       case Js.Arr(items @ _*) =>
         val ctx = f.arrayContext(-1).asInstanceOf[RawFContext[Any, T]]
-        for(item <- items) ctx.add(visit(item, f), -1)
+        for(item <- items) ctx.add(visit(item, ctx.facade), -1)
         ctx.finish(-1)
       case Js.Obj(items @ _*) =>
         val ctx = f.objectContext(-1).asInstanceOf[RawFContext[Any, T]]
         for((k, item) <- items) {
           ctx.visitKey(k, -1)
-          ctx.add(visit(item, f), -1)
+          ctx.add(visit(item, ctx.facade), -1)
         }
         ctx.finish(-1)
     }
