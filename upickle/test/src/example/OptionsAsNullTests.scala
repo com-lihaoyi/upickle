@@ -28,29 +28,11 @@ object OptionPickler extends upickle.AttributeTagged {
     }
     override def jstring(s: CharSequence, index: Int) = Some(delegate.jstring(s, index))
 
-    override def objectContext(index: Int) = new RawFContext[Any, Option[T]]{
-      val ctx = delegate.objectContext(index)
-      override def facade = ctx.facade
-
-      override def visitKey(s: CharSequence, index: Int): Unit = ctx.visitKey(s, index)
-
-      override def add(v: Any, index: Int): Unit = ctx.add(v, index)
-
-      override def finish(index: Int) = Some(ctx.finish(index))
-
-      override def isObj = true
+    override def objectContext(index: Int) = {
+      upickle.Util.mapContext(delegate.objectContext(index))(Some(_))
     }
-    override def arrayContext(index: Int) = new RawFContext[Any, Option[T]]{
-      val ctx = delegate.arrayContext(index)
-      override def facade = ctx.facade
-
-      override def visitKey(s: CharSequence, index: Int): Unit = ctx.visitKey(s, index)
-
-      override def add(v: Any, index: Int): Unit = ctx.add(v, index)
-
-      override def finish(index: Int) = Some(ctx.finish(index))
-
-      override def isObj = false
+    override def arrayContext(index: Int) = {
+      upickle.Util.mapContext(delegate.arrayContext(index))(Some(_))
     }
   }
 }

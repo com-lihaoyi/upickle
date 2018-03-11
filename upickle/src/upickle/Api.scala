@@ -132,12 +132,13 @@ trait AttributeTagged extends Api{
     def tags = Seq(n)
 
     def write(out: Facade[Unit], v: V) = {
-      val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, _]]
-      ctx.add((), -1)
-      out.jstring(n, -1)
-      ctx.add((), -1)
-      rw.write(out, v)
-      ctx.finish(-1)
+//      rw.write(JsB, v)
+//      val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, _]]
+//      ctx.add((), -1)
+//      out.jstring(n, -1)
+//      ctx.add((), -1)
+//      rw.write(out, v)
+//      ctx.finish(-1)
     }
   }
 
@@ -151,31 +152,10 @@ trait AttributeTagged extends Api{
     def readers: Seq[Reader[T]]
 
     override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[T]
-    override def arrayContext(index: Int) = new RawFContext[Any, T] {
-      var typeName: String = null
-      var delegate: Reader[_] = null
-      var delegateCtx: RawFContext[_, T] = null
-
-      var res: T = _
-      def visitKey(s: CharSequence, index: Int): Unit = ???
-      def facade =
-        if (typeName == null) TaggedReaderImpl.this.asInstanceOf[RawFacade[Any]]
-        else delegate.asInstanceOf[RawFacade[Any]]
-
-      def add(v: Any, index: Int): Unit = {
-        if (typeName == null){
-          typeName = v.toString
-          delegate = readers(tags.indexOf(typeName))
-        }else{
-          res = v.asInstanceOf[T]
-        }
-      }
-
-      def finish(index: Int) = {
-        res
-      }
-
-      def isObj = false
+    override def objectContext(index: Int) = Util.mapContext(JsObjR.objectContext(index)){ x =>
+      val key = x.value.find(_._1 == tagName).get._2.str.toString
+      val delegate = readers(tags.indexOf(key))
+      JsVisitor.visit(x,  delegate)
     }
   }
   def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = new TaggedReaderImpl[T] with TaggedWriter[T] {
