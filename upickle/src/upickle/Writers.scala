@@ -49,10 +49,12 @@ trait Writers extends Types with Generated with LowPriImplicits{
     def write[R](out: jawn.Facade[R], v: C[T]): R = {
       if (v == null) out.jnull()
       else{
-        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, R]]
+        val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
         val x = v.iterator
         while(x.nonEmpty){
-          ctx.add(r.write(out, x.next().asInstanceOf[T]), -1)
+          val next = x.next().asInstanceOf[T]
+          val written = r.write(out, next)
+          ctx.add(written, -1)
 
         }
         ctx.finish(-1)
@@ -61,7 +63,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
   }
   implicit def ArrayWriter[T](implicit r: Writer[T]) = new Writer[Array[T]] {
     def write[R](out: jawn.Facade[R], v: Array[T]): R = {
-      val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, R]]
+      val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
       for(item <- v){
         ctx.add(r.write(out, item), -1)
       }
@@ -73,7 +75,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
   implicit def MapWriter[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[Map[K, V]] = {
     if (kw eq StringWriter) new Writer[Map[String, V]]{
       def write[R](out: jawn.Facade[R], v: Map[String, V]): R = {
-        val ctx = out.objectContext().asInstanceOf[RawFContext[Unit, R]]
+        val ctx = out.objectContext().asInstanceOf[RawFContext[Any, R]]
         for((k1, v1) <- v){
 
           ctx.visitKey(k1, -1)
@@ -102,14 +104,14 @@ trait Writers extends Types with Generated with LowPriImplicits{
   implicit def EitherWriter[T1: Writer, T2: Writer] = new Writer[Either[T1, T2]]{
     def write[R](out: jawn.Facade[R], v: Either[T1, T2]): R = v match{
       case Left(t1) =>
-        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, R]]
+        val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
         ctx.add(out.jnum("0", -1, -1), -1)
 
         ctx.add(implicitly[Writer[T1]].write(out, t1), -1)
 
         ctx.finish(-1)
       case Right(t2) =>
-        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, R]]
+        val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
         ctx.add(out.jnum("1", -1, -1), -1)
 
         ctx.add(implicitly[Writer[T2]].write(out, t2), -1)

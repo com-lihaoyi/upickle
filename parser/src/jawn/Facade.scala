@@ -8,9 +8,9 @@ package jawn
  * usually want to define both.
  */
 trait Facade[J] extends RawFacade[J]{
-  def singleContext(): RawFContext[_, J]
-  def arrayContext(): RawFContext[_, J]
-  def objectContext(): RawFContext[_, J]
+  def singleContext(): RawFContext[J, J]
+  def arrayContext(): RawFContext[J, J]
+  def objectContext(): RawFContext[J, J]
 
   def jnull(): J
   def jfalse(): J

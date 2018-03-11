@@ -14,7 +14,7 @@ private[upickle] trait GeneratedUtil extends Types{
       if (v == null) out.jnull(-1)
       else{
 
-        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, R]]
+        val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
 
         for((item, w) <- f(v).zip(writers)){
           ctx.add(w.asInstanceOf[Writer[Any]].write(out, item), -1)
