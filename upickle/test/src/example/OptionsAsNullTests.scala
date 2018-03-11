@@ -19,23 +19,38 @@ object OptionPickler extends upickle.AttributeTagged {
   }
 
   override implicit def OptionReader[T: Reader]: Reader[Option[T]] = new Reader[Option[T]] {
+    val delegate = implicitly[Reader[T]]
     override def jnull(index: Int) = None
+    override def jfalse(index: Int) = Some(delegate.jfalse(index))
+    override def jtrue(index: Int) = Some(delegate.jtrue(index))
+    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      Some(delegate.jnum(s, decIndex, expIndex, index))
+    }
+    override def jstring(s: CharSequence, index: Int) = Some(delegate.jstring(s, index))
 
-    override def objectContext(index: Int) = {
+    override def objectContext(index: Int) = new RawFContext[Any, Option[T]]{
+      val ctx = delegate.objectContext(index)
+      override def facade = ctx.facade
 
-      val sup = super.objectContext(index)
-      var res: T = null.asInstanceOf[T]
-      new RawFContext[T, Option[T]] {
-        def facade = sup.facade.asInstanceOf[RawFacade[T]]
+      override def visitKey(s: CharSequence, index: Int): Unit = ctx.visitKey(s, index)
 
-        def visitKey(s: CharSequence, index: Int): Unit = sup.visitKey(s, index)
+      override def add(v: Any, index: Int): Unit = ctx.add(v, index)
 
-        def add(v: T, index: Int): Unit = res = v
+      override def finish(index: Int) = Some(ctx.finish(index))
 
-        def finish(index: Int) = Some(res)
+      override def isObj = true
+    }
+    override def arrayContext(index: Int) = new RawFContext[Any, Option[T]]{
+      val ctx = delegate.arrayContext(index)
+      override def facade = ctx.facade
 
-        def isObj = sup.isObj
-      }.asInstanceOf[RawFContext[Any, Option[T]]]
+      override def visitKey(s: CharSequence, index: Int): Unit = ctx.visitKey(s, index)
+
+      override def add(v: Any, index: Int): Unit = ctx.add(v, index)
+
+      override def finish(index: Int) = Some(ctx.finish(index))
+
+      override def isObj = false
     }
   }
 }
