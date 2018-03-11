@@ -1,3 +1,13 @@
+POST inline CaseW
+
+---------------- Running Tests upickle.LegacyTests.performance ----------------
++ upickle.LegacyTests.performance.read 50098ms  3919303
++ upickle.LegacyTests.performance.write 50002ms  3940427
+
+----------------- Running Tests upickle.MacroTests.performance -----------------
++ upickle.MacroTests.performance.read 50107ms  2354389
++ upickle.MacroTests.performance.write 50004ms  2511077
+
 NEW tuple
 
 ---------------- Running Tests upickle.LegacyTests.performance ----------------

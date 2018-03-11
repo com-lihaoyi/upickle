@@ -45,46 +45,6 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
-  class CaseR[T, V](f: T => V,
-                    names: Array[String],
-                    defaults: Array[Any])
-                   (r0: => TupleNReader[T]) extends Reader[V]{
-    lazy val r = r0
-    override def objectContext(index: Int) = new RawFContext[Any, V] {
-      val aggregated = new Array[Any](names.length)
-      val found = new Array[Boolean](names.length)
-      var currentIndex = -1
-      var currentKeyIndex: String = null
-      var facade: jawn.RawFacade[_, _] = null
-
-      def visitKey(s: CharSequence, index: Int): Unit = {
-        currentKeyIndex = s.toString
-        currentIndex = names.indexOf(currentKeyIndex)
-
-        facade =
-          if (currentIndex == -1) jawn.NullFacade
-          else r.readers(currentIndex)
-      }
-
-      def add(v: Any, index: Int): Unit = {
-        if (currentIndex != -1) {
-          aggregated(currentIndex) = v
-          found(currentIndex) = true
-        }
-      }
-
-      def finish(index: Int) = {
-        var i = 0
-        while(i < found.length){
-          if (!found(i)) aggregated(i) = defaults(i)
-          i += 1
-        }
-        f(r.f(aggregated))
-      }
-
-      def isObj = true
-    }
-  }
   class Case0R[V](f: () => V) extends Reader[V]{ outer =>
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       def facade = outer
