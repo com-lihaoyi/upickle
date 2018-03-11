@@ -162,7 +162,8 @@ object Macros {
         case Right((companion, typeParams, argSyms, hasDefaults)) =>
 
           //    println("argSyms " + argSyms.map(_.typeSignature))
-          val args = argSyms.map { p =>
+          val rawArgs = argSyms.map(_.name.toString)
+          val mappedArgs = argSyms.map { p =>
             customKey(p).getOrElse(p.name.toString)
           }
 
@@ -193,12 +194,13 @@ object Macros {
           }
 
           val derive =
-            if (args.isEmpty) // 0-arg case classes are treated like `object`s
+            if (rawArgs.isEmpty) // 0-arg case classes are treated like `object`s
               wrapCase0(companion, tpe)
-            else if (args.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
+            else if (rawArgs.length == 1) // 1-arg case classes often need their output wrapped in a Tuple1
               wrapCase1(
                 companion,
-                args(0),
+                rawArgs(0),
+                mappedArgs(0),
                 typeArgs,
                 func(argSyms(0).typeSignature),
                 hasDefaults(0),
@@ -207,7 +209,8 @@ object Macros {
             else // Otherwise, reading and writing are kinda identical
               wrapCaseN(
                 companion,
-                args,
+                rawArgs,
+                mappedArgs,
                 typeArgs,
                 argSyms.map(_.typeSignature).map(func),
                 hasDefaults,
@@ -237,13 +240,15 @@ object Macros {
     def wrapObject(obj: Tree): Tree
     def wrapCase0(companion: Tree, targetType: c.Type): Tree
     def wrapCase1(companion: Tree,
-                  arg: String,
+                  rawArg: String,
+                  mappedArg: String,
                   typeArgs: Seq[c.Type],
                   argTypes: Type,
                   hasDefault: Boolean,
                   targetType: c.Type): Tree
     def wrapCaseN(companion: Tree,
-                  args: Seq[String],
+                  rawArgs: Seq[String],
+                  mappedArgs: Seq[String],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
@@ -257,7 +262,8 @@ object Macros {
     def wrapCase0(t: c.Tree, targetType: c.Type) =
       q"new ${c.prefix}.Case0R(() => $t(): $targetType)"
     def wrapCase1(companion: c.Tree,
-                  arg: String,
+                  rawArg: String,
+                  mappedArg: String,
                   typeArgs: Seq[c.Type],
                   argType: c.Type,
                   hasDefault: Boolean,
@@ -266,25 +272,26 @@ object Macros {
       q"""
         new ${c.prefix}.CaseR[_root_.scala.Tuple1[$argType], $targetType](
           _ match {case _root_.scala.Tuple1(x) => $companion.apply[..$typeArgs](x)},
-          _root_.scala.Array($arg),
+          _root_.scala.Array($mappedArg),
           _root_.scala.Array(..$defaults)
         )(${c.prefix}.Tuple1Reader)
         """
     }
     def wrapCaseN(companion: c.Tree,
-                  args: Seq[String],
+                  rawArgs: Seq[String],
+                  mappedArgs: Seq[String],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type) = {
       val x = q"${c.fresh[TermName]("derive")}"
-      val name = newTermName("Tuple"+args.length+"Reader")
-      val argSyms = (1 to args.length).map(t => q"$x.${newTermName("_"+t)}")
+      val name = newTermName("Tuple"+mappedArgs.length+"Reader")
+      val argSyms = (1 to mappedArgs.length).map(t => q"$x.${newTermName("_"+t)}")
       val defaults = deriveDefaults(companion, hasDefaults)
       q"""
         new ${c.prefix}.CaseR[(..$argTypes), $targetType](
           ($x: (..$argTypes)) => ($companion.apply: (..$argTypes) => $targetType)(..$argSyms),
-          _root_.scala.Array(..$args),
+          _root_.scala.Array(..$mappedArgs),
           _root_.scala.Array(..$defaults)
         )(${c.prefix}.$name)
       """
@@ -312,37 +319,43 @@ object Macros {
         "were defined: unapply, unapplySeq"))
     }
     def wrapCase1(companion: c.Tree,
-                  arg: String,
+                  rawArg: String,
+                  mappedArg: String,
                   typeArgs: Seq[c.Type],
                   argType: Type,
                   hasDefault: Boolean,
                   targetType: c.Type) = {
       val defaults = deriveDefaults(companion, Seq(hasDefault))
-      q"""
-        new ${c.prefix}.CaseW[_root_.scala.Tuple1[$argType], $targetType](
-          $companion.${findUnapply(targetType)}(_).map(_root_.scala.Tuple1.apply),
-          _root_.scala.Array($arg),
-          _root_.scala.Array(..$defaults)
-        )(${c.prefix}.Tuple1Writer)
-        """
+      wrapCaseN(companion, Seq(rawArg), Seq(mappedArg), typeArgs, Seq(argType), Seq(hasDefault), targetType)
     }
 
     def internal = q"${c.prefix}.Internal"
     def wrapCaseN(companion: c.Tree,
-                  args: Seq[String],
+                  rawArgs: Seq[String],
+                  mappedArgs: Seq[String],
                   typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type) = {
       val defaults = deriveDefaults(companion, hasDefaults)
-      val name = newTermName("Tuple"+args.length+"Writer")
+
+      def write(i: Int) = {
+        q"""
+           ctx.visitKey(${mappedArgs(i)}, -1)
+           val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
+           ctx.add(w.write(out, v.${TermName(rawArgs(i))}), -1)
+
+         """
+      }
       q"""
-        new ${c.prefix}.CaseW[(..$argTypes), $targetType](
-          $companion.${findUnapply(targetType)}[..$typeArgs],
-          _root_.scala.Array(..$args),
-          _root_.scala.Array(..$defaults)
-        )(${c.prefix}.$name)
-      """
+        new ${c.prefix}.Writer[$targetType]{
+          def write[R](out: jawn.Facade[R], v: $targetType): R = {
+            val ctx = out.objectContext(-1)
+            ..${(0 until rawArgs.length).map(write)}
+            ctx.finish(-1)
+          }
+        }
+       """
     }
     def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       q"${c.prefix}.Writer.merge[$targetType](..$subtree)"

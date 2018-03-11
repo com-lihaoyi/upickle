@@ -345,7 +345,7 @@ object LegacyTests extends TestSuite {
 //      'read{
 //        var n = 0
 //        val start = System.currentTimeMillis()
-//        while(System.currentTimeMillis() < start + 500000){
+//        while(System.currentTimeMillis() < start + 50000){
 //          upickle.legacy.read[Data](stringified)
 //          n += 1
 //        }
@@ -354,7 +354,7 @@ object LegacyTests extends TestSuite {
 //      'write{
 //        var n = 0
 //        val start = System.currentTimeMillis()
-//        while(System.currentTimeMillis() < start + 500000){
+//        while(System.currentTimeMillis() < start + 50000){
 //          upickle.legacy.write(data)
 //          n += 1
 //        }

@@ -1,0 +1,29 @@
+NEW tuple
+
+---------------- Running Tests upickle.LegacyTests.performance ----------------
++ upickle.LegacyTests.performance.read 50095ms  3815319
++ upickle.LegacyTests.performance.write 50002ms  3456656
+
+---------------- Running Tests upickle.LegacyTests.performance ----------------
++ upickle.LegacyTests.performance.read 50092ms  4089028
++ upickle.LegacyTests.performance.write 50002ms  3373859
+
+NEW $type
+
+----------------- Running Tests upickle.MacroTests.performance -----------------
++ upickle.MacroTests.performance.read 50122ms  2304257
++ upickle.MacroTests.performance.write 50003ms  2468231
+
+----------------- Running Tests upickle.MacroTests.performance -----------------
++ upickle.MacroTests.performance.read 50103ms  2303042
++ upickle.MacroTests.performance.write 50003ms  2390178
+
+OLD $type
+
+----------------- Running Tests upickle.MacroTests.performance -----------------
++ upickle.MacroTests.performance.read 50111ms  1882177
++ upickle.MacroTests.performance.write 50003ms  3427662
+
+----------------- Running Tests upickle.MacroTests.performance -----------------
++ upickle.MacroTests.performance.read 50164ms  2082690
++ upickle.MacroTests.performance.write 50006ms  3347166

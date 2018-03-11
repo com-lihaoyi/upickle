@@ -99,25 +99,6 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
 
-  class CaseW[T, V](val f: V => Option[T],
-                    val names: Array[String],
-                    val defaults: Array[Any])
-                   (w0: => TupleNWriter[T]) extends Writer[V]{
-    lazy val w = w0
-    def write[R](out: Facade[R], v: V): R = {
-
-      val ctx = out.objectContext(-1)
-      val items = w.f(f(v).get)
-      var i = 0
-      while(i < names.length){
-        ctx.visitKey(names(i), -1)
-        ctx.add(w.writers(i).asInstanceOf[Writer[Any]].write(out, items(i)), -1)
-        i += 1
-      }
-
-      ctx.finish(-1)
-    }
-  }
   class Case0W[T](f: T => Boolean) extends Writer[T] {
     def write[R](out: jawn.Facade[R], v: T): R = {
       out.objectContext(-1).finish(-1)
