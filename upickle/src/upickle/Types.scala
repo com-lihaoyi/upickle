@@ -36,7 +36,7 @@ trait Types{ types =>
 
         def readers = w1.asInstanceOf[TaggedReadWriter[K]].readers
 
-        def write(out: Facade[Unit], v: K): Unit = w1.write(out, v)
+        def write[R](out: Facade[R], v: K): R = w1.write(out, v)
       }
     }
     def merge[T](rws: Mergable[T, _]*): TaggedReadWriter[T] = {
@@ -72,7 +72,7 @@ trait Types{ types =>
       override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
       override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
 
-      def write(out: Facade[Unit], v: T): Unit = {
+      def write[R](out: Facade[R], v: T): R = {
         implicitly[Writer[T]].write(out, v)
       }
     }
@@ -165,13 +165,13 @@ trait Types{ types =>
     }
   }
   trait Writer[T]{
-    def write(out: jawn.Facade[Unit], v: T): Unit
+    def write[V](out: jawn.Facade[V], v: T): V
     def comap[U](f: U => T) = new Writer.MapWriter[U, T](this, f)
   }
   object Writer {
 
     class MapWriter[U, T](src: Writer[T], f: U => T) extends Writer[U] {
-      def write(out: jawn.Facade[Unit], v: U) =
+      def write[R](out: jawn.Facade[R], v: U): R =
         src.write(out, if(v == null) null.asInstanceOf[T] else f(v))
     }
     implicit class Mergable[T, K <: T](w0: => Writer[K])(implicit val ct: ClassTag[K]){
@@ -179,12 +179,12 @@ trait Types{ types =>
       val w = new TaggedWriter[K]{
         def tags = w1.tags
 
-        def write(out: Facade[Unit], v: K): Unit = w1.write(out, v)
+        def write[V](out: Facade[V], v: K): V = w1.write(out, v)
       }
     }
     def merge[T](writers: Mergable[T, _]*) = new TaggedWriter[T] {
       def tags = writers.flatMap(_.w.tags)
-      def write(out: Facade[Unit], v: T): Unit = {
+      def write[R](out: Facade[R], v: T): R = {
         val w = writers.find(_.ct.runtimeClass.isInstance(v)).get.w
         w.asInstanceOf[Writer[Any]].write(out, v)
       }

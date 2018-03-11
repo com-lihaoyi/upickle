@@ -10,11 +10,11 @@ import scala.reflect.ClassTag
 */
 private[upickle] trait GeneratedUtil extends Types{
   class TupleNWriter[V](val writers: List[Writer[_]], val f: V => Seq[Any]) extends Writer[V]{
-    def write(out: jawn.Facade[Unit], v: V) = {
+    def write[R](out: jawn.Facade[R], v: V): R = {
       if (v == null) out.jnull(-1)
       else{
 
-        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
+        val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, R]]
 
         for((item, w) <- f(v).zip(writers)){
           ctx.add(w.asInstanceOf[Writer[Any]].write(out, item), -1)
@@ -106,9 +106,9 @@ private[upickle] trait GeneratedUtil extends Types{
                     val tags: Seq[String])
                    (w0: => TupleNWriter[T]) extends Writer[V]{
     lazy val w = w0
-    def write(out: Facade[Unit], v: V): Unit = {
+    def write[R](out: Facade[R], v: V): R = {
       val writers = w.writers.asInstanceOf[Seq[Writer[Any]]]
-      val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
+      val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, R]]
       val items = w.f(f(v).get)
       for(i <- names.indices){
 
@@ -120,7 +120,7 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
   class Case0W[T](f: T => Boolean, val tags: Seq[String]) extends Writer[T] {
-    def write(out: jawn.Facade[Unit], v: T) = {
+    def write[R](out: jawn.Facade[R], v: T): R = {
       out.objectContext(-1).finish(-1)
     }
   }
@@ -139,7 +139,7 @@ private[upickle] trait GeneratedUtil extends Types{
     }
   }
   class SingletonW[T](f: T) extends Writer[T] {
-    def write(out: Facade[Unit], v: T): Unit = out.objectContext().finish(-1)
+    def write[R](out: Facade[R], v: T): R = out.objectContext().finish(-1)
   }
 
 

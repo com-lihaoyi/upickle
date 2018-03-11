@@ -12,7 +12,7 @@ object Opt{
 }
 object OptionPickler extends upickle.AttributeTagged {
   override implicit def OptionWriter[T: Writer]: Writer[Option[T]] = new Writer[Option[T]] {
-    override def write(out: Facade[Unit], v: Option[T]): Unit = v match{
+    override def write[R](out: Facade[R], v: Option[T]): R = v match{
       case None    => out.jnull(-1)
       case Some(s) => implicitly[Writer[T]].write(out, s)
     }

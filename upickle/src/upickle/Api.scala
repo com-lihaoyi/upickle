@@ -46,8 +46,8 @@ object legacy extends Api{
   def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
     def tags = Seq(n)
 
-    def write(out: Facade[Unit], v: V) = {
-      val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, _]]
+    def write[R](out: Facade[R], v: V): R = {
+      val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, R]]
       ctx.add(out.jstring(n, -1), -1)
 
       ctx.add(rw.write(out, v), -1)
@@ -109,7 +109,7 @@ object legacy extends Api{
     override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
     override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
 
-    def write(out: Facade[Unit], v: T): Unit = {
+    def write[R](out: Facade[R], v: T): R = {
       implicitly[Writer[T]].write(out, v)
     }
   }
@@ -131,7 +131,7 @@ trait AttributeTagged extends Api{
   def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
     def tags = Seq(n)
 
-    def write(out: Facade[Unit], v: V) = {
+    def write[R](out: Facade[R], v: V): R = {
       val s = new java.io.StringWriter()
       rw.write(new Renderer(s), v)
       val Js.Obj(kvs @ _*) = jawn.Parser.parseUnsafe(s.toString)(JsBuilder)
@@ -176,7 +176,7 @@ trait AttributeTagged extends Api{
     override def arrayContext(index: Int) = implicitly[Reader[T]].arrayContext(index)
     override def singleContext(index: Int) = implicitly[Reader[T]].singleContext(index)
 
-    def write(out: Facade[Unit], v: T): Unit = {
+    def write[R](out: Facade[R], v: T): R = {
       implicitly[Writer[T]].write(out, v)
     }
   }
