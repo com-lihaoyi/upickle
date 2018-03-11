@@ -28,33 +28,6 @@ object JsVisitor {
 }
 
 
-object JsVisitor2 {
-  def visit[T](j: Js.Value, f: jawn.RawFacade[Unit]): Unit = {
-    j match{
-      case Js.Null => f.jnull(-1)
-      case Js.True => f.jtrue(-1)
-      case Js.False => f.jfalse(-1)
-      case Js.Str(s) => f.jstring(s, -1)
-      case Js.Num(d) => f.jnum(d.toString, -1, -1, -1)
-      case Js.Arr(items @ _*) =>
-        val ctx = f.arrayContext(-1).asInstanceOf[RawFContext[Any, T]]
-        for(item <- items) {
-          ctx.add((), -1)
-          visit(item, f)
-        }
-        ctx.finish(-1)
-      case Js.Obj(items @ _*) =>
-        val ctx = f.objectContext(-1).asInstanceOf[RawFContext[Any, T]]
-        for((k, item) <- items) {
-          ctx.visitKey(k, -1)
-          ctx.add((), -1)
-          visit(item, f)
-        }
-        ctx.finish(-1)
-    }
-  }
-}
-
 object JsBuilder extends jawn.Facade[Js.Value]{
   def singleContext() = ???
 

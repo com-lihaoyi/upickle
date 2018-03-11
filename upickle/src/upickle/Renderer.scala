@@ -12,18 +12,29 @@ class Renderer(out: java.io.Writer,
                var depth: Int = 0) extends jawn.Facade[Unit]{
   def singleContext() = ???
 
+  var commaBuffered = false
+
+  def flushBuffer() = {
+    if (commaBuffered) {
+      commaBuffered = false
+      out.append(", ")
+    }
+  }
   def arrayContext() = new RawFContext[Unit, Unit] {
+    flushBuffer()
     out.append("[")
-    var first = true
+
     depth += 1
     def facade = Renderer.this
     def visitKey(s: CharSequence, index: Int): Unit = ???
     def add(v: Unit, index: Int): Unit = {
-      if (first) first = false
-      else out.append(", ")
+      flushBuffer()
+      commaBuffered = true
+
       renderIndent()
     }
     def finish(index: Int): Unit = {
+      commaBuffered = false
       depth -= 1
       renderIndent()
       out.append("]")
@@ -32,19 +43,21 @@ class Renderer(out: java.io.Writer,
   }
 
   def objectContext() = new RawFContext[Unit, Unit] {
+    flushBuffer()
     out.append("{")
-    var first = true
     depth += 1
     def facade = Renderer.this
     def visitKey(s: CharSequence, index: Int): Unit = {
-      if (first) first = false
-      else out.append(", ")
+      flushBuffer()
       renderIndent()
       Renderer.escape(out, s, true)
       out.append(": ")
     }
-    def add(v: Unit, index: Int): Unit = {}
+    def add(v: Unit, index: Int): Unit = {
+      commaBuffered = true
+    }
     def finish(index: Int): Unit = {
+      commaBuffered = false
       depth -= 1
       renderIndent()
       out.append("}")
@@ -52,17 +65,31 @@ class Renderer(out: java.io.Writer,
     def isObj = false
   }
 
-  def jnull() = out.append("null")
+  def jnull() = {
+    flushBuffer()
+    out.append("null")
+  }
 
-  def jfalse() = out.append("false")
+  def jfalse() = {
+    flushBuffer()
+    out.append("false")
+  }
 
-  def jtrue() = out.append("true")
+  def jtrue() = {
+    flushBuffer()
+    out.append("true")
+  }
 
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int) = out.append(s)
+  def jnum(s: CharSequence, decIndex: Int, expIndex: Int) = {
+    flushBuffer()
+    out.append(s)
+  }
 
-  def jstring(s: CharSequence) =
+  def jstring(s: CharSequence) = {
+    flushBuffer()
     if (s == null) out.append("null")
     else Renderer.escape(out, s, true)
+  }
 
   final def renderIndent() = {
     if (indent == -1) ()

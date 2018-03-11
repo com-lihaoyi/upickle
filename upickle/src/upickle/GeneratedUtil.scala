@@ -17,8 +17,8 @@ private[upickle] trait GeneratedUtil extends Types{
         val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
 
         for((item, w) <- f(v).zip(writers)){
-          ctx.add((), -1)
-          w.asInstanceOf[Writer[Any]].write(out, item)
+          ctx.add(w.asInstanceOf[Writer[Any]].write(out, item), -1)
+
         }
         ctx.finish(-1)
       }
@@ -111,10 +111,11 @@ private[upickle] trait GeneratedUtil extends Types{
       val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Any]]
       val items = w.f(f(v).get)
       for(i <- names.indices){
-        ctx.add((), -1)
+
         ctx.visitKey(names(i), -1)
-        writers(i).write(out, items(i))
+        ctx.add(writers(i).write(out, items(i)), -1)
       }
+
       ctx.finish(-1)
     }
   }

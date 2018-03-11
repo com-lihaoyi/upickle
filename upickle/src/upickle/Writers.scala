@@ -52,8 +52,8 @@ trait Writers extends Types with Generated with LowPriImplicits{
         val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
         val x = v.iterator
         while(x.nonEmpty){
-          ctx.add((), -1)
-          r.write(out, x.next().asInstanceOf[T])
+          ctx.add(r.write(out, x.next().asInstanceOf[T]), -1)
+
         }
         ctx.finish(-1)
       }
@@ -63,9 +63,9 @@ trait Writers extends Types with Generated with LowPriImplicits{
     def write(out: jawn.Facade[Unit], v: Array[T]) = {
       val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
       for(item <- v){
-        ctx.add((), -1)
-        r.write(out, item)
+        ctx.add(r.write(out, item), -1)
       }
+
       ctx.finish(-1)
     }
   }
@@ -103,17 +103,17 @@ trait Writers extends Types with Generated with LowPriImplicits{
     def write(out: jawn.Facade[Unit], v: Either[T1, T2]) = v match{
       case Left(t1) =>
         val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
-        ctx.add((), -1)
-        out.jnum("0", -1, -1)
-        ctx.add((), -1)
-        implicitly[Writer[T1]].write(out, t1)
+        ctx.add(out.jnum("0", -1, -1), -1)
+
+        ctx.add(implicitly[Writer[T1]].write(out, t1), -1)
+
         ctx.finish(-1)
       case Right(t2) =>
         val ctx = out.arrayContext().asInstanceOf[RawFContext[Unit, Unit]]
-        ctx.add((), -1)
-        out.jnum("1", -1, -1)
-        ctx.add((), -1)
-        implicitly[Writer[T2]].write(out, t2)
+        ctx.add(out.jnum("1", -1, -1), -1)
+
+        ctx.add(implicitly[Writer[T2]].write(out, t2), -1)
+
         ctx.finish(-1)
     }
   }
@@ -135,17 +135,17 @@ trait Writers extends Types with Generated with LowPriImplicits{
         case v: Js.Obj =>
           val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, Unit]]
           for((k, item) <- v.value){
-            ctx.add((), -1)
+
             ctx.visitKey(k, -1)
-            JsValueW.write(out, item)
+            ctx.add(JsValueW.write(out, item), -1)
           }
 
           ctx.finish(-1)
         case v: Js.Arr =>
           val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, Unit]]
           for(item <- v.value){
-            ctx.add((), -1)
-            JsValueW.write(out, item)
+            ctx.add(JsValueW.write(out, item), -1)
+
           }
 
           ctx.finish(-1)

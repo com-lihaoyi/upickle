@@ -48,10 +48,10 @@ object legacy extends Api{
 
     def write(out: Facade[Unit], v: V) = {
       val ctx = out.arrayContext(-1).asInstanceOf[RawFContext[Any, _]]
-      ctx.add((), -1)
-      out.jstring(n, -1)
-      ctx.add((), -1)
-      rw.write(out, v)
+      ctx.add(out.jstring(n, -1), -1)
+
+      ctx.add(rw.write(out, v), -1)
+
       ctx.finish(-1)
     }
   }
@@ -136,8 +136,7 @@ trait AttributeTagged extends Api{
       rw.write(new Renderer(s), v)
       val Js.Obj(kvs @ _*) = jawn.Parser.parseUnsafe(s.toString)(JsBuilder)
       val tagged = Js.Obj((tagName -> Js.Str(n)) +: kvs: _*)
-      JsVisitor2.visit(tagged, out)
-
+      JsVisitor.visit(tagged, out)
     }
   }
 
