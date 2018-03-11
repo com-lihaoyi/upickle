@@ -34,10 +34,10 @@ trait Readers extends Types with Generated with LowPriImplicits{
     override def jstring(s: CharSequence, index: Int) = s.toString
   }
   implicit val DoubleReader: Reader[Double] = NumStringReader.map(_.toDouble)
-  implicit val IntReader: Reader[Int] = NumStringReader.map(_.toInt)
+  implicit val IntReader: Reader[Int] = NumStringReader.map(_.toDouble.toInt)
   implicit val FloatReader: Reader[Float] = NumStringReader.map(_.toFloat)
-  implicit val ShortReader: Reader[Short] = NumStringReader.map(_.toShort)
-  implicit val ByteReader: Reader[Byte] = NumStringReader.map(_.toByte)
+  implicit val ShortReader: Reader[Short] = NumStringReader.map(_.toDouble.toShort)
+  implicit val ByteReader: Reader[Byte] = NumStringReader.map(_.toDouble.toByte)
 
   implicit object StringReader extends Reader[String] {
     override def jstring(s: CharSequence, index: Int) = s.toString

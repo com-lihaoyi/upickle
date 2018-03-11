@@ -136,7 +136,7 @@ trait AttributeTagged extends Api{
       rw.write(new Renderer(s), v)
       val Js.Obj(kvs @ _*) = jawn.Parser.parseUnsafe(s.toString)(JsBuilder)
       val tagged = Js.Obj((tagName -> Js.Str(n)) +: kvs: _*)
-      JsVisitor.visit(tagged, out)
+      JsVisitor2.visit(tagged, out)
 
     }
   }
@@ -154,7 +154,11 @@ trait AttributeTagged extends Api{
     override def objectContext(index: Int) = Util.mapContext(JsObjR.objectContext(index)){ x =>
       val key = x.value.find(_._1 == tagName).get._2.str.toString
       val delegate = readers(tags.indexOf(key))
-      JsVisitor.visit(x,  delegate)
+      val write = new java.io.StringWriter()
+
+      JsObjW.write(new Renderer(write), Js.Obj(x.value.filter(_._1 != tagName):_*))
+
+      read(write.toString)(delegate)
     }
   }
   def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = new TaggedReaderImpl[T] with TaggedWriter[T] {

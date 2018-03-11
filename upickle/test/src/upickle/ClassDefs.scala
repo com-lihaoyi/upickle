@@ -65,6 +65,9 @@ object Hierarchy {
     implicit def rw: upickle.default.ReadWriter[C] = default.macroRW
   }
 
+  object Z{
+    implicit def rw: upickle.default.ReadWriter[Z] = default.macroRW
+  }
   sealed trait Z //new line
   case object AnZ extends Z //new line
 }
@@ -407,34 +410,34 @@ sealed trait Ast{
  * sealed traits, which aren't a strict hierarchy
  */
 object Ast{
-//  implicit def rw: RW[Ast] = RW.merge(Block.rw, Header.rw)
+  implicit def rw: RW[Ast] = RW.merge(Block.rw, Header.rw)
   /**
    * @param parts The various bits of text and other things which make up this block
    * @param offset
    */
   case class Block(offset: Int, parts: Seq[Block.Sub]) extends Chain.Sub with Block.Sub
   object Block{
-//    implicit def rw: RW[Block] = default.macroRW
+    implicit def rw: RW[Block] = default.macroRW
     sealed trait Sub extends Ast
     object Sub{
-//      implicit def rw: RW[Sub] = RW.merge(Text.rw, For.rw, IfElse.rw, Block.rw, Header.rw)
+      implicit def rw: RW[Sub] = RW.merge(Text.rw, For.rw, IfElse.rw, Block.rw, Header.rw)
     }
     case class Text(offset: Int, txt: String) extends Block.Sub
     object Text{
-//      implicit def rw: RW[Text] = default.macroRW
+      implicit def rw: RW[Text] = default.macroRW
     }
     case class For(offset: Int, generators: String, block: Block) extends Block.Sub
     object For{
-//      implicit def rw: RW[For] = default.macroRW
+      implicit def rw: RW[For] = default.macroRW
     }
     case class IfElse(offset: Int, condition: String, block: Block, elseBlock: Option[Block]) extends Block.Sub
     object IfElse{
-//      implicit def rw: RW[IfElse] = default.macroRW
+      implicit def rw: RW[IfElse] = default.macroRW
     }
   }
   case class Header(offset: Int, front: String, block: Block) extends Block.Sub with Chain.Sub
   object Header{
-//    implicit def rw: RW[Header] = default.macroRW
+    implicit def rw: RW[Header] = default.macroRW
   }
 
   /**
@@ -444,22 +447,22 @@ object Ast{
    */
   case class Chain(offset: Int, lhs: String, parts: Seq[Chain.Sub]) extends Block.Sub
   object Chain{
-//    implicit def rw: RW[Chain] = default.macroRW
+    implicit def rw: RW[Chain] = default.macroRW
     sealed trait Sub extends Ast
     object Sub{
-//      implicit def rw: RW[Sub] = RW.merge(Prop.rw, TypeArgs.rw, Args.rw, Block.rw, Header.rw)
+      implicit def rw: RW[Sub] = RW.merge(Prop.rw, TypeArgs.rw, Args.rw, Block.rw, Header.rw)
     }
     case class Prop(offset: Int, str: String) extends Sub
     object Prop{
-//      implicit def rw: RW[Prop] = default.macroRW
+      implicit def rw: RW[Prop] = default.macroRW
     }
     case class TypeArgs(offset: Int, str: String) extends Sub
     object TypeArgs{
-//      implicit def rw: RW[TypeArgs] = default.macroRW
+      implicit def rw: RW[TypeArgs] = default.macroRW
     }
     case class Args(offset: Int, str: String) extends Sub
     object Args{
-//      implicit def rw: RW[Args] = default.macroRW
+      implicit def rw: RW[Args] = default.macroRW
     }
   }
 }
