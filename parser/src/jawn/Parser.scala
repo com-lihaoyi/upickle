@@ -9,7 +9,7 @@ import scala.util.Try
 
 case class ParseException(msg: String, index: Int, line: Int, col: Int) extends Exception(msg)
 
-case class IncompleteParseException(msg: String) extends Exception(msg)
+case class IncompleteParseException(msg: String, cause: Throwable) extends Exception(msg, cause)
 
 /**
  * Parser implements a state machine for correctly parsing JSON data.
@@ -361,8 +361,8 @@ abstract class Parser[J] {
       case _ => die(i, "expected json value")
     }
   } catch {
-    case _: IndexOutOfBoundsException =>
-      throw IncompleteParseException("exhausted input")
+    case e: IndexOutOfBoundsException =>
+      throw IncompleteParseException("exhausted input", e)
   }
 
   /**

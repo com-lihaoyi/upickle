@@ -61,16 +61,23 @@ private[upickle] trait GeneratedUtil extends Types{
 
       def visitKey(s: CharSequence, index: Int): Unit = {
         currentKey = s.toString
-        facade = r.readers(names.indexOf(currentKey)).asInstanceOf[RawFacade[Any]]
+        val index = names.indexOf(currentKey)
+
+        facade =
+          if (index == -1) jawn.NullFacade.asInstanceOf[RawFacade[Any]]
+          else r.readers(index).asInstanceOf[RawFacade[Any]]
       }
 
       def add(v: Any, index: Int): Unit = {
-        aggregated(names.indexOf(currentKey)) = v
-        found(names.indexOf(currentKey)) = true
+        val index = names.indexOf(currentKey)
+        if (index != -1) {
+          aggregated(index) = v
+          found(index) = true
+        }
       }
 
       def finish(index: Int) = {
-        for(i <- 0 until found.length){
+        for(i <- found.indices){
           if (!found(i)) aggregated(i) = defaults(i)
         }
         f(r.f(aggregated))
