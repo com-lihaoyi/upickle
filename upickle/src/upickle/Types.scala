@@ -28,15 +28,14 @@ trait Types{ types =>
     def tags: Seq[String]
   }
   object ReadWriter{
-    implicit class Mergable[T, K <: T](w0: => ReadWriter[K])
+    implicit class Mergable[T, K <: T](w0: ReadWriter[K])
                                       (implicit val ct: ClassTag[K]){
-      lazy val w1 = w0.asInstanceOf[TaggedReadWriter[K]]
       val w = new TaggedReader0[K] with TaggedWriter[K]{
-        def tags = w1.tags
+        def tags = w0.asInstanceOf[TaggedReadWriter[K]].tags
 
-        def readers = w1.asInstanceOf[TaggedReadWriter[K]].readers
+        def readers = w0.asInstanceOf[TaggedReadWriter[K]].readers
 
-        def write[R](out: Facade[R], v: K): R = w1.write(out, v)
+        def write[R](out: Facade[R], v: K): R = w0.write(out, v)
       }
     }
     def merge[T](rws: Mergable[T, _]*): TaggedReadWriter[T] = {
@@ -68,9 +67,11 @@ trait Types{ types =>
   }
   def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T]
   object Reader{
-    implicit class Mergable[T, K <: T](r0: => Reader[K])(implicit val ct: ClassTag[K]){
-      lazy val r1 = r0.asInstanceOf[TaggedReader[K]]
-      val r = newTaggedReader[K] (r1.tags, r1.readers)
+    implicit class Mergable[T, K <: T](r0: Reader[K])(implicit val ct: ClassTag[K]){
+      val r = newTaggedReader[K](
+        r0.asInstanceOf[TaggedReader0[K]].tags,
+        r0.asInstanceOf[TaggedReader0[K]].readers
+      )
     }
     def merge[T](readers0: Mergable[T, _]*) = newTaggedReader[T](
       readers0.flatMap(_.r.tags),
@@ -179,12 +180,11 @@ trait Types{ types =>
       def write[R](out: jawn.Facade[R], v: U): R =
         src.write(out, if(v == null) null.asInstanceOf[T] else f(v))
     }
-    implicit class Mergable[T, K <: T](w0: => Writer[K])(implicit val ct: ClassTag[K]){
-      lazy val w1 = w0.asInstanceOf[TaggedWriter[K]]
+    implicit class Mergable[T, K <: T](w0: Writer[K])(implicit val ct: ClassTag[K]){
       val w = new TaggedWriter[K]{
-        def tags = w1.tags
+        def tags = w0.asInstanceOf[TaggedWriter[K]].tags
 
-        def write[V](out: Facade[V], v: K): V = w1.write(out, v)
+        def write[V](out: Facade[V], v: K): V = w0.write(out, v)
       }
     }
     def merge[T](writers: Mergable[T, _]*) = new TaggedWriter[T] {

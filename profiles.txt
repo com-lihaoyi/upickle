@@ -1,3 +1,13 @@
+POST inline CaseR
+
+---------------- Running Tests upickle.LegacyTests.performance ----------------
++ upickle.LegacyTests.performance.read 50073ms  3932121
++ upickle.LegacyTests.performance.write 50003ms  3867331
+
+----------------- Running Tests upickle.MacroTests.performance -----------------
++ upickle.MacroTests.performance.read 50158ms  2317665
++ upickle.MacroTests.performance.write 50003ms  2521549
+
 POST inline CaseW
 
 ---------------- Running Tests upickle.LegacyTests.performance ----------------
