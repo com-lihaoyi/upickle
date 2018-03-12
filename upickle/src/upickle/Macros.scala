@@ -180,7 +180,6 @@ object Macros {
 
             if (argSyms.length == 0) t
             else {
-              val base = argSyms.map(_.typeSignature.typeSymbol)
               val concrete = tpe.normalize.asInstanceOf[TypeRef].args
               if (t.typeSymbol != definitions.RepeatedParamClass) {
 
@@ -192,6 +191,9 @@ object Macros {
               }
             }
           }
+          // According to @retronym, this is necessary in order to force the
+          // default argument `apply$default$n` methods to be synthesized
+          companion.tpe.member(TermName("apply")).info
 
           val derive =
             if (rawArgs.isEmpty) // 0-arg case classes are treated like `object`s
@@ -257,41 +259,35 @@ object Macros {
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type,
                   varargs: Boolean) = {
-      val x = q"${c.fresh[TermName]("derive")}"
-      val name = newTermName("Tuple"+mappedArgs.length+"Reader")
-      val tupleName = newTypeName("Tuple"+mappedArgs.length)
-      val argSyms = (1 to mappedArgs.length).map(t => q"$x.${newTermName("_"+t)}")
       val defaults = deriveDefaults(companion, hasDefaults)
       q"""
-        new ${c.prefix}.CaseR[$targetType](
-          _root_.scala.Array(..$mappedArgs),
-          _root_.scala.Array(..$defaults)
-        ){
-          override def objectContext(index: Int) = new jawn.RawFContext[Any, $targetType] {
-            val aggregated = new Array[Any](names.length)
-            val found = new Array[Boolean](names.length)
-            var currentIndex = -1
+        new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
+          override def objectContext(index: Int) = new CaseObjectContext{
             def visitKey(s: CharSequence, index: Int): Unit = {
-              currentIndex = names.indexOf(s.toString)
-            }
-
-            def add(v: Any, index: Int): Unit = {
-              if (currentIndex != -1) {
-                aggregated(currentIndex) = v
-                found(currentIndex) = true
+              currentIndex = s.toString match {
+                case ..${
+                  for(i <- mappedArgs.indices)
+                  yield cq"${mappedArgs(i)} => $i"
+                }
+                case _ => -1
               }
             }
+
 
             def finish(index: Int) = {
-              var i = 0
-              while(i < found.length){
-                if (!found(i)) aggregated(i) = defaults(i)
-                i += 1
+              ..${
+                for(i <- rawArgs.indices if hasDefaults(i))
+                yield q"if (!found($i)) aggregated($i) = ${defaults(i)}"
               }
-              f(aggregated)
+              $companion.apply(
+                ..${
+                  for(i <- rawArgs.indices)
+                  yield
+                    if (i == rawArgs.length - 1 && varargs) q"aggregated($i).asInstanceOf[${argTypes(i)}]:_*"
+                    else q"aggregated($i).asInstanceOf[${argTypes(i)}]"
+                }
+              )
             }
-
-            def isObj = true
 
             def facade: jawn.RawFacade[_, _] = currentIndex match{
               case -1 => jawn.NullFacade
@@ -300,15 +296,6 @@ object Macros {
                 yield cq"$i => implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
               }
             }
-
-            def f(x: Seq[Any]): $targetType = $companion.apply(
-              ..${
-                for(i <- rawArgs.indices)
-                yield
-                  if (i == rawArgs.length - 1 && varargs) q"aggregated($i).asInstanceOf[${argTypes(i)}]:_*"
-                  else q"aggregated($i).asInstanceOf[${argTypes(i)}]"
-              }
-            )
           }
         }
       """
