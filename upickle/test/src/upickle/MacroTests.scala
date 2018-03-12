@@ -334,54 +334,6 @@ object MacroTests extends TestSuite {
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
     }
 
-//    'performance{
-//      import Generic.ADT
-//      import Hierarchy._
-//      import Recursive._
-//      import Defaults._
-//      import ADTs.ADT0
-//      type Data = ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]
-//      val data: Data = ADT(
-//        Vector((1, 2), (3, 4), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13)),
-//        """
-//          |I am cow, hear me moo
-//          |I weigh twice as much as you
-//          |And I look good on the barbecueeeee
-//        """.stripMargin,
-//        C("lol i am a noob", "haha you are a noob"): A,
-//        Node(-11, Node(-22, Node(-33, Node(-44, End)))): LL,
-//        ADTc(i = 1234567890, s = "i am a strange loop"),
-//        ADT0()
-//      )
-//
-//      // Some arbitrary data that represents a mix of all the different
-//      // ways things can be pickled and unpickled
-//
-//      val stringified = write(data)
-//      val r1 = read[Data](stringified)
-//      assert(data == r1)
-//      val rewritten = write(read[Data](stringified))
-//      assert(stringified == rewritten)
-//
-//      'read{
-//        var n = 0
-//        val start = System.currentTimeMillis()
-//        while(System.currentTimeMillis() < start + 50000){
-//          read[Data](stringified)
-//          n += 1
-//        }
-//        n
-//      }
-//      'write{
-//        var n = 0
-//        val start = System.currentTimeMillis()
-//        while(System.currentTimeMillis() < start + 50000){
-//          write(data)
-//          n += 1
-//        }
-//        n
-//      }
-//    }
     'issues {
       'issue95 {
         rw(

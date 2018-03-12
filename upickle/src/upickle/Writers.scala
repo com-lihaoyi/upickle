@@ -2,22 +2,22 @@ package upickle
 
 import java.util.UUID
 
-import jawn.RawFContext
+import upickle.jawn.RawFContext
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Writers extends Types with Generated with LowPriImplicits{
   implicit object StringWriter extends Writer[String] {
-    def write[R](out: jawn.Facade[R], v: String): R = out.jstring(v)
+    def write[R](out: upickle.jawn.Facade[R], v: String): R = out.jstring(v)
   }
   implicit object UnitWriter extends Writer[Unit] {
-    def write[R](out: jawn.Facade[R], v: Unit): R = {
+    def write[R](out: upickle.jawn.Facade[R], v: Unit): R = {
       out.objectContext(-1).finish(-1)
     }
   }
 
   object NumStringWriter extends Writer[String] {
-    def write[R](out: jawn.Facade[R], v: String): R = v match{
+    def write[R](out: upickle.jawn.Facade[R], v: String): R = v match{
       case "-Infinity" | "Infinity" | "NaN" => out.jstring(v)
       case _ => out.jnum(v, -1, -1)
     }
@@ -29,7 +29,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
   implicit val ByteWriter: Writer[Byte] = NumStringWriter.comap[Byte](_.toString)
 
   implicit object BooleanWriter extends Writer[Boolean] {
-    def write[R](out: jawn.Facade[R], v: Boolean): R = {
+    def write[R](out: upickle.jawn.Facade[R], v: Boolean): R = {
       if(v) out.jtrue() else out.jfalse()
     }
   }
@@ -44,7 +44,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
   implicit def SomeWriter[T: Writer]: Writer[Some[T]] = OptionWriter[T].asInstanceOf[Writer[Some[T]]]
   implicit def NoneWriter: Writer[None.type] = OptionWriter[Unit].asInstanceOf[Writer[None.type]]
   implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]) = new Writer[C[T]] {
-    def write[R](out: jawn.Facade[R], v: C[T]): R = {
+    def write[R](out: upickle.jawn.Facade[R], v: C[T]): R = {
       if (v == null) out.jnull()
       else{
         val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
@@ -60,7 +60,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
     }
   }
   implicit def ArrayWriter[T](implicit r: Writer[T]) = new Writer[Array[T]] {
-    def write[R](out: jawn.Facade[R], v: Array[T]): R = {
+    def write[R](out: upickle.jawn.Facade[R], v: Array[T]): R = {
       val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
       var i = 0
       while(i < v.length){
@@ -74,7 +74,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
 
   implicit def MapWriter[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[Map[K, V]] = {
     if (kw eq StringWriter) new Writer[Map[String, V]]{
-      def write[R](out: jawn.Facade[R], v: Map[String, V]): R = {
+      def write[R](out: upickle.jawn.Facade[R], v: Map[String, V]): R = {
         val ctx = out.objectContext().asInstanceOf[RawFContext[Any, R]]
         for(pair <- v){
           val (k1, v1) = pair
@@ -89,7 +89,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
   }
 
   implicit object DurationWriter extends Writer[Duration]{
-    def write[R](out: jawn.Facade[R], v: Duration): R = v match{
+    def write[R](out: upickle.jawn.Facade[R], v: Duration): R = v match{
       case Duration.Inf => out.jstring("inf", -1)
       case Duration.MinusInf => out.jstring("-inf", -1)
       case x if x eq Duration.Undefined => out.jstring("undef", -1)
@@ -101,7 +101,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
   implicit val FiniteDurationWriter = DurationWriter.asInstanceOf[Writer[FiniteDuration]]
 
   implicit def EitherWriter[T1: Writer, T2: Writer] = new Writer[Either[T1, T2]]{
-    def write[R](out: jawn.Facade[R], v: Either[T1, T2]): R = v match{
+    def write[R](out: upickle.jawn.Facade[R], v: Either[T1, T2]): R = v match{
       case Left(t1) =>
         val ctx = out.arrayContext().asInstanceOf[RawFContext[Any, R]]
         ctx.add(out.jnum("0", -1, -1), -1)
@@ -131,7 +131,7 @@ trait Writers extends Types with Generated with LowPriImplicits{
   implicit def JsFalseW: Writer[Js.False.type] = JsValueW.asInstanceOf[Writer[Js.False.type]]
   implicit def JsNullW: Writer[Js.Null.type] = JsValueW.asInstanceOf[Writer[Js.Null.type]]
   implicit object JsValueW extends Writer[Js.Value] {
-    def write[R](out: jawn.Facade[R], v: Js.Value): R = {
+    def write[R](out: upickle.jawn.Facade[R], v: Js.Value): R = {
       v match{
         case v: Js.Obj =>
           val ctx = out.objectContext(-1).asInstanceOf[RawFContext[Any, R]]

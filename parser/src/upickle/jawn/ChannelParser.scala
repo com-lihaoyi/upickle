@@ -1,4 +1,4 @@
-package jawn
+package upickle.jawn
 
 import java.lang.Integer.{ bitCount, highestOneBit }
 import java.io.{File, FileInputStream}

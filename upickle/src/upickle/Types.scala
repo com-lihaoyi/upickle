@@ -1,13 +1,9 @@
 package upickle
 
-import scala.{PartialFunction => PF}
 import language.experimental.macros
-import scala.annotation.implicitNotFound
 import language.higherKinds
-import acyclic.file
-import jawn.{Facade, RawFContext, RawFacade}
+import upickle.jawn.{Facade, RawFContext}
 
-import scala.collection.mutable
 import scala.reflect.ClassTag
 
 /**
@@ -44,7 +40,7 @@ trait Types{ types =>
           rws.map(x =>
             new Reader.Mergable[T, T](
               x.w.asInstanceOf[TaggedReadWriter[T]]
-            )(x.ct.asInstanceOf[ClassTag[T]])
+            )
           ):_*
         ),
         Writer.merge[T](
@@ -67,7 +63,7 @@ trait Types{ types =>
   }
   def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T]
   object Reader{
-    implicit class Mergable[T, K <: T](r0: Reader[K])(implicit val ct: ClassTag[K]){
+    implicit class Mergable[T, K <: T](r0: Reader[K]){
       val r = newTaggedReader[K](
         r0.asInstanceOf[TaggedReader0[K]].tags,
         r0.asInstanceOf[TaggedReader0[K]].readers
@@ -79,7 +75,7 @@ trait Types{ types =>
     )
   }
   type Reader[T] = BaseReader[Any, T]
-  trait BaseReader[-T, V] extends jawn.RawFacade[T, V] {
+  trait BaseReader[-T, V] extends upickle.jawn.RawFacade[T, V] {
     def narrow[K <: V] = this.asInstanceOf[BaseReader[T, K]]
     def jnull(index: Int): V = null.asInstanceOf[V]
     def jtrue(index: Int): V =  throw new Exception(index.toString)
@@ -88,10 +84,10 @@ trait Types{ types =>
     def jstring(s: CharSequence, index: Int): V = throw new Exception(index.toString)
     def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): V = throw new Exception(index.toString)
 
-    def objectContext(index: Int): jawn.RawFContext[T, V] = throw new Exception(index.toString)
-    def arrayContext(index: Int): jawn.RawFContext[T, V] = throw new Exception(index.toString)
+    def objectContext(index: Int): upickle.jawn.RawFContext[T, V] = throw new Exception(index.toString)
+    def arrayContext(index: Int): upickle.jawn.RawFContext[T, V] = throw new Exception(index.toString)
     def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z](this, f)
-    def singleContext(index: Int): jawn.RawFContext[T, V] = new RawFContext[T, V] {
+    def singleContext(index: Int): upickle.jawn.RawFContext[T, V] = new RawFContext[T, V] {
       var res: V = _
 
       def facade = BaseReader.this
@@ -139,10 +135,10 @@ trait Types{ types =>
       }
       override def jtrue(index: Int) = f(src.jtrue(index))
 
-      override def objectContext(index: Int): jawn.RawFContext[T, Z] = {
+      override def objectContext(index: Int): upickle.jawn.RawFContext[T, Z] = {
         new MapFContext[T, V, Z](src.objectContext(index), f)
       }
-      override def arrayContext(index: Int): jawn.RawFContext[T, Z] = {
+      override def arrayContext(index: Int): upickle.jawn.RawFContext[T, Z] = {
         new MapFContext[T, V, Z](src.arrayContext(index), f)
       }
 
@@ -152,13 +148,13 @@ trait Types{ types =>
       // value has already been transformed by `f` when it was added, and so
       // does not need to be transformed again by the MapFContext
       //
-      // override def singleContext(index: Int): jawn.RawFContext[T, Z] = {
+      // override def singleContext(index: Int): upickle.jawn.RawFContext[T, Z] = {
       //   new MapFContext[T, V, Z](src.singleContext(index), f)
       // }
     }
 
-    class MapFContext[T, V, Z](src: jawn.RawFContext[T, V],
-                               f: V => Z) extends jawn.RawFContext[T, Z]{
+    class MapFContext[T, V, Z](src: upickle.jawn.RawFContext[T, V],
+                               f: V => Z) extends upickle.jawn.RawFContext[T, Z]{
       def facade = src.facade
 
       def visitKey(s: CharSequence, index: Int): Unit = src.visitKey(s, index)
@@ -171,13 +167,13 @@ trait Types{ types =>
     }
   }
   trait Writer[T]{
-    def write[V](out: jawn.Facade[V], v: T): V
+    def write[V](out: upickle.jawn.Facade[V], v: T): V
     def comap[U](f: U => T) = new Writer.MapWriter[U, T](this, f)
   }
   object Writer {
 
     class MapWriter[U, T](src: Writer[T], f: U => T) extends Writer[U] {
-      def write[R](out: jawn.Facade[R], v: U): R =
+      def write[R](out: upickle.jawn.Facade[R], v: U): R =
         src.write(out, if(v == null) null.asInstanceOf[T] else f(v))
     }
     implicit class Mergable[T, K <: T](w0: Writer[K])(implicit val ct: ClassTag[K]){
@@ -188,29 +184,11 @@ trait Types{ types =>
       }
     }
     def merge[T](writers: Mergable[T, _]*) = new TaggedWriter[T] {
-      def tags = writers.flatMap(_.w.tags)
+      val tags = writers.flatMap(_.w.tags)
       def write[R](out: Facade[R], v: T): R = {
         val w = writers.find(_.ct.runtimeClass.isInstance(v)).get.w
         w.asInstanceOf[Writer[Any]].write(out, v)
       }
     }
   }
-
-
-//  /**
-//   * Serialize an object of type [[T]] to a `String`
-//   */
-//  def write[T: Writer](expr: T, indent: Int = 0): String = json.write(writeJs(expr), indent)
-//  /**
-//   * Serialize an object of type [[T]] to a `Js.Value`
-//   */
-//  def writeJs[T: Writer](expr: T): Js.Value = implicitly[Writer[T]].write(expr)
-//  /**
-//   * Deserialize a `String` object of type [[T]]
-//   */
-//  def read[T: Reader](expr: String): T = readJs[T](json.read(expr))
-//  /**
-//   * Deserialize a `Js.Value` object of type [[T]]
-//   */
-//  def readJs[T: Reader](expr: Js.Value): T = implicitly[Reader[T]].read(expr)
 }

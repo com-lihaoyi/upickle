@@ -1,4 +1,4 @@
-package jawn
+package upickle.jawn
 
 /**
  * Basic in-memory string parsing.

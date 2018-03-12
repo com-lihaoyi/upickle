@@ -1,4 +1,4 @@
-package jawn
+package upickle.jawn
 
 /**
  * Facade is a type class that describes how Jawn should construct

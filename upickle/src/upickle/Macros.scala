@@ -261,11 +261,19 @@ object Macros {
                   varargs: Boolean) = {
       val defaults = deriveDefaults(companion, hasDefaults)
       q"""
-        new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
+        lazy val localReaders = Array[${c.prefix}.Reader[_]](
           ..${
-            for(i <- rawArgs.indices)
-            yield q"lazy val ${TermName("r" + i)} = implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
+            for (i <- rawArgs.indices)
+            yield q"implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
           }
+        )
+
+
+        new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
+
+
+
+
           override def objectContext(index: Int) = new CaseObjectContext{
             def visitKey(s: CharSequence, index: Int): Unit = {
               currentIndex = s.toString match {
@@ -293,13 +301,9 @@ object Macros {
               )
             }
 
-            def facade: jawn.RawFacade[_, _] = currentIndex match{
-              case -1 => jawn.NullFacade
-              case ..${
-                for(i <- rawArgs.indices)
-                yield cq"$i => ${TermName("r" + i)}"
-              }
-            }
+            def facade: upickle.jawn.RawFacade[_, _] =
+                        if (currentIndex == -1) upickle.jawn.NullFacade
+                        else localReaders(currentIndex)
           }
         }
       """
@@ -348,7 +352,7 @@ object Macros {
       }
       q"""
         new ${c.prefix}.Writer[$targetType]{
-          def write[R](out: jawn.Facade[R], v: $targetType): R = {
+          def write[R](out: upickle.jawn.Facade[R], v: $targetType): R = {
             val ctx = out.objectContext(-1)
             ..${(0 until rawArgs.length).map(write)}
             ctx.finish(-1)

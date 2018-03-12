@@ -1,11 +1,11 @@
 package upickle
 
-import jawn.RawFContext
+import upickle.jawn.RawFContext
 
 import scala.collection.mutable
 
 object JsVisitor {
-  def visit[T](j: Js.Value, f: jawn.RawFacade[_, T]): T = {
+  def visit[T](j: Js.Value, f: upickle.jawn.RawFacade[_, T]): T = {
     j match{
       case Js.Null => f.jnull(-1)
       case Js.True => f.jtrue(-1)
@@ -28,7 +28,7 @@ object JsVisitor {
 }
 
 
-object JsBuilder extends jawn.Facade[Js.Value]{
+object JsBuilder extends upickle.jawn.Facade[Js.Value]{
   def singleContext() = ???
 
   def arrayContext() = new RawFContext[Js.Value, Js.Value] {

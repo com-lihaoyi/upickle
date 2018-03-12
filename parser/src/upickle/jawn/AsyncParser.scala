@@ -1,4 +1,4 @@
-package jawn
+package upickle.jawn
 
 import scala.annotation.{switch, tailrec}
 import scala.math.max

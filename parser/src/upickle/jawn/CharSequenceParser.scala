@@ -1,4 +1,4 @@
-package jawn
+package upickle.jawn
 
 /**
  * Lazy character sequence parsing.

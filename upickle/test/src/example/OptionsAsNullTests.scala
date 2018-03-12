@@ -4,7 +4,7 @@ import acyclic.file
 import upickle.{Js, TestUtil}
 import utest._
 import example.Simple.Thing
-import jawn.{FContext, Facade, RawFContext, RawFacade}
+import upickle.jawn.{FContext, Facade, RawFContext, RawFacade}
 
 case class Opt(a: Option[String], b: Option[Int])
 object Opt{

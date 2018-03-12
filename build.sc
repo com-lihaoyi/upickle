@@ -139,7 +139,14 @@ class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
 
 object test extends ScalaModule{
   def scalaVersion = "2.12.4"
-  def moduleDeps = Seq(upickleJvm("2.12.4"))
+  def moduleDeps = Seq(upickleJvm("2.12.4").test)
+  def ivyDeps = Agg(
+    ivy"io.circe::circe-core:0.9.1",
+    ivy"io.circe::circe-generic:0.9.1",
+    ivy"io.circe::circe-parser:0.9.1",
+    ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
+    ivy"com.typesafe.play::play-json:2.6.7"
+  )
   def sources = T.sources{millSourcePath}
 }
 

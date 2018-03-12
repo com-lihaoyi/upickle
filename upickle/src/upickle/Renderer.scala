@@ -3,13 +3,13 @@ package upickle
 
 import java.io.{ByteArrayOutputStream, StringWriter, Writer}
 
-import jawn.RawFContext
+import upickle.jawn.RawFContext
 
 import scala.annotation.switch
 
 class Renderer(out: java.io.Writer,
                var indent: Int = -1,
-               var depth: Int = 0) extends jawn.Facade[Unit]{
+               var depth: Int = 0) extends upickle.jawn.Facade[Unit]{
   def singleContext() = ???
 
   var commaBuffered = false

@@ -1,5 +1,5 @@
 package upickle
-import jawn.{Facade, RawFContext, RawFacade}
+import upickle.jawn.{Facade, RawFContext, RawFacade}
 
 import language.higherKinds
 import scala.collection.mutable
@@ -10,7 +10,7 @@ import scala.reflect.ClassTag
 */
 private[upickle] trait GeneratedUtil extends Types{
   class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{
-    def write[R](out: jawn.Facade[R], v: V): R = {
+    def write[R](out: upickle.jawn.Facade[R], v: V): R = {
       if (v == null) out.jnull(-1)
       else{
         val ctx = out.arrayContext()
@@ -26,7 +26,7 @@ private[upickle] trait GeneratedUtil extends Types{
   }
 
   class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends Reader[V]{
-    override def arrayContext(index: Int) = new jawn.RawFContext[Any, V] {
+    override def arrayContext(index: Int) = new upickle.jawn.RawFContext[Any, V] {
       val b = new Array[Any](readers.length)
       var facadesIndex = 0
 
@@ -46,7 +46,7 @@ private[upickle] trait GeneratedUtil extends Types{
   }
 
   abstract class CaseR[V](argCount: Int) extends Reader[V]{
-    trait CaseObjectContext extends jawn.RawFContext[Any, V]{
+    trait CaseObjectContext extends upickle.jawn.RawFContext[Any, V]{
 
       val aggregated = new Array[Any](argCount)
       val found = new Array[Boolean](argCount)
@@ -77,14 +77,14 @@ private[upickle] trait GeneratedUtil extends Types{
   }
 
   class Case0W[T](f: T => Boolean) extends Writer[T] {
-    def write[R](out: jawn.Facade[R], v: T): R = {
+    def write[R](out: upickle.jawn.Facade[R], v: T): R = {
       out.objectContext(-1).finish(-1)
     }
   }
 
   class SingletonR[T](t: T) extends Reader[T]{
     override def objectContext(index: Int) = new RawFContext[Any, T] {
-      def facade = jawn.NullFacade
+      def facade = upickle.jawn.NullFacade
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 

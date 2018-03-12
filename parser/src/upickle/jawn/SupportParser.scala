@@ -1,4 +1,4 @@
-package jawn
+package upickle.jawn
 
 import java.io.File
 import java.nio.ByteBuffer

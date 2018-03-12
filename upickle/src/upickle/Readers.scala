@@ -3,7 +3,7 @@ package upickle
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import jawn.{RawFContext, RawFacade}
+import upickle.jawn.{RawFContext, RawFacade}
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
@@ -76,7 +76,7 @@ trait Readers extends Types with Generated with LowPriImplicits{
   implicit def NoneReader: Reader[None.type] = OptionReader[Unit].narrow[None.type]
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
-    override def arrayContext(index: Int) = new jawn.RawFContext[Any, C[T]] {
+    override def arrayContext(index: Int) = new upickle.jawn.RawFContext[Any, C[T]] {
       val b = cbf.apply()
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
@@ -105,7 +105,7 @@ trait Readers extends Types with Generated with LowPriImplicits{
   implicit val FiniteDurationReader = DurationReader.narrow[FiniteDuration]
 
   implicit def EitherReader[T1: Reader, T2: Reader] = new Reader[Either[T1, T2]]{
-    override def arrayContext(index: Int) = new jawn.RawFContext[Any, Either[T1, T2]] {
+    override def arrayContext(index: Int) = new upickle.jawn.RawFContext[Any, Either[T1, T2]] {
       var right: java.lang.Boolean = null
       var value: Either[T1, T2] = _
       def visitKey(s: CharSequence, index: Int): Unit = ???

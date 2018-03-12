@@ -2,7 +2,7 @@ package upickle
 
 
 
-import jawn.{Facade, RawFContext, RawFacade}
+import upickle.jawn.{Facade, RawFContext, RawFacade}
 
 import language.experimental.macros
 import language.higherKinds
@@ -15,7 +15,7 @@ import scala.reflect.ClassTag
  */
 trait Api extends Types with Implicits {
   def read[T: Reader](s: String) = {
-    jawn.Parser.parseUnsafe(s)(implicitly[Reader[T]])
+    upickle.jawn.Parser.parseUnsafe(s)(implicitly[Reader[T]])
   }
   def write[T: Writer](t: T, indent: Int = -1) = {
     val out = new java.io.StringWriter()
@@ -160,9 +160,9 @@ trait AttributeTagged extends Api{
 
 object json{
   val jsRW = upickle.default.macroRW0[Js.Value](implicitly, implicitly)
-  def read(s: String) = jawn.Parser.parseUnsafe(s)(jsRW)
-  def read(s: java.nio.ByteBuffer) = jawn.Parser.parseFromByteBuffer(s)(jsRW).get
-  def read(s: java.io.File) = jawn.Parser.parseFromFile(s)(jsRW).get
+  def read(s: String) = upickle.jawn.Parser.parseUnsafe(s)(jsRW)
+  def read(s: java.nio.ByteBuffer) = upickle.jawn.Parser.parseFromByteBuffer(s)(jsRW).get
+  def read(s: java.io.File) = upickle.jawn.Parser.parseFromFile(s)(jsRW).get
   def write(t: Js.Value): String = {
     val out = new java.io.StringWriter()
     jsRW.write(new Renderer(out), t)

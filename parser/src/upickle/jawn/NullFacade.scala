@@ -1,4 +1,4 @@
-package jawn
+package upickle.jawn
 
 /**
  * NullFacade discards all JSON AST information.
