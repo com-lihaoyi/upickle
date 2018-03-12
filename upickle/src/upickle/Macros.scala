@@ -262,6 +262,10 @@ object Macros {
       val defaults = deriveDefaults(companion, hasDefaults)
       q"""
         new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
+          ..${
+            for(i <- rawArgs.indices)
+            yield q"lazy val ${TermName("r" + i)} = implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
+          }
           override def objectContext(index: Int) = new CaseObjectContext{
             def visitKey(s: CharSequence, index: Int): Unit = {
               currentIndex = s.toString match {
@@ -293,7 +297,7 @@ object Macros {
               case -1 => jawn.NullFacade
               case ..${
                 for(i <- rawArgs.indices)
-                yield cq"$i => implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
+                yield cq"$i => ${TermName("r" + i)}"
               }
             }
           }

@@ -304,63 +304,62 @@ object LegacyTests extends TestSuite {
       implicit val WrapperRW: RW[subpackage.Wrapper] = upickle.legacy.macroRW
       upickle.legacy.write(subpackage.Wrapper(subpackage.Base.Child))
     }
-//    'performance{
-//      import Generic.ADT
-//      import Hierarchy._
-//      import Recursive._
-//      import Defaults._
-//      import ADTs.ADT0
-//      type Data = ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]
-//      val data: Data = ADT(
-//        Vector((1, 2), (3, 4), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13)),
-//        """
-//          |I am cow, hear me moo
-//          |I weigh twice as much as you
-//          |And I look good on the barbecueeeee
-//        """.stripMargin,
-//        C("lol i am a noob", "haha you are a noob"): A,
-//        Node(-11, Node(-22, Node(-33, Node(-44, End)))): LL,
-//        ADTc(i = 1234567890, s = "i am a strange loop"),
-//        ADT0()
-//      )
-//      implicit def rw1: RW[Data] = upickle.legacy.macroRW
-//      implicit def rw2: RW[A] = upickle.legacy.macroRW
-//      implicit def rw3: RW[B] = upickle.legacy.macroRW
-//      implicit def rw4: RW[C] = upickle.legacy.macroRW
-//      implicit def rw5: RW[LL] = upickle.legacy.macroRW
-//      implicit def rw6: RW[Node] = upickle.legacy.macroRW
-//      implicit def rw7: RW[End.type] = upickle.legacy.macroRW
-//      implicit def rw8: RW[ADTc] = upickle.legacy.macroRW
-//      implicit def rw9: RW[ADT0] = upickle.legacy.macroRW
-//
-//      // Some arbitrary data that represents a mix of all the different
-//      // ways things can be pickled and unpickled
-//
-//      val stringified = upickle.legacy.write(data)
-//      val r1 = upickle.legacy.read[Data](stringified)
-//      assert(data == r1)
-//      val rewritten = upickle.legacy.write(upickle.legacy.read[Data](stringified))
-//      assert(stringified == rewritten)
-//
-//      'read{
-//        var n = 0
-//        val start = System.currentTimeMillis()
-//        while(System.currentTimeMillis() < start + 50000){
-//          upickle.legacy.read[Data](stringified)
-//          n += 1
-//        }
-//        n
-//      }
-//      'write{
-//        var n = 0
-//        val start = System.currentTimeMillis()
-//        while(System.currentTimeMillis() < start + 50000){
-//          upickle.legacy.write(data)
-//          n += 1
-//        }
-//        n
-//      }
-//    }
+    'performance{
+      import Generic.ADT
+      import Hierarchy._
+      import Recursive._
+      import Defaults._
+      import ADTs.ADT0
+      type Data = ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]
+      val data: Data = ADT(
+        Vector((1, 2), (3, 4), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13)),
+        """
+          |I am cow, hear me moo
+          |I weigh twice as much as you
+          |And I look good on the barbecueeeee
+        """.stripMargin,
+        C("lol i am a noob", "haha you are a noob"): A,
+        Node(-11, Node(-22, Node(-33, Node(-44, End)))): LL,
+        ADTc(i = 1234567890, s = "i am a strange loop"),
+        ADT0()
+      )
+      implicit def rw1: RW[Data] = upickle.legacy.macroRW
+      implicit def rw2: RW[A] = upickle.legacy.macroRW
+      implicit def rw3: RW[B] = upickle.legacy.macroRW
+      implicit def rw4: RW[C] = upickle.legacy.macroRW
+      implicit def rw5: RW[LL] = upickle.legacy.macroRW
+      implicit def rw6: RW[Node] = upickle.legacy.macroRW
+      implicit def rw7: RW[End.type] = upickle.legacy.macroRW
+      implicit def rw8: RW[ADTc] = upickle.legacy.macroRW
+      implicit def rw9: RW[ADT0] = upickle.legacy.macroRW
 
+      // Some arbitrary data that represents a mix of all the different
+      // ways things can be pickled and unpickled
+
+      val stringified = upickle.legacy.write(data)
+      val r1 = upickle.legacy.read[Data](stringified)
+      assert(data == r1)
+      val rewritten = upickle.legacy.write(upickle.legacy.read[Data](stringified))
+      assert(stringified == rewritten)
+
+      'read{
+        var n = 0
+        val start = System.currentTimeMillis()
+        while(System.currentTimeMillis() < start + 50000){
+          upickle.legacy.read[Data](stringified)
+          n += 1
+        }
+        n
+      }
+      'write{
+        var n = 0
+        val start = System.currentTimeMillis()
+        while(System.currentTimeMillis() < start + 50000){
+          upickle.legacy.write(data)
+          n += 1
+        }
+        n
+      }
+    }
   }
 }
