@@ -1,7 +1,14 @@
 package upickle
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.`type`.TypeReference
+import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.databind.node.{IntNode, ObjectNode}
+import com.fasterxml.jackson.databind.util.TokenBuffer
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 
 
 object Main{
@@ -25,7 +32,7 @@ object Main{
   )
 
   def main(args: Array[String]): Unit = {
-//    jacksonModuleScala()
+    jacksonModuleScala()
     playJson()
     circe()
     upickleDefault()
@@ -36,44 +43,83 @@ object Main{
     upickleLegacy2()
   }
 
-//  def jacksonModuleScala() = {
-//    val mapper = new ObjectMapper()
-//    mapper.registerModule(DefaultScalaModule)
-//
-//
-//    val stringified = mapper.writeValueAsString(benchmarkSampledata)
-//    println(stringified)
-//    println()
-//    val r1 = mapper.readValue[Data](stringified, classOf[Data])
-//    println(r1)
-//    println()
-//
-//    assert(benchmarkSampledata == r1)
-//
-//    val rewritten = mapper.writeValueAsString(mapper.readValue[Data](stringified, classOf[Data]))
-//    assert(stringified == rewritten)
-//
-//    {
-//      var n = 0
-//      val start = System.currentTimeMillis()
-//      while(System.currentTimeMillis() < start + 50000){
-//        mapper.readValue[Data](stringified, classOf[Data])
-//        n += 1
-//      }
-//      println("jacksonModuleScala Read " + n)
-//    }
-//
-//    {
-//      var n = 0
-//      val start = System.currentTimeMillis()
-//      while(System.currentTimeMillis() < start + 50000){
-//        mapper.writeValueAsString(benchmarkSampledata)
-//        n += 1
-//      }
-//      println("jacksonModuleScala Write " + n)
-//    }
-//
-//  }
+  def jacksonModuleScala() = {
+    val mapper = new ObjectMapper() with ScalaObjectMapper
+    val m = new SimpleModule
+    mapper.registerModule(DefaultScalaModule)
+
+    // https://stackoverflow.com/questions/47955581/jackson-deserialize-json-to-scala-adt?rq=1
+    m.addDeserializer(
+      classOf[A],
+      new StdDeserializer[A](classOf[A]) {
+        def deserialize(jp: JsonParser, ctxt: DeserializationContext): A = {
+          val tb = new TokenBuffer(jp, ctxt)
+          tb.copyCurrentStructure(jp)
+          val firstParser = tb.asParser
+          firstParser.nextToken
+          val curNode = firstParser.getCodec.readTree[JsonNode](firstParser)
+          val objectParser = tb.asParser
+          objectParser.nextToken()
+          if (curNode.has("i")) {
+            objectParser.readValueAs[B](classOf[B])
+          } else if (curNode.has("s1")) {
+            objectParser.readValueAs[C](classOf[C])
+          } else ???
+        }
+      }
+    )
+    m.addDeserializer(
+      classOf[LL],
+      new StdDeserializer[LL](classOf[LL]) {
+        def deserialize(jp: JsonParser, ctxt: DeserializationContext): LL = {
+          val tb = new TokenBuffer(jp, ctxt)
+          tb.copyCurrentStructure(jp)
+          val firstParser = tb.asParser
+          firstParser.nextToken
+          val curNode = firstParser.getCodec.readTree[JsonNode](firstParser)
+          val objectParser = tb.asParser
+          objectParser.nextToken()
+          if (curNode.has("c")) {
+            objectParser.readValueAs[Node](classOf[Node])
+          } else{
+            End
+          }
+        }
+      }
+    )
+    mapper.registerModule(m)
+
+    val jacksonType = new TypeReference[Data] {}
+
+    val stringified = mapper.writeValueAsString(benchmarkSampledata)
+    val r1 = mapper.readValue[Data](stringified, jacksonType)
+
+    assert(benchmarkSampledata == r1)
+
+    val rewritten = mapper.writeValueAsString(mapper.readValue[Data](stringified, jacksonType))
+    assert(stringified == rewritten)
+
+    {
+      var n = 0
+      val start = System.currentTimeMillis()
+      while(System.currentTimeMillis() < start + 50000){
+        mapper.readValue[Data](stringified, classOf[Data])
+        n += 1
+      }
+      println("jacksonModuleScala Read " + n)
+    }
+
+    {
+      var n = 0
+      val start = System.currentTimeMillis()
+      while(System.currentTimeMillis() < start + 50000){
+        mapper.writeValueAsString(benchmarkSampledata)
+        n += 1
+      }
+      println("jacksonModuleScala Write " + n)
+    }
+
+  }
   def circe() = {
     import io.circe._, io.circe.parser._, io.circe.generic.semiauto._
 
