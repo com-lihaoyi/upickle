@@ -31,20 +31,25 @@ object Main{
     ADT0()
   )
 
-  val duration = 50000
+
   def main(args: Array[String]): Unit = {
-    jacksonModuleScala()
-    playJson()
-    circe()
-    upickleDefault()
-    upickleLegacy()
-    playJson2()
-    circe2()
-    upickleDefault2()
-    upickleLegacy2()
+    for(duration <- Seq(5000, 50000)){
+      println("RUN: " + duration)
+      println()
+      jacksonModuleScala(duration)
+      playJson(duration)
+      circe(duration)
+      upickleDefault(duration)
+      upickleLegacy(duration)
+      playJsonCached(duration)
+      circeCached(duration)
+      upickleDefaultCached(duration)
+      upickleLegacyCached(duration)
+      println()
+    }
   }
 
-  def jacksonModuleScala() = {
+  def jacksonModuleScala(duration: Int) = {
     val mapper = new ObjectMapper() with ScalaObjectMapper
     val m = new SimpleModule
     mapper.registerModule(DefaultScalaModule)
@@ -92,36 +97,14 @@ object Main{
 
     val jacksonType = new TypeReference[Data] {}
 
-    val stringified = mapper.writeValueAsString(benchmarkSampledata)
-    val r1 = mapper.readValue[Data](stringified, jacksonType)
+    bench("jackson", duration)(
+      mapper.readValue[Data](_, jacksonType),
+      mapper.writeValueAsString(_)
+    )
 
-    assert(benchmarkSampledata == r1)
-
-    val rewritten = mapper.writeValueAsString(mapper.readValue[Data](stringified, jacksonType))
-    assert(stringified == rewritten)
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        mapper.readValue[Data](stringified, classOf[Data])
-        n += 1
-      }
-      println("jacksonModuleScala Read " + n)
-    }
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        mapper.writeValueAsString(benchmarkSampledata)
-        n += 1
-      }
-      println("jacksonModuleScala Write " + n)
-    }
 
   }
-  def circe() = {
+  def circe(duration: Int) = {
     import io.circe._, io.circe.parser._, io.circe.generic.semiauto._
 
     implicit def _r1: Decoder[Data] = deriveDecoder
@@ -144,36 +127,14 @@ object Main{
     implicit def _w8: Encoder[ADTc] = deriveEncoder
     implicit def _w9: Encoder[ADT0] = deriveEncoder
 
-    val stringified = implicitly[Encoder[Data]].apply(benchmarkSampledata).toString()
-    val r1 = decode[Data](stringified).right.get
-    assert(benchmarkSampledata == r1)
-
-    val rewritten = implicitly[Encoder[Data]].apply(decode[Data](stringified).right.get).toString()
-    assert(stringified == rewritten)
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        decode[Data](stringified).right.get
-        n += 1
-      }
-      println("circe Read " + n)
-    }
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        implicitly[Encoder[Data]].apply(benchmarkSampledata).toString()
-        n += 1
-      }
-      println("circe Write " + n)
-    }
+    bench("circe", duration)(
+      decode[Data](_).right.get,
+      implicitly[Encoder[Data]].apply(_).toString()
+    )
 
   }
 
-  def playJson() = {
+  def playJson(duration: Int) = {
     import play.api.libs.json._
     implicit def rw1: Format[Data] = play.api.libs.json.Json.format
     implicit def rw2: Format[A] = play.api.libs.json.Json.format
@@ -193,35 +154,14 @@ object Main{
       def writes(o: ADT0) = JsObject(Nil)
     }
 
-    val stringified = Json.stringify(Json.toJson(benchmarkSampledata))
-    val r1 = Json.fromJson[Data](Json.parse(stringified)).get
-    val equal = benchmarkSampledata == r1
-    assert(equal)
-    val rewritten = Json.stringify(Json.toJson(Json.fromJson[Data](Json.parse(stringified)).get))
-    assert(stringified == rewritten)
 
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        Json.fromJson[Data](Json.parse(stringified)).get
-        n += 1
-      }
-      println("playJson Read " + n)
-    }
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        Json.stringify(Json.toJson(benchmarkSampledata))
-        n += 1
-      }
-      println("playJson Write " + n)
-    }
+    bench("playJsonCached", duration)(
+      s => Json.fromJson[Data](Json.parse(s)).get,
+      d => Json.stringify(Json.toJson(d))
+    )
   }
 
-  def upickleLegacy() = {
+  def upickleLegacy(duration: Int) = {
     import upickle.legacy.{macroRW, ReadWriter => RW, Reader => R, Writer => W}
 
     implicit def rw1: RW[Data] = upickle.legacy.macroRW
@@ -234,63 +174,22 @@ object Main{
     implicit def rw8: RW[ADTc] = upickle.legacy.macroRW
     implicit def rw9: RW[ADT0] = upickle.legacy.macroRW
 
-    val stringified = upickle.legacy.write(benchmarkSampledata)
-    val r1 = upickle.legacy.read[Data](stringified)
-    assert(benchmarkSampledata == r1)
-    val rewritten = upickle.legacy.write(upickle.legacy.read[Data](stringified))
-    assert(stringified == rewritten)
 
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        upickle.legacy.read[Data](stringified)
-        n += 1
-      }
-      println("upickleLegacy Read " + n)
-    }
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        upickle.legacy.write(benchmarkSampledata)
-        n += 1
-      }
-      println("upickleLegacy Write " + n)
-    }
+    bench("upickleLegacy", duration)(
+      upickle.legacy.read[Data],
+      upickle.legacy.write(_)
+    )
 
 
   }
-  def upickleDefault() = {
+  def upickleDefault(duration: Int) = {
 
-    val stringified = upickle.default.write(benchmarkSampledata)
-    val r1 = upickle.default.read[Data](stringified)
-    assert(benchmarkSampledata == r1)
-    val rewritten = upickle.default.write(upickle.default.read[Data](stringified))
-    assert(stringified == rewritten)
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        upickle.default.read[Data](stringified)
-        n += 1
-      }
-      println("upickleDefault Read " + n)
-    }
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        upickle.default.write(benchmarkSampledata)
-        n += 1
-      }
-      println("upickleDefault Write " + n)
-    }
+    bench("upickleDefault", duration)(
+      upickle.default.read[Data],
+      upickle.default.write(_)
+    )
   }
-  def circe2() = {
+  def circeCached(duration: Int) = {
     import io.circe._, io.circe.parser._, io.circe.generic.semiauto._
 
     implicit lazy val _r1: Decoder[Data] = deriveDecoder
@@ -313,36 +212,13 @@ object Main{
     implicit lazy val _w8: Encoder[ADTc] = deriveEncoder
     implicit lazy val _w9: Encoder[ADT0] = deriveEncoder
 
-    val stringified = implicitly[Encoder[Data]].apply(benchmarkSampledata).toString()
-    val r1 = decode[Data](stringified).right.get
-    assert(benchmarkSampledata == r1)
-
-    val rewritten = implicitly[Encoder[Data]].apply(decode[Data](stringified).right.get).toString()
-    assert(stringified == rewritten)
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        decode[Data](stringified).right.get
-        n += 1
-      }
-      println("circe Read " + n)
-    }
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        implicitly[Encoder[Data]].apply(benchmarkSampledata).toString()
-        n += 1
-      }
-      println("circe Write " + n)
-    }
-
+    bench("circeCached", duration)(
+      decode[Data](_).right.get,
+      implicitly[Encoder[Data]].apply(_).toString()
+    )
   }
 
-  def playJson2() = {
+  def playJsonCached(duration: Int) = {
     import play.api.libs.json._
     implicit lazy val rw1: Format[Data] = play.api.libs.json.Json.format
     implicit lazy val rw2: Format[A] = play.api.libs.json.Json.format
@@ -362,35 +238,16 @@ object Main{
       def writes(o: ADT0) = JsObject(Nil)
     }
 
-    val stringified = Json.stringify(Json.toJson(benchmarkSampledata))
-    val r1 = Json.fromJson[Data](Json.parse(stringified)).get
-    val equal = benchmarkSampledata == r1
-    assert(equal)
-    val rewritten = Json.stringify(Json.toJson(Json.fromJson[Data](Json.parse(stringified)).get))
-    assert(stringified == rewritten)
 
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        Json.fromJson[Data](Json.parse(stringified)).get
-        n += 1
-      }
-      println("playJson Read " + n)
-    }
 
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        Json.stringify(Json.toJson(benchmarkSampledata))
-        n += 1
-      }
-      println("playJson Write " + n)
-    }
+    bench("playJsonCached", duration)(
+      s => Json.fromJson[Data](Json.parse(s)).get,
+      d => Json.stringify(Json.toJson(d))
+    )
+
   }
 
-  def upickleLegacy2() = {
+  def upickleLegacyCached(duration: Int) = {
     import upickle.legacy.{macroRW, ReadWriter => RW, Reader => R, Writer => W}
 
     implicit lazy val rw1: RW[Data] = upickle.legacy.macroRW
@@ -403,35 +260,13 @@ object Main{
     implicit lazy val rw8: RW[ADTc] = upickle.legacy.macroRW
     implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
 
-    val stringified = upickle.legacy.write(benchmarkSampledata)
-    val r1 = upickle.legacy.read[Data](stringified)
-    assert(benchmarkSampledata == r1)
-    val rewritten = upickle.legacy.write(upickle.legacy.read[Data](stringified))
-    assert(stringified == rewritten)
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        upickle.legacy.read[Data](stringified)
-        n += 1
-      }
-      println("upickleLegacy Read " + n)
-    }
-
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        upickle.legacy.write(benchmarkSampledata)
-        n += 1
-      }
-      println("upickleLegacy Write " + n)
-    }
-
-
+    bench("upickleLegacyCached", duration)(
+      upickle.legacy.read[Data],
+      upickle.legacy.write(_)
+    )
   }
-  def upickleDefault2() = {
+
+  def upickleDefaultCached(duration: Int) = {
     implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
     implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
     implicit lazy val rw3: upickle.default.ReadWriter[B] = upickle.default.macroRW
@@ -441,30 +276,42 @@ object Main{
     implicit lazy val rw7: upickle.default.ReadWriter[End.type] = upickle.default.macroRW
     implicit lazy val rw8: upickle.default.ReadWriter[ADTc] = upickle.default.macroRW
     implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
-    val stringified = upickle.default.write(benchmarkSampledata)
-    val r1 = upickle.default.read[Data](stringified)
-    assert(benchmarkSampledata == r1)
-    val rewritten = upickle.default.write(upickle.default.read[Data](stringified))
+
+    bench("upickleDefaultCached", duration)(
+      upickle.default.read[Data],
+      upickle.default.write(_)
+    )
+  }
+
+  def bench(name: String, duration: Int)
+           (f1: String => Data, f2: Data => String) = {
+    val stringified = f2(benchmarkSampledata)
+    val r1 = f1(stringified)
+    val equal = benchmarkSampledata == r1
+
+    assert(equal)
+    val rewritten = f2(f1(stringified))
+
     assert(stringified == rewritten)
 
     {
       var n = 0
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
-        upickle.default.read[Data](stringified)
+        f1(stringified)
         n += 1
       }
-      println("upickleDefault Read " + n)
+      println(name + " Read " + n)
     }
 
     {
       var n = 0
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
-        upickle.default.write(benchmarkSampledata)
+        f2(benchmarkSampledata)
         n += 1
       }
-      println("upickleDefault Write " + n)
+      println(name + " Write " + n)
     }
   }
 }
