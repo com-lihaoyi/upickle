@@ -17,40 +17,48 @@ trait Types{ types =>
   def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new Exception(index.toString)
   def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new Exception(index.toString)
   def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R
+
+  private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {
+    var x: V = null.asInstanceOf[V]
+    val i = xs.iterator
+    while(x == null && i.hasNext){
+      val t = f(i.next())
+      if(t != null) x = t
+    }
+    x
+  }
   trait TaggedReader[T] extends Reader[T]{
-    def findReader(s: String): Option[Reader[T]]
+    def findReader(s: String): Reader[T]
 
     override def arrayContext(index: Int) = taggedArrayContext(this, index)
     override def objectContext(index: Int) = taggedObjectContext(this, index)
   }
   object TaggedReader{
-    case class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
-      def findReader(s: String) = if (s == tag) Some(r) else None
+    class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
+      def findReader(s: String) = if (s == tag) r else null
     }
-    case class Node[T](rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
-      def findReader(s: String) = rs.map(_.findReader(s).asInstanceOf[Option[Reader[T]]]).collectFirst{case Some(x) => x}
+    class Node[T](rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
+      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
     }
   }
 
   trait TaggedWriter[T] extends Writer[T]{
-    def findWriter(v: Any): Option[(String, Writer[T])]
+    def findWriter(v: Any): (String, Writer[T])
     def write[R](out: Facade[R], v: T): R = {
-      val (tag, w) = findWriter(v).get
+      val (tag, w) = findWriter(v)
       taggedWrite(w, tag, out, v)
 
     }
   }
   object TaggedWriter{
-    case class Leaf[T](c: ClassTag[_], tag: String, r: Writer[T]) extends TaggedWriter[T]{
+    class Leaf[T](c: ClassTag[_], tag: String, r: Writer[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
-        if (c.runtimeClass.isInstance(v)) Some(tag -> r)
-        else None
+        if (c.runtimeClass.isInstance(v)) tag -> r
+        else null
       }
     }
-    case class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
-      def findWriter(v: Any) = {
-        rs.map(_.findWriter(v)).collectFirst{case Some(x: (String, Writer[T])) => x}
-      }
+    class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
+      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, Writer[T])]
     }
   }
 
@@ -61,25 +69,23 @@ trait Types{ types =>
 
   }
   object TaggedReadWriter{
-    case class Leaf[T](c: ClassTag[_], tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
-      def findReader(s: String) = if (s == tag) Some(r) else None
+    class Leaf[T](c: ClassTag[_], tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
+      def findReader(s: String) = if (s == tag) r else null
       def findWriter(v: Any) = {
-        if (c.runtimeClass.isInstance(v)) Some(tag -> r)
-        else None
+        if (c.runtimeClass.isInstance(v)) (tag -> r)
+        else null
       }
     }
-    case class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
-      def findReader(s: String) = rs.map(_.findReader(s).asInstanceOf[Option[Reader[T]]]).collectFirst{case Some(x) => x}
-      def findWriter(v: Any) = {
-        rs.map(_.findWriter(v)).collectFirst{case Some(x: (String, Writer[T])) => x}
-      }
+    class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
+      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
+      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, Writer[T])]
     }
   }
 
   object ReadWriter{
 
     def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
-      TaggedReadWriter.Node(rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
+      new TaggedReadWriter.Node(rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
 
     def join[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] with BaseReader.Delegate[Any, T]{
@@ -93,7 +99,9 @@ trait Types{ types =>
 
   object Reader{
 
-    def merge[T](readers0: Reader[_ <: T]*) = TaggedReader.Node(readers0.asInstanceOf[Seq[TaggedReader[T]]]:_*)
+    def merge[T](readers0: Reader[_ <: T]*) = {
+      new TaggedReader.Node(readers0.asInstanceOf[Seq[TaggedReader[T]]]:_*)
+    }
   }
   type Reader[T] = BaseReader[Any, T]
   trait BaseReader[-T, V] extends upickle.jawn.RawFacade[T, V] {
@@ -197,6 +205,8 @@ trait Types{ types =>
       def write[R](out: upickle.jawn.Facade[R], v: U): R =
         src.write(out, if(v == null) null.asInstanceOf[T] else f(v))
     }
-    def merge[T](writers: Writer[_ <: T]*) = TaggedWriter.Node(writers.asInstanceOf[Seq[TaggedWriter[T]]]:_*)
+    def merge[T](writers: Writer[_ <: T]*) = {
+      new TaggedWriter.Node(writers.asInstanceOf[Seq[TaggedWriter[T]]]:_*)
+    }
   }
 }

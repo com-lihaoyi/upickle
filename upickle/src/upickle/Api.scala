@@ -35,9 +35,11 @@ object default extends AttributeTagged{
  * tagged instances of sealed traits.
  */
 object legacy extends Api{
-  def annotate[V](rw: Reader[V], n: String) = TaggedReader.Leaf[V](n, rw)
+  def annotate[V](rw: Reader[V], n: String) = new TaggedReader.Leaf[V](n, rw)
 
-  def annotate[V](rw: Writer[V], n: String)(implicit c: ClassTag[V]) = TaggedWriter.Leaf[V](c, n, rw)
+  def annotate[V](rw: Writer[V], n: String)(implicit c: ClassTag[V]) = {
+    new TaggedWriter.Leaf[V](c, n, rw)
+  }
 
   override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new RawFContext[Any, T] {
     var typeName: String = null
@@ -54,7 +56,7 @@ object legacy extends Api{
     def add(v: Any, index: Int): Unit = {
       if (typeName == null){
         typeName = v.toString
-        delegate = taggedReader.findReader(typeName).get
+        delegate = taggedReader.findReader(typeName)
       }else{
         res = v.asInstanceOf[T]
       }
@@ -83,14 +85,18 @@ object legacy extends Api{
  */
 trait AttributeTagged extends Api{
   def tagName = "$type"
-  def annotate[V: ClassTag](rw: Reader[V], n: String) = TaggedReader.Leaf[V](n, rw)
+  def annotate[V](rw: Reader[V], n: String) = {
+    new TaggedReader.Leaf[V](n, rw)
+  }
 
-  def annotate[V: ClassTag](rw: Writer[V], n: String)(implicit c: ClassTag[V]) = TaggedWriter.Leaf[V](c, n, rw)
+  def annotate[V](rw: Writer[V], n: String)(implicit c: ClassTag[V]) = {
+    new TaggedWriter.Leaf[V](c, n, rw)
+  }
 
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) =
     Util.mapContext(JsObjR.objectContext(index)){ x =>
       val key = x.value.find(_._1 == tagName).get._2.str.toString
-      val delegate = taggedReader.findReader(key).get
+      val delegate = taggedReader.findReader(key)
 
       val ctx = delegate.objectContext(-1)
       for((k, v) <- x.value if k != tagName){
