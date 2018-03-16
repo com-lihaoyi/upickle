@@ -21,7 +21,7 @@ trait Types{ types =>
     def findReader(s: String): Option[Reader[T]]
 
     override def arrayContext(index: Int) = taggedArrayContext(this, index)
-    override def objectContext(index: Int) = taggedArrayContext(this, index)
+    override def objectContext(index: Int) = taggedObjectContext(this, index)
   }
   object TaggedReader{
     case class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
@@ -32,27 +32,6 @@ trait Types{ types =>
     }
   }
 
-  sealed trait TaggedReadWriter[T] extends TaggedReader[T] with TaggedWriter[T]{
-
-    override def arrayContext(index: Int) = taggedArrayContext(this, index)
-    override def objectContext(index: Int) = taggedArrayContext(this, index)
-
-  }
-  object TaggedReadWriter{
-    case class Leaf[T](tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
-      def findReader(s: String) = if (s == tag) Some(r) else None
-      def findWriter(v: Any) = {
-        if (v.getClass.getCanonicalName == tag) Some(tag -> r)
-        else None
-      }
-    }
-    case class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
-      def findReader(s: String) = rs.map(_.findReader(s).asInstanceOf[Option[Reader[T]]]).collectFirst{case Some(x) => x}
-      def findWriter(v: Any) = {
-        rs.map(_.findWriter(v)).collectFirst{case Some(x: (String, Writer[T])) => x}
-      }
-    }
-  }
   trait TaggedWriter[T] extends Writer[T]{
     def findWriter(v: Any): Option[(String, Writer[T])]
     def write[R](out: Facade[R], v: T): R = {
@@ -64,11 +43,34 @@ trait Types{ types =>
   object TaggedWriter{
     case class Leaf[T](tag: String, r: Writer[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
-        if (v.getClass.getCanonicalName == tag) Some(tag -> r)
+        if (v.getClass.getName.replace('$', '.').stripSuffix(".") == tag) Some(tag -> r)
         else None
       }
     }
     case class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
+      assert(rs.forall(_.isInstanceOf[TaggedWriter[_ <: T]]))
+      def findWriter(v: Any) = {
+        rs.map(_.findWriter(v)).collectFirst{case Some(x: (String, Writer[T])) => x}
+      }
+    }
+  }
+
+  sealed trait TaggedReadWriter[T] extends TaggedReader[T] with TaggedWriter[T]{
+
+    override def arrayContext(index: Int) = taggedArrayContext(this, index)
+    override def objectContext(index: Int) = taggedObjectContext(this, index)
+
+  }
+  object TaggedReadWriter{
+    case class Leaf[T](tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
+      def findReader(s: String) = if (s == tag) Some(r) else None
+      def findWriter(v: Any) = {
+        if (v.getClass.getName.replace('$', '.').stripSuffix(".") == tag) Some(tag -> r)
+        else None
+      }
+    }
+    case class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
+      def findReader(s: String) = rs.map(_.findReader(s).asInstanceOf[Option[Reader[T]]]).collectFirst{case Some(x) => x}
       def findWriter(v: Any) = {
         rs.map(_.findWriter(v)).collectFirst{case Some(x: (String, Writer[T])) => x}
       }

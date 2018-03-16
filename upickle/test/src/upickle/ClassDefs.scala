@@ -1,6 +1,6 @@
 package upickle
 
-import upickle.ADTs.ADT0
+//import upickle.ADTs.ADT0
 import default.{Reader => R, Writer => W, ReadWriter => RW}
 /*
  * A whole bunch of test data that can be used by client libraries to try out
@@ -71,6 +71,7 @@ object Hierarchy {
   sealed trait Z //new line
   case object AnZ extends Z //new line
 }
+
 object DeepHierarchy {
   sealed abstract class A
   object A{

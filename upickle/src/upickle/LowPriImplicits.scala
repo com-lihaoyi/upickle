@@ -45,9 +45,36 @@ trait LowPriImplicits{ this: Types =>
   def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
   def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
   def macroRW[T]: Reader[T] with Writer[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
-  def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = new BaseReader.Delegate[Any, T] with Writer[T]{
-    def delegatedReader = r
-    def write[V](out: Facade[V], v: T) = w.write(out, v)
+  def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = (r, w) match{
+    case (r1: TaggedReader[T], w1: TaggedWriter[T]) =>
+      def rec(r2: TaggedReader[_], w2: TaggedWriter[_]): TaggedReadWriter[_] = {
+        (r2, w2) match{
+          case (TaggedReadWriter.Node(rs@_*), TaggedReadWriter.Node(ws@_*)) =>
+            TaggedReadWriter.Node(rs.zip(ws).map(rec _ tupled):_*)
+          case (TaggedReader.Node(rs@_*), TaggedWriter.Node(ws@_*)) =>
+            TaggedReadWriter.Node(rs.zip(ws).map(rec _ tupled):_*)
+          case (TaggedReader.Leaf(t, r3), TaggedWriter.Leaf(t2, w3)) =>
+            TaggedReadWriter.Leaf(t,
+              new BaseReader.Delegate[Any, T] with Writer[T]{
+                def delegatedReader = r3.asInstanceOf[Reader[T]]
+                def write[V](out: Facade[V], v: T) = w3.asInstanceOf[Writer[T]].write(out, v)
+              }
+            )
+          case (TaggedReadWriter.Leaf(t, r3), TaggedReadWriter.Leaf(t2, w3)) =>
+            TaggedReadWriter.Leaf(t,
+              new BaseReader.Delegate[Any, T] with Writer[T]{
+                def delegatedReader = r3.asInstanceOf[Reader[T]]
+                def write[V](out: Facade[V], v: T) = w3.asInstanceOf[Writer[T]].write(out, v)
+              }
+            )
+        }
+      }
+      rec(r1, w1).asInstanceOf[TaggedReadWriter[T]]
+    case _ =>
+      new BaseReader.Delegate[Any, T] with Writer[T]{
+        def delegatedReader = r
+        def write[V](out: Facade[V], v: T) = w.write(out, v)
+      }
   }
   def macroR0[T, M[_]]: Reader[T] = macro Macros.macroRImpl[T, M]
   def macroW0[T, M[_]]: Writer[T] = macro Macros.macroWImpl[T, M]
