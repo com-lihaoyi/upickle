@@ -17,7 +17,7 @@ trait Types{ types =>
   def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new Exception(index.toString)
   def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new Exception(index.toString)
   def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R
-  sealed trait TaggedReader[T] extends Reader[T]{
+  trait TaggedReader[T] extends Reader[T]{
     def findReader(s: String): Option[Reader[T]]
 
     override def arrayContext(index: Int) = taggedArrayContext(this, index)
@@ -54,7 +54,7 @@ trait Types{ types =>
     }
   }
 
-  sealed trait TaggedReadWriter[T] extends TaggedReader[T] with TaggedWriter[T]{
+  trait TaggedReadWriter[T] extends TaggedReader[T] with TaggedWriter[T]{
 
     override def arrayContext(index: Int) = taggedArrayContext(this, index)
     override def objectContext(index: Int) = taggedObjectContext(this, index)

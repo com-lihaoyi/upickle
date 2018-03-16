@@ -47,29 +47,11 @@ trait LowPriImplicits{ this: Types =>
   def macroRW[T]: Reader[T] with Writer[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
   def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = (r, w) match{
     case (r1: TaggedReader[T], w1: TaggedWriter[T]) =>
-      def rec(r2: TaggedReader[_], w2: TaggedWriter[_]): TaggedReadWriter[_] = {
-        (r2, w2) match{
-          case (TaggedReadWriter.Node(rs@_*), TaggedReadWriter.Node(ws@_*)) =>
-            TaggedReadWriter.Node(rs.zip(ws).map(rec _ tupled):_*)
-          case (TaggedReader.Node(rs@_*), TaggedWriter.Node(ws@_*)) =>
-            TaggedReadWriter.Node(rs.zip(ws).map(rec _ tupled):_*)
-          case (TaggedReader.Leaf(t, r3), TaggedWriter.Leaf(c, t2, w3)) =>
-            TaggedReadWriter.Leaf(c, t,
-              new BaseReader.Delegate[Any, T] with Writer[T]{
-                def delegatedReader = r3.asInstanceOf[Reader[T]]
-                def write[V](out: Facade[V], v: T) = w3.asInstanceOf[Writer[T]].write(out, v)
-              }
-            )
-          case (TaggedReadWriter.Leaf(c1, t, r3), TaggedReadWriter.Leaf(c, t2, w3)) =>
-            TaggedReadWriter.Leaf(c, t,
-              new BaseReader.Delegate[Any, T] with Writer[T]{
-                def delegatedReader = r3.asInstanceOf[Reader[T]]
-                def write[V](out: Facade[V], v: T) = w3.asInstanceOf[Writer[T]].write(out, v)
-              }
-            )
-        }
+      new TaggedReadWriter[T] {
+        def findReader(s: String) = r1.findReader(s)
+        def findWriter(v: Any) = w1.findWriter(v)
       }
-      rec(r1, w1).asInstanceOf[TaggedReadWriter[T]]
+
     case _ =>
       new BaseReader.Delegate[Any, T] with Writer[T]{
         def delegatedReader = r
