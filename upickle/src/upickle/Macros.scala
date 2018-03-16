@@ -309,7 +309,7 @@ object Macros {
       """
     }
     def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
-      q"${c.prefix}.Reader.merge[$targetType](..${subtrees.map(x => q"new ${c.prefix}.Reader.Mergable($x)")})"
+      q"${c.prefix}.Reader.merge[$targetType](..$subtrees)"
     }
   }
 

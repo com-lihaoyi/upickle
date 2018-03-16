@@ -35,69 +35,40 @@ object default extends AttributeTagged{
  * tagged instances of sealed traits.
  */
 object legacy extends Api{
-  def annotate[V: ClassTag](rw: Reader[V], n: String) = new TaggedReader[V] {
-    def tags: Seq[String] = Array(n)
+  def annotate[V](rw: Reader[V], n: String) = TaggedReader.Leaf[V](n, rw)
 
-    def readers: Seq[Reader[V]] = Array(rw)
-  }
+  def annotate[V](rw: Writer[V], n: String) = TaggedWriter.Leaf[V](n, rw)
 
-  def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
-    def tags: Seq[String] = Array(n)
+  override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new RawFContext[Any, T] {
+    var typeName: String = null
+    var delegate: Reader[_] = null
+    var delegateCtx: RawFContext[_, T] = null
 
-    def write[R](out: Facade[R], v: V): R = {
-      val ctx = out.arrayContext(-1)
-      ctx.add(out.jstring(n, -1), -1)
+    var res: T = _
+    def visitKey(s: CharSequence, index: Int): Unit = throw new Exception(s + " " + index)
+    def facade =
+      if (typeName == null) StringReader
+      else delegate
 
-      ctx.add(rw.write(out, v), -1)
-
-      ctx.finish(-1)
-    }
-  }
-
-  override def newTaggedReader[T](tags0: Seq[String], readers0: Seq[Reader[T]]) = new TaggedReaderImpl[T] {
-    def tags = tags0
-    def readers = readers0
-  }
-  type TaggedReader[T] = TaggedReaderImpl[T]
-  trait TaggedReaderImpl[T] extends TaggedReader0[T]{
-    def tags: Seq[String]
-    def readers: Seq[Reader[T]]
-
-    override def arrayContext(index: Int) = new RawFContext[Any, T] {
-      var typeName: String = null
-      var delegate: Reader[_] = null
-      var delegateCtx: RawFContext[_, T] = null
-
-      var res: T = _
-      def visitKey(s: CharSequence, index: Int): Unit = ???
-      def facade =
-        if (typeName == null) StringReader
-        else delegate
-
-      def add(v: Any, index: Int): Unit = {
-        if (typeName == null){
-          typeName = v.toString
-          delegate = readers(tags.indexOf(typeName))
-        }else{
-          res = v.asInstanceOf[T]
-        }
+    def add(v: Any, index: Int): Unit = {
+      if (typeName == null){
+        typeName = v.toString
+        delegate = taggedReader.findReader(typeName).get
+        println("typeName: " + typeName)
+        println("taggedReader: " + taggedReader)
+        println("delegate: " + delegate.getClass)
+      }else{
+        res = v.asInstanceOf[T]
       }
-
-      def finish(index: Int) = {
-        res
-      }
-
-      def isObj = false
     }
-  }
-  def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = {
-    new TaggedReaderImpl[T] with TaggedWriter[T] {
-      def delegateReader = implicitly[TaggedReader[T]]
-      def tags = delegateReader.tags
-      def readers = delegateReader.readers
-      def write[R](out: Facade[R], v: T): R = implicitly[Writer[T]].write(out, v)
+
+    def finish(index: Int) = {
+      res
     }
+
+    def isObj = false
   }
+
 }
 
 /**
@@ -107,37 +78,14 @@ object legacy extends Api{
  */
 trait AttributeTagged extends Api{
   def tagName = "$type"
-  def annotate[V: ClassTag](rw: Reader[V], n: String) = new TaggedReader[V] {
-    def tags: Seq[String] = Array(n)
+  def annotate[V: ClassTag](rw: Reader[V], n: String) = TaggedReader.Leaf[V](n, rw)
 
-    def readers: Seq[Reader[V]] = Array(rw)
-  }
+  def annotate[V: ClassTag](rw: Writer[V], n: String) = TaggedWriter.Leaf[V](n, rw)
 
-  def annotate[V: ClassTag](rw: Writer[V], n: String) = new TaggedWriter[V]{
-    def tags: Seq[String] = Array(n)
-
-    def write[R](out: Facade[R], v: V): R = {
-      val s = new java.io.StringWriter()
-      val tree = rw.write(JsBuilder, v)
-      val Js.Obj(kvs @ _*) = tree
-      val tagged = Js.Obj((tagName -> Js.Str(n)) +: kvs: _*)
-      JsVisitor.visit(tagged, out)
-    }
-  }
-
-  override def newTaggedReader[T](tags0: Seq[String], readers0: Seq[Reader[T]]) = new TaggedReaderImpl[T] {
-    def tags = tags0
-    def readers = readers0
-  }
-  type TaggedReader[T] = TaggedReaderImpl[T]
-  trait TaggedReaderImpl[T] extends TaggedReader0[T]{
-    def tags: Seq[String]
-    def readers: Seq[Reader[T]]
-
-    override def jstring(cs: CharSequence, index: Int) = cs.toString.asInstanceOf[T]
-    override def objectContext(index: Int) = Util.mapContext(JsObjR.objectContext(index)){ x =>
+  override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) =
+    Util.mapContext(JsObjR.objectContext(index)){ x =>
       val key = x.value.find(_._1 == tagName).get._2.str.toString
-      val delegate = readers(tags.indexOf(key))
+      val delegate = taggedReader.findReader(key).get
 
       val ctx = delegate.objectContext(-1)
       for((k, v) <- x.value if k != tagName){
@@ -146,16 +94,8 @@ trait AttributeTagged extends Api{
       }
       ctx.finish(index)
     }
-  }
-  def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T] = {
-    new TaggedReaderImpl[T] with TaggedWriter[T] with BaseReader.Delegate[Any, T]{
-      def delegatedReader = implicitly[TaggedReader[T]]
-      def tags = delegatedReader.tags
-      def readers = delegatedReader.readers
 
-      def write[R](out: Facade[R], v: T): R = implicitly[Writer[T]].write(out, v)
-    }
-  }
+
 }
 
 object json{

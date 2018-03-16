@@ -1,4 +1,6 @@
 package upickle
+import upickle.jawn.Facade
+
 import language.experimental.macros
 
 /**
@@ -43,11 +45,9 @@ trait LowPriImplicits{ this: Types =>
   def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
   def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
   def macroRW[T]: Reader[T] with Writer[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
-  def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = {
-    (r, w) match{
-      case (x: TaggedReader[T], y: TaggedWriter[T]) => joinTagged[T](x, y)
-      case (x, y) => ReadWriter.join[T](x, y)
-    }
+  def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = new BaseReader.Delegate[Any, T] with Writer[T]{
+    def delegatedReader = r
+    def write[V](out: Facade[V], v: T) = w.write(out, v)
   }
   def macroR0[T, M[_]]: Reader[T] = macro Macros.macroRImpl[T, M]
   def macroW0[T, M[_]]: Writer[T] = macro Macros.macroWImpl[T, M]

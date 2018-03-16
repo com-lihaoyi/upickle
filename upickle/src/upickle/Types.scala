@@ -13,44 +13,67 @@ import scala.reflect.ClassTag
 */
 trait Types{ types =>
   type ReadWriter[T] = Reader[T] with Writer[T]
-  type TaggedReadWriter[T] = TaggedReader[T] with TaggedWriter[T]
-  type TaggedReader[T] <: TaggedReader0[T]
-  trait TaggedReader0[T] extends Reader[T] {
-    def tags: Seq[String]
-    def readers: Seq[Reader[T]]
-  }
-  def newTaggedReader[T](tags0: Seq[String], readers0: Seq[Reader[T]]): TaggedReader[T]
-  trait TaggedWriter[T] extends Writer[T]{
-    def tags: Seq[String]
-  }
-  object ReadWriter{
-    implicit class Mergable[T, K <: T](w0: ReadWriter[K])
-                                      (implicit val ct: ClassTag[K]){
-      val w = new TaggedReader0[K] with TaggedWriter[K]{
-        def tags = w0.asInstanceOf[TaggedReadWriter[K]].tags
 
-        def readers = w0.asInstanceOf[TaggedReadWriter[K]].readers
+  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new Exception(index.toString)
+  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new Exception(index.toString)
+  sealed trait TaggedReader[T] extends Reader[T]{
+    def findReader(s: String): Option[Reader[T]]
 
-        def write[R](out: Facade[R], v: K): R = w0.write(out, v)
+    override def arrayContext(index: Int) = taggedArrayContext(this, index)
+    override def objectContext(index: Int) = taggedArrayContext(this, index)
+  }
+  object TaggedReader{
+    case class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
+      def findReader(s: String) = if (s == tag) Some(r) else None
+    }
+    case class Node[T](rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
+      def findReader(s: String) = rs.map(_.findReader(s).asInstanceOf[Option[Reader[T]]]).collectFirst{case Some(x) => x}
+    }
+  }
+
+  sealed trait TaggedReadWriter[T] extends TaggedReader[T] with TaggedWriter[T]{
+
+    override def arrayContext(index: Int) = taggedArrayContext(this, index)
+    override def objectContext(index: Int) = taggedArrayContext(this, index)
+
+  }
+  object TaggedReadWriter{
+    case class Leaf[T](tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
+      def findReader(s: String) = if (s == tag) Some(r) else None
+      def findWriter(v: Any) = {
+        if (v.getClass.getCanonicalName == tag) Some(r)
+        else None
       }
     }
-    def merge[T](rws: Mergable[T, _]*): TaggedReadWriter[T] = {
-      joinTagged(
-        Reader.merge[T](
-          rws.map(x =>
-            new Reader.Mergable[T, T](
-              x.w.asInstanceOf[TaggedReadWriter[T]]
-            )
-          ):_*
-        ),
-        Writer.merge[T](
-          rws.map(x =>
-            new Writer.Mergable[T, T](
-              x.w.asInstanceOf[TaggedReadWriter[T]]
-            )(x.ct.asInstanceOf[ClassTag[T]])
-          ):_*
-        )
-      )
+    case class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
+      def findReader(s: String) = rs.map(_.findReader(s).asInstanceOf[Option[Reader[T]]]).collectFirst{case Some(x) => x}
+      def findWriter(v: Any) = {
+        rs.map(_.findWriter(v)).collectFirst{case Some(x) => x.asInstanceOf[Writer[T]]}
+      }
+    }
+  }
+  trait TaggedWriter[T] extends Writer[T]{
+    def findWriter(v: Any): Option[Writer[T]]
+    def write[R](out: Facade[R], v: T): R = findWriter(v).get.write(out, v)
+  }
+  object TaggedWriter{
+    case class Leaf[T](tag: String, r: Writer[T]) extends TaggedWriter[T]{
+      def findWriter(v: Any) = {
+        if (v.getClass.getCanonicalName == tag) Some(r)
+        else None
+      }
+    }
+    case class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
+      def findWriter(v: Any) = {
+        rs.map(_.findWriter(v)).collectFirst{case Some(x) => x.asInstanceOf[Writer[T]]}
+      }
+    }
+  }
+
+  object ReadWriter{
+
+    def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
+      TaggedReadWriter.Node(rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
 
     def join[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] with BaseReader.Delegate[Any, T]{
@@ -61,18 +84,10 @@ trait Types{ types =>
       }
     }
   }
-  def joinTagged[T: TaggedReader: TaggedWriter]: TaggedReadWriter[T]
+
   object Reader{
-    implicit class Mergable[T, K <: T](r0: Reader[K]){
-      val r = newTaggedReader[K](
-        r0.asInstanceOf[TaggedReader0[K]].tags,
-        r0.asInstanceOf[TaggedReader0[K]].readers
-      )
-    }
-    def merge[T](readers0: Mergable[T, _]*) = newTaggedReader[T](
-      readers0.flatMap(_.r.tags),
-      readers0.flatMap(_.r.readers.asInstanceOf[Seq[Reader[T]]])
-    )
+
+    def merge[T](readers0: Reader[_ <: T]*) = TaggedReader.Node(readers0.asInstanceOf[Seq[TaggedReader[T]]]:_*)
   }
   type Reader[T] = BaseReader[Any, T]
   trait BaseReader[-T, V] extends upickle.jawn.RawFacade[T, V] {
@@ -176,19 +191,6 @@ trait Types{ types =>
       def write[R](out: upickle.jawn.Facade[R], v: U): R =
         src.write(out, if(v == null) null.asInstanceOf[T] else f(v))
     }
-    implicit class Mergable[T, K <: T](w0: Writer[K])(implicit val ct: ClassTag[K]){
-      val w = new TaggedWriter[K]{
-        def tags = w0.asInstanceOf[TaggedWriter[K]].tags
-
-        def write[V](out: Facade[V], v: K): V = w0.write(out, v)
-      }
-    }
-    def merge[T](writers: Mergable[T, _]*) = new TaggedWriter[T] {
-      val tags = writers.flatMap(_.w.tags)
-      def write[R](out: Facade[R], v: T): R = {
-        val w = writers.find(_.ct.runtimeClass.isInstance(v)).get.w
-        w.asInstanceOf[Writer[Any]].write(out, v)
-      }
-    }
+    def merge[T](writers: Writer[_ <: T]*) = TaggedWriter.Node(writers.asInstanceOf[Seq[TaggedWriter[T]]]:_*)
   }
 }
