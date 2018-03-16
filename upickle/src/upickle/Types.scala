@@ -16,6 +16,7 @@ trait Types{ types =>
 
   def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new Exception(index.toString)
   def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new Exception(index.toString)
+  def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R
   sealed trait TaggedReader[T] extends Reader[T]{
     def findReader(s: String): Option[Reader[T]]
 
@@ -41,31 +42,35 @@ trait Types{ types =>
     case class Leaf[T](tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
       def findReader(s: String) = if (s == tag) Some(r) else None
       def findWriter(v: Any) = {
-        if (v.getClass.getCanonicalName == tag) Some(r)
+        if (v.getClass.getCanonicalName == tag) Some(tag -> r)
         else None
       }
     }
     case class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
       def findReader(s: String) = rs.map(_.findReader(s).asInstanceOf[Option[Reader[T]]]).collectFirst{case Some(x) => x}
       def findWriter(v: Any) = {
-        rs.map(_.findWriter(v)).collectFirst{case Some(x) => x.asInstanceOf[Writer[T]]}
+        rs.map(_.findWriter(v)).collectFirst{case Some(x: (String, Writer[T])) => x}
       }
     }
   }
   trait TaggedWriter[T] extends Writer[T]{
-    def findWriter(v: Any): Option[Writer[T]]
-    def write[R](out: Facade[R], v: T): R = findWriter(v).get.write(out, v)
+    def findWriter(v: Any): Option[(String, Writer[T])]
+    def write[R](out: Facade[R], v: T): R = {
+      val (tag, w) = findWriter(v).get
+      taggedWrite(w, tag, out, v)
+
+    }
   }
   object TaggedWriter{
     case class Leaf[T](tag: String, r: Writer[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
-        if (v.getClass.getCanonicalName == tag) Some(r)
+        if (v.getClass.getCanonicalName == tag) Some(tag -> r)
         else None
       }
     }
     case class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
-        rs.map(_.findWriter(v)).collectFirst{case Some(x) => x.asInstanceOf[Writer[T]]}
+        rs.map(_.findWriter(v)).collectFirst{case Some(x: (String, Writer[T])) => x}
       }
     }
   }

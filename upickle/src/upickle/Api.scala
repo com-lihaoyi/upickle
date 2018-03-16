@@ -46,6 +46,7 @@ object legacy extends Api{
 
     var res: T = _
     def visitKey(s: CharSequence, index: Int): Unit = throw new Exception(s + " " + index)
+
     def facade =
       if (typeName == null) StringReader
       else delegate
@@ -54,9 +55,6 @@ object legacy extends Api{
       if (typeName == null){
         typeName = v.toString
         delegate = taggedReader.findReader(typeName).get
-        println("typeName: " + typeName)
-        println("taggedReader: " + taggedReader)
-        println("delegate: " + delegate.getClass)
       }else{
         res = v.asInstanceOf[T]
       }
@@ -68,7 +66,14 @@ object legacy extends Api{
 
     def isObj = false
   }
+  def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R = {
+    val ctx = out.arrayContext(-1)
+    ctx.add(out.jstring(tag, -1), -1)
 
+    ctx.add(w.write(out, v), -1)
+
+    ctx.finish(-1)
+  }
 }
 
 /**
@@ -94,8 +99,13 @@ trait AttributeTagged extends Api{
       }
       ctx.finish(index)
     }
-
-
+  def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R = {
+    val s = new java.io.StringWriter()
+    val tree = w.write(JsBuilder, v)
+    val Js.Obj(kvs @ _*) = tree
+    val tagged = Js.Obj((tagName -> Js.Str(tag)) +: kvs: _*)
+    JsVisitor.visit(tagged, out)
+  }
 }
 
 object json{
