@@ -37,7 +37,7 @@ object default extends AttributeTagged{
 object legacy extends Api{
   def annotate[V](rw: Reader[V], n: String) = TaggedReader.Leaf[V](n, rw)
 
-  def annotate[V](rw: Writer[V], n: String) = TaggedWriter.Leaf[V](n, rw)
+  def annotate[V](rw: Writer[V], n: String)(implicit c: ClassTag[V]) = TaggedWriter.Leaf[V](c, n, rw)
 
   override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new RawFContext[Any, T] {
     var typeName: String = null
@@ -85,7 +85,7 @@ trait AttributeTagged extends Api{
   def tagName = "$type"
   def annotate[V: ClassTag](rw: Reader[V], n: String) = TaggedReader.Leaf[V](n, rw)
 
-  def annotate[V: ClassTag](rw: Writer[V], n: String) = TaggedWriter.Leaf[V](n, rw)
+  def annotate[V: ClassTag](rw: Writer[V], n: String)(implicit c: ClassTag[V]) = TaggedWriter.Leaf[V](c, n, rw)
 
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) =
     Util.mapContext(JsObjR.objectContext(index)){ x =>

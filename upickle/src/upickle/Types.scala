@@ -41,14 +41,13 @@ trait Types{ types =>
     }
   }
   object TaggedWriter{
-    case class Leaf[T](tag: String, r: Writer[T]) extends TaggedWriter[T]{
+    case class Leaf[T](c: ClassTag[_], tag: String, r: Writer[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
-        if (v.getClass.getName.replace('$', '.').stripSuffix(".") == tag) Some(tag -> r)
+        if (c.runtimeClass.isInstance(v)) Some(tag -> r)
         else None
       }
     }
     case class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
-      assert(rs.forall(_.isInstanceOf[TaggedWriter[_ <: T]]))
       def findWriter(v: Any) = {
         rs.map(_.findWriter(v)).collectFirst{case Some(x: (String, Writer[T])) => x}
       }
@@ -62,10 +61,10 @@ trait Types{ types =>
 
   }
   object TaggedReadWriter{
-    case class Leaf[T](tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
+    case class Leaf[T](c: ClassTag[_], tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
       def findReader(s: String) = if (s == tag) Some(r) else None
       def findWriter(v: Any) = {
-        if (v.getClass.getName.replace('$', '.').stripSuffix(".") == tag) Some(tag -> r)
+        if (c.runtimeClass.isInstance(v)) Some(tag -> r)
         else None
       }
     }

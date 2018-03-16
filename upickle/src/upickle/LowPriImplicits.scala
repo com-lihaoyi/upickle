@@ -53,15 +53,15 @@ trait LowPriImplicits{ this: Types =>
             TaggedReadWriter.Node(rs.zip(ws).map(rec _ tupled):_*)
           case (TaggedReader.Node(rs@_*), TaggedWriter.Node(ws@_*)) =>
             TaggedReadWriter.Node(rs.zip(ws).map(rec _ tupled):_*)
-          case (TaggedReader.Leaf(t, r3), TaggedWriter.Leaf(t2, w3)) =>
-            TaggedReadWriter.Leaf(t,
+          case (TaggedReader.Leaf(t, r3), TaggedWriter.Leaf(c, t2, w3)) =>
+            TaggedReadWriter.Leaf(c, t,
               new BaseReader.Delegate[Any, T] with Writer[T]{
                 def delegatedReader = r3.asInstanceOf[Reader[T]]
                 def write[V](out: Facade[V], v: T) = w3.asInstanceOf[Writer[T]].write(out, v)
               }
             )
-          case (TaggedReadWriter.Leaf(t, r3), TaggedReadWriter.Leaf(t2, w3)) =>
-            TaggedReadWriter.Leaf(t,
+          case (TaggedReadWriter.Leaf(c1, t, r3), TaggedReadWriter.Leaf(c, t2, w3)) =>
+            TaggedReadWriter.Leaf(c, t,
               new BaseReader.Delegate[Any, T] with Writer[T]{
                 def delegatedReader = r3.asInstanceOf[Reader[T]]
                 def write[V](out: Facade[V], v: T) = w3.asInstanceOf[Writer[T]].write(out, v)
