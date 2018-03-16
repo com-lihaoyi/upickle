@@ -31,6 +31,7 @@ object Main{
     ADT0()
   )
 
+  val duration = 50000
   def main(args: Array[String]): Unit = {
     jacksonModuleScala()
     playJson()
@@ -102,7 +103,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         mapper.readValue[Data](stringified, classOf[Data])
         n += 1
       }
@@ -112,7 +113,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         mapper.writeValueAsString(benchmarkSampledata)
         n += 1
       }
@@ -153,7 +154,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         decode[Data](stringified).right.get
         n += 1
       }
@@ -163,7 +164,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         implicitly[Encoder[Data]].apply(benchmarkSampledata).toString()
         n += 1
       }
@@ -202,7 +203,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         Json.fromJson[Data](Json.parse(stringified)).get
         n += 1
       }
@@ -212,7 +213,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         Json.stringify(Json.toJson(benchmarkSampledata))
         n += 1
       }
@@ -242,7 +243,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         upickle.legacy.read[Data](stringified)
         n += 1
       }
@@ -252,7 +253,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         upickle.legacy.write(benchmarkSampledata)
         n += 1
       }
@@ -272,7 +273,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         upickle.default.read[Data](stringified)
         n += 1
       }
@@ -282,7 +283,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         upickle.default.write(benchmarkSampledata)
         n += 1
       }
@@ -322,7 +323,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         decode[Data](stringified).right.get
         n += 1
       }
@@ -332,7 +333,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         implicitly[Encoder[Data]].apply(benchmarkSampledata).toString()
         n += 1
       }
@@ -371,7 +372,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         Json.fromJson[Data](Json.parse(stringified)).get
         n += 1
       }
@@ -381,7 +382,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         Json.stringify(Json.toJson(benchmarkSampledata))
         n += 1
       }
@@ -411,7 +412,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         upickle.legacy.read[Data](stringified)
         n += 1
       }
@@ -421,7 +422,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         upickle.legacy.write(benchmarkSampledata)
         n += 1
       }
@@ -449,7 +450,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         upickle.default.read[Data](stringified)
         n += 1
       }
@@ -459,7 +460,7 @@ object Main{
     {
       var n = 0
       val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + 50000){
+      while(System.currentTimeMillis() < start + duration){
         upickle.default.write(benchmarkSampledata)
         n += 1
       }
