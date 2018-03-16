@@ -1,4 +1,5 @@
 package upickle
+package internal
 
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
@@ -6,7 +7,7 @@ import compat._
 import acyclic.file
 import language.higherKinds
 import language.existentials
-case class key(s: String) extends StaticAnnotation
+
 /**
  * Implementation of macros used by uPickle to serialize and deserialize
  * case classes automatically. You probably shouldn't need to use these

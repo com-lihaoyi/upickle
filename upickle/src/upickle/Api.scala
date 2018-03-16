@@ -6,6 +6,7 @@ import upickle.jawn.{Facade, RawFContext, RawFacade}
 
 import language.experimental.macros
 import language.higherKinds
+import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
 /**
  * An instance of the upickle API. There's a default instance at
@@ -13,13 +14,13 @@ import scala.reflect.ClassTag
  * its behavior. Override the `annotate` methods to control how a sealed
  * trait instance is tagged during reading and writing.
  */
-trait Api extends Types with Implicits {
+trait Api extends upickle.core.Types with api.Implicits {
   def read[T: Reader](s: String) = {
     upickle.jawn.Parser.parseUnsafe(s)(implicitly[Reader[T]])
   }
   def write[T: Writer](t: T, indent: Int = -1) = {
     val out = new java.io.StringWriter()
-    implicitly[Writer[T]].write(new Renderer(out, indent = indent), t)
+    implicitly[Writer[T]].write(new visitors.Renderer(out, indent = indent), t)
     out.toString
   }
 }
@@ -94,23 +95,22 @@ trait AttributeTagged extends Api{
   }
 
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) =
-    Util.mapContext(JsObjR.objectContext(index)){ x =>
+    upickle.core.Util.mapContext(JsObjR.objectContext(index)){ x =>
       val key = x.value.find(_._1 == tagName).get._2.str.toString
       val delegate = taggedReader.findReader(key)
 
       val ctx = delegate.objectContext(-1)
       for((k, v) <- x.value if k != tagName){
         ctx.visitKey(k, -1)
-        ctx.add(JsVisitor.visit(v, ctx.facade), -1)
+        ctx.add(visitors.JsVisitor.visit(v, ctx.facade), -1)
       }
       ctx.finish(index)
     }
   def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R = {
-    val s = new java.io.StringWriter()
-    val tree = w.write(JsBuilder, v)
+    val tree = w.write(visitors.JsBuilder, v)
     val Js.Obj(kvs @ _*) = tree
     val tagged = Js.Obj((tagName -> Js.Str(tag)) +: kvs: _*)
-    JsVisitor.visit(tagged, out)
+    visitors.JsVisitor.visit(tagged, out)
   }
 }
 
@@ -121,7 +121,9 @@ object json{
   def read(s: java.io.File) = upickle.jawn.Parser.parseFromFile(s)(jsRW).get
   def write(t: Js.Value): String = {
     val out = new java.io.StringWriter()
-    jsRW.write(new Renderer(out), t)
+    jsRW.write(new visitors.Renderer(out), t)
     out.toString
   }
 }
+
+case class key(s: String) extends StaticAnnotation

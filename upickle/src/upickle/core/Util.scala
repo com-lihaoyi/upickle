@@ -1,6 +1,7 @@
 package upickle
+package core
 
-import upickle.jawn.{RawFContext, RawFacade}
+import upickle.jawn.RawFContext
 
 object Util {
   def mapContext[T, V, Z](in: RawFContext[T, V])(f: V => Z) = new RawFContext[T, Z] {
@@ -15,3 +16,4 @@ object Util {
     def isObj = in.isObj
   }
 }
+

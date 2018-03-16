@@ -1,9 +1,10 @@
 package upickle
+package core
 
-import language.experimental.macros
-import language.higherKinds
 import upickle.jawn.{Facade, RawFContext}
 
+import scala.language.experimental.macros
+import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 /**

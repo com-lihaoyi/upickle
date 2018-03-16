@@ -1,16 +1,17 @@
 package upickle
+package api
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import upickle.jawn.{RawFContext, RawFacade}
+import upickle.jawn.RawFContext
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 
-trait Readers extends Types with Generated with LowPriImplicits{
+trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object UnitReader extends Reader[Unit] {
     override def objectContext(index: Int) = new RawFContext[Any, Unit] {
       def facade = UnitReader

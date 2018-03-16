@@ -1,4 +1,6 @@
 package upickle
+package api
+
 import upickle.jawn.Facade
 
 import language.experimental.macros
@@ -6,7 +8,7 @@ import language.experimental.macros
 /**
   * Stupid hacks to work around scalac not forwarding macro type params properly
   */
-object Forwarder{
+object MacroImplicits{
   def dieIfNothing[T: c.WeakTypeTag]
   (c: scala.reflect.macros.blackbox.Context)
   (name: String) = {
@@ -38,13 +40,13 @@ object Forwarder{
   }
 
 }
-trait LowPriImplicits{ this: Types =>
-  implicit def macroSingletonR[T <: Singleton]: Reader[T] = macro Forwarder.applyR[T]
-  implicit def macroSingletonW[T <: Singleton]: Writer[T] = macro Forwarder.applyW[T]
-  implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro Forwarder.applyRW[T]
-  def macroR[T]: Reader[T] = macro Forwarder.applyR[T]
-  def macroW[T]: Writer[T] = macro Forwarder.applyW[T]
-  def macroRW[T]: Reader[T] with Writer[T] = macro Forwarder.applyRW[Reader[T] with Writer[T]]
+trait MacroImplicits{ this: upickle.core.Types =>
+  implicit def macroSingletonR[T <: Singleton]: Reader[T] = macro MacroImplicits.applyR[T]
+  implicit def macroSingletonW[T <: Singleton]: Writer[T] = macro MacroImplicits.applyW[T]
+  implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro MacroImplicits.applyRW[T]
+  def macroR[T]: Reader[T] = macro MacroImplicits.applyR[T]
+  def macroW[T]: Writer[T] = macro MacroImplicits.applyW[T]
+  def macroRW[T]: Reader[T] with Writer[T] = macro MacroImplicits.applyRW[Reader[T] with Writer[T]]
   def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = (r, w) match{
     case (r1: TaggedReader[T], w1: TaggedWriter[T]) =>
       new TaggedReadWriter[T] {
@@ -58,7 +60,7 @@ trait LowPriImplicits{ this: Types =>
         def write[V](out: Facade[V], v: T) = w.write(out, v)
       }
   }
-  def macroR0[T, M[_]]: Reader[T] = macro Macros.macroRImpl[T, M]
-  def macroW0[T, M[_]]: Writer[T] = macro Macros.macroWImpl[T, M]
+  def macroR0[T, M[_]]: Reader[T] = macro internal.Macros.macroRImpl[T, M]
+  def macroW0[T, M[_]]: Writer[T] = macro internal.Macros.macroWImpl[T, M]
 }
 

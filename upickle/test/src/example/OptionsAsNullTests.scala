@@ -29,10 +29,10 @@ object OptionPickler extends upickle.AttributeTagged {
     override def jstring(s: CharSequence, index: Int) = Some(delegate.jstring(s, index))
 
     override def objectContext(index: Int) = {
-      upickle.Util.mapContext(delegate.objectContext(index))(Some(_))
+      upickle.core.Util.mapContext(delegate.objectContext(index))(Some(_))
     }
     override def arrayContext(index: Int) = {
-      upickle.Util.mapContext(delegate.arrayContext(index))(Some(_))
+      upickle.core.Util.mapContext(delegate.arrayContext(index))(Some(_))
     }
   }
 }

@@ -63,6 +63,7 @@ trait UpickleModule extends CrossScalaModule with PublishModule{
 
     ammonite.ops.write(file, s"""
       package upickle
+      package api
       import acyclic.file
       import language.experimental.macros
       /**

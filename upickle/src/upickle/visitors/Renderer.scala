@@ -1,5 +1,5 @@
 package upickle
-
+package visitors
 
 import java.io.{ByteArrayOutputStream, StringWriter, Writer}
 

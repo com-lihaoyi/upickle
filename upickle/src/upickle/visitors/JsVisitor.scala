@@ -1,4 +1,5 @@
 package upickle
+package visitors
 
 import upickle.jawn.RawFContext
 

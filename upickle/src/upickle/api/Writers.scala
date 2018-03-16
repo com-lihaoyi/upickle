@@ -1,4 +1,5 @@
 package upickle
+package api
 
 import java.util.UUID
 
@@ -6,7 +7,7 @@ import upickle.jawn.RawFContext
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-trait Writers extends Types with Generated with LowPriImplicits{
+trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object StringWriter extends Writer[String] {
     def write[R](out: upickle.jawn.Facade[R], v: String): R = out.jstring(v)
   }

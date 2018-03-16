@@ -1,14 +1,15 @@
 package upickle
-import upickle.jawn.{Facade, RawFContext, RawFacade}
+package api
 
-import language.higherKinds
-import scala.collection.mutable
-import scala.reflect.ClassTag
+import upickle.jawn.{Facade, RawFContext}
+
+import scala.language.higherKinds
+
 /**
 * Stuff that generated code depends on but I don't want
 * to put in the stringly typed code-generator
 */
-private[upickle] trait GeneratedUtil extends Types{
+private[upickle] trait GeneratedUtil extends upickle.core.Types{
   class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{
     def write[R](out: upickle.jawn.Facade[R], v: V): R = {
       if (v == null) out.jnull(-1)
