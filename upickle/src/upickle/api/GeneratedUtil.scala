@@ -27,6 +27,7 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
   }
 
   class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends Reader[V]{
+    override def expectedMsg = "expected sequence"
     override def arrayContext(index: Int) = new upickle.jawn.RawFContext[Any, V] {
       val b = new Array[Any](readers.length)
       var facadesIndex = 0
@@ -40,7 +41,12 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
       }
 
       def finish(index: Int) = {
-        if (facadesIndex - start != readers.length) throw new FacadeRejectedException("")
+        val lengthSoFar = facadesIndex - start
+        if (lengthSoFar != readers.length) {
+          throw new FacadeRejectedException(
+            "expected " + readers.length + " items in sequence, found " + lengthSoFar
+          )
+        }
         start = facadesIndex
         f(b)
 
@@ -53,6 +59,7 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
   }
 
   abstract class CaseR[V](val argCount: Int) extends Reader[V]{
+    override def expectedMsg = "expected dictionary"
     trait CaseObjectContext extends upickle.jawn.RawFContext[Any, V]{
 
       val aggregated = new Array[Any](argCount)
@@ -72,6 +79,7 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
   }
 
   class Case0R[V](f: () => V) extends Reader[V]{ outer =>
+    override def expectedMsg = "expected dictionary"
     override def objectContext(index: Int) = new RawFContext[Any, V] {
       def facade = outer
 
@@ -92,6 +100,7 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
   }
 
   class SingletonR[T](t: T) extends Reader[T]{
+    override def expectedMsg = "expected dictionary"
     override def objectContext(index: Int) = new RawFContext[Any, T] {
       def facade = upickle.jawn.NullFacade
 

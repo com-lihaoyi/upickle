@@ -287,10 +287,21 @@ object Macros {
             def finish(index: Int) = {
               ..${
                 for(i <- rawArgs.indices if hasDefaults(i))
-                yield q"if (!found($i)) {count += 1; aggregated($i) = ${defaults(i)}}"
+                yield q"if (!found($i)) {count += 1; found($i) = true; aggregated($i) = ${defaults(i)}}"
               }
               if (count != argCount){
-                throw new upickle.jawn.FacadeRejectedException("")
+                val keys = for{
+                  i <- 0 until ${rawArgs.length}
+                  if !found(i)
+                } yield i match{
+                  case ..${
+                    for (i <- mappedArgs.indices)
+                    yield cq"$i => ${mappedArgs(i)}"
+                  }
+                }
+                throw new upickle.jawn.FacadeRejectedException(
+                  "missing keys in dictionary: " + keys.mkString(", ")
+                )
               }
               $companion.apply(
                 ..${

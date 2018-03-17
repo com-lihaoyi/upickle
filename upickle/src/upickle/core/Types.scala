@@ -106,16 +106,25 @@ trait Types{ types =>
   }
   type Reader[T] = BaseReader[Any, T]
   trait BaseReader[-T, V] extends upickle.jawn.RawFacade[T, V] {
+    def expectedMsg = ""
     def narrow[K <: V] = this.asInstanceOf[BaseReader[T, K]]
     def jnull(index: Int): V = null.asInstanceOf[V]
-    def jtrue(index: Int): V =  throw new FacadeRejectedException("")
-    def jfalse(index: Int): V = throw new FacadeRejectedException("")
+    def jtrue(index: Int): V =  throw new FacadeRejectedException(expectedMsg + " got boolean")
+    def jfalse(index: Int): V = throw new FacadeRejectedException(expectedMsg + " got boolean")
 
-    def jstring(s: CharSequence, index: Int): V = throw new FacadeRejectedException("")
-    def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): V = throw new FacadeRejectedException("")
+    def jstring(s: CharSequence, index: Int): V = {
+      throw new FacadeRejectedException(expectedMsg + " got string")
+    }
+    def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): V = {
+      throw new FacadeRejectedException(expectedMsg + " got number")
+    }
 
-    def objectContext(index: Int): upickle.jawn.RawFContext[T, V] = throw new FacadeRejectedException("")
-    def arrayContext(index: Int): upickle.jawn.RawFContext[T, V] = throw new FacadeRejectedException("")
+    def objectContext(index: Int): upickle.jawn.RawFContext[T, V] = {
+      throw new FacadeRejectedException(expectedMsg + " got dictionary")
+    }
+    def arrayContext(index: Int): upickle.jawn.RawFContext[T, V] = {
+      throw new FacadeRejectedException(expectedMsg + " got sequence")
+    }
     def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z](this, f)
     def singleContext(index: Int): upickle.jawn.RawFContext[T, V] = new RawFContext[T, V] {
       var res: V = _

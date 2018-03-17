@@ -26,15 +26,18 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
   implicit object BooleanReader extends Reader[Boolean] {
+    override def expectedMsg = "expected double"
     override def jtrue(index: Int) = true
     override def jfalse(index: Int) = false
   }
 
   object NumStringReader extends Reader[String] {
+    override def expectedMsg = "expected number or double string"
     override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = s.toString
     override def jstring(s: CharSequence, index: Int) = s.toString
   }
   object NumReader extends Reader[String] {
+    override def expectedMsg = "expected number"
     override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = s.toString
   }
   implicit val DoubleReader: Reader[Double] = NumStringReader.map(_.toDouble)
@@ -44,6 +47,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit val ByteReader: Reader[Byte] = NumReader.map(_.toDouble.toByte)
 
   implicit object StringReader extends Reader[String] {
+    override def expectedMsg = "expected string"
     override def jstring(s: CharSequence, index: Int) = s.toString
   }
 
@@ -80,6 +84,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def NoneReader: Reader[None.type] = OptionReader[Unit].narrow[None.type]
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
+    override def expectedMsg = "expected sequence"
     override def arrayContext(index: Int) = new upickle.jawn.RawFContext[Any, C[T]] {
       val b = cbf.apply()
 
@@ -95,20 +100,18 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
 
-  implicit object DurationReader extends Reader[Duration]{
-    override def jstring(s: CharSequence, index: Int) = {
-      s.toString match{
-        case "inf" => Duration.Inf
-        case "-inf" => Duration.MinusInf
-        case "undef" => Duration.Undefined
-        case x => Duration(x.toLong, TimeUnit.NANOSECONDS)
-      }
-    }
+  implicit val DurationReader = StringReader.map{
+    case "inf" => Duration.Inf
+    case "-inf" => Duration.MinusInf
+    case "undef" => Duration.Undefined
+    case x => Duration(x.toLong, TimeUnit.NANOSECONDS)
   }
+
   implicit val InfiniteDurationReader = DurationReader.narrow[Duration.Infinite]
   implicit val FiniteDurationReader = DurationReader.narrow[FiniteDuration]
 
   implicit def EitherReader[T1: Reader, T2: Reader] = new Reader[Either[T1, T2]]{
+    override def expectedMsg = "expected sequence"
     override def arrayContext(index: Int) = new upickle.jawn.RawFContext[Any, Either[T1, T2]] {
       var right: java.lang.Boolean = null
       var value: Either[T1, T2] = _

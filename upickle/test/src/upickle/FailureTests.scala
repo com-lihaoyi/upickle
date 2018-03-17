@@ -89,25 +89,54 @@ object FailureTests extends TestSuite {
     }
     'otherFailures{
       'nonMacroFailures{
-        * - intercept[FacadeException] { read[Boolean]("\"lol\"") }
-        * - intercept[FacadeException] { read[Int]("\"lol\"") }
-        * - intercept[FacadeException] { read[Seq[Int]]("\"lol\"") }
-        * - intercept[FacadeException] { read[Seq[String]]("[1, 2, 3]") }
-        * - intercept[FacadeException] { read[Seq[(Int, String)]]("[[1, \"1\"], [2, \"2\"], []]") }
+        * - {
+          val err = intercept[FacadeException] { read[Boolean]("\"lol\"") }
+//          assert(err.msg.contains("expected boolean"))
+          err
+        }
+        * - {
+          val err = intercept[FacadeException] { read[Int]("\"lol\"") }
+          assert(err.msg.contains("expected number got string"))
+          err
+        }
+        * - {
+          val err = intercept[FacadeException] { read[Seq[Int]]("\"lol\"") }
+          assert(err.msg.contains("expected sequence got string"))
+          err
+        }
+        * - {
+          val err = intercept[FacadeException] { read[Seq[String]]("[1, 2, 3]") }
+          assert(err.msg.contains("expected string got number"))
+          err
+        }
+        'tupleShort - {
+          val err = intercept[FacadeException] { read[Seq[(Int, String)]]("[[1, \"1\"], [2, \"2\"], []]") }
+          assert(err.msg.contains("expected 2 items in sequence"))
+          err
+        }
       }
       'macroFailures{
         // Separate this guy out because the read macro and
         // the intercept macro play badly with each other
         'missingKey {
-          val readFoo = () => read[Fee]( """{"i": 123}""")
-          val err = intercept[FacadeException]{ readFoo() }
-//          assert(err.msg.contains("Key Missing: s"))
+          * - {
+            val readFoo = () => read[Fee]( """{"i": 123}""")
+            val err = intercept[FacadeException]{ readFoo() }
+            assert(err.msg.contains("missing keys in dictionary: s"))
+            err
+          }
+          * - {
+            val readFoo = () => read[Fee]( """{}""")
+            val err = intercept[FacadeException]{ readFoo() }
+            assert(err.msg.contains("missing keys in dictionary: i, s"))
+            err
+          }
         }
         'completelyInvalid{
           val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
           val err = intercept[FacadeException] { readFoo2() }
-//          assert(err.msg.contains("Object"))
-//          println(err)
+          assert(err.msg.contains("dictionary"))
+          err
         }
 
         'invalidTag {
@@ -115,6 +144,7 @@ object FailureTests extends TestSuite {
           val err = intercept[FacadeException]{ readFo() }
 //          assert(err.msg.contains("Tagged Object"))
 //          assert(err.msg.contains("upickle.Fi.Fo"))
+          err
         }
 
         'invalidTag2{
@@ -122,6 +152,7 @@ object FailureTests extends TestSuite {
           val err = intercept[FacadeException]{ readFo2() }
 //          assert(err.msg.contains("Tagged Object"))
 //          assert(err.msg.contains("upickle.Fi"))
+          err
         }
       }
     }
