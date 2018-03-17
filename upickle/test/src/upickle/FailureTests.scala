@@ -10,14 +10,17 @@ object Fee{
 }
 sealed trait Fi
 object Fi{
-  implicit def rw: upickle.legacy.ReadWriter[Fi] = upickle.legacy.ReadWriter.merge(Fo.rw, Fum.rw)
+  implicit def rw1: upickle.legacy.ReadWriter[Fi] = upickle.legacy.ReadWriter.merge(Fo.rw1, Fum.rw1)
+  implicit def rw2: upickle.default.ReadWriter[Fi] = upickle.default.ReadWriter.merge(Fo.rw2, Fum.rw2)
   case class Fo(i: Int) extends Fi
   object Fo{
-    implicit def rw: upickle.legacy.ReadWriter[Fo] = upickle.legacy.macroRW
+    implicit def rw1: upickle.legacy.ReadWriter[Fo] = upickle.legacy.macroRW
+    implicit def rw2: upickle.default.ReadWriter[Fo] = upickle.default.macroRW
   }
   case class Fum(s: String) extends Fi
   object Fum{
-    implicit def rw: upickle.legacy.ReadWriter[Fum] = upickle.legacy.macroRW
+    implicit def rw1: upickle.legacy.ReadWriter[Fum] = upickle.legacy.macroRW
+    implicit def rw2: upickle.default.ReadWriter[Fum] = upickle.default.macroRW
   }
 }
 /**
@@ -90,9 +93,13 @@ object FailureTests extends TestSuite {
     'facadeFailures - {
       def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
         val err = intercept[JsonProcessingException] { upickle.legacy.read[T](s) }
-        for (msg <- msgs){
-          assert(err.getMessage.contains(msg))
-        }
+        for (msg <- msgs) assert(err.getMessage.contains(msg))
+
+        err
+      }
+      def assertErrorMsgDefault[T: upickle.default.Reader](s: String, msgs: String*) = {
+        val err = intercept[JsonProcessingException] { upickle.default.read[T](s) }
+        for (msg <- msgs) assert(err.getMessage.contains(msg))
         err
       }
       'structs - {
@@ -103,7 +110,7 @@ object FailureTests extends TestSuite {
         'tupleShort - {
           assertErrorMsg[Seq[(Int, String)]](
             "[[1, \"1\"], [2, \"2\"], []]",
-            "expected 2 items in sequence"
+            "expected 2 items in sequence, found 0 at index 22"
           )
         }
       }
@@ -111,9 +118,9 @@ object FailureTests extends TestSuite {
         // Separate this guy out because the read macro and
         // the intercept macro play badly with each other
         'missingKey - {
-          * - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s at index 0")
+          * - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s at index 9")
           * - assertErrorMsg[Fee](""" {"s": "123"}""", "missing keys in dictionary: i at index 1")
-          * - assertErrorMsg[Fee]("""  {}""", "missing keys in dictionary: i, s at index 2")
+          * - assertErrorMsg[Fee]("""  {}""", "missing keys in dictionary: i, s at index 3")
         }
         'badKey - {
           * - assertErrorMsg[Fee]("""{"i": true}""", "expected number got boolean")
@@ -127,6 +134,15 @@ object FailureTests extends TestSuite {
         'invalidTag - {
           * - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
           * - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
+          * - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
+          * - assertErrorMsgDefault[Fi]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
+        }
+
+        'taggedInvalidBody - {
+          * - assertErrorMsg[Fi.Fo]("""["upickle.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 24")
+          * - assertErrorMsg[Fi]("""["upickle.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 24")
+          * - assertErrorMsgDefault[Fi.Fo]("""{"$type": "upickle.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 32")
+          * - assertErrorMsgDefault[Fi]("""{"$type": "upickle.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 32")
         }
       }
     }

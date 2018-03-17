@@ -2,7 +2,8 @@ package upickle
 
 
 
-import upickle.jawn.{Facade, AbortJsonProcessingException, RawFContext, RawFacade}
+import upickle.internal.IndexedJs
+import upickle.jawn._
 
 import language.experimental.macros
 import language.higherKinds
@@ -98,11 +99,12 @@ trait AttributeTagged extends Api{
 
   def taggedExpectedMsg = "expected dictionary"
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
-    upickle.core.Util.mapContext(JsObjR.objectContext(index)) { x =>
-      val key = x.value.find(_._1 == tagName).get._2.str.toString
+    upickle.core.Util.mapContext(IndexedJsObjR.objectContext(index)) { x =>
+      val keyAttr = x.value.find(_._1 == tagName).get._2
+      val key = keyAttr.asInstanceOf[IndexedJs.Str].value
       val delegate = taggedReader.findReader(key)
       if (delegate == null){
-        throw new AbortJsonProcessingException("invalid tag for tagged object: " + key)
+        throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil)
       }
       val ctx = delegate.objectContext(-1)
       for ((k, v) <- x.value if k != tagName) {

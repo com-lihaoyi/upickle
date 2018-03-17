@@ -7,7 +7,9 @@ package upickle.internal
   * something goes wrong
   */
 object IndexedJs {
-  sealed trait Value
+  sealed trait Value{
+    def index: Int
+  }
   case class Str(index: Int, value0: java.lang.CharSequence) extends Value{
     lazy val value: String = value0.toString
   }

@@ -353,13 +353,13 @@ abstract class Parser[J] {
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
         val ctxt = facade.singleContext(i).asInstanceOf[RawFContext[Any, J]]
         val j = parseNumSlow(i, ctxt)
-        (ctxt.finish(i), j)
+        (try ctxt.finish(i) catch reject(i, Nil), j)
 
       // we have a single top-level string
       case '"' =>
         val ctxt = facade.singleContext(i)
         val (_, j) = parseString(i, ctxt, false)
-        (ctxt.finish(i), j)
+        (try ctxt.finish(i) catch reject(i, Nil), j)
 
       // we have a single top-level constant
       case 't' => (parseTrue(i), i + 4)
@@ -415,9 +415,6 @@ abstract class Parser[J] {
         val ctx = try facade.arrayContext(i) catch reject(j, path)
         rparse(ARRBEG, i + 1, ctx :: stack, null :: path)
       } else if (c == '{') {
-        println(stack.head)
-        println(facade)
-        println(j)
         val ctx = try facade.objectContext(i) catch reject(j, path)
         rparse(OBJBEG, i + 1, ctx :: stack, null :: path)
       } else {
@@ -454,10 +451,10 @@ abstract class Parser[J] {
         val ctxt1 = stack.head
         val tail = stack.tail
         if (tail.isEmpty) {
-          (ctxt1.finish(i), i + 1)
+          (try ctxt1.finish(i) catch reject(i, path), i + 1)
         } else {
           val ctxt2 = tail.head.asInstanceOf[RawFContext[Any, J]]
-          ctxt2.add(ctxt1.finish(i), i)
+          try ctxt2.add(ctxt1.finish(i) , i) catch reject(i, path)
           rparse(if (ctxt2.isObj) OBJEND else ARREND, i + 1, tail, path.tail)
         }
       }

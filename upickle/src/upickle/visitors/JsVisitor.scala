@@ -2,7 +2,7 @@ package upickle
 package visitors
 
 import upickle.internal.IndexedJs
-import upickle.jawn.RawFContext
+import upickle.jawn.{AbortJsonProcessingException, JsonProcessingException, RawFContext}
 
 import scala.collection.mutable
 
@@ -27,26 +27,31 @@ object JsVisitor {
         ctx.finish(-1)
     }
   }
-  def visit[T](j: IndexedJs.Value, f: upickle.jawn.RawFacade[_, T]): T = {
+  def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
+    case e: AbortJsonProcessingException =>
+
+      throw new JsonProcessingException(e.msg, j, -1, -1, path)
+  }
+  def visit[T](j: IndexedJs.Value, f: upickle.jawn.RawFacade[_, T]): T = try{
     j match{
-      case IndexedJs.Null(i) => f.jnull(-1)
-      case IndexedJs.True(i) => f.jtrue(-1)
-      case IndexedJs.False(i) => f.jfalse(-1)
-      case IndexedJs.Str(i, s) => f.jstring(s, -1)
-      case IndexedJs.Num(i, d) => f.jnum(d.toString, -1, -1, -1)
+      case IndexedJs.Null(i) => f.jnull(i)
+      case IndexedJs.True(i) => f.jtrue(i)
+      case IndexedJs.False(i) => f.jfalse(i)
+      case IndexedJs.Str(i, s) => f.jstring(s, i)
+      case IndexedJs.Num(i, d) => f.jnum(d.toString, -1, -1, i)
       case IndexedJs.Arr(i, items @_*) =>
         val ctx = f.arrayContext(-1).asInstanceOf[RawFContext[Any, T]]
-        for(item <- items) ctx.add(visit(item, ctx.facade), -1)
-        ctx.finish(-1)
+        for(item <- items) try ctx.add(visit(item, ctx.facade), item.index) catch reject(item.index, Nil)
+        ctx.finish(i)
       case IndexedJs.Obj(i, items @_*) =>
         val ctx = f.objectContext(-1).asInstanceOf[RawFContext[Any, T]]
         for((k, item) <- items) {
-          ctx.visitKey(k, -1)
-          ctx.add(visit(item, ctx.facade), -1)
+          try ctx.visitKey(k, i) catch reject(i, Nil)
+          try ctx.add(visit(item, ctx.facade), item.index) catch reject(item.index, Nil)
         }
-        ctx.finish(-1)
+        ctx.finish(i)
     }
-  }
+  } catch reject(j.index, Nil)
 }
 
 

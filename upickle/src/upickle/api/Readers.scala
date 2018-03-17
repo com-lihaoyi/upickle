@@ -4,6 +4,7 @@ package api
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import upickle.internal.IndexedJs
 import upickle.jawn.RawFContext
 
 import scala.collection.generic.CanBuildFrom
@@ -202,4 +203,65 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
 
   implicit def JsNullR: Reader[Js.Null.type] = JsValueR.narrow[Js.Null.type]
+
+  implicit object IndexedJsValueR extends Reader[IndexedJs.Value]{
+    override def objectContext(index: Int) = {
+      new RawFContext[Any, IndexedJs.Obj] {
+        val output = mutable.Buffer.empty[(String, IndexedJs.Value)]
+        var lastKey: String = null
+        def facade = IndexedJsValueR
+
+        def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
+
+        def add(v: Any, index: Int): Unit = {
+          output.append((lastKey, v.asInstanceOf[IndexedJs.Value]))
+        }
+
+        def finish(index: Int) = IndexedJs.Obj(index, output:_*)
+
+        def isObj = true
+      }
+    }
+    override def arrayContext(index: Int) = {
+      new RawFContext[Any, IndexedJs.Arr] {
+        val output = mutable.Buffer.empty[IndexedJs.Value]
+        def facade = IndexedJsValueR
+
+        def visitKey(s: CharSequence, index: Int): Unit = ???
+
+        def add(v: Any, index: Int): Unit = {
+          output.append(v.asInstanceOf[IndexedJs.Value])
+        }
+
+        def finish(index: Int) = IndexedJs.Arr(index, output:_*)
+
+        def isObj = false
+      }
+    }
+    override def jstring(s: CharSequence, index: Int) = IndexedJs.Str(index, s)
+    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = IndexedJs.Num(index, s.toString.toDouble)
+    override def jtrue(index: Int) = IndexedJs.True(index)
+    override def jfalse(index: Int) = IndexedJs.False(index)
+    override def jnull(index: Int) = IndexedJs.Null(index)
+  }
+
+  implicit def IndexedJsObjR: Reader[IndexedJs.Obj] = IndexedJsValueR.narrow[IndexedJs.Obj]
+
+
+  implicit def IndexedJsArrR: Reader[IndexedJs.Arr] = IndexedJsValueR.narrow[IndexedJs.Arr]
+
+
+
+  implicit def IndexedJsStrR: Reader[IndexedJs.Str] = IndexedJsValueR.narrow[IndexedJs.Str]
+
+
+  implicit def IndexedJsNumR: Reader[IndexedJs.Num] = IndexedJsValueR.narrow[IndexedJs.Num]
+
+
+  implicit def IndexedJsTrueR: Reader[IndexedJs.True] = IndexedJsValueR.narrow[IndexedJs.True]
+
+  implicit def IndexedJsFalseR: Reader[IndexedJs.False] = IndexedJsValueR.narrow[IndexedJs.False]
+
+
+  implicit def IndexedJsNullR: Reader[IndexedJs.Null] = IndexedJsValueR.narrow[IndexedJs.Null]
 }
