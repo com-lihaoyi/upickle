@@ -90,10 +90,10 @@ object FailureTests extends TestSuite {
     'otherFailures{
       'nonMacroFailures{
         * - intercept[FacadeException] { read[Boolean]("\"lol\"") }
-        * - intercept[Invalid.Data] { read[Int]("\"lol\"") }
+        * - intercept[FacadeException] { read[Int]("\"lol\"") }
         * - intercept[FacadeException] { read[Seq[Int]]("\"lol\"") }
         * - intercept[FacadeException] { read[Seq[String]]("[1, 2, 3]") }
-//        * - intercept[Invalid.Data] { read[Seq[(Int, String)]]("[[1, \"1\"], [2, \"2\"], []]") }
+        * - intercept[FacadeException] { read[Seq[(Int, String)]]("[[1, \"1\"], [2, \"2\"], []]") }
       }
       'macroFailures{
         // Separate this guy out because the read macro and

@@ -1,7 +1,7 @@
 package upickle
 package api
 
-import upickle.jawn.{Facade, RawFContext}
+import upickle.jawn.{Facade, FacadeRejectedException, RawFContext}
 
 import scala.language.higherKinds
 
@@ -31,18 +31,24 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
       val b = new Array[Any](readers.length)
       var facadesIndex = 0
 
+      var start = facadesIndex
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
       def add(v: Any, index: Int): Unit = {
-        b(facadesIndex) = v
-        facadesIndex = (facadesIndex + 1) % readers.length
+        b(facadesIndex % readers.length) = v
+        facadesIndex = facadesIndex + 1
       }
 
-      def finish(index: Int) = f(b)
+      def finish(index: Int) = {
+        if (facadesIndex - start != readers.length) throw new FacadeRejectedException("")
+        start = facadesIndex
+        f(b)
+
+      }
 
       def isObj = false
 
-      def facade = readers(facadesIndex)
+      def facade = readers(facadesIndex % readers.length)
     }
   }
 
