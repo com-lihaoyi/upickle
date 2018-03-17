@@ -197,9 +197,6 @@ object Macros {
           companion.tpe.member(TermName("apply")).info
 
           val derive =
-            if (rawArgs.isEmpty) // 0-arg case classes are treated like `object`s
-              wrapCase0(companion, tpe)
-            else {
               // Otherwise, reading and writing are kinda identical
               wrapCaseN(
                 companion,
@@ -211,7 +208,7 @@ object Macros {
                 tpe,
                 argSyms.exists(_.typeSignature.typeSymbol == definitions.RepeatedParamClass)
               )
-            }
+
           annotate(tpe)(derive)
       }
     }
@@ -233,7 +230,6 @@ object Macros {
     }
 
     def wrapObject(obj: Tree): Tree
-    def wrapCase0(companion: Tree, targetType: c.Type): Tree
 
     def wrapCaseN(companion: Tree,
                   rawArgs: Seq[String],
@@ -249,8 +245,6 @@ object Macros {
     val c: scala.reflect.macros.blackbox.Context
     import c.universe._
     def wrapObject(t: c.Tree) = q"new ${c.prefix}.SingletonR($t)"
-    def wrapCase0(t: c.Tree, targetType: c.Type) =
-      q"new ${c.prefix}.Case0R(() => $t(): $targetType)"
 
     def wrapCaseN(companion: c.Tree,
                   rawArgs: Seq[String],
@@ -329,8 +323,6 @@ object Macros {
     val c: scala.reflect.macros.blackbox.Context
     import c.universe._
     def wrapObject(obj: c.Tree) = q"new ${c.prefix}.SingletonW($obj)"
-    def wrapCase0(companion: c.Tree, targetType: c.Type) =
-      q"new ${c.prefix}.Case0W($companion.unapply)"
     def findUnapply(tpe: Type) = {
       val (companion, paramTypes, argSyms, hasDefaults) = getArgSyms(tpe).fold(
         errMsg => c.abort(c.enclosingPosition, errMsg),

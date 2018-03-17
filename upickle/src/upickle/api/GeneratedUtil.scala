@@ -78,27 +78,6 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
     }
   }
 
-  class Case0R[V](f: () => V) extends Reader[V]{ outer =>
-    override def expectedMsg = "expected dictionary"
-    override def objectContext(index: Int) = new RawFContext[Any, V] {
-      def facade = outer
-
-      def visitKey(s: CharSequence, index: Int): Unit = ???
-
-      def add(v: Any, index: Int): Unit = ???
-
-      def finish(index: Int) = f()
-
-      def isObj = true
-    }
-  }
-
-  class Case0W[T](f: T => Boolean) extends Writer[T] {
-    def write[R](out: upickle.jawn.Facade[R], v: T): R = {
-      out.objectContext(-1).finish(-1)
-    }
-  }
-
   class SingletonR[T](t: T) extends Reader[T]{
     override def expectedMsg = "expected dictionary"
     override def objectContext(index: Int) = new RawFContext[Any, T] {
