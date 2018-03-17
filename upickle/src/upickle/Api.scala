@@ -2,7 +2,7 @@ package upickle
 
 
 
-import upickle.jawn.{Facade, FacadeRejectedException, RawFContext, RawFacade}
+import upickle.jawn.{Facade, AbortJsonProcessingException, RawFContext, RawFacade}
 
 import language.experimental.macros
 import language.higherKinds
@@ -58,7 +58,7 @@ object legacy extends Api{
         typeName = v.toString
         delegate = taggedReader.findReader(typeName)
         if (delegate == null) {
-          throw new FacadeRejectedException("invalid tag for tagged object: " + typeName)
+          throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
         }
       }else{
         res = v.asInstanceOf[T]
@@ -102,7 +102,7 @@ trait AttributeTagged extends Api{
       val key = x.value.find(_._1 == tagName).get._2.str.toString
       val delegate = taggedReader.findReader(key)
       if (delegate == null){
-        throw new FacadeRejectedException("invalid tag for tagged object: " + key)
+        throw new AbortJsonProcessingException("invalid tag for tagged object: " + key)
       }
       val ctx = delegate.objectContext(-1)
       for ((k, v) <- x.value if k != tagName) {

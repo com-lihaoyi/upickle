@@ -26,7 +26,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
   implicit object BooleanReader extends Reader[Boolean] {
-    override def expectedMsg = "expected double"
+    override def expectedMsg = "expected boolean"
     override def jtrue(index: Int) = true
     override def jfalse(index: Int) = false
   }

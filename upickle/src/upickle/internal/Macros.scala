@@ -293,7 +293,7 @@ object Macros {
                     yield cq"$i => ${mappedArgs(i)}"
                   }
                 }
-                throw new upickle.jawn.FacadeRejectedException(
+                throw new upickle.jawn.AbortJsonProcessingException(
                   "missing keys in dictionary: " + keys.mkString(", ")
                 )
               }

@@ -7,9 +7,13 @@ import java.nio.charset.Charset
 import scala.annotation.{switch, tailrec}
 import scala.util.Try
 
-case class ParseException(msg: String, index: Int, line: Int, col: Int) extends Exception(msg)
-case class FacadeException(msg: String, index: Int, line: Int, col: Int, path: List[Any]) extends Exception(msg)
-case class FacadeRejectedException(msg: String) extends Exception(msg)
+case class ParseException(clue: String, index: Int, line: Int, col: Int) extends Exception(clue + " at index " + index)
+case class JsonProcessingException(clue: String,
+                                   index: Int,
+                                   line: Int,
+                                   col: Int,
+                                   path: List[Any]) extends Exception(clue + " at index " + index)
+case class AbortJsonProcessingException(msg: String) extends Exception(msg)
 
 case class IncompleteParseException(msg: String, cause: Throwable) extends Exception(msg, cause)
 
@@ -371,10 +375,10 @@ abstract class Parser[J] {
   }
 
   def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
-    case e: FacadeRejectedException =>
+    case e: AbortJsonProcessingException =>
       val y = line() + 1
       val x = column(j) + 1
-      throw new FacadeException(e.msg, j, y, x, path)
+      throw new JsonProcessingException(e.msg, j, y, x, path)
   }
   /**
    * Tail-recursive parsing method to do the bulk of JSON parsing.

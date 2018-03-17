@@ -1,7 +1,7 @@
 package upickle
 package api
 
-import upickle.jawn.{Facade, FacadeRejectedException, RawFContext}
+import upickle.jawn.{Facade, AbortJsonProcessingException, RawFContext}
 
 import scala.language.higherKinds
 
@@ -43,7 +43,7 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
       def finish(index: Int) = {
         val lengthSoFar = facadesIndex - start
         if (lengthSoFar != readers.length) {
-          throw new FacadeRejectedException(
+          throw new AbortJsonProcessingException(
             "expected " + readers.length + " items in sequence, found " + lengthSoFar
           )
         }

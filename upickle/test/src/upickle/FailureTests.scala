@@ -3,7 +3,7 @@ package upickle
 import utest._
 import upickle.legacy.read
 import acyclic.file
-import upickle.jawn.{FacadeException, IncompleteParseException, ParseException}
+import upickle.jawn.{JsonProcessingException, IncompleteParseException, ParseException}
 case class Fee(i: Int, s: String)
 object Fee{
   implicit def rw: upickle.legacy.ReadWriter[Fee] = upickle.legacy.macroRW
@@ -89,17 +89,17 @@ object FailureTests extends TestSuite {
     }
     'facadeFailures - {
       def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
-        val err = intercept[FacadeException] { upickle.legacy.read[T](s) }
+        val err = intercept[JsonProcessingException] { upickle.legacy.read[T](s) }
         for (msg <- msgs){
-          assert(err.msg.contains(msg))
+          assert(err.getMessage.contains(msg))
         }
         err
       }
       'structs - {
-        * - assertErrorMsg[Boolean]("\"lol\"")
-        * - assertErrorMsg[Int]("\"lol\"", "expected number got string")
-        * - assertErrorMsg[Seq[Int]]("\"lol\"", "expected sequence got string")
-        * - assertErrorMsg[Seq[String]]("[1, 2, 3]", "expected string got number")
+        * - assertErrorMsg[Boolean]("\"lol\"", "expected boolean got string at index 0")
+        * - assertErrorMsg[Int]("\"lol\"", "expected number got string at index 0")
+        * - assertErrorMsg[Seq[Int]]("\"lol\"", "expected sequence got string at index 0")
+        * - assertErrorMsg[Seq[String]]("""["1", 2, 3]""", "expected string got number at index 6")
         'tupleShort - {
           assertErrorMsg[Seq[(Int, String)]](
             "[[1, \"1\"], [2, \"2\"], []]",
@@ -111,22 +111,22 @@ object FailureTests extends TestSuite {
         // Separate this guy out because the read macro and
         // the intercept macro play badly with each other
         'missingKey - {
-          * - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s")
-          * - assertErrorMsg[Fee]("""{"s": "123"}""", "missing keys in dictionary: i")
-          * - assertErrorMsg[Fee]("""{}""", "missing keys in dictionary: i, s")
+          * - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s at index 0")
+          * - assertErrorMsg[Fee](""" {"s": "123"}""", "missing keys in dictionary: i at index 1")
+          * - assertErrorMsg[Fee]("""  {}""", "missing keys in dictionary: i, s at index 2")
         }
         'badKey - {
           * - assertErrorMsg[Fee]("""{"i": true}""", "expected number got boolean")
         }
 
         'wrongType - {
-          * - assertErrorMsg[Fee]("""[1, 2, 3]""", "expected dictionary")
-          * - assertErrorMsg[Fee]("""31337""", "expected dictionary")
+          * - assertErrorMsg[Fee]("""[1, 2, 3]""", "expected dictionary got sequence at index 0")
+          * - assertErrorMsg[Fee]("""31337""", "expected dictionary got number at index 0")
         }
 
         'invalidTag - {
-          * - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg")
-          * - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg")
+          * - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
+          * - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
         }
       }
     }

@@ -1,7 +1,7 @@
 package upickle
 package core
 
-import upickle.jawn.{Facade, FacadeRejectedException, RawFContext}
+import upickle.jawn.{Facade, AbortJsonProcessingException, RawFContext}
 
 import scala.language.experimental.macros
 import scala.language.higherKinds
@@ -16,8 +16,8 @@ trait Types{ types =>
   type ReadWriter[T] = Reader[T] with Writer[T]
 
   def taggedExpectedMsg: String
-  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new FacadeRejectedException(taggedExpectedMsg)
-  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new FacadeRejectedException(taggedExpectedMsg)
+  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new AbortJsonProcessingException(taggedExpectedMsg)
+  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new AbortJsonProcessingException(taggedExpectedMsg)
   def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R
 
   private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {
@@ -111,21 +111,21 @@ trait Types{ types =>
     def expectedMsg = ""
     def narrow[K <: V] = this.asInstanceOf[BaseReader[T, K]]
     def jnull(index: Int): V = null.asInstanceOf[V]
-    def jtrue(index: Int): V =  throw new FacadeRejectedException(expectedMsg + " got boolean")
-    def jfalse(index: Int): V = throw new FacadeRejectedException(expectedMsg + " got boolean")
+    def jtrue(index: Int): V =  throw new AbortJsonProcessingException(expectedMsg + " got boolean")
+    def jfalse(index: Int): V = throw new AbortJsonProcessingException(expectedMsg + " got boolean")
 
     def jstring(s: CharSequence, index: Int): V = {
-      throw new FacadeRejectedException(expectedMsg + " got string")
+      throw new AbortJsonProcessingException(expectedMsg + " got string")
     }
     def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): V = {
-      throw new FacadeRejectedException(expectedMsg + " got number")
+      throw new AbortJsonProcessingException(expectedMsg + " got number")
     }
 
     def objectContext(index: Int): upickle.jawn.RawFContext[T, V] = {
-      throw new FacadeRejectedException(expectedMsg + " got dictionary")
+      throw new AbortJsonProcessingException(expectedMsg + " got dictionary")
     }
     def arrayContext(index: Int): upickle.jawn.RawFContext[T, V] = {
-      throw new FacadeRejectedException(expectedMsg + " got sequence")
+      throw new AbortJsonProcessingException(expectedMsg + " got sequence")
     }
     def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z](this, f)
     def singleContext(index: Int): upickle.jawn.RawFContext[T, V] = new RawFContext[T, V] {
