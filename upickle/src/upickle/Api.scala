@@ -42,6 +42,7 @@ object legacy extends Api{
     new TaggedWriter.Leaf[V](c, n, rw)
   }
 
+  def taggedExpectedMsg = "expected sequence"
   override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new RawFContext[Any, T] {
     var typeName: String = null
 
@@ -56,7 +57,9 @@ object legacy extends Api{
       if (typeName == null){
         typeName = v.toString
         delegate = taggedReader.findReader(typeName)
-        if (delegate == null) throw new FacadeRejectedException("")
+        if (delegate == null) {
+          throw new FacadeRejectedException("invalid tag for tagged object: " + typeName)
+        }
       }else{
         res = v.asInstanceOf[T]
       }
@@ -93,11 +96,14 @@ trait AttributeTagged extends Api{
     new TaggedWriter.Leaf[V](c, n, rw)
   }
 
+  def taggedExpectedMsg = "expected dictionary"
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
     upickle.core.Util.mapContext(JsObjR.objectContext(index)) { x =>
       val key = x.value.find(_._1 == tagName).get._2.str.toString
       val delegate = taggedReader.findReader(key)
-
+      if (delegate == null){
+        throw new FacadeRejectedException("invalid tag for tagged object: " + key)
+      }
       val ctx = delegate.objectContext(-1)
       for ((k, v) <- x.value if k != tagName) {
         ctx.visitKey(k, -1)

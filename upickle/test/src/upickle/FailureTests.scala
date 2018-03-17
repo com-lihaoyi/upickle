@@ -31,7 +31,7 @@ object FailureTests extends TestSuite {
 //    'test - {
 //      read[Js.Value](""" {unquoted_key: "keys must be quoted"} """)
 //    }
-    'jsonFailures {
+    'jsonFailures - {
       // Run through the test cases from the json.org validation suite,
       // skipping the ones which we don't support yet (e.g. leading zeroes,
       // extra commas) or will never support (e.g. too deep)
@@ -87,76 +87,50 @@ object FailureTests extends TestSuite {
       intercept[IncompleteParseException]{read[Js.Value](""" {"Comma instead if closing brace": true, """)}
       intercept[IncompleteParseException]{read[Js.Value](""" ["Unclosed array" """)}
     }
-    'otherFailures{
-      'nonMacroFailures{
-        * - {
-          val err = intercept[FacadeException] { read[Boolean]("\"lol\"") }
-//          assert(err.msg.contains("expected boolean"))
-          err
+    'facadeFailures - {
+      def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
+        val err = intercept[FacadeException] { upickle.legacy.read[T](s) }
+        for (msg <- msgs){
+          assert(err.msg.contains(msg))
         }
-        * - {
-          val err = intercept[FacadeException] { read[Int]("\"lol\"") }
-          assert(err.msg.contains("expected number got string"))
-          err
-        }
-        * - {
-          val err = intercept[FacadeException] { read[Seq[Int]]("\"lol\"") }
-          assert(err.msg.contains("expected sequence got string"))
-          err
-        }
-        * - {
-          val err = intercept[FacadeException] { read[Seq[String]]("[1, 2, 3]") }
-          assert(err.msg.contains("expected string got number"))
-          err
-        }
+        err
+      }
+      'structs - {
+        * - assertErrorMsg[Boolean]("\"lol\"")
+        * - assertErrorMsg[Int]("\"lol\"", "expected number got string")
+        * - assertErrorMsg[Seq[Int]]("\"lol\"", "expected sequence got string")
+        * - assertErrorMsg[Seq[String]]("[1, 2, 3]", "expected string got number")
         'tupleShort - {
-          val err = intercept[FacadeException] { read[Seq[(Int, String)]]("[[1, \"1\"], [2, \"2\"], []]") }
-          assert(err.msg.contains("expected 2 items in sequence"))
-          err
+          assertErrorMsg[Seq[(Int, String)]](
+            "[[1, \"1\"], [2, \"2\"], []]",
+            "expected 2 items in sequence"
+          )
         }
       }
-      'macroFailures{
+      'caseClass - {
         // Separate this guy out because the read macro and
         // the intercept macro play badly with each other
-        'missingKey {
-          * - {
-            val readFoo = () => read[Fee]( """{"i": 123}""")
-            val err = intercept[FacadeException]{ readFoo() }
-            assert(err.msg.contains("missing keys in dictionary: s"))
-            err
-          }
-          * - {
-            val readFoo = () => read[Fee]( """{}""")
-            val err = intercept[FacadeException]{ readFoo() }
-            assert(err.msg.contains("missing keys in dictionary: i, s"))
-            err
-          }
+        'missingKey - {
+          * - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s")
+          * - assertErrorMsg[Fee]("""{"s": "123"}""", "missing keys in dictionary: i")
+          * - assertErrorMsg[Fee]("""{}""", "missing keys in dictionary: i, s")
         }
-        'completelyInvalid{
-          val readFoo2 = () => read[Fee]("""[1, 2, 3]""")
-          val err = intercept[FacadeException] { readFoo2() }
-          assert(err.msg.contains("dictionary"))
-          err
+        'badKey - {
+          * - assertErrorMsg[Fee]("""{"i": true}""", "expected number got boolean")
         }
 
-        'invalidTag {
-          val readFo = () => read[Fi.Fo]( """["omg", {}]""")
-          val err = intercept[FacadeException]{ readFo() }
-//          assert(err.msg.contains("Tagged Object"))
-//          assert(err.msg.contains("upickle.Fi.Fo"))
-          err
+        'wrongType - {
+          * - assertErrorMsg[Fee]("""[1, 2, 3]""", "expected dictionary")
+          * - assertErrorMsg[Fee]("""31337""", "expected dictionary")
         }
 
-        'invalidTag2{
-          val readFo2 = () => read[Fi]("""["omg", {}]""")
-          val err = intercept[FacadeException]{ readFo2() }
-//          assert(err.msg.contains("Tagged Object"))
-//          assert(err.msg.contains("upickle.Fi"))
-          err
+        'invalidTag - {
+          * - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg")
+          * - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg")
         }
       }
     }
-    'compileErrors{
+    'compileErrors - {
       compileError("write(new Object)")
       compileError("""read[Object]("")""")
 //      compileError("""read[Array[Object]]("")""").msg

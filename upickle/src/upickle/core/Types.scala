@@ -15,8 +15,9 @@ import scala.reflect.ClassTag
 trait Types{ types =>
   type ReadWriter[T] = Reader[T] with Writer[T]
 
-  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new FacadeRejectedException("")
-  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new FacadeRejectedException("")
+  def taggedExpectedMsg: String
+  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new FacadeRejectedException(taggedExpectedMsg)
+  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new FacadeRejectedException(taggedExpectedMsg)
   def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R
 
   private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {
@@ -31,6 +32,7 @@ trait Types{ types =>
   trait TaggedReader[T] extends Reader[T]{
     def findReader(s: String): Reader[T]
 
+    override def expectedMsg = taggedExpectedMsg
     override def arrayContext(index: Int) = taggedArrayContext(this, index)
     override def objectContext(index: Int) = taggedObjectContext(this, index)
   }
