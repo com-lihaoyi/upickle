@@ -286,7 +286,10 @@ abstract class Parser[J] {
   /**
    * Parse the JSON string starting at 'i' and save it into 'ctxt'.
    */
-  protected[this] def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)(implicit facade: RawFacade[_, J]): Int
+  protected[this] def parseString(i: Int,
+                                  ctxt: RawFContext[_, J],
+                                  key: Boolean)
+                                 (implicit facade: RawFacade[_, J]): (CharSequence, Int)
 
   /**
    * Parse the JSON constant "true".
@@ -337,8 +340,8 @@ abstract class Parser[J] {
 
       // if we have a recursive top-level structure, we'll delegate the parsing
       // duties to our good friend rparse().
-      case '[' => rparse(ARRBEG, i + 1, facade.arrayContext(i) :: Nil)
-      case '{' => rparse(OBJBEG, i + 1, facade.objectContext(i) :: Nil)
+      case '[' => rparse(ARRBEG, i + 1, facade.arrayContext(i) :: Nil, null :: Nil)
+      case '{' => rparse(OBJBEG, i + 1, facade.objectContext(i) :: Nil, null :: Nil)
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
@@ -349,7 +352,7 @@ abstract class Parser[J] {
       // we have a single top-level string
       case '"' =>
         val ctxt = facade.singleContext(i)
-        val j = parseString(i, ctxt, false)
+        val (_, j) = parseString(i, ctxt, false)
         (ctxt.finish(i), j)
 
       // we have a single top-level constant
@@ -380,7 +383,10 @@ abstract class Parser[J] {
    * improvements.
    */
   @tailrec
-  protected[this] final def rparse(state: Int, j: Int, stack: List[RawFContext[_, J]]) : (J, Int) = {
+  protected[this] final def rparse(state: Int,
+                                   j: Int,
+                                   stack: List[RawFContext[_, J]],
+                                   path: List[Any]) : (J, Int) = {
     val i = reset(j)
     checkpoint(state, i, stack)
     implicit val facade: RawFacade[_, J] = stack.head.facade.asInstanceOf[RawFacade[_, J]]
@@ -388,33 +394,33 @@ abstract class Parser[J] {
 
     if (c == '\n') {
       newline(i)
-      rparse(state, i + 1, stack)
+      rparse(state, i + 1, stack, path)
     } else if (c == ' ' || c == '\t' || c == '\r') {
-      rparse(state, i + 1, stack)
+      rparse(state, i + 1, stack, path)
     } else if (state == DATA) {
       // we are inside an object or array expecting to see data
       if (c == '[') {
-        rparse(ARRBEG, i + 1, facade.arrayContext(i) :: stack)
+        rparse(ARRBEG, i + 1, facade.arrayContext(i) :: stack, null :: path)
       } else if (c == '{') {
-        rparse(OBJBEG, i + 1, facade.objectContext(i) :: stack)
+        rparse(OBJBEG, i + 1, facade.objectContext(i) :: stack, null :: path)
       } else {
         val ctxt = stack.head.asInstanceOf[RawFContext[Any, J]]
 
         if ((c >= '0' && c <= '9') || c == '-') {
           val j = parseNum(i, ctxt)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack)
+          rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack, path)
         } else if (c == '"') {
-          val j = parseString(i, ctxt, false)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack)
+          val (_, j) = parseString(i, ctxt, false)
+          rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack, path)
         } else if (c == 't') {
           ctxt.add(parseTrue(i), i)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack)
+          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
         } else if (c == 'f') {
           ctxt.add(parseFalse(i), i)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 5, stack)
+          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 5, stack, path)
         } else if (c == 'n') {
           ctxt.add(parseNull(i), i)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack)
+          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
         } else {
           die(i, "expected json value")
         }
@@ -430,50 +436,39 @@ abstract class Parser[J] {
       } else {
         val ctxt1 = stack.head
         val tail = stack.tail
-
         if (tail.isEmpty) {
           (ctxt1.finish(i), i + 1)
         } else {
           val ctxt2 = tail.head.asInstanceOf[RawFContext[Any, J]]
           ctxt2.add(ctxt1.finish(i), i)
-          rparse(if (ctxt2.isObj) OBJEND else ARREND, i + 1, tail)
+          rparse(if (ctxt2.isObj) OBJEND else ARREND, i + 1, tail, path.tail)
         }
       }
     } else if (state == KEY) {
       // we are in an object expecting to see a key.
       if (c == '"') {
-        val j = parseString(i, stack.head, true)
-        rparse(SEP, j, stack)
-      } else {
-        die(i, "expected \"")
+        val (s, v) = parseString(i, stack.head, true)
+        rparse(SEP, v, stack, s :: path.tail)
       }
+      else die(i, "expected \"")
     } else if (state == SEP) {
       // we are in an object just after a key, expecting to see a colon.
-      if (c == ':') {
-        rparse(DATA, i + 1, stack)
-      } else {
-        die(i, "expected :")
-      }
+      if (c == ':') rparse(DATA, i + 1, stack, path)
+      else die(i, "expected :")
     } else if (state == ARREND) {
       // we are in an array, expecting to see a comma (before more data).
-      if (c == ',') {
-        rparse(DATA, i + 1, stack)
-      } else {
-        die(i, "expected ] or ,")
-      }
+      if (c == ',') rparse(DATA, i + 1, stack, (path.head.asInstanceOf[Int]+1) :: path.tail)
+      else die(i, "expected ] or ,")
     } else if (state == OBJEND) {
       // we are in an object, expecting to see a comma (before more data).
-      if (c == ',') {
-        rparse(KEY, i + 1, stack)
-      } else {
-        die(i, "expected } or ,")
-      }
+      if (c == ',') rparse(KEY, i + 1, stack, path)
+      else die(i, "expected } or ,")
     } else if (state == ARRBEG) {
       // we are starting an array, expecting to see data or a closing bracket.
-      rparse(DATA, i, stack)
+      rparse(DATA, i, stack, path)
     } else {
       // we are starting an object, expecting to see a key or a closing brace.
-      rparse(KEY, i, stack)
+      rparse(KEY, i, stack, path)
     }
   }
 }

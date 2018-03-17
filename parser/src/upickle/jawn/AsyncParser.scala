@@ -210,7 +210,7 @@ final class AsyncParser[J] protected[jawn] (
           val (value, j) = if (state <= 0) {
             parse(offset)
           } else {
-            rparse(state, curr, stack)
+            rparse(state, curr, stack, Nil)
           }
           if (streamMode > 0) {
             state = ASYNC_POSTVAL
