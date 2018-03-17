@@ -8,6 +8,8 @@ import scala.annotation.{switch, tailrec}
 import scala.util.Try
 
 case class ParseException(msg: String, index: Int, line: Int, col: Int) extends Exception(msg)
+case class FacadeException(msg: String, index: Int, line: Int, col: Int, path: List[Any]) extends Exception(msg)
+case class FacadeRejectedException(msg: String) extends Exception(msg)
 
 case class IncompleteParseException(msg: String, cause: Throwable) extends Exception(msg, cause)
 
@@ -352,7 +354,8 @@ abstract class Parser[J] {
       // we have a single top-level string
       case '"' =>
         val ctxt = facade.singleContext(i)
-        val (_, j) = parseString(i, ctxt, false)
+
+        val (_, j) = try parseString(i, ctxt, false) catch reject(i, Nil)
         (ctxt.finish(i), j)
 
       // we have a single top-level constant
@@ -368,6 +371,12 @@ abstract class Parser[J] {
       throw IncompleteParseException("exhausted input", e)
   }
 
+  def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
+    case e: FacadeRejectedException =>
+      val y = line() + 1
+      val x = column(j) + 1
+      throw new FacadeException(e.msg, j, y, x, path)
+  }
   /**
    * Tail-recursive parsing method to do the bulk of JSON parsing.
    *
@@ -400,26 +409,28 @@ abstract class Parser[J] {
     } else if (state == DATA) {
       // we are inside an object or array expecting to see data
       if (c == '[') {
-        rparse(ARRBEG, i + 1, facade.arrayContext(i) :: stack, null :: path)
+        val ctx = try facade.arrayContext(i) catch reject(j, path)
+        rparse(ARRBEG, i + 1, ctx :: stack, null :: path)
       } else if (c == '{') {
-        rparse(OBJBEG, i + 1, facade.objectContext(i) :: stack, null :: path)
+        val ctx = try facade.objectContext(i) catch reject(j, path)
+        rparse(OBJBEG, i + 1, ctx :: stack, null :: path)
       } else {
         val ctxt = stack.head.asInstanceOf[RawFContext[Any, J]]
 
         if ((c >= '0' && c <= '9') || c == '-') {
-          val j = parseNum(i, ctxt)
+          val j = try parseNum(i, ctxt) catch reject(i, path)
           rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack, path)
         } else if (c == '"') {
-          val (_, j) = parseString(i, ctxt, false)
+          val (_, j) = try parseString(i, ctxt, false) catch reject(i, path)
           rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack, path)
         } else if (c == 't') {
-          ctxt.add(parseTrue(i), i)
+          ctxt.add(try parseTrue(i) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
         } else if (c == 'f') {
-          ctxt.add(parseFalse(i), i)
+          ctxt.add(try parseFalse(i) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 5, stack, path)
         } else if (c == 'n') {
-          ctxt.add(parseNull(i), i)
+          ctxt.add(try parseNull(i) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
         } else {
           die(i, "expected json value")
@@ -449,8 +460,7 @@ abstract class Parser[J] {
       if (c == '"') {
         val (s, v) = parseString(i, stack.head, true)
         rparse(SEP, v, stack, s :: path.tail)
-      }
-      else die(i, "expected \"")
+      } else die(i, "expected \"")
     } else if (state == SEP) {
       // we are in an object just after a key, expecting to see a colon.
       if (c == ':') rparse(DATA, i + 1, stack, path)

@@ -94,18 +94,19 @@ trait AttributeTagged extends Api{
     new TaggedWriter.Leaf[V](c, n, rw)
   }
 
-  override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) =
-    upickle.core.Util.mapContext(JsObjR.objectContext(index)){ x =>
+  override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
+    upickle.core.Util.mapContext(JsObjR.objectContext(index)) { x =>
       val key = x.value.find(_._1 == tagName).get._2.str.toString
       val delegate = taggedReader.findReader(key)
 
       val ctx = delegate.objectContext(-1)
-      for((k, v) <- x.value if k != tagName){
+      for ((k, v) <- x.value if k != tagName) {
         ctx.visitKey(k, -1)
         ctx.add(visitors.JsVisitor.visit(v, ctx.facade), -1)
       }
       ctx.finish(index)
     }
+  }
   def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R = {
     val tree = w.write(visitors.JsBuilder, v)
     val Js.Obj(kvs @ _*) = tree
