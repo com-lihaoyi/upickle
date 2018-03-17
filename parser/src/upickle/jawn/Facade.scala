@@ -82,3 +82,20 @@ trait RawFContext[-J, +T] {
   def finish(index: Int): T
   def isObj: Boolean
 }
+
+/**
+  * Signals failure processsing JSON after parsing.
+  */
+case class JsonProcessingException(clue: String,
+                                   index: Int,
+                                   line: Int,
+                                   col: Int,
+                                   path: List[Any]) extends Exception(clue + " at index " + index)
+
+/**
+  * Throw this inside a [[Facade]]'s handler functions to fail the processing
+  * of JSON. The Facade just needs to provide the error message, and it is up
+  * to the driver to ensure it is properly wrapped in a [[JsonProcessingException]]
+  * with the relevant source information.
+  */
+case class AbortJsonProcessingException(msg: String) extends Exception(msg)
