@@ -38,7 +38,7 @@ object JsVisitor {
       case IndexedJs.True(i) => f.jtrue(i)
       case IndexedJs.False(i) => f.jfalse(i)
       case IndexedJs.Str(i, s) => f.jstring(s, i)
-      case IndexedJs.Num(i, d) => f.jnum(d.toString, -1, -1, i)
+      case IndexedJs.Num(i, s, d, e) => f.jnum(s, d, e, i)
       case IndexedJs.Arr(i, items @_*) =>
         val ctx = f.arrayContext(-1).asInstanceOf[RawFContext[Any, T]]
         for(item <- items) try ctx.add(visit(item, ctx.facade), item.index) catch reject(item.index, Nil)
@@ -124,7 +124,7 @@ object IndexedJsBuilder extends upickle.jawn.RawFacade[IndexedJs.Value, IndexedJ
 
   def jtrue(i: Int) = IndexedJs.True(i)
 
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, i: Int) = IndexedJs.Num(i, s.toString.toDouble)
+  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, i: Int) = IndexedJs.Num(i, s, decIndex, expIndex)
 
   def jstring(s: CharSequence, i: Int) = IndexedJs.Str(i, s)
 }

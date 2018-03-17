@@ -5,7 +5,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import upickle.internal.IndexedJs
-import upickle.jawn.RawFContext
+import upickle.jawn.{AbortJsonProcessingException, RawFContext}
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
@@ -37,27 +37,64 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = s.toString
     override def jstring(s: CharSequence, index: Int) = s.toString
   }
-  object NumReader extends Reader[String] {
+  class NumReader[T](f: Long => T) extends Reader[T] {
     override def expectedMsg = "expected number"
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = s.toString
+    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      if (expIndex != -1) throw new AbortJsonProcessingException("expected integer")
+      if (decIndex != -1) {
+        var i = decIndex + 1
+        while(i < s.length) {
+          if (s.charAt(i) != '0') throw new AbortJsonProcessingException("expected integer")
+          i += 1
+        }
+      }
+
+
+      val end = if(decIndex != -1) decIndex else s.length
+      var l = upickle.core.Util.parseLong(s, 0, end)
+      if (expIndex == -1) f(l)
+      else{
+        val e = upickle.core.Util.parseLong(s, expIndex, s.length())
+        var i = 0
+        while(i < e){
+          if (l >= Long.MaxValue / 10) throw new AbortJsonProcessingException("expected integer")
+          l = l * 10
+          i += 1
+        }
+        f(l)
+      }
+    }
   }
   implicit val DoubleReader: Reader[Double] = NumStringReader.map(_.toDouble)
-  implicit val IntReader: Reader[Int] = NumReader.map(_.toDouble.toInt)
+  implicit val IntReader: Reader[Int] = new NumReader(l =>
+    if (l > Int.MaxValue || l < Int.MinValue) throw new AbortJsonProcessingException("expected integer")
+    else l.toInt
+  )
   implicit val FloatReader: Reader[Float] = NumStringReader.map(_.toFloat)
-  implicit val ShortReader: Reader[Short] = NumReader.map(_.toDouble.toShort)
-  implicit val ByteReader: Reader[Byte] = NumReader.map(_.toDouble.toByte)
+  implicit val ShortReader: Reader[Short] = new NumReader(l =>
+    if (l > Short.MaxValue || l < Short.MinValue) throw new AbortJsonProcessingException("expected short")
+    else l.toShort
+  )
+  implicit val ByteReader: Reader[Byte] = new NumReader(l =>
+    if (l > Byte.MaxValue || l < Byte.MinValue) throw new AbortJsonProcessingException("expected byte")
+    else l.toByte
+  )
 
   implicit object StringReader extends Reader[String] {
     override def expectedMsg = "expected string"
     override def jstring(s: CharSequence, index: Int) = s.toString
   }
+  class MapStringReader[T](f: CharSequence => T) extends Reader[T] {
+    override def expectedMsg = "expected string"
+    override def jstring(s: CharSequence, index: Int) = f(s)
+  }
 
-  implicit val CharReader: Reader[Char] = StringReader.map(_(0))
-  implicit val UUIDReader: Reader[UUID] = StringReader.map(UUID.fromString)
-  implicit val LongReader: Reader[Long] = StringReader.map(_.toLong)
-  implicit val BigIntReader: Reader[BigInt] = StringReader.map(BigInt(_))
-  implicit val BigDecimalReader: Reader[BigDecimal] = StringReader.map(BigDecimal(_))
-  implicit val SymbolReader: Reader[Symbol] = StringReader.map(Symbol.apply(_))
+  implicit val CharReader: Reader[Char] = new MapStringReader(_.charAt(0))
+  implicit val UUIDReader: Reader[UUID] = new MapStringReader(s => UUID.fromString(s.toString))
+  implicit val LongReader: Reader[Long] = new MapStringReader(s => core.Util.parseLong(s, 0, s.length()))
+  implicit val BigIntReader: Reader[BigInt] = new MapStringReader(s => BigInt(s.toString))
+  implicit val BigDecimalReader: Reader[BigDecimal] = new MapStringReader(s => BigDecimal(s.toString))
+  implicit val SymbolReader: Reader[Symbol] = new MapStringReader(s => Symbol(s.toString))
 
   implicit def MapReader[K, V](implicit k: Reader[K], v: Reader[V]): Reader[Map[K, V]] = {
     if (k ne StringReader) SeqLikeReader[Array, (K, V)].map(_.toMap)
@@ -101,12 +138,27 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
 
-  implicit val DurationReader = StringReader.map{
-    case "inf" => Duration.Inf
-    case "-inf" => Duration.MinusInf
-    case "undef" => Duration.Undefined
-    case x => Duration(x.toLong, TimeUnit.NANOSECONDS)
-  }
+  implicit val DurationReader = new MapStringReader( s =>
+    if (s.charAt(0) == 'i' &&
+        s.charAt(1) == 'n' &&
+        s.charAt(2) == 'f'
+        && s.length() == 3){
+      Duration.Inf
+    } else if (s.charAt(0) == '-' &&
+               s.charAt(1) == 'i' &&
+               s.charAt(2) == 'n' &&
+               s.charAt(3) == 'f' &&
+               s.length() == 4){
+      Duration.MinusInf
+    } else if (s.charAt(0) == 'u' &&
+               s.charAt(1) == 'n' &&
+               s.charAt(2) == 'd' &&
+               s.charAt(3) == 'e' &&
+               s.charAt(4) == 'f' &&
+               s.length() == 5){
+      Duration.Undefined
+    }else Duration(core.Util.parseLong(s, 0, s.length()), TimeUnit.NANOSECONDS)
+  )
 
   implicit val InfiniteDurationReader = DurationReader.narrow[Duration.Infinite]
   implicit val FiniteDurationReader = DurationReader.narrow[FiniteDuration]
@@ -239,7 +291,9 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       }
     }
     override def jstring(s: CharSequence, index: Int) = IndexedJs.Str(index, s)
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = IndexedJs.Num(index, s.toString.toDouble)
+    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      IndexedJs.Num(index, s, decIndex, expIndex)
+    }
     override def jtrue(index: Int) = IndexedJs.True(index)
     override def jfalse(index: Int) = IndexedJs.False(index)
     override def jnull(index: Int) = IndexedJs.Null(index)

@@ -100,16 +100,20 @@ trait AttributeTagged extends Api{
   def taggedExpectedMsg = "expected dictionary"
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
     upickle.core.Util.mapContext(IndexedJsObjR.objectContext(index)) { x =>
-      val keyAttr = x.value.find(_._1 == tagName).get._2
-      val key = keyAttr.asInstanceOf[IndexedJs.Str].value
+      val keyAttr = x.value0.find(_._1.toString == tagName).get._2
+      val key = keyAttr.asInstanceOf[IndexedJs.Str].value0.toString
       val delegate = taggedReader.findReader(key)
       if (delegate == null){
         throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil)
       }
       val ctx = delegate.objectContext(-1)
-      for ((k, v) <- x.value if k != tagName) {
-        ctx.visitKey(k, -1)
-        ctx.add(visitors.JsVisitor.visit(v, ctx.facade), -1)
+      for (p <- x.value0) {
+        val (k0, v) = p
+        val k = k0.toString
+        if (k != tagName){
+          ctx.visitKey(k, -1)
+          ctx.add(visitors.JsVisitor.visit(v, ctx.facade), -1)
+        }
       }
       ctx.finish(index)
     }

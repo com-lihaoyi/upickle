@@ -10,14 +10,10 @@ object IndexedJs {
   sealed trait Value{
     def index: Int
   }
-  case class Str(index: Int, value0: java.lang.CharSequence) extends Value{
-    lazy val value: String = value0.toString
-  }
-  case class Obj(index: Int, value0: (java.lang.CharSequence, Value)*) extends Value{
-    lazy val value: Seq[(String, Value)] = value0.map{case (k, v) => (k.toString, v)}
-  }
+  case class Str(index: Int, value0: java.lang.CharSequence) extends Value
+  case class Obj(index: Int, value0: (java.lang.CharSequence, Value)*) extends Value
   case class Arr(index: Int, value: Value*) extends Value
-  case class Num(index: Int, value: Double) extends Value
+  case class Num(index: Int, s: CharSequence, decIndex: Int, expIndex: Int) extends Value
   case class False(index: Int) extends Value{
     def value = false
   }
