@@ -2,7 +2,7 @@ package upickle
 
 
 
-import upickle.jawn.{Facade, RawFContext, RawFacade}
+import upickle.jawn.{Facade, FacadeRejectedException, RawFContext, RawFacade}
 
 import language.experimental.macros
 import language.higherKinds
@@ -44,20 +44,19 @@ object legacy extends Api{
 
   override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new RawFContext[Any, T] {
     var typeName: String = null
-    var delegate: Reader[_] = null
-    var delegateCtx: RawFContext[_, T] = null
+
+    var delegate: Reader[_] = StringReader
 
     var res: T = _
     def visitKey(s: CharSequence, index: Int): Unit = throw new Exception(s + " " + index)
 
-    def facade =
-      if (typeName == null) StringReader
-      else delegate
+    def facade = delegate
 
     def add(v: Any, index: Int): Unit = {
       if (typeName == null){
         typeName = v.toString
         delegate = taggedReader.findReader(typeName)
+        if (delegate == null) throw new FacadeRejectedException("")
       }else{
         res = v.asInstanceOf[T]
       }

@@ -46,14 +46,16 @@ private[upickle] trait GeneratedUtil extends upickle.core.Types{
     }
   }
 
-  abstract class CaseR[V](argCount: Int) extends Reader[V]{
+  abstract class CaseR[V](val argCount: Int) extends Reader[V]{
     trait CaseObjectContext extends upickle.jawn.RawFContext[Any, V]{
 
       val aggregated = new Array[Any](argCount)
       val found = new Array[Boolean](argCount)
       var currentIndex = -1
+      var count = 0
       def add(v: Any, index: Int): Unit = {
-        if (currentIndex != -1) {
+        if (currentIndex != -1 && !found(currentIndex)) {
+          count += 1
           aggregated(currentIndex) = v
           found(currentIndex) = true
         }

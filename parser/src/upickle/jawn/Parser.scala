@@ -354,8 +354,7 @@ abstract class Parser[J] {
       // we have a single top-level string
       case '"' =>
         val ctxt = facade.singleContext(i)
-
-        val (_, j) = try parseString(i, ctxt, false) catch reject(i, Nil)
+        val (_, j) = parseString(i, ctxt, false)
         (ctxt.finish(i), j)
 
       // we have a single top-level constant
@@ -366,7 +365,7 @@ abstract class Parser[J] {
       // invalid
       case _ => die(i, "expected json value")
     }
-  } catch {
+  } catch reject(i, Nil) orElse[Throwable, Nothing] {
     case e: IndexOutOfBoundsException =>
       throw IncompleteParseException("exhausted input", e)
   }
@@ -412,6 +411,9 @@ abstract class Parser[J] {
         val ctx = try facade.arrayContext(i) catch reject(j, path)
         rparse(ARRBEG, i + 1, ctx :: stack, null :: path)
       } else if (c == '{') {
+        println(stack.head)
+        println(facade)
+        println(j)
         val ctx = try facade.objectContext(i) catch reject(j, path)
         rparse(OBJBEG, i + 1, ctx :: stack, null :: path)
       } else {

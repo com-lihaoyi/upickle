@@ -269,13 +269,10 @@ object Macros {
           }
         )
 
-
         new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
 
-
-
-
           override def objectContext(index: Int) = new CaseObjectContext{
+
             def visitKey(s: CharSequence, index: Int): Unit = {
               currentIndex = s.toString match {
                 case ..${
@@ -290,7 +287,10 @@ object Macros {
             def finish(index: Int) = {
               ..${
                 for(i <- rawArgs.indices if hasDefaults(i))
-                yield q"if (!found($i)) aggregated($i) = ${defaults(i)}"
+                yield q"if (!found($i)) {count += 1; aggregated($i) = ${defaults(i)}}"
+              }
+              if (count != argCount){
+                throw new upickle.jawn.FacadeRejectedException("")
               }
               $companion.apply(
                 ..${
@@ -303,8 +303,8 @@ object Macros {
             }
 
             def facade: upickle.jawn.RawFacade[_, _] =
-                        if (currentIndex == -1) upickle.jawn.NullFacade
-                        else localReaders(currentIndex)
+              if (currentIndex == -1) upickle.jawn.NullFacade
+              else localReaders(currentIndex)
           }
         }
       """
