@@ -30,7 +30,7 @@ object JsVisitor {
   def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
     case e: AbortJsonProcessingException =>
 
-      throw new JsonProcessingException(e.msg, j, -1, -1, path)
+      throw new JsonProcessingException(e.msg, j, -1, -1, path, e)
   }
   def visit[T](j: IndexedJs.Value, f: upickle.jawn.RawFacade[_, T]): T = try{
     j match{

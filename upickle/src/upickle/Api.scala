@@ -44,30 +44,40 @@ object legacy extends Api{
   }
 
   def taggedExpectedMsg = "expected sequence"
+  sealed trait TaggedReaderState
+  object TaggedReaderState{
+    case object Initializing extends TaggedReaderState
+    case class Parsing(f: Reader[_]) extends TaggedReaderState
+    case class Parsed(res: Any) extends TaggedReaderState
+  }
   override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new RawFContext[Any, T] {
-    var typeName: String = null
+    var state: TaggedReaderState = TaggedReaderState.Initializing
 
-    var delegate: Reader[_] = StringReader
-
-    var res: T = _
     def visitKey(s: CharSequence, index: Int): Unit = throw new Exception(s + " " + index)
 
-    def facade = delegate
+    def facade = state match{
+      case TaggedReaderState.Initializing => StringReader
+      case TaggedReaderState.Parsing(f) => f
+      case TaggedReaderState.Parsed(res) => NullFacade
+    }
 
-    def add(v: Any, index: Int): Unit = {
-      if (typeName == null){
-        typeName = v.toString
-        delegate = taggedReader.findReader(typeName)
+    def add(v: Any, index: Int): Unit = state match{
+      case TaggedReaderState.Initializing =>
+        val typeName = v.toString
+        val delegate = taggedReader.findReader(typeName)
         if (delegate == null) {
           throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
         }
-      }else{
-        res = v.asInstanceOf[T]
-      }
+        state = TaggedReaderState.Parsing(delegate)
+      case TaggedReaderState.Parsing(f) =>
+        state = TaggedReaderState.Parsed(v)
+      case TaggedReaderState.Parsed(res) => res.asInstanceOf[T]
+        throw new AbortJsonProcessingException("expected tagged dictionary")
     }
 
-    def finish(index: Int) = {
-      res
+    def finish(index: Int) = state match{
+      case TaggedReaderState.Parsed(res) => res.asInstanceOf[T]
+      case _ => throw new AbortJsonProcessingException("expected tagged dictionary")
     }
 
     def isObj = false
@@ -98,62 +108,70 @@ trait AttributeTagged extends Api{
   }
 
   def taggedExpectedMsg = "expected dictionary"
+  sealed trait TaggedReaderState
+  object TaggedReaderState{
+    case object Initializing extends TaggedReaderState
+    case class FastPath(ctx: RawFContext[Any, _]) extends TaggedReaderState
+    case class SlowPath(ctx: RawFContext[Any, IndexedJs.Obj]) extends TaggedReaderState
+  }
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
-    var res = null.asInstanceOf[T]
     new upickle.jawn.RawFContext[Any, T]{
-      var typeName: String = null
-
-      var delegateCtx: RawFContext[Any, T] = null
-
-      var typeFirst = false
-      def visitKey(s: CharSequence, index: Int): Unit = {
-        if (s.toString == tagName) typeFirst = true
-        else delegateCtx.visitKey(s, index)
+      var state: TaggedReaderState = TaggedReaderState.Initializing
+      def visitKey(s: CharSequence, index: Int): Unit = state match{
+        case TaggedReaderState.Initializing =>
+          if (s.toString == tagName) () //do nothing
+          else {
+            val slowCtx = IndexedJsObjR.objectContext(index)
+            slowCtx.visitKey(s, index)
+            state = TaggedReaderState.SlowPath(slowCtx)
+          }
+        case TaggedReaderState.FastPath(ctx) => ctx.visitKey(s, index)
+        case TaggedReaderState.SlowPath(ctx) => ctx.visitKey(s, index)
       }
 
-      def facade = {
-        if (delegateCtx == null) StringReader
-        else delegateCtx.facade
+      def facade = state match{
+        case TaggedReaderState.Initializing => StringReader
+        case TaggedReaderState.FastPath(ctx) => ctx.facade
+        case TaggedReaderState.SlowPath(ctx) => ctx.facade
       }
 
-      def add(v: Any, index: Int): Unit = {
-        if (typeFirst && delegateCtx == null){
-          typeName = v.toString
+      def add(v: Any, index: Int): Unit = state match{
+        case TaggedReaderState.Initializing =>
+          val typeName = v.toString
           val facade0 = taggedReader.findReader(typeName)
           if (facade0 == null) {
             throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
           }
-          delegateCtx = facade0.objectContext(index)
-        }else{
-          delegateCtx.add(v, index)
-          res = v.asInstanceOf[T]
-        }
+          state = TaggedReaderState.FastPath(facade0.objectContext(index))
+        case TaggedReaderState.FastPath(ctx) => ctx.add(v, index)
+        case TaggedReaderState.SlowPath(ctx) => ctx.add(v, index)
       }
 
-      def finish(index: Int) = {
-        delegateCtx.finish(index)
+      def finish(index: Int) = state match{
+        case TaggedReaderState.Initializing => throw new AbortJsonProcessingException("expected tagged dictionary")
+        case TaggedReaderState.FastPath(ctx) => ctx.finish(index).asInstanceOf[T]
+        case TaggedReaderState.SlowPath(ctx) =>
+          val x = ctx.finish(index)
+          val keyAttr = x.value0.find(_._1.toString == tagName).get._2
+          val key = keyAttr.asInstanceOf[IndexedJs.Str].value0.toString
+          val delegate = taggedReader.findReader(key)
+          if (delegate == null){
+            throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil, null)
+          }
+          val ctx2 = delegate.objectContext(-1)
+          for (p <- x.value0) {
+            val (k0, v) = p
+            val k = k0.toString
+            if (k != tagName){
+              ctx2.visitKey(k, -1)
+              ctx2.add(visitors.JsVisitor.visit(v, ctx2.facade), -1)
+            }
+          }
+          ctx2.finish(index)
       }
 
       def isObj = true
     }
-//    upickle.core.Util.mapContext(IndexedJsObjR.objectContext(index)) { x =>
-//      val keyAttr = x.value0.find(_._1.toString == tagName).get._2
-//      val key = keyAttr.asInstanceOf[IndexedJs.Str].value0.toString
-//      val delegate = taggedReader.findReader(key)
-//      if (delegate == null){
-//        throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil)
-//      }
-//      val ctx = delegate.objectContext(-1)
-//      for (p <- x.value0) {
-//        val (k0, v) = p
-//        val k = k0.toString
-//        if (k != tagName){
-//          ctx.visitKey(k, -1)
-//          ctx.add(visitors.JsVisitor.visit(v, ctx.facade), -1)
-//        }
-//      }
-//      ctx.finish(index)
-//    }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Facade[R], v: T): R = {
     val ctx = out.objectContext(-1)

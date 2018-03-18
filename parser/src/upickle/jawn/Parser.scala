@@ -364,7 +364,7 @@ abstract class Parser[J] {
     case e: AbortJsonProcessingException =>
       val y = line() + 1
       val x = column(j) + 1
-      throw new JsonProcessingException(e.msg, j, y, x, path)
+      throw new JsonProcessingException(e.msg, j, y, x, path, e)
   }
   /**
    * Tail-recursive parsing method to do the bulk of JSON parsing.

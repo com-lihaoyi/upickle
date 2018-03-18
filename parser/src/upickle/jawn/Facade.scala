@@ -90,7 +90,8 @@ case class JsonProcessingException(clue: String,
                                    index: Int,
                                    line: Int,
                                    col: Int,
-                                   path: List[Any]) extends Exception(clue + " at index " + index)
+                                   path: List[Any],
+                                   cause: Throwable) extends Exception(clue + " at index " + index, cause)
 
 /**
   * Throw this inside a [[Facade]]'s handler functions to fail the processing
