@@ -76,17 +76,8 @@ trait CharBasedParser[J] extends Parser[J] {
       j = reset(j)
       c = at(j)
     }
-    val str =
-      if (key) {
-        val s = sb.makeString
-        ctxt.visitKey(s, i)
-        s
-      } else {
-        val s = sb.makeString
-        ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(s, i), i)
-        s
-      }
-    (str, j + 1)
+
+    (sb.makeString, j + 1)
   }
 
   /**
@@ -101,20 +92,18 @@ trait CharBasedParser[J] extends Parser[J] {
                                        (implicit facade: RawFacade[_, J]): (CharSequence, Int) = {
 
     val k = parseStringSimple(i + 1, ctxt)
-    if (k != -1) {
-      val str =
-        if (key) {
-          val s = at(i + 1, k - 1)
-          ctxt.visitKey(s, i)
-          s
-        } else {
-          val s = at(i + 1, k - 1)
-          ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(s, i), i)
-          s
-        }
-      (str, k)
-    } else {
-      parseStringComplex(i, ctxt, key)
-    }
+    val (s, j) =
+      if (k != -1) {
+        val s = at(i + 1, k - 1)
+        (s, k)
+      }else {
+        val (s, j) = parseStringComplex(i, ctxt, key)
+        (s, j)
+      }
+
+    if (key) ctxt.visitKey(s, i)
+    else ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(s, i), i)
+
+    (s, j)
   }
 }
