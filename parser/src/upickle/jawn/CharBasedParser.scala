@@ -27,7 +27,7 @@ trait CharBasedParser[J] extends Parser[J] {
     var c = at(j)
     while (c != '"') {
       if (c < ' ') return die(j, s"control char (${c.toInt}) in string")
-      if (c == '\\') return -1
+      if (c == '\\') return -1 - j
       j += 1
       c = at(j)
     }
@@ -37,11 +37,15 @@ trait CharBasedParser[J] extends Parser[J] {
   /**
    * Parse a string that is known to have escape sequences.
    */
-  protected[this] final def parseStringComplex(i: Int, ctxt: RawFContext[_, J], key: Boolean)
+  protected[this] final def parseStringComplex(pre: Int,
+                                               i: Int,
+                                               ctxt: RawFContext[_, J],
+                                               key: Boolean)
                                               (implicit facade: RawFacade[_, J]): (CharSequence, Int) = {
 
-    var j = i + 1
     val sb = charBuilder.reset()
+    sb.extend(at(pre, i))
+    var j = i
 
     var c = at(j)
     while (c != '"') {
@@ -92,18 +96,13 @@ trait CharBasedParser[J] extends Parser[J] {
                                        (implicit facade: RawFacade[_, J]): (CharSequence, Int) = {
 
     val k = parseStringSimple(i + 1, ctxt)
-    val (s, j) =
-      if (k != -1) {
-        val s = at(i + 1, k - 1)
-        (s, k)
-      }else {
-        val (s, j) = parseStringComplex(i, ctxt, key)
-        (s, j)
-      }
+    val res =
+      if (k >= 0) (at(i + 1, k - 1), k)
+      else parseStringComplex(i + 1, (-k) - 1, ctxt, key)
 
-    if (key) ctxt.visitKey(s, i)
-    else ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(s, i), i)
+    if (key) ctxt.visitKey(res._1, i)
+    else ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(res._1, i), i)
 
-    (s, j)
+    res
   }
 }
