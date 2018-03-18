@@ -300,22 +300,10 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   }
 
   implicit def IndexedJsObjR: Reader[IndexedJs.Obj] = IndexedJsValueR.narrow[IndexedJs.Obj]
-
-
   implicit def IndexedJsArrR: Reader[IndexedJs.Arr] = IndexedJsValueR.narrow[IndexedJs.Arr]
-
-
-
   implicit def IndexedJsStrR: Reader[IndexedJs.Str] = IndexedJsValueR.narrow[IndexedJs.Str]
-
-
   implicit def IndexedJsNumR: Reader[IndexedJs.Num] = IndexedJsValueR.narrow[IndexedJs.Num]
-
-
   implicit def IndexedJsTrueR: Reader[IndexedJs.True] = IndexedJsValueR.narrow[IndexedJs.True]
-
   implicit def IndexedJsFalseR: Reader[IndexedJs.False] = IndexedJsValueR.narrow[IndexedJs.False]
-
-
   implicit def IndexedJsNullR: Reader[IndexedJs.Null] = IndexedJsValueR.narrow[IndexedJs.Null]
 }

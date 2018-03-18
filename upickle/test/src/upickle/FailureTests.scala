@@ -34,6 +34,7 @@ object FailureTests extends TestSuite {
 //    'test - {
 //      read[Js.Value](""" {unquoted_key: "keys must be quoted"} """)
 //    }
+
     'jsonFailures - {
       // Run through the test cases from the json.org validation suite,
       // skipping the ones which we don't support yet (e.g. leading zeroes,
@@ -90,6 +91,7 @@ object FailureTests extends TestSuite {
       intercept[IncompleteParseException]{read[Js.Value](""" {"Comma instead if closing brace": true, """)}
       intercept[IncompleteParseException]{read[Js.Value](""" ["Unclosed array" """)}
     }
+
     'facadeFailures - {
       def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
         val err = intercept[JsonProcessingException] { upickle.legacy.read[T](s) }

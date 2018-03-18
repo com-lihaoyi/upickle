@@ -5,7 +5,7 @@ trait UpickleModule extends CrossScalaModule with PublishModule{
 
   def artifactName = "mill-" + super.artifactName()
   def publishVersion = "0.5.1"
-
+  def millSourcePath = build.millSourcePath / "upickle"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -86,32 +86,33 @@ trait UpickleTestModule extends TestModule{
     ivy"com.lihaoyi::acyclic:0.1.5"
   )
 
-  def testFrameworks = Seq("utest.runner.Framework")
+  def testFrameworks = Seq("upickle.UTestFramework")
 }
 
-//object parserJs extends Cross[JawnJsModule]("2.11.11", "2.12.4")
-//class JawnJsModule(val crossScalaVersion: String) extends UpickleModule{
-//  def platformSegment = "js"
-//  def millSourcePath = build.millSourcePath / "parser"
-//  def generatedSources = Nil
-//  def sources = T.sources(millSourcePath / "src" / "main")
-//  object test extends Tests with UpickleTestModule{
-//    def platformSegment = "js"
-//    def millSourcePath = build.millSourcePath / "parser"
-//  }
-//}
+object parserJs extends Cross[JawnJsModule]("2.11.11", "2.12.4")
+class JawnJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
+  def scalaJSVersion = "0.6.22"
+  def platformSegment = "js"
+  def millSourcePath = build.millSourcePath / "parser"
+  def generatedSources = Nil
+
+  object test extends Tests with UpickleTestModule{
+    def platformSegment = "js"
+    def millSourcePath = build.millSourcePath / "parser"
+  }
+}
 
 object parserJvm extends Cross[JawnJvmModule]("2.11.11", "2.12.4")
 class JawnJvmModule(val crossScalaVersion: String) extends UpickleModule{
   def millSourcePath = build.millSourcePath / "parser"
   def generatedSources = Nil
+
   object test extends Tests with UpickleTestModule{
   }
 }
 
 object upickleJvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
 class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
-  def millSourcePath = build.millSourcePath / "upickle"
   def moduleDeps = Seq(parserJvm())
 
   object test extends Tests with UpickleTestModule{
@@ -119,24 +120,23 @@ class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
   }
 }
 
-//object upickleJs extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
-//class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
-//  def moduleDeps = Seq(parserJs())
-//  def platformSegment = "js"
-//
-//  def scalaJSVersion = "0.6.22"
-//  def scalacOptions = T{
-//    super.scalacOptions() ++ Seq({
-//      val a = build.millSourcePath.toString.replaceFirst("[^/]+/?$", "")
-//      val g = "https://raw.githubusercontent.com/lihaoyi/upickle"
-//      s"-P:scalajs:mapSourceURI:$a->$g/v${publishVersion()}/"
-//    })
-//  }
-//  object test extends Tests with UpickleTestModule{
-//    def platformSegment = "js"
-//    def millSourcePath = build.millSourcePath / "upickle"
-//  }
-//}
+object upickleJs extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
+class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
+  def moduleDeps = Seq(parserJs())
+  def platformSegment = "js"
+
+  def scalaJSVersion = "0.6.22"
+  def scalacOptions = T{
+    super.scalacOptions() ++ Seq({
+      val a = build.millSourcePath.toString.replaceFirst("[^/]+/?$", "")
+      val g = "https://raw.githubusercontent.com/lihaoyi/upickle"
+      s"-P:scalajs:mapSourceURI:$a->$g/v${publishVersion()}/"
+    })
+  }
+  object test extends Tests with UpickleTestModule{
+    def platformSegment = "js"
+  }
+}
 
 object test extends ScalaModule{
   def scalaVersion = "2.12.4"
