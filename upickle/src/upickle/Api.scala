@@ -39,7 +39,7 @@ object default extends AttributeTagged{
 object legacy extends Api{
   def annotate[V](rw: Reader[V], n: String) = new TaggedReader.Leaf[V](n, rw)
 
-  def annotate[V](rw: Writer[V], n: String)(implicit c: ClassTag[V]) = {
+  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]) = {
     new TaggedWriter.Leaf[V](c, n, rw)
   }
 
@@ -72,7 +72,7 @@ object legacy extends Api{
 
     def isObj = false
   }
-  def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R = {
+  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Facade[R], v: T): R = {
     val ctx = out.arrayContext(-1)
     ctx.add(out.jstring(tag, -1), -1)
 
@@ -89,11 +89,11 @@ object legacy extends Api{
  */
 trait AttributeTagged extends Api{
   def tagName = "$type"
-  def annotate[V](rw: Reader[V], n: String) = {
+  def annotate[V](rw: CaseR[V], n: String) = {
     new TaggedReader.Leaf[V](n, rw)
   }
 
-  def annotate[V](rw: Writer[V], n: String)(implicit c: ClassTag[V]) = {
+  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]) = {
     new TaggedWriter.Leaf[V](c, n, rw)
   }
 
@@ -118,11 +118,12 @@ trait AttributeTagged extends Api{
       ctx.finish(index)
     }
   }
-  def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R = {
-    val tree = w.write(visitors.JsBuilder, v)
-    val Js.Obj(kvs @ _*) = tree
-    val tagged = Js.Obj((tagName -> Js.Str(tag)) +: kvs: _*)
-    visitors.JsVisitor.visit(tagged, out)
+  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Facade[R], v: T): R = {
+    val ctx = out.objectContext(-1)
+    ctx.visitKey(tagName, -1)
+    ctx.add(out.jstring(tag, -1), -1)
+    w.writeToObject(ctx, out, v)
+    ctx.finish(-1)
   }
 }
 

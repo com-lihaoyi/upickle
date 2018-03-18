@@ -351,15 +351,15 @@ object Macros {
            ctx.visitKey(${mappedArgs(i)}, -1)
            val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
            ctx.add(w.write(out, v.${TermName(rawArgs(i))}), -1)
-
          """
       }
       q"""
-        new ${c.prefix}.Writer[$targetType]{
-          def write[R](out: upickle.jawn.Facade[R], v: $targetType): R = {
-            val ctx = out.objectContext(-1)
+        new ${c.prefix}.CaseW[$targetType]{
+          def writeToObject[R](ctx: upickle.jawn.RawFContext[R, R],
+                               out: upickle.jawn.Facade[R],
+                               v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}
-            ctx.finish(-1)
+
           }
         }
        """

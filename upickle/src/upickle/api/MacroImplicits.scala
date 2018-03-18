@@ -1,7 +1,7 @@
 package upickle
 package api
 
-import upickle.jawn.Facade
+import upickle.jawn.{AbortJsonProcessingException, Facade, RawFContext}
 
 import language.experimental.macros
 
@@ -40,7 +40,7 @@ object MacroImplicits{
   }
 
 }
-trait MacroImplicits{ this: upickle.core.Types =>
+trait MacroImplicits{ this: core.Types =>
   implicit def macroSingletonR[T <: Singleton]: Reader[T] = macro MacroImplicits.applyR[T]
   implicit def macroSingletonW[T <: Singleton]: Writer[T] = macro MacroImplicits.applyW[T]
   implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro MacroImplicits.applyRW[T]

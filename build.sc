@@ -70,7 +70,7 @@ trait UpickleModule extends CrossScalaModule with PublishModule{
        * Auto-generated picklers and unpicklers, used for creating the 22
        * versions of tuple-picklers and case-class picklers
        */
-      trait Generated extends GeneratedUtil{
+      trait Generated extends upickle.core.Types{
         ${tuples.mkString("\n")}
       }
     """)

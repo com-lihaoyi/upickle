@@ -15,76 +15,6 @@ import scala.reflect.ClassTag
 trait Types{ types =>
   type ReadWriter[T] = Reader[T] with Writer[T]
 
-  def taggedExpectedMsg: String
-  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new AbortJsonProcessingException(taggedExpectedMsg)
-  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new AbortJsonProcessingException(taggedExpectedMsg)
-  def taggedWrite[T, R](w: Writer[T], tag: String, out: Facade[R], v: T): R
-
-  private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {
-    var x: V = null.asInstanceOf[V]
-    val i = xs.iterator
-    while(x == null && i.hasNext){
-      val t = f(i.next())
-      if(t != null) x = t
-    }
-    x
-  }
-  trait TaggedReader[T] extends Reader[T]{
-    def findReader(s: String): Reader[T]
-
-    override def expectedMsg = taggedExpectedMsg
-    override def arrayContext(index: Int) = taggedArrayContext(this, index)
-    override def objectContext(index: Int) = taggedObjectContext(this, index)
-  }
-  object TaggedReader{
-    class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
-      def findReader(s: String) = if (s == tag) r else null
-    }
-    class Node[T](rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
-      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
-    }
-  }
-
-  trait TaggedWriter[T] extends Writer[T]{
-    def findWriter(v: Any): (String, Writer[T])
-    def write[R](out: Facade[R], v: T): R = {
-      val (tag, w) = findWriter(v)
-      taggedWrite(w, tag, out, v)
-
-    }
-  }
-  object TaggedWriter{
-    class Leaf[T](c: ClassTag[_], tag: String, r: Writer[T]) extends TaggedWriter[T]{
-      def findWriter(v: Any) = {
-        if (c.runtimeClass.isInstance(v)) tag -> r
-        else null
-      }
-    }
-    class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
-      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, Writer[T])]
-    }
-  }
-
-  trait TaggedReadWriter[T] extends TaggedReader[T] with TaggedWriter[T]{
-
-    override def arrayContext(index: Int) = taggedArrayContext(this, index)
-    override def objectContext(index: Int) = taggedObjectContext(this, index)
-
-  }
-  object TaggedReadWriter{
-    class Leaf[T](c: ClassTag[_], tag: String, r: ReadWriter[T]) extends TaggedReadWriter[T]{
-      def findReader(s: String) = if (s == tag) r else null
-      def findWriter(v: Any) = {
-        if (c.runtimeClass.isInstance(v)) (tag -> r)
-        else null
-      }
-    }
-    class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
-      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
-      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, Writer[T])]
-    }
-  }
-
   object ReadWriter{
 
     def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
@@ -221,4 +151,171 @@ trait Types{ types =>
       new TaggedWriter.Node(writers.asInstanceOf[Seq[TaggedWriter[T]]]:_*)
     }
   }
+
+  class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{
+    def write[R](out: upickle.jawn.Facade[R], v: V): R = {
+      if (v == null) out.jnull(-1)
+      else{
+        val ctx = out.arrayContext()
+        val vs = f(v)
+        var i = 0
+        while(i < writers.length){
+          ctx.add(writers(i).asInstanceOf[Writer[Any]].write(out, vs(i)), -1)
+          i += 1
+        }
+        ctx.finish(-1)
+      }
+    }
+  }
+
+  class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends Reader[V]{
+    override def expectedMsg = "expected sequence"
+    override def arrayContext(index: Int) = new upickle.jawn.RawFContext[Any, V] {
+      val b = new Array[Any](readers.length)
+      var facadesIndex = 0
+
+      var start = facadesIndex
+      def visitKey(s: CharSequence, index: Int): Unit = ???
+
+      def add(v: Any, index: Int): Unit = {
+        b(facadesIndex % readers.length) = v
+        facadesIndex = facadesIndex + 1
+      }
+
+      def finish(index: Int) = {
+        val lengthSoFar = facadesIndex - start
+        if (lengthSoFar != readers.length) {
+          throw new AbortJsonProcessingException(
+            "expected " + readers.length + " items in sequence, found " + lengthSoFar
+          )
+        }
+        start = facadesIndex
+        f(b)
+
+      }
+
+      def isObj = false
+
+      def facade = readers(facadesIndex % readers.length)
+    }
+  }
+
+  abstract class CaseR[V](val argCount: Int) extends Reader[V]{
+    override def expectedMsg = "expected dictionary"
+    trait CaseObjectContext extends upickle.jawn.RawFContext[Any, V]{
+
+      val aggregated = new Array[Any](argCount)
+      val found = new Array[Boolean](argCount)
+      var currentIndex = -1
+      var count = 0
+      def add(v: Any, index: Int): Unit = {
+        if (currentIndex != -1 && !found(currentIndex)) {
+          count += 1
+          aggregated(currentIndex) = v
+          found(currentIndex) = true
+        }
+      }
+
+      def isObj = true
+    }
+  }
+  trait CaseW[V] extends Writer[V]{
+    def writeToObject[R](ctx: RawFContext[R, R],
+                         out: upickle.jawn.Facade[R],
+                         v: V): Unit
+    def write[R](out: upickle.jawn.Facade[R], v: V): R = {
+      val ctx = out.objectContext(-1)
+      writeToObject(ctx, out, v)
+      ctx.finish(-1)
+    }
+  }
+  class SingletonR[T](t: T) extends CaseR[T](0){
+    override def expectedMsg = "expected dictionary"
+    override def objectContext(index: Int) = new RawFContext[Any, T] {
+      def facade = upickle.jawn.NullFacade
+
+      def visitKey(s: CharSequence, index: Int): Unit = ???
+
+      def add(v: Any, index: Int): Unit = ???
+
+      def finish(index: Int) = t
+
+      def isObj = true
+    }
+  }
+  class SingletonW[T](f: T) extends CaseW[T] {
+    def writeToObject[R](ctx: RawFContext[R, R], out: Facade[R], v: T): Unit = () // do nothing
+  }
+
+
+  def taggedExpectedMsg: String
+  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new AbortJsonProcessingException(taggedExpectedMsg)
+  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): RawFContext[Any, T] = throw new AbortJsonProcessingException(taggedExpectedMsg)
+  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Facade[R], v: T): R
+
+  private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {
+    var x: V = null.asInstanceOf[V]
+    val i = xs.iterator
+    while(x == null && i.hasNext){
+      val t = f(i.next())
+      if(t != null) x = t
+    }
+    x
+  }
+  trait TaggedReader[T] extends Reader[T]{
+    def findReader(s: String): Reader[T]
+
+    override def expectedMsg = taggedExpectedMsg
+    override def arrayContext(index: Int) = taggedArrayContext(this, index)
+    override def objectContext(index: Int) = taggedObjectContext(this, index)
+  }
+  object TaggedReader{
+    class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
+      def findReader(s: String) = if (s == tag) r else null
+    }
+    class Node[T](rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
+      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
+    }
+  }
+
+  trait TaggedWriter[T] extends Writer[T]{
+    def findWriter(v: Any): (String, CaseW[T])
+    def write[R](out: Facade[R], v: T): R = {
+      val (tag, w) = findWriter(v)
+      taggedWrite(w, tag, out, v)
+
+    }
+  }
+  object TaggedWriter{
+    class Leaf[T](c: ClassTag[_], tag: String, r: CaseW[T]) extends TaggedWriter[T]{
+      def findWriter(v: Any) = {
+        if (c.runtimeClass.isInstance(v)) tag -> r
+        else null
+      }
+    }
+    class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
+      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, CaseW[T])]
+    }
+  }
+
+  trait TaggedReadWriter[T] extends TaggedReader[T] with TaggedWriter[T]{
+
+    override def arrayContext(index: Int) = taggedArrayContext(this, index)
+    override def objectContext(index: Int) = taggedObjectContext(this, index)
+
+  }
+  object TaggedReadWriter{
+    class Leaf[T](c: ClassTag[_], tag: String, r: CaseW[T] with Reader[T]) extends TaggedReadWriter[T]{
+      def findReader(s: String) = if (s == tag) r else null
+      def findWriter(v: Any) = {
+        if (c.runtimeClass.isInstance(v)) (tag -> r)
+        else null
+      }
+    }
+    class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
+      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
+      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, CaseW[T])]
+    }
+  }
+
 }
