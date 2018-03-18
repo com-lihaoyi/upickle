@@ -131,6 +131,7 @@ object MacroTests extends TestSuite {
           * - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
           * - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
           * - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
+          * - rw(C("a", "b"), """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
 
           * - rw(AnZ: Z, """{"$type": "upickle.Hierarchy.AnZ"}""")
           * - rw(AnZ, """{"$type": "upickle.Hierarchy.AnZ"}""")

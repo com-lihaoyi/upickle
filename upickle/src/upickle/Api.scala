@@ -99,24 +99,61 @@ trait AttributeTagged extends Api{
 
   def taggedExpectedMsg = "expected dictionary"
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
-    upickle.core.Util.mapContext(IndexedJsObjR.objectContext(index)) { x =>
-      val keyAttr = x.value0.find(_._1.toString == tagName).get._2
-      val key = keyAttr.asInstanceOf[IndexedJs.Str].value0.toString
-      val delegate = taggedReader.findReader(key)
-      if (delegate == null){
-        throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil)
+    var res = null.asInstanceOf[T]
+    new upickle.jawn.RawFContext[Any, T]{
+      var typeName: String = null
+
+      var delegateCtx: RawFContext[Any, T] = null
+
+      var typeFirst = false
+      def visitKey(s: CharSequence, index: Int): Unit = {
+        if (s.toString == tagName) typeFirst = true
+        else delegateCtx.visitKey(s, index)
       }
-      val ctx = delegate.objectContext(-1)
-      for (p <- x.value0) {
-        val (k0, v) = p
-        val k = k0.toString
-        if (k != tagName){
-          ctx.visitKey(k, -1)
-          ctx.add(visitors.JsVisitor.visit(v, ctx.facade), -1)
+
+      def facade = {
+        if (delegateCtx == null) StringReader
+        else delegateCtx.facade
+      }
+
+      def add(v: Any, index: Int): Unit = {
+        if (typeFirst && delegateCtx == null){
+          typeName = v.toString
+          val facade0 = taggedReader.findReader(typeName)
+          if (facade0 == null) {
+            throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
+          }
+          delegateCtx = facade0.objectContext(index)
+        }else{
+          delegateCtx.add(v, index)
+          res = v.asInstanceOf[T]
         }
       }
-      ctx.finish(index)
+
+      def finish(index: Int) = {
+        delegateCtx.finish(index)
+      }
+
+      def isObj = true
     }
+//    upickle.core.Util.mapContext(IndexedJsObjR.objectContext(index)) { x =>
+//      val keyAttr = x.value0.find(_._1.toString == tagName).get._2
+//      val key = keyAttr.asInstanceOf[IndexedJs.Str].value0.toString
+//      val delegate = taggedReader.findReader(key)
+//      if (delegate == null){
+//        throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil)
+//      }
+//      val ctx = delegate.objectContext(-1)
+//      for (p <- x.value0) {
+//        val (k0, v) = p
+//        val k = k0.toString
+//        if (k != tagName){
+//          ctx.visitKey(k, -1)
+//          ctx.add(visitors.JsVisitor.visit(v, ctx.facade), -1)
+//        }
+//      }
+//      ctx.finish(index)
+//    }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Facade[R], v: T): R = {
     val ctx = out.objectContext(-1)
