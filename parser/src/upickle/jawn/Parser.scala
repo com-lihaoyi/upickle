@@ -139,21 +139,19 @@ abstract class Parser[J] {
     if (c == '0') {
       j += 1
       c = at(j)
-    } else if ('1' <= c && c <= '9') {
-      while ('0' <= c && c <= '9') { j += 1; c = at(j) }
     } else {
-      die(i, "expected digit")
+      val j0 = j
+      while ('0' <= c && c <= '9') { j += 1; c = at(j) }
+      if (j == j0) die(i, "expected digit")
     }
 
     if (c == '.') {
       decIndex = j - i
       j += 1
       c = at(j)
-      if ('0' <= c && c <= '9') {
-        while ('0' <= c && c <= '9') { j += 1; c = at(j) }
-      } else {
-        die(i, "expected digit")
-      }
+      val j0 = j
+      while ('0' <= c && c <= '9') { j += 1; c = at(j) }
+      if (j0 == j) die(i, "expected digit")
     }
 
     if (c == 'e' || c == 'E') {
@@ -164,11 +162,9 @@ abstract class Parser[J] {
         j += 1
         c = at(j)
       }
-      if ('0' <= c && c <= '9') {
-        while ('0' <= c && c <= '9') { j += 1; c = at(j) }
-      } else {
-        die(i, "expected digit")
-      }
+      val j0 = j
+      while ('0' <= c && c <= '9') { j += 1; c = at(j) }
+      if (j0 == j)  die(i, "expected digit")
     }
 
     ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
@@ -207,7 +203,8 @@ abstract class Parser[J] {
         return j
       }
       c = at(j)
-    } else if ('1' <= c && c <= '9') {
+    } else {
+      val j0 = j
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
@@ -216,8 +213,7 @@ abstract class Parser[J] {
         }
         c = at(j)
       }
-    } else {
-      die(i, "expected digit")
+      if (j0 == j) die(i, "expected digit")
     }
 
     if (c == '.') {
@@ -225,18 +221,16 @@ abstract class Parser[J] {
       decIndex = j - i
       j += 1
       c = at(j)
-      if ('0' <= c && c <= '9') {
-        while ('0' <= c && c <= '9') {
-          j += 1
-          if (atEof(j)) {
-            ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
-            return j
-          }
-          c = at(j)
+      val j0 = j
+      while ('0' <= c && c <= '9') {
+        j += 1
+        if (atEof(j)) {
+          ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
+          return j
         }
-      } else {
-        die(i, "expected digit")
+        c = at(j)
       }
+      if(j0 == j) die(i, "expected digit")
     }
 
     if (c == 'e' || c == 'E') {
@@ -248,18 +242,16 @@ abstract class Parser[J] {
         j += 1
         c = at(j)
       }
-      if ('0' <= c && c <= '9') {
-        while ('0' <= c && c <= '9') {
-          j += 1
-          if (atEof(j)) {
-            ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
-            return j
-          }
-          c = at(j)
+      val j0 = j
+      while ('0' <= c && c <= '9') {
+        j += 1
+        if (atEof(j)) {
+          ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
+          return j
         }
-      } else {
-        die(i, "expected digit")
+        c = at(j)
       }
+      if (j0 == j) die(i, "expected digit")
     }
 
     ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
