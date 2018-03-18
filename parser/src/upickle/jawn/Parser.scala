@@ -7,9 +7,13 @@ import java.nio.charset.Charset
 import scala.annotation.{switch, tailrec}
 import scala.util.Try
 
-case class ParseException(clue: String, index: Int, line: Int, col: Int) extends Exception(clue + " at index " + index)
+sealed trait ParsingFailedException extends Exception
 
-case class IncompleteParseException(msg: String, cause: Throwable) extends Exception(msg, cause)
+case class ParseException(clue: String, index: Int, line: Int, col: Int)
+  extends Exception(clue + " at index " + index) with ParsingFailedException
+
+case class IncompleteParseException(msg: String, cause: Throwable)
+  extends Exception(msg, cause) with ParsingFailedException
 
 /**
  * Parser implements a state machine for correctly parsing JSON data.

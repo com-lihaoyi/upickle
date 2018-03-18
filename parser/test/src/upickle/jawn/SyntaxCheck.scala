@@ -1,3 +1,4 @@
+package upickle
 package jawn
 package parser
 
@@ -69,10 +70,6 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
     val r2 = Parser.parseFromByteBuffer(bb)(NullFacade).isSuccess
     if (r0 == r1) r1 else sys.error(s"CharSequence/String parsing disagree($r0, $r1): $s")
     if (r1 == r2) r1 else sys.error(s"String/ByteBuffer parsing disagree($r1, $r2): $s")
-
-    TestUtil.withTemp(s) { t =>
-      Parser.parseFromFile(t)(NullFacade).isSuccess
-    }
 
     val async = AsyncParser[Unit](AsyncParser.SingleValue)
     val r3 = async.absorb(s)(NullFacade).isRight && async.finish()(NullFacade).isRight

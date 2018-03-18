@@ -1,11 +1,17 @@
 import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._
 
+trait CommonModule extends ScalaModule {
 
-trait UpickleModule extends CrossScalaModule with PublishModule{
+  def platformSegment: String
 
+  def sources = T.sources(
+    millSourcePath / "src",
+    millSourcePath / s"src-$platformSegment"
+  )
+}
+trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
   def artifactName = "mill-" + super.artifactName()
   def publishVersion = "0.5.1"
-  def millSourcePath = build.millSourcePath / "upickle"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -19,6 +25,40 @@ trait UpickleModule extends CrossScalaModule with PublishModule{
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
   )
+}
+
+trait JawnTestModule extends TestModule with CommonModule{
+  def ivyDeps = Agg(
+    ivy"org.scalatest::scalatest::3.0.3",
+    ivy"org.scalacheck::scalacheck::1.13.5"
+  )
+  def testFrameworks = Seq("org.scalatest.tools.Framework")
+}
+object parserJs extends Cross[JawnJsModule]("2.11.11", "2.12.4")
+class JawnJsModule(val crossScalaVersion: String) extends CommonPublishModule with ScalaJSModule {
+  def millSourcePath = build.millSourcePath / "parser"
+  def scalaJSVersion = "0.6.22"
+  def platformSegment = "js"
+  def generatedSources = Nil
+
+  object test extends Tests with JawnTestModule {
+    def platformSegment = "js"
+  }
+}
+
+object parserJvm extends Cross[JawnJvmModule]("2.11.11", "2.12.4")
+class JawnJvmModule(val crossScalaVersion: String) extends CommonPublishModule{
+  def millSourcePath = build.millSourcePath / "parser"
+  def platformSegment = "jvm"
+  def generatedSources = Nil
+
+  object test extends Tests with JawnTestModule {
+    def platformSegment = "jvm"
+  }
+}
+
+trait UpickleModule extends CommonPublishModule{
+  def millSourcePath = build.millSourcePath / "upickle"
   def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
     ivy"com.lihaoyi::acyclic:0.1.5"
   )
@@ -30,7 +70,8 @@ trait UpickleModule extends CrossScalaModule with PublishModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::sourcecode::0.1.3"
   )
-  def scalacOptions = Seq("-unchecked",
+  def scalacOptions = Seq(
+    "-unchecked",
     "-deprecation",
     "-encoding", "utf8",
     "-feature"
@@ -76,11 +117,9 @@ trait UpickleModule extends CrossScalaModule with PublishModule{
     """)
     Seq(PathRef(dir))
   }
-
 }
 
-trait UpickleTestModule extends TestModule{
-
+trait UpickleTestModule extends TestModule with CommonModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::utest::0.6.0",
     ivy"com.lihaoyi::acyclic:0.1.5"
@@ -89,34 +128,14 @@ trait UpickleTestModule extends TestModule{
   def testFrameworks = Seq("upickle.UTestFramework")
 }
 
-object parserJs extends Cross[JawnJsModule]("2.11.11", "2.12.4")
-class JawnJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
-  def scalaJSVersion = "0.6.22"
-  def platformSegment = "js"
-  def millSourcePath = build.millSourcePath / "parser"
-  def generatedSources = Nil
-
-  object test extends Tests with UpickleTestModule{
-    def platformSegment = "js"
-    def millSourcePath = build.millSourcePath / "parser"
-  }
-}
-
-object parserJvm extends Cross[JawnJvmModule]("2.11.11", "2.12.4")
-class JawnJvmModule(val crossScalaVersion: String) extends UpickleModule{
-  def millSourcePath = build.millSourcePath / "parser"
-  def generatedSources = Nil
-
-  object test extends Tests with UpickleTestModule{
-  }
-}
 
 object upickleJvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
 class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
+  def platformSegment = "jvm"
   def moduleDeps = Seq(parserJvm())
 
   object test extends Tests with UpickleTestModule{
-
+    def platformSegment = "jvm"
   }
 }
 
@@ -148,6 +167,4 @@ object test extends ScalaModule{
     ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
     ivy"com.typesafe.play::play-json:2.6.7"
   )
-  def sources = T.sources{millSourcePath}
 }
-

@@ -77,7 +77,7 @@ final class AsyncParser[J] protected[jawn] (
   final def copy() =
     new AsyncParser(state, curr, stack, data.clone, len, allocated, offset, done, streamMode)
 
-  final def absorb(buf: ByteBuffer)(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] = {
+  final def absorb(buf: ByteBuffer)(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = false
     val buflen = buf.limit - buf.position
     val need = len + buflen
@@ -87,15 +87,16 @@ final class AsyncParser[J] protected[jawn] (
     churn()
   }
 
-  final def absorb(bytes: Array[Byte])(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] =
+  final def absorb(bytes: Array[Byte])(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] =
     absorb(ByteBuffer.wrap(bytes))
 
-  final def absorb(s: String)(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] =
+  final def absorb(s: String)(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] =
     absorb(ByteBuffer.wrap(s.getBytes(utf8)))
 
-  final def finish()(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] = {
+  final def finish()(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = true
-    churn()
+    try churn()
+    catch{case e: ParsingFailedException => Left(e)}
   }
 
   protected[this] final def resizeIfNecessary(need: Int): Unit = {
@@ -140,7 +141,7 @@ final class AsyncParser[J] protected[jawn] (
   @inline private[this] final def ASYNC_POSTVAL = -2
   @inline private[this] final def ASYNC_PREVAL = -1
 
-  protected[jawn] def churn()(implicit facade: RawFacade[_, J]): Either[ParseException, Seq[J]] = {
+  protected[jawn] def churn()(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] = {
 
     // accumulates json values
     val results = mutable.ArrayBuffer.empty[J]
@@ -231,7 +232,7 @@ final class AsyncParser[J] protected[jawn] (
         if (done) {
           // if we are done, make sure we ended at a good stopping point
           if (state == ASYNC_PREVAL || state == ASYNC_END) Right(results)
-          else Left(ParseException("exhausted input", -1, -1, -1))
+          else Left(IncompleteParseException("exhausted input", e))
         } else {
           // we ran out of data, so return what we have so far
           Right(results)

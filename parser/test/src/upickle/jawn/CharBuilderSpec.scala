@@ -1,3 +1,4 @@
+package upickle
 package jawn
 
 import org.scalatest._
