@@ -27,33 +27,33 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
   )
 }
 
-trait JawnTestModule extends TestModule with CommonModule{
-  def ivyDeps = Agg(
-    ivy"org.scalatest::scalatest::3.0.3",
-    ivy"org.scalacheck::scalacheck::1.13.5"
-  )
-  def testFrameworks = Seq("org.scalatest.tools.Framework")
-}
-object parserJs extends Cross[JawnJsModule]("2.11.11", "2.12.4")
-class JawnJsModule(val crossScalaVersion: String) extends CommonPublishModule with ScalaJSModule {
+trait JawnModule extends CommonPublishModule{
   def millSourcePath = build.millSourcePath / "parser"
-  def scalaJSVersion = "0.6.22"
-  def platformSegment = "js"
-  def generatedSources = Nil
-
-  object test extends Tests with JawnTestModule {
-    def platformSegment = "js"
+  trait JawnTestModule extends Tests with CommonModule{
+    def platformSegment = JawnModule.this.platformSegment
+    def ivyDeps = Agg(
+      ivy"org.scalatest::scalatest::3.0.3",
+      ivy"org.scalacheck::scalacheck::1.13.5"
+    )
+    def testFrameworks = Seq("org.scalatest.tools.Framework")
   }
 }
 
-object parserJvm extends Cross[JawnJvmModule]("2.11.11", "2.12.4")
-class JawnJvmModule(val crossScalaVersion: String) extends CommonPublishModule{
-  def millSourcePath = build.millSourcePath / "parser"
-  def platformSegment = "jvm"
-  def generatedSources = Nil
+object parser extends Module{
+  object js extends Cross[JawnJsModule]("2.11.11", "2.12.4")
+  class JawnJsModule(val crossScalaVersion: String) extends JawnModule with ScalaJSModule {
 
-  object test extends Tests with JawnTestModule {
+    def scalaJSVersion = "0.6.22"
+    def platformSegment = "js"
+
+    object test extends JawnTestModule
+  }
+
+  object jvm extends Cross[JawnJvmModule]("2.11.11", "2.12.4")
+  class JawnJvmModule(val crossScalaVersion: String) extends JawnModule{
     def platformSegment = "jvm"
+
+    object test extends JawnTestModule
   }
 }
 
@@ -117,43 +117,42 @@ trait UpickleModule extends CommonPublishModule{
     """)
     Seq(PathRef(dir))
   }
+  trait UpickleTestModule extends Tests with CommonModule{
+    def platformSegment = UpickleModule.this.platformSegment
+    def ivyDeps = Agg(
+      ivy"com.lihaoyi::utest::0.6.0",
+      ivy"com.lihaoyi::acyclic:0.1.5"
+    )
+
+    def testFrameworks = Seq("upickle.UTestFramework")
+  }
 }
 
-trait UpickleTestModule extends TestModule with CommonModule{
-  def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.6.0",
-    ivy"com.lihaoyi::acyclic:0.1.5"
-  )
-
-  def testFrameworks = Seq("upickle.UTestFramework")
-}
 
 
-object upickleJvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
-class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
-  def platformSegment = "jvm"
-  def moduleDeps = Seq(parserJvm())
-
-  object test extends Tests with UpickleTestModule{
+object upickle extends Module{
+  object jvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
+  class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
     def platformSegment = "jvm"
-  }
-}
+    def moduleDeps = Seq(parser.jvm())
 
-object upickleJs extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
-class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
-  def moduleDeps = Seq(parserJs())
-  def platformSegment = "js"
-
-  def scalaJSVersion = "0.6.22"
-  def scalacOptions = T{
-    super.scalacOptions() ++ Seq({
-      val a = build.millSourcePath.toString.replaceFirst("[^/]+/?$", "")
-      val g = "https://raw.githubusercontent.com/lihaoyi/upickle"
-      s"-P:scalajs:mapSourceURI:$a->$g/v${publishVersion()}/"
-    })
+    object test extends UpickleTestModule
   }
-  object test extends Tests with UpickleTestModule{
+
+  object js extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
+  class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
+    def moduleDeps = Seq(parser.js())
     def platformSegment = "js"
+
+    def scalaJSVersion = "0.6.22"
+    def scalacOptions = T{
+      super.scalacOptions() ++ Seq({
+        val a = build.millSourcePath.toString.replaceFirst("[^/]+/?$", "")
+        val g = "https://raw.githubusercontent.com/lihaoyi/upickle"
+        s"-P:scalajs:mapSourceURI:$a->$g/v${publishVersion()}/"
+      })
+    }
+    object test extends UpickleTestModule
   }
 }
 
@@ -172,13 +171,12 @@ object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
     def scalaJSVersion = "0.6.22"
     def platformSegment = "js"
-    def moduleDeps = Seq(upickleJs("2.12.4").test)
-
+    def moduleDeps = Seq(upickle.js("2.12.4").test)
   }
 
   object jvm extends BenchModule {
     def platformSegment = "jvm"
-    def moduleDeps = Seq(upickleJvm("2.12.4").test)
+    def moduleDeps = Seq(upickle.jvm("2.12.4").test)
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
     )

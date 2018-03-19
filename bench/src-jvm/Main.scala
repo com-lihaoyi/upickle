@@ -11,7 +11,11 @@ import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 
 
 object Main{
-
+  import ADTs.ADT0
+  import Defaults._
+  import Generic.ADT
+  import Hierarchy._
+  import Recursive._
   def main(args: Array[String]): Unit = {
     for(duration <- Seq(5000, 50000)){
       println("RUN JVM: " + duration)
@@ -75,10 +79,10 @@ object Main{
     )
     mapper.registerModule(m)
 
-    val jacksonType = new TypeReference[Data] {}
+    val jacksonType = new TypeReference[Common.Data] {}
 
-    bench("jackson", duration)(
-      mapper.readValue[Data](_, jacksonType),
+    Common.bench("jackson", duration)(
+      mapper.readValue[Common.Data](_, jacksonType),
       mapper.writeValueAsString(_)
     )
   }
