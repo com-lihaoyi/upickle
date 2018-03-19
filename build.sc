@@ -157,14 +157,30 @@ class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with 
   }
 }
 
-object test extends ScalaModule{
+trait BenchModule extends CommonModule{
   def scalaVersion = "2.12.4"
-  def moduleDeps = Seq(upickleJvm("2.12.4").test)
+  def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
-    ivy"io.circe::circe-core:0.9.1",
-    ivy"io.circe::circe-generic:0.9.1",
-    ivy"io.circe::circe-parser:0.9.1",
-    ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
-    ivy"com.typesafe.play::play-json:2.6.7"
+    ivy"io.circe::circe-core::0.9.1",
+    ivy"io.circe::circe-generic::0.9.1",
+    ivy"io.circe::circe-parser::0.9.1",
+    ivy"com.typesafe.play::play-json::2.6.7"
   )
+}
+
+object bench extends Module {
+  object js extends BenchModule with ScalaJSModule {
+    def scalaJSVersion = "0.6.22"
+    def platformSegment = "js"
+    def moduleDeps = Seq(upickleJs("2.12.4").test)
+
+  }
+
+  object jvm extends BenchModule {
+    def platformSegment = "jvm"
+    def moduleDeps = Seq(upickleJvm("2.12.4").test)
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
+    )
+  }
 }
