@@ -2,21 +2,20 @@ package upickle
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.`type`.TypeReference
-import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.databind.node.{IntNode, ObjectNode}
 import com.fasterxml.jackson.databind.util.TokenBuffer
+import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 
 
 object Main{
+  import ADTs.ADT0
+  import Defaults._
   import Generic.ADT
   import Hierarchy._
   import Recursive._
-  import Defaults._
-  import ADTs.ADT0
   type Data = ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]
   def benchmarkSampledata: Data = ADT(
     Vector((1, 2), (3, 4), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13)),
@@ -105,7 +104,9 @@ object Main{
 
   }
   def circe(duration: Int) = {
-    import io.circe._, io.circe.parser._, io.circe.generic.semiauto._
+    import io.circe._
+    import io.circe.generic.semiauto._
+    import io.circe.parser._
 
     implicit def _r1: Decoder[Data] = deriveDecoder
     implicit def _r2: Decoder[A] = deriveDecoder
@@ -162,7 +163,7 @@ object Main{
   }
 
   def upickleLegacy(duration: Int) = {
-    import upickle.legacy.{macroRW, ReadWriter => RW, Reader => R, Writer => W}
+    import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
 
     implicit def rw1: RW[Data] = upickle.legacy.macroRW
     implicit def rw2: RW[A] = upickle.legacy.macroRW
@@ -190,7 +191,9 @@ object Main{
     )
   }
   def circeCached(duration: Int) = {
-    import io.circe._, io.circe.parser._, io.circe.generic.semiauto._
+    import io.circe._
+    import io.circe.generic.semiauto._
+    import io.circe.parser._
 
     implicit lazy val _r1: Decoder[Data] = deriveDecoder
     implicit lazy val _r2: Decoder[A] = deriveDecoder
@@ -248,7 +251,7 @@ object Main{
   }
 
   def upickleLegacyCached(duration: Int) = {
-    import upickle.legacy.{macroRW, ReadWriter => RW, Reader => R, Writer => W}
+    import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
 
     implicit lazy val rw1: RW[Data] = upickle.legacy.macroRW
     implicit lazy val rw2: RW[A] = upickle.legacy.macroRW
