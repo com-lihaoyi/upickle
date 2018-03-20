@@ -15,7 +15,7 @@ import scala.reflect.ClassTag
  * its behavior. Override the `annotate` methods to control how a sealed
  * trait instance is tagged during reading and writing.
  */
-trait Api extends upickle.core.Types with api.Implicits {
+trait Api extends upickle.core.Types with api.Implicits with WebJson{
   def read[T: Reader](s: String) = {
     upickle.jawn.Parser.parseUnsafe(s)(implicitly[Reader[T]])
   }
@@ -36,7 +36,8 @@ object default extends AttributeTagged{
  * An instance of the upickle API that follows the old serialization for
  * tagged instances of sealed traits.
  */
-object legacy extends Api{
+object legacy extends LegacyApi
+trait LegacyApi extends Api{
   def annotate[V](rw: Reader[V], n: String) = new TaggedReader.Leaf[V](n, rw)
 
   def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]) = {

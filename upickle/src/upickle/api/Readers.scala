@@ -128,7 +128,9 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
-      def add(v: Any, index: Int): Unit = b += v.asInstanceOf[T]
+      def add(v: Any, index: Int): Unit = {
+        b += v.asInstanceOf[T]
+      }
 
       def finish(index: Int) = b.result()
 

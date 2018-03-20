@@ -264,9 +264,7 @@ object Macros {
         )
 
         new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
-
           override def objectContext(index: Int) = new CaseObjectContext{
-
             def visitKey(s: CharSequence, index: Int): Unit = {
               currentIndex = s.toString match {
                 case ..${

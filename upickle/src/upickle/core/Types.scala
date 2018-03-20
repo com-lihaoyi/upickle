@@ -169,6 +169,7 @@ trait Types{ types =>
   }
 
   class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends Reader[V]{
+
     override def expectedMsg = "expected sequence"
     override def arrayContext(index: Int) = new upickle.jawn.RawFContext[Any, V] {
       val b = new Array[Any](readers.length)
@@ -190,6 +191,7 @@ trait Types{ types =>
           )
         }
         start = facadesIndex
+
         f(b)
 
       }
@@ -203,7 +205,6 @@ trait Types{ types =>
   abstract class CaseR[V](val argCount: Int) extends Reader[V]{
     override def expectedMsg = "expected dictionary"
     trait CaseObjectContext extends upickle.jawn.RawFContext[Any, V]{
-
       val aggregated = new Array[Any](argCount)
       val found = new Array[Boolean](argCount)
       var currentIndex = -1

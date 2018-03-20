@@ -172,19 +172,19 @@ object bench extends Module {
     def scalaJSVersion = "0.6.22"
     def platformSegment = "js"
     def moduleDeps = Seq(upickle.js("2.12.4").test)
-    def run(args: String*) = T.command {
-      finalMainClassOpt() match{
-        case Left(err) => mill.eval.Result.Failure(err)
-        case Right(_) =>
-          ScalaJSBridge.scalaJSBridge().run(
-            toolsClasspath().map(_.path),
-            nodeJSConfig(),
-            fullOpt().path.toIO
-          )
-          mill.eval.Result.Success(())
-      }
-
-    }
+//    def run(args: String*) = T.command {
+//      finalMainClassOpt() match{
+//        case Left(err) => mill.eval.Result.Failure(err)
+//        case Right(_) =>
+//          ScalaJSBridge.scalaJSBridge().run(
+//            toolsClasspath().map(_.path),
+//            nodeJSConfig(),
+//            fullOpt().path.toIO
+//          )
+//          mill.eval.Result.Success(())
+//      }
+//
+//    }
   }
 
   object jvm extends BenchModule {
