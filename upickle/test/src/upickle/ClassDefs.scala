@@ -66,7 +66,9 @@ object Hierarchy {
   }
 
   object Z{
-    implicit def rw: upickle.default.ReadWriter[Z] = default.macroRW
+    implicit def rw: upickle.default.ReadWriter[Z] = RW.merge(
+      implicitly[upickle.default.ReadWriter[AnZ.type]]
+    )
   }
   sealed trait Z //new line
   case object AnZ extends Z //new line
