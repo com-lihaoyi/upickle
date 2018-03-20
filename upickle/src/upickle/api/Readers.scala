@@ -258,17 +258,17 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit def JsNullR: Reader[Js.Null.type] = JsValueR.narrow[Js.Null.type]
 
-  implicit object IndexedJsValueR extends Reader[IndexedJs.Value]{
+  implicit object IndexedJsValueR extends Reader[IndexedJs]{
     override def objectContext(index: Int) = {
       new RawFContext[Any, IndexedJs.Obj] {
-        val output = mutable.Buffer.empty[(String, IndexedJs.Value)]
+        val output = mutable.Buffer.empty[(String, IndexedJs)]
         var lastKey: String = null
         def facade = IndexedJsValueR
 
         def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
 
         def add(v: Any, index: Int): Unit = {
-          output.append((lastKey, v.asInstanceOf[IndexedJs.Value]))
+          output.append((lastKey, v.asInstanceOf[IndexedJs]))
         }
 
         def finish(index: Int) = IndexedJs.Obj(index, output:_*)
@@ -278,13 +278,13 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
     override def arrayContext(index: Int) = {
       new RawFContext[Any, IndexedJs.Arr] {
-        val output = mutable.Buffer.empty[IndexedJs.Value]
+        val output = mutable.Buffer.empty[IndexedJs]
         def facade = IndexedJsValueR
 
         def visitKey(s: CharSequence, index: Int): Unit = ???
 
         def add(v: Any, index: Int): Unit = {
-          output.append(v.asInstanceOf[IndexedJs.Value])
+          output.append(v.asInstanceOf[IndexedJs])
         }
 
         def finish(index: Int) = IndexedJs.Arr(index, output:_*)

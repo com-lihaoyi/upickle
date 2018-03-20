@@ -17,8 +17,8 @@ trait WebJson extends upickle.core.Types {
     }
   }
 }
-object WebJson{
-  def visit[T](j: Any, f: upickle.jawn.RawFacade[_, T]): T = {
+object WebJson extends jawn.Visitor[js.Any]{
+  def visit[T](j: js.Any, f: upickle.jawn.RawFacade[_, T]): T = {
     (j: Any) match{
       case s: String => f.jstring(s, -1)
       case n: Double =>
@@ -27,7 +27,7 @@ object WebJson{
       case true => f.jtrue(-1)
       case false => f.jfalse(-1)
       case null => f.jnull(-1)
-      case s: js.Array[_] =>
+      case s: js.Array[js.Any] =>
         val ctx = f.arrayContext(-1).asInstanceOf[RawFContext[Any, T]]
         for(i <- s) ctx.add(visit(i, ctx.facade), -1)
         ctx.finish(-1)

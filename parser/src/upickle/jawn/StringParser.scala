@@ -23,3 +23,7 @@ private[jawn] final class StringParser[J](s: String) extends SyncParser[J] with 
   final def atEof(i: Int) = i == s.length
   final def close() = ()
 }
+
+object StringParser extends Visitor[String]{
+  def visit[T](j: String, f: RawFacade[_, T]) = new StringParser(j).parse()(f)
+}

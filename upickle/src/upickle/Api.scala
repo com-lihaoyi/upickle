@@ -165,7 +165,7 @@ trait AttributeTagged extends Api{
             val k = k0.toString
             if (k != tagName){
               ctx2.visitKey(k, -1)
-              ctx2.add(visitors.JsVisitor.visit(v, ctx2.facade), -1)
+              ctx2.add(IndexedJs.visit(v, ctx2.facade), -1)
             }
           }
           ctx2.finish(index)

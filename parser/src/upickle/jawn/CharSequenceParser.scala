@@ -16,3 +16,7 @@ private[jawn] final class CharSequenceParser[J](cs: CharSequence) extends SyncPa
   final def atEof(i: Int) = i == cs.length
   final def close() = ()
 }
+
+object CharSequenceParser extends Visitor[CharSequence]{
+  def visit[T](j: CharSequence, f: RawFacade[_, T]) = new CharSequenceParser(j).parse()(f)
+}
