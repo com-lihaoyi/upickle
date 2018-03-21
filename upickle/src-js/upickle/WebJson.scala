@@ -17,7 +17,7 @@ trait WebJson extends upickle.core.Types {
     }
   }
 }
-object WebJson extends jawn.Visitor[js.Any]{
+object WebJson extends jawn.Walker[js.Any]{
   def visit[T](j: js.Any, f: upickle.jawn.RawFacade[_, T]): T = {
     (j: Any) match{
       case s: String => f.jstring(s, -1)

@@ -5,7 +5,7 @@ import java.io.{File, FileInputStream}
 import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
 
-object ChannelParser extends Visitor[ReadableByteChannel]{
+object ChannelParser extends Walker[ReadableByteChannel]{
   def visit[T](j: ReadableByteChannel, f: RawFacade[_, T]) = {
     new ChannelParser(j, DefaultBufferSize).parse()(f)
   }

@@ -7,7 +7,7 @@ import upickle.jawn.{AbortJsonProcessingException, JsonProcessingException, RawF
 import scala.collection.mutable
 
 
-object JsVisitor extends jawn.Visitor[Js.Value]{
+object JsVisitor extends jawn.Walker[Js.Value]{
   def visit[T](j: Js.Value, f: upickle.jawn.RawFacade[_, T]): T = {
     j match{
       case Js.Null => f.jnull(-1)

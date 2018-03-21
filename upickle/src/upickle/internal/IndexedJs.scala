@@ -1,6 +1,6 @@
 package upickle.internal
 
-import upickle.jawn.{RawFContext, Visitor}
+import upickle.jawn.{RawFContext, Walker}
 import upickle.visitors.JsVisitor.{reject, visit}
 
 import scala.collection.mutable
@@ -14,7 +14,7 @@ import scala.collection.mutable
 sealed trait IndexedJs {
   def index: Int
 }
-object IndexedJs extends Visitor[IndexedJs]{
+object IndexedJs extends Walker[IndexedJs]{
   
   case class Str(index: Int, value0: java.lang.CharSequence) extends IndexedJs
   case class Obj(index: Int, value0: (java.lang.CharSequence, IndexedJs)*) extends IndexedJs

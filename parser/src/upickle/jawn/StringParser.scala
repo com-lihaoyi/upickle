@@ -24,6 +24,6 @@ private[jawn] final class StringParser[J](s: String) extends SyncParser[J] with 
   final def close() = ()
 }
 
-object StringParser extends Visitor[String]{
+object StringParser extends Walker[String]{
   def visit[T](j: String, f: RawFacade[_, T]) = new StringParser(j).parse()(f)
 }

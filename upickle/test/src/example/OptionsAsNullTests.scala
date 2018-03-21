@@ -51,8 +51,8 @@ object OptionsAsNullTests extends TestSuite {
         read[String]("\"A String\"") ==> "A String"
         write(1) ==> "1"
         read[Int]("1") ==> 1
-        write(Thing(1, "gg")) ==> """{"myFieldA": 1, "myFieldB": "gg"}"""
-        read[Thing]("""{"myFieldA": 1, "myFieldB": "gg"}""") ==> Thing(1, "gg")
+        write(Thing(1, "gg")) ==> """{"myFieldA":1,"myFieldB":"gg"}"""
+        read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> Thing(1, "gg")
       }
 
       'none {
@@ -75,21 +75,21 @@ object OptionsAsNullTests extends TestSuite {
       }
 
       'caseClass {
-        write(Opt(None, None)) ==> """{"a": null, "b": null}"""
-        read[Opt]("""{"a": null, "b": null}""") ==> Opt(None, None)
-        write(Opt(Some("abc"), Some(1))) ==> """{"a": "abc", "b": 1}"""
+        write(Opt(None, None)) ==> """{"a":null,"b":null}"""
+        read[Opt]("""{"a":null,"b":null}""") ==> Opt(None, None)
+        write(Opt(Some("abc"), Some(1))) ==> """{"a":"abc","b":1}"""
       }
 
       'optionCaseClass {
         implicit val thingReader = implicitly[Reader[Thing]]
         implicit val thingWriter = implicitly[Writer[Thing]]
 
-        write(Opt(None, None)) ==> """{"a": null, "b": null}"""
-        read[Opt]("""{"a": null, "b": null}""") ==> Opt(None, None)
-        write(Opt(Some("abc"), Some(1))) ==> """{"a": "abc", "b": 1}"""
+        write(Opt(None, None)) ==> """{"a":null,"b":null}"""
+        read[Opt]("""{"a":null,"b":null}""") ==> Opt(None, None)
+        write(Opt(Some("abc"), Some(1))) ==> """{"a":"abc","b":1}"""
 
-        write(Option(Thing(1, "gg"))) ==> """{"myFieldA": 1, "myFieldB": "gg"}"""
-        read[Option[Thing]]("""{"myFieldA": 1, "myFieldB": "gg"}""") ==> Option(Thing(1, "gg"))
+        write(Option(Thing(1, "gg"))) ==> """{"myFieldA":1,"myFieldB":"gg"}"""
+        read[Option[Thing]]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> Option(Thing(1, "gg"))
       }
 
     }

@@ -16,9 +16,9 @@ import scala.reflect.ClassTag
  * trait instance is tagged during reading and writing.
  */
 trait Api extends upickle.core.Types with api.Implicits with WebJson{
-  def read[T: Reader](s: String) = {
-    upickle.jawn.Parser.parseUnsafe(s)(implicitly[Reader[T]])
-  }
+  def read[T: Reader](s: Source) = s.apply(implicitly[Reader[T]])
+
+
   def write[T: Writer](t: T, indent: Int = -1) = {
     val out = new java.io.StringWriter()
     implicitly[Writer[T]].write(new visitors.Renderer(out, indent = indent), t)

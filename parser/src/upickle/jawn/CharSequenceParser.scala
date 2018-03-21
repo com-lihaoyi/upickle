@@ -17,6 +17,6 @@ private[jawn] final class CharSequenceParser[J](cs: CharSequence) extends SyncPa
   final def close() = ()
 }
 
-object CharSequenceParser extends Visitor[CharSequence]{
+object CharSequenceParser extends Walker[CharSequence]{
   def visit[T](j: CharSequence, f: RawFacade[_, T]) = new CharSequenceParser(j).parse()(f)
 }

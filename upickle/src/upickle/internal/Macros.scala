@@ -346,9 +346,11 @@ object Macros {
 
       def write(i: Int) = {
         q"""
-           ctx.visitKey(${mappedArgs(i)}, -1)
-           val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
-           ctx.add(w.write(out, v.${TermName(rawArgs(i))}), -1)
+          if (${!hasDefaults(i)} || v.${TermName(rawArgs(i))} != ${defaults(i)}){
+            ctx.visitKey(${mappedArgs(i)}, -1)
+            val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
+            ctx.add(w.write(out, v.${TermName(rawArgs(i))}), -1)
+          }
          """
       }
       q"""
