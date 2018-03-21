@@ -14,7 +14,7 @@ import scala.util.{Try, Success, Failure}
 class FileSyntaxCheck extends SyntaxCheck {
   override def isValidSyntax(s: String): Boolean = {
     TestUtil.withTemp(s) { t =>
-      Try(Source.fromFile(t).apply(NullFacade)).isSuccess
+      Try(Source.fromFile(t).apply(NoOpVisitor)).isSuccess
     }
   }
 }

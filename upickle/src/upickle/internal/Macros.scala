@@ -282,6 +282,7 @@ object Macros {
                 yield q"if (!found($i)) {count += 1; found($i) = true; aggregated($i) = ${defaults(i)}}"
               }
               if (count != argCount){
+                var i = 0
                 val keys = for{
                   i <- 0 until ${rawArgs.length}
                   if !found(i)
@@ -306,7 +307,7 @@ object Macros {
             }
 
             def subVisitor: upickle.jawn.Visitor[_, _] =
-              if (currentIndex == -1) upickle.jawn.NullFacade
+              if (currentIndex == -1) upickle.jawn.NoOpVisitor
               else localReaders(currentIndex)
           }
         }

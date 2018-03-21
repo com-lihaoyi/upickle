@@ -64,15 +64,15 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
 
   def isValidSyntax(s: String): Boolean = {
     val cs = java.nio.CharBuffer.wrap(s.toCharArray)
-    val r0 = Try(CharSequenceParser.visit(cs, NullFacade)).isSuccess
-    val r1 = Try(StringParser.visit(s, NullFacade)).isSuccess
+    val r0 = Try(CharSequenceParser.visit(cs, NoOpVisitor)).isSuccess
+    val r1 = Try(StringParser.visit(s, NoOpVisitor)).isSuccess
     val bb = ByteBuffer.wrap(s.getBytes("UTF-8"))
-    val r2 = Try(ByteBufferParser.visit(bb, NullFacade)).isSuccess
+    val r2 = Try(ByteBufferParser.visit(bb, NoOpVisitor)).isSuccess
     if (r0 == r1) r1 else sys.error(s"CharSequence/String parsing disagree($r0, $r1): $s")
     if (r1 == r2) r1 else sys.error(s"String/ByteBuffer parsing disagree($r1, $r2): $s")
 
     val async = AsyncParser[Unit](AsyncParser.SingleValue)
-    val r3 = async.absorb(s)(NullFacade).isRight && async.finish()(NullFacade).isRight
+    val r3 = async.absorb(s)(NoOpVisitor).isRight && async.finish()(NoOpVisitor).isRight
     if (r1 == r3) r1 else sys.error(s"Sync/Async parsing disagree($r1, $r3): $s")
   }
 

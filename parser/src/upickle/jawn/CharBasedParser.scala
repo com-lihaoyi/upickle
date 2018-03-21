@@ -13,7 +13,7 @@ import scala.annotation.{switch, tailrec}
  */
 trait CharBasedParser[J] extends Parser[J] {
 
-  private[this] final val charBuilder = new CharBuilder()
+  private[this] final val charBuilder = new upickle.jawn.util.CharBuilder()
 
   /**
    * See if the string has any escape sequences. If not, return the

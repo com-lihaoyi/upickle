@@ -45,7 +45,7 @@ trait ByteBasedParser[J] extends Parser[J] {
     // one go.
 
     var j = i + 1
-    val sb = new CharBuilder
+    val sb = new upickle.jawn.util.CharBuilder
 
     var c: Int = byte(j) & 0xff
     while (c != 34) { // "

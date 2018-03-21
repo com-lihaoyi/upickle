@@ -16,11 +16,11 @@ class ChannelSpec extends PropSpec with Matchers {
     val bigEscaped = q + ("\\\\" * (20 * M)) + q
 
     TestUtil.withTemp(big) { t =>
-      scala.util.Try(Source.fromFile(t).apply(NullFacade)).isSuccess shouldBe true
+      scala.util.Try(Source.fromFile(t).apply(NoOpVisitor)).isSuccess shouldBe true
     }
 
     TestUtil.withTemp(bigEscaped) { t =>
-      scala.util.Try(Source.fromFile(t).apply(NullFacade)).isSuccess shouldBe true
+      scala.util.Try(Source.fromFile(t).apply(NoOpVisitor)).isSuccess shouldBe true
     }
   }
 }

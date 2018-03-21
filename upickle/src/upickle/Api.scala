@@ -57,7 +57,7 @@ trait LegacyApi extends Api{
     def subVisitor = state match{
       case TaggedReaderState.Initializing => StringReader
       case TaggedReaderState.Parsing(f) => f
-      case TaggedReaderState.Parsed(res) => NullFacade
+      case TaggedReaderState.Parsed(res) => NoOpVisitor
     }
 
     def visitValue(v: Any, index: Int): Unit = state match{

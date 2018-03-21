@@ -8,7 +8,7 @@ class CharBuilderSpec extends PropSpec with Matchers with PropertyChecks {
 
   property("append") {
     forAll { xs: List[Char] =>
-      val builder = new CharBuilder
+      val builder = new upickle.jawn.util.CharBuilder
       xs.foreach(builder.append)
       builder.makeString shouldBe xs.mkString
     }
@@ -16,7 +16,7 @@ class CharBuilderSpec extends PropSpec with Matchers with PropertyChecks {
 
   property("extend") {
     forAll { xs: List[String] =>
-      val builder = new CharBuilder
+      val builder = new upickle.jawn.util.CharBuilder
       xs.foreach(builder.extend)
       builder.makeString shouldBe xs.mkString
     }

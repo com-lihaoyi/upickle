@@ -240,7 +240,7 @@ trait Types{ types =>
   class SingletonR[T](t: T) extends CaseR[T](0){
     override def expectedMsg = "expected dictionary"
     override def visitObject(index: Int) = new ObjVisitor[Any, T] {
-      def subVisitor = upickle.jawn.NullFacade
+      def subVisitor = upickle.jawn.NoOpVisitor
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 

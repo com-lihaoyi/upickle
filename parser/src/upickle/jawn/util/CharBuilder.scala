@@ -1,4 +1,4 @@
-package upickle.jawn
+package upickle.jawn.util
 
 /**
  * CharBuilder is a specialized way to build Strings.
