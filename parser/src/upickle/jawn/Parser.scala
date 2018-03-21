@@ -474,31 +474,3 @@ abstract class Parser[J] {
     }
   }
 }
-
-
-object Parser {
-
-  def parseUnsafe[J](s: String)(implicit facade: Visitor[_, J]): J =
-    new StringParser(s).parse()
-
-  def parseFromString[J](s: String)(implicit facade: Visitor[_, J]): Try[J] =
-    Try(new StringParser[J](s).parse)
-
-  def parseFromCharSequence[J](cs: CharSequence)(implicit facade: Visitor[_, J]): Try[J] =
-    Try(new CharSequenceParser[J](cs).parse)
-
-  def parseFromPath[J](path: String)(implicit facade: Visitor[_, J]): Try[J] =
-    Try(ChannelParser.fromFile[J](new File(path)).parse)
-
-  def parseFromFile[J](file: File)(implicit facade: Visitor[_, J]): Try[J] =
-    Try(ChannelParser.fromFile[J](file).parse)
-
-  def parseFromChannel[J](ch: ReadableByteChannel)(implicit facade: Visitor[_, J]): Try[J] =
-    Try(ChannelParser.fromChannel[J](ch).parse)
-
-  def parseFromByteBuffer[J](buf: ByteBuffer)(implicit facade: Visitor[_, J]): Try[J] =
-    Try(new ByteBufferParser[J](buf).parse)
-
-  def async[J](mode: AsyncParser.Mode)(implicit facade: Visitor[_, J]): AsyncParser[J] =
-    AsyncParser[J](mode)
-}

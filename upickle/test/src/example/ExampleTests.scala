@@ -211,6 +211,9 @@ object ExampleTests extends TestSuite {
       import java.nio.file.Files
       val f = Files.createTempFile("", "")
       Files.write(f, original.getBytes)
+
+      read[Thing](f) ==> Thing(1, "gg")
+      read[Thing](f.toFile) ==> Thing(1, "gg")
       read[Thing](Files.newByteChannel(f)) ==> Thing(1, "gg")
     }
     'defaults{

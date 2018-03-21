@@ -181,9 +181,7 @@ trait AttributeTagged extends Api{
 
 object json{
   val jsRW = upickle.default.macroRW0[Js.Value](implicitly, implicitly)
-  def read(s: String) = upickle.jawn.Parser.parseUnsafe(s)(jsRW)
-  def read(s: java.nio.ByteBuffer) = upickle.jawn.Parser.parseFromByteBuffer(s)(jsRW).get
-  def read(s: java.io.File) = upickle.jawn.Parser.parseFromFile(s)(jsRW).get
+  def read(s: Source) = s.apply(jsRW)
   def write(t: Js.Value): String = {
     val out = new java.io.StringWriter()
     jsRW.write(new visitors.Renderer(out), t)
