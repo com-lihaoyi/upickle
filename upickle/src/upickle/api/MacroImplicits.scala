@@ -1,7 +1,7 @@
 package upickle
 package api
 
-import upickle.jawn.{AbortJsonProcessingException, Facade, RawFContext}
+import upickle.jawn.{AbortJsonProcessingException, ObjArrVisitor, Visitor}
 
 import language.experimental.macros
 
@@ -57,7 +57,7 @@ trait MacroImplicits{ this: core.Types =>
     case _ =>
       new BaseReader.Delegate[Any, T] with Writer[T]{
         def delegatedReader = r
-        def write[V](out: Facade[V], v: T) = w.write(out, v)
+        def write[V](out: Visitor[_, V], v: T) = w.write(out, v)
       }
   }
   def macroR0[T, M[_]]: Reader[T] = macro internal.Macros.macroRImpl[T, M]

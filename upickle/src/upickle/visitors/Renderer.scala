@@ -3,15 +3,15 @@ package visitors
 
 import java.io.{ByteArrayOutputStream, StringWriter, Writer}
 
-import upickle.jawn.RawFContext
+import upickle.jawn.ObjArrVisitor
 
 import scala.annotation.switch
 
 class Renderer(out: java.io.Writer,
                var indent: Int = -1,
-               var depth: Int = 0) extends upickle.jawn.Facade[Unit]{
+               var depth: Int = 0) extends upickle.jawn.Visitor[Unit, Unit]{
   val colonSnippet = if (indent == -1) ":" else ": "
-  def singleContext() = ???
+  def singleContext(index: Int) = ???
 
   var commaBuffered = false
 
@@ -22,7 +22,7 @@ class Renderer(out: java.io.Writer,
       renderIndent()
     }
   }
-  def arrayContext() = new RawFContext[Unit, Unit] {
+  def arrayContext(index: Int) = new ObjArrVisitor[Unit, Unit] {
     flushBuffer()
     out.append('[')
 
@@ -43,7 +43,7 @@ class Renderer(out: java.io.Writer,
     def isObj = false
   }
 
-  def objectContext() = new RawFContext[Unit, Unit] {
+  def objectContext(index: Int) = new ObjArrVisitor[Unit, Unit] {
     flushBuffer()
     out.append('{')
     depth += 1
@@ -68,27 +68,27 @@ class Renderer(out: java.io.Writer,
     def isObj = false
   }
 
-  def jnull() = {
+  def jnull(index: Int) = {
     flushBuffer()
     out.append("null")
   }
 
-  def jfalse() = {
+  def jfalse(index: Int) = {
     flushBuffer()
     out.append("false")
   }
 
-  def jtrue() = {
+  def jtrue(index: Int) = {
     flushBuffer()
     out.append("true")
   }
 
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int) = {
+  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     flushBuffer()
     out.append(s)
   }
 
-  def jstring(s: CharSequence) = {
+  def jstring(s: CharSequence, index: Int) = {
     flushBuffer()
     if (s == null) out.append("null")
     else Renderer.escape(out, s, true)

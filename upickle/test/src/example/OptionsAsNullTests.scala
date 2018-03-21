@@ -4,7 +4,8 @@ import acyclic.file
 import upickle.{Js, TestUtil}
 import utest._
 import example.Simple.Thing
-import upickle.jawn.{FContext, Facade, RawFContext, RawFacade}
+import upickle.jawn.Visitor
+
 
 case class Opt(a: Option[String], b: Option[Int])
 object Opt{
@@ -12,7 +13,7 @@ object Opt{
 }
 object OptionPickler extends upickle.AttributeTagged {
   override implicit def OptionWriter[T: Writer]: Writer[Option[T]] = new Writer[Option[T]] {
-    override def write[R](out: Facade[R], v: Option[T]): R = v match{
+    override def write[R](out: Visitor[_, R], v: Option[T]): R = v match{
       case None    => out.jnull(-1)
       case Some(s) => implicitly[Writer[T]].write(out, s)
     }

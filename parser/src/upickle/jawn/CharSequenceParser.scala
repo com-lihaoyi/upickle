@@ -10,7 +10,7 @@ private[jawn] final class CharSequenceParser[J](cs: CharSequence) extends SyncPa
   final def column(i: Int) = i
   final def newline(i: Int) { line += 1 }
   final def reset(i: Int): Int = i
-  final def checkpoint(state: Int, i: Int, stack: List[RawFContext[_, J]]): Unit = ()
+  final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]]): Unit = ()
   final def at(i: Int): Char = Platform.charAt(cs, i)
   final def at(i: Int, j: Int): CharSequence = cs.subSequence(i, j)
   final def atEof(i: Int) = i == cs.length
@@ -18,5 +18,5 @@ private[jawn] final class CharSequenceParser[J](cs: CharSequence) extends SyncPa
 }
 
 object CharSequenceParser extends Walker[CharSequence]{
-  def visit[T](j: CharSequence, f: RawFacade[_, T]) = new CharSequenceParser(j).parse()(f)
+  def visit[T](j: CharSequence, f: Visitor[_, T]) = new CharSequenceParser(j).parse()(f)
 }

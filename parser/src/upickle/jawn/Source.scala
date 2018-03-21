@@ -4,11 +4,11 @@ import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
 
 abstract class Source {
-  def apply[T](f: upickle.jawn.RawFacade[_, T]): T
+  def apply[T](f: upickle.jawn.Visitor[_, T]): T
 }
 object Source{
   class WalkerSource[T](t: T, w: Walker[T]) extends Source{
-    def apply[T](f: upickle.jawn.RawFacade[_, T]): T = {
+    def apply[T](f: upickle.jawn.Visitor[_, T]): T = {
       w.visit(t, f)
     }
   }

@@ -51,7 +51,7 @@ trait LegacyApi extends Api{
     case class Parsing(f: Reader[_]) extends TaggedReaderState
     case class Parsed(res: Any) extends TaggedReaderState
   }
-  override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new RawFContext[Any, T] {
+  override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new ObjArrVisitor[Any, T] {
     var state: TaggedReaderState = TaggedReaderState.Initializing
 
     def visitKey(s: CharSequence, index: Int): Unit = throw new Exception(s + " " + index)
@@ -83,8 +83,8 @@ trait LegacyApi extends Api{
 
     def isObj = false
   }
-  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Facade[R], v: T): R = {
-    val ctx = out.arrayContext(-1)
+  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
+    val ctx = out.asInstanceOf[Visitor[Any, R]].arrayContext(-1)
     ctx.add(out.jstring(tag, -1), -1)
 
     ctx.add(w.write(out, v), -1)
@@ -112,11 +112,11 @@ trait AttributeTagged extends Api{
   sealed trait TaggedReaderState
   object TaggedReaderState{
     case object Initializing extends TaggedReaderState
-    case class FastPath(ctx: RawFContext[Any, _]) extends TaggedReaderState
-    case class SlowPath(ctx: RawFContext[Any, IndexedJs.Obj]) extends TaggedReaderState
+    case class FastPath(ctx: ObjArrVisitor[Any, _]) extends TaggedReaderState
+    case class SlowPath(ctx: ObjArrVisitor[Any, IndexedJs.Obj]) extends TaggedReaderState
   }
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
-    new upickle.jawn.RawFContext[Any, T]{
+    new upickle.jawn.ObjArrVisitor[Any, T]{
       var state: TaggedReaderState = TaggedReaderState.Initializing
       def visitKey(s: CharSequence, index: Int): Unit = state match{
         case TaggedReaderState.Initializing =>
@@ -174,8 +174,8 @@ trait AttributeTagged extends Api{
       def isObj = true
     }
   }
-  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Facade[R], v: T): R = {
-    val ctx = out.objectContext(-1)
+  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
+    val ctx = out.asInstanceOf[Visitor[Any, R]].objectContext(-1)
     ctx.visitKey(tagName, -1)
     ctx.add(out.jstring(tag, -1), -1)
     w.writeToObject(ctx, out, v)

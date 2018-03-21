@@ -6,7 +6,7 @@ import java.nio.channels.ReadableByteChannel
 import scala.util.Try
 
 trait SupportParser[J] {
-  implicit def facade: RawFacade[_, J]
+  implicit def facade: Visitor[_, J]
 
   def parseUnsafe(s: String): J =
     new StringParser(s).parse()

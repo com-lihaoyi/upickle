@@ -22,7 +22,7 @@ trait CharBasedParser[J] extends Parser[J] {
    * This method expects the data to be in UTF-16 and accesses it as
    * chars.
    */
-  protected[this] final def parseStringSimple(i: Int, ctxt: RawFContext[_, J]): Int = {
+  protected[this] final def parseStringSimple(i: Int, ctxt: ObjArrVisitor[_, J]): Int = {
     var j = i
     var c = at(j)
     while (c != '"') {
@@ -39,9 +39,9 @@ trait CharBasedParser[J] extends Parser[J] {
    */
   protected[this] final def parseStringComplex(pre: Int,
                                                i: Int,
-                                               ctxt: RawFContext[_, J],
+                                               ctxt: ObjArrVisitor[_, J],
                                                key: Boolean)
-                                              (implicit facade: RawFacade[_, J]): (CharSequence, Int) = {
+                                              (implicit facade: Visitor[_, J]): (CharSequence, Int) = {
 
     val sb = charBuilder.reset()
     sb.extend(at(pre, i))
@@ -92,8 +92,8 @@ trait CharBasedParser[J] extends Parser[J] {
    * Char. It performs the correct checks to make sure that we don't
    * interpret a multi-char code point incorrectly.
    */
-  protected[this] final def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)
-                                       (implicit facade: RawFacade[_, J]): (CharSequence, Int) = {
+  protected[this] final def parseString(i: Int, ctxt: ObjArrVisitor[_, J], key: Boolean)
+                                       (implicit facade: Visitor[_, J]): (CharSequence, Int) = {
 
     val k = parseStringSimple(i + 1, ctxt)
     val res =
@@ -101,7 +101,7 @@ trait CharBasedParser[J] extends Parser[J] {
       else parseStringComplex(i + 1, (-k) - 1, ctxt, key)
 
     if (key) ctxt.visitKey(res._1, i)
-    else ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(res._1, i), i)
+    else ctxt.asInstanceOf[ObjArrVisitor[J, J]].add(facade.jstring(res._1, i), i)
 
     res
   }

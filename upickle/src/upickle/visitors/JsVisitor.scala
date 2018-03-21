@@ -2,13 +2,13 @@ package upickle
 package visitors
 
 import upickle.internal.IndexedJs
-import upickle.jawn.{AbortJsonProcessingException, JsonProcessingException, RawFContext}
+import upickle.jawn.{AbortJsonProcessingException, JsonProcessingException, ObjArrVisitor}
 
 import scala.collection.mutable
 
 
 object JsVisitor extends jawn.Walker[Js.Value]{
-  def visit[T](j: Js.Value, f: upickle.jawn.RawFacade[_, T]): T = {
+  def visit[T](j: Js.Value, f: upickle.jawn.Visitor[_, T]): T = {
     j match{
       case Js.Null => f.jnull(-1)
       case Js.True => f.jtrue(-1)
@@ -16,11 +16,11 @@ object JsVisitor extends jawn.Walker[Js.Value]{
       case Js.Str(s) => f.jstring(s, -1)
       case Js.Num(d) => f.jnum(d.toString, -1, -1, -1)
       case Js.Arr(items @ _*) =>
-        val ctx = f.arrayContext(-1).asInstanceOf[RawFContext[Any, T]]
+        val ctx = f.arrayContext(-1).asInstanceOf[ObjArrVisitor[Any, T]]
         for(item <- items) ctx.add(visit(item, ctx.facade), -1)
         ctx.finish(-1)
       case Js.Obj(items @ _*) =>
-        val ctx = f.objectContext(-1).asInstanceOf[RawFContext[Any, T]]
+        val ctx = f.objectContext(-1).asInstanceOf[ObjArrVisitor[Any, T]]
         for((k, item) <- items) {
           ctx.visitKey(k, -1)
           ctx.add(visit(item, ctx.facade), -1)
@@ -36,10 +36,10 @@ object JsVisitor extends jawn.Walker[Js.Value]{
 }
 
 
-object JsBuilder extends upickle.jawn.Facade[Js.Value]{
-  def singleContext() = ???
+object JsBuilder extends upickle.jawn.Visitor[Js.Value, Js.Value]{
+  def singleContext(index: Int) = ???
 
-  def arrayContext() = new RawFContext[Js.Value, Js.Value] {
+  def arrayContext(index: Int) = new ObjArrVisitor[Js.Value, Js.Value] {
     val out = mutable.Buffer.empty[Js.Value]
     def facade = JsBuilder.this
     def visitKey(s: CharSequence, index: Int): Unit = ???
@@ -50,7 +50,7 @@ object JsBuilder extends upickle.jawn.Facade[Js.Value]{
     def isObj = false
   }
 
-  def objectContext() = new RawFContext[Js.Value, Js.Value] {
+  def objectContext(index: Int) = new ObjArrVisitor[Js.Value, Js.Value] {
     val out = mutable.Buffer.empty[(String, Js.Value)]
     var currentKey: String = _
     def facade = JsBuilder.this
@@ -62,13 +62,15 @@ object JsBuilder extends upickle.jawn.Facade[Js.Value]{
     def isObj = true
   }
 
-  def jnull() = Js.Null
+  def jnull(index: Int) = Js.Null
 
-  def jfalse() = Js.False
+  def jfalse(index: Int) = Js.False
 
-  def jtrue() = Js.True
+  def jtrue(index: Int) = Js.True
 
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int) = Js.Num(s.toString.toDouble)
+  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    Js.Num(s.toString.toDouble)
+  }
 
-  def jstring(s: CharSequence) = Js.Str(s)
+  def jstring(s: CharSequence, index: Int) = Js.Str(s)
 }

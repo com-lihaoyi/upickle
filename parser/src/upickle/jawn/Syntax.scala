@@ -8,7 +8,7 @@ import scala.annotation.{switch, tailrec}
 import scala.util.Try
 
 object Syntax {
-  implicit def unitFacade: RawFacade[_, Unit] = NullFacade
+  implicit def unitFacade: Visitor[_, Unit] = NullFacade
 
   def checkString(s: String): Boolean =
     Try(new StringParser(s).parse).isSuccess

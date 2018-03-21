@@ -25,7 +25,7 @@ trait ByteBasedParser[J] extends Parser[J] {
    * This method expects the data to be in UTF-8 and accesses it as bytes. Thus
    * we can just ignore any bytes with the highest bit set.
    */
-  protected[this] final def parseStringSimple(i: Int, ctxt: RawFContext[_, J]): Int = {
+  protected[this] final def parseStringSimple(i: Int, ctxt: ObjArrVisitor[_, J]): Int = {
     var j = i
     var c: Int = byte(j) & 0xff
     while (c != 34) {
@@ -42,8 +42,8 @@ trait ByteBasedParser[J] extends Parser[J] {
    *
    * This method expects the data to be in UTF-8 and accesses it as bytes.
    */
-  protected[this] final def parseString(i: Int, ctxt: RawFContext[_, J], key: Boolean)
-                                       (implicit facade: RawFacade[_, J]): (CharSequence, Int) = {
+  protected[this] final def parseString(i: Int, ctxt: ObjArrVisitor[_, J], key: Boolean)
+                                       (implicit facade: Visitor[_, J]): (CharSequence, Int) = {
     val k = parseStringSimple(i + 1, ctxt)
     if (k != -1) {
       val str =
@@ -53,7 +53,7 @@ trait ByteBasedParser[J] extends Parser[J] {
           s
         } else {
           val s = at(i + 1, k - 1)
-          ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(s, i), i)
+          ctxt.asInstanceOf[ObjArrVisitor[J, J]].add(facade.jstring(s, i), i)
           s
         }
       return (str, k)
@@ -115,7 +115,7 @@ trait ByteBasedParser[J] extends Parser[J] {
         s
       } else {
         val s = sb.makeString
-        ctxt.asInstanceOf[RawFContext[J, J]].add(facade.jstring(s, i), i)
+        ctxt.asInstanceOf[ObjArrVisitor[J, J]].add(facade.jstring(s, i), i)
         s
       }
     (str, j + 1)

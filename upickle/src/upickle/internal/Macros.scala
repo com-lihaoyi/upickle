@@ -305,7 +305,7 @@ object Macros {
               )
             }
 
-            def facade: upickle.jawn.RawFacade[_, _] =
+            def facade: upickle.jawn.Visitor[_, _] =
               if (currentIndex == -1) upickle.jawn.NullFacade
               else localReaders(currentIndex)
           }
@@ -349,14 +349,20 @@ object Macros {
           if (${!hasDefaults(i)} || v.${TermName(rawArgs(i))} != ${defaults(i)}){
             ctx.visitKey(${mappedArgs(i)}, -1)
             val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
-            ctx.add(w.write(out, v.${TermName(rawArgs(i))}), -1)
+            ctx.add(
+              w.write(
+                out.asInstanceOf[upickle.jawn.Visitor[Any, Nothing]],
+                v.${TermName(rawArgs(i))}
+              ),
+              -1
+            )
           }
          """
       }
       q"""
         new ${c.prefix}.CaseW[$targetType]{
-          def writeToObject[R](ctx: upickle.jawn.RawFContext[R, R],
-                               out: upickle.jawn.Facade[R],
+          def writeToObject[R](ctx: upickle.jawn.ObjArrVisitor[_, R],
+                               out: upickle.jawn.Visitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}
 

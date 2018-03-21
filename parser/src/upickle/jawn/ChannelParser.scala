@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
 
 object ChannelParser extends Walker[ReadableByteChannel]{
-  def visit[T](j: ReadableByteChannel, f: RawFacade[_, T]) = {
+  def visit[T](j: ReadableByteChannel, f: Visitor[_, T]) = {
     new ChannelParser(j, DefaultBufferSize).parse()(f)
   }
 
@@ -115,7 +115,7 @@ final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends S
       i
     }
 
-  protected[this] final def checkpoint(state: Int, i: Int, stack: List[RawFContext[_, J]]): Unit = ()
+  protected[this] final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]]): Unit = ()
 
   /**
    * This is a specialized accessor for the case where our underlying

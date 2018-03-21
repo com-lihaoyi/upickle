@@ -58,15 +58,15 @@ object AsyncParser {
  *       allowed.
  */
 final class AsyncParser[J] protected[jawn] (
-  protected[jawn] var state: Int,
-  protected[jawn] var curr: Int,
-  protected[jawn] var stack: List[RawFContext[_, J]],
-  protected[jawn] var data: Array[Byte],
-  protected[jawn] var len: Int,
-  protected[jawn] var allocated: Int,
-  protected[jawn] var offset: Int,
-  protected[jawn] var done: Boolean,
-  protected[jawn] var streamMode: Int
+                                             protected[jawn] var state: Int,
+                                             protected[jawn] var curr: Int,
+                                             protected[jawn] var stack: List[ObjArrVisitor[_, J]],
+                                             protected[jawn] var data: Array[Byte],
+                                             protected[jawn] var len: Int,
+                                             protected[jawn] var allocated: Int,
+                                             protected[jawn] var offset: Int,
+                                             protected[jawn] var done: Boolean,
+                                             protected[jawn] var streamMode: Int
 ) extends ByteBasedParser[J] {
 
   protected[this] var line = 0
@@ -77,7 +77,7 @@ final class AsyncParser[J] protected[jawn] (
   final def copy() =
     new AsyncParser(state, curr, stack, data.clone, len, allocated, offset, done, streamMode)
 
-  final def absorb(buf: ByteBuffer)(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] = {
+  final def absorb(buf: ByteBuffer)(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = false
     val buflen = buf.limit - buf.position
     val need = len + buflen
@@ -87,13 +87,13 @@ final class AsyncParser[J] protected[jawn] (
     churn()
   }
 
-  final def absorb(bytes: Array[Byte])(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] =
+  final def absorb(bytes: Array[Byte])(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] =
     absorb(ByteBuffer.wrap(bytes))
 
-  final def absorb(s: String)(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] =
+  final def absorb(s: String)(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] =
     absorb(ByteBuffer.wrap(s.getBytes(utf8)))
 
-  final def finish()(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] = {
+  final def finish()(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = true
     try churn()
     catch{case e: ParsingFailedException => Left(e)}
@@ -141,7 +141,7 @@ final class AsyncParser[J] protected[jawn] (
   @inline private[this] final def ASYNC_POSTVAL = -2
   @inline private[this] final def ASYNC_PREVAL = -1
 
-  protected[jawn] def churn()(implicit facade: RawFacade[_, J]): Either[ParsingFailedException, Seq[J]] = {
+  protected[jawn] def churn()(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
 
     // accumulates json values
     val results = mutable.ArrayBuffer.empty[J]
@@ -268,7 +268,7 @@ final class AsyncParser[J] protected[jawn] (
    * arguments are the exact arguments we can pass to rparse to
    * continue where we left off.
    */
-  protected[this] final def checkpoint(state: Int, i: Int, stack: List[RawFContext[_, J]]) {
+  protected[this] final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]]) {
     this.state = state
     this.curr = i
     this.stack = stack

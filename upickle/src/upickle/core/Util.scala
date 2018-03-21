@@ -1,10 +1,10 @@
 package upickle
 package core
 
-import upickle.jawn.RawFContext
+import upickle.jawn.ObjArrVisitor
 
 object Util {
-  def mapContext[T, V, Z](in: RawFContext[T, V])(f: V => Z) = new RawFContext[T, Z] {
+  def mapContext[T, V, Z](in: ObjArrVisitor[T, V])(f: V => Z) = new ObjArrVisitor[T, Z] {
     def facade = in.facade
 
     def visitKey(s: CharSequence, index: Int): Unit = in.visitKey(s, index)

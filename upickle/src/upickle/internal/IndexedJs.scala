@@ -1,6 +1,6 @@
 package upickle.internal
 
-import upickle.jawn.{RawFContext, Walker}
+import upickle.jawn.{ObjArrVisitor, Walker}
 import upickle.visitors.JsVisitor.{reject, visit}
 
 import scala.collection.mutable
@@ -30,7 +30,7 @@ object IndexedJs extends Walker[IndexedJs]{
     def value = null
   }
 
-  def visit[T](j: IndexedJs, f: upickle.jawn.RawFacade[_, T]): T = try{
+  def visit[T](j: IndexedJs, f: upickle.jawn.Visitor[_, T]): T = try{
     j match{
       case IndexedJs.Null(i) => f.jnull(i)
       case IndexedJs.True(i) => f.jtrue(i)
@@ -38,11 +38,11 @@ object IndexedJs extends Walker[IndexedJs]{
       case IndexedJs.Str(i, s) => f.jstring(s, i)
       case IndexedJs.Num(i, s, d, e) => f.jnum(s, d, e, i)
       case IndexedJs.Arr(i, items @_*) =>
-        val ctx = f.arrayContext(-1).asInstanceOf[RawFContext[Any, T]]
+        val ctx = f.arrayContext(-1).asInstanceOf[ObjArrVisitor[Any, T]]
         for(item <- items) try ctx.add(visit(item, ctx.facade), item.index) catch reject(item.index, Nil)
         ctx.finish(i)
       case IndexedJs.Obj(i, items @_*) =>
-        val ctx = f.objectContext(-1).asInstanceOf[RawFContext[Any, T]]
+        val ctx = f.objectContext(-1).asInstanceOf[ObjArrVisitor[Any, T]]
         for((k, item) <- items) {
           try ctx.visitKey(k, i) catch reject(i, Nil)
           try ctx.add(visit(item, ctx.facade), item.index) catch reject(item.index, Nil)
@@ -52,10 +52,10 @@ object IndexedJs extends Walker[IndexedJs]{
   } catch reject(j.index, Nil)
 
 
-  object Builder extends upickle.jawn.RawFacade[IndexedJs, IndexedJs]{
+  object Builder extends upickle.jawn.Visitor[IndexedJs, IndexedJs]{
     def singleContext(i: Int) = ???
 
-    def arrayContext(i: Int) = new RawFContext[IndexedJs, IndexedJs] {
+    def arrayContext(i: Int) = new ObjArrVisitor[IndexedJs, IndexedJs] {
       val out = mutable.Buffer.empty[IndexedJs]
       def facade = Builder.this
       def visitKey(s: CharSequence, index: Int): Unit = ???
@@ -66,7 +66,7 @@ object IndexedJs extends Walker[IndexedJs]{
       def isObj = false
     }
 
-    def objectContext(i: Int) = new RawFContext[IndexedJs, IndexedJs] {
+    def objectContext(i: Int) = new ObjArrVisitor[IndexedJs, IndexedJs] {
       val out = mutable.Buffer.empty[(String, IndexedJs)]
       var currentKey: String = _
       def facade = Builder.this

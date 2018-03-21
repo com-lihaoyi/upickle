@@ -10,22 +10,22 @@ package upickle.jawn
  * It will always return () on any successful parse, no matter the
  * content.
  */
-object NullFacade extends Facade[Unit] {
+object NullFacade extends Visitor[Unit, Unit] {
 
-  case class NullContext(isObj: Boolean) extends FContext[Unit] {
+  case class NullContext(isObj: Boolean) extends ObjArrVisitor[Unit, Unit] {
     def facade = NullFacade.this
-    def visitKey(s: CharSequence): Unit = ()
-    def add(v: Unit): Unit = ()
-    def finish: Unit = ()
+    def visitKey(s: CharSequence, index: Int): Unit = ()
+    def add(v: Unit, index: Int): Unit = ()
+    def finish(index: Int): Unit = ()
   }
 
-  val singleContext: RawFContext[Unit, Unit] = NullContext(false)
-  val arrayContext: RawFContext[Unit, Unit] = NullContext(false)
-  val objectContext: RawFContext[Unit, Unit] = NullContext(true)
+  def singleContext(index: Int): ObjArrVisitor[Unit, Unit] = NullContext(false)
+  def arrayContext(index: Int): ObjArrVisitor[Unit, Unit] = NullContext(false)
+  def objectContext(index: Int): ObjArrVisitor[Unit, Unit] = NullContext(true)
 
-  def jnull(): Unit = ()
-  def jfalse(): Unit = ()
-  def jtrue(): Unit = ()
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int): Unit = ()
-  def jstring(s: CharSequence): Unit = ()
+  def jnull(index: Int): Unit = ()
+  def jfalse(index: Int): Unit = ()
+  def jtrue(index: Int): Unit = ()
+  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Unit = ()
+  def jstring(s: CharSequence, index: Int): Unit = ()
 }

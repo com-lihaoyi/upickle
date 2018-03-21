@@ -18,9 +18,9 @@ object JNumIndexCheckFacade extends Facade[Boolean] {
     def finish: Boolean = !failed
   }
 
-  val singleContext: RawFContext[Boolean, Boolean] = new JNumIndexCheckContext(false)
-  val arrayContext: RawFContext[Boolean, Boolean] = new JNumIndexCheckContext(false)
-  val objectContext: RawFContext[Boolean, Boolean] = new JNumIndexCheckContext(true)
+  val singleContext: ObjArrVisitor[Boolean, Boolean] = new JNumIndexCheckContext(false)
+  val arrayContext: ObjArrVisitor[Boolean, Boolean] = new JNumIndexCheckContext(false)
+  val objectContext: ObjArrVisitor[Boolean, Boolean] = new JNumIndexCheckContext(true)
 
   def jnull(): Boolean = true
   def jfalse(): Boolean = true
