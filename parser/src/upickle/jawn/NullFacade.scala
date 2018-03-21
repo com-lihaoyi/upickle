@@ -12,21 +12,21 @@ package upickle.jawn
  */
 object NullFacade extends Visitor[Unit, Unit] {
 
-  def arrayContext(index: Int) = new ArrVisitor[Unit, Unit] {
+  def visitArray(index: Int) = new ArrVisitor[Unit, Unit] {
     def subVisitor = NullFacade.this
-    def add(v: Unit, index: Int): Unit = ()
-    def finish(index: Int): Unit = ()
+    def visitValue(v: Unit, index: Int): Unit = ()
+    def visitEnd(index: Int): Unit = ()
   }
-  def objectContext(index: Int) = new ObjVisitor[Unit, Unit] {
+  def visitObject(index: Int) = new ObjVisitor[Unit, Unit] {
     def subVisitor = NullFacade.this
     def visitKey(s: CharSequence, index: Int): Unit = ()
-    def add(v: Unit, index: Int): Unit = ()
-    def finish(index: Int): Unit = ()
+    def visitValue(v: Unit, index: Int): Unit = ()
+    def visitEnd(index: Int): Unit = ()
   }
 
-  def jnull(index: Int): Unit = ()
-  def jfalse(index: Int): Unit = ()
-  def jtrue(index: Int): Unit = ()
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Unit = ()
-  def jstring(s: CharSequence, index: Int): Unit = ()
+  def visitNull(index: Int): Unit = ()
+  def visitFalse(index: Int): Unit = ()
+  def visitTrue(index: Int): Unit = ()
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Unit = ()
+  def visitString(s: CharSequence, index: Int): Unit = ()
 }

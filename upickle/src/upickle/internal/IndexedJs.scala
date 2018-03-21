@@ -32,55 +32,55 @@ object IndexedJs extends Walker[IndexedJs]{
 
   def visit[T](j: IndexedJs, f: upickle.jawn.Visitor[_, T]): T = try{
     j match{
-      case IndexedJs.Null(i) => f.jnull(i)
-      case IndexedJs.True(i) => f.jtrue(i)
-      case IndexedJs.False(i) => f.jfalse(i)
-      case IndexedJs.Str(i, s) => f.jstring(s, i)
-      case IndexedJs.Num(i, s, d, e) => f.jnum(s, d, e, i)
+      case IndexedJs.Null(i) => f.visitNull(i)
+      case IndexedJs.True(i) => f.visitTrue(i)
+      case IndexedJs.False(i) => f.visitFalse(i)
+      case IndexedJs.Str(i, s) => f.visitString(s, i)
+      case IndexedJs.Num(i, s, d, e) => f.visitNum(s, d, e, i)
       case IndexedJs.Arr(i, items @_*) =>
-        val ctx = f.arrayContext(-1).narrow
-        for(item <- items) try ctx.add(visit(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
-        ctx.finish(i)
+        val ctx = f.visitArray(-1).narrow
+        for(item <- items) try ctx.visitValue(visit(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
+        ctx.visitEnd(i)
       case IndexedJs.Obj(i, items @_*) =>
-        val ctx = f.objectContext(-1).narrow
+        val ctx = f.visitObject(-1).narrow
         for((k, item) <- items) {
           try ctx.visitKey(k, i) catch reject(i, Nil)
-          try ctx.add(visit(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
+          try ctx.visitValue(visit(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
         }
-        ctx.finish(i)
+        ctx.visitEnd(i)
     }
   } catch reject(j.index, Nil)
 
 
   object Builder extends upickle.jawn.Visitor[IndexedJs, IndexedJs]{
-    def arrayContext(i: Int) = new ArrVisitor[IndexedJs, IndexedJs] {
+    def visitArray(i: Int) = new ArrVisitor[IndexedJs, IndexedJs] {
       val out = mutable.Buffer.empty[IndexedJs]
       def subVisitor = Builder.this
-      def add(v: IndexedJs, index: Int): Unit = {
+      def visitValue(v: IndexedJs, index: Int): Unit = {
         out.append(v)
       }
-      def finish(index: Int): IndexedJs = IndexedJs.Arr(i, out:_*)
+      def visitEnd(index: Int): IndexedJs = IndexedJs.Arr(i, out:_*)
     }
 
-    def objectContext(i: Int) = new ObjVisitor[IndexedJs, IndexedJs] {
+    def visitObject(i: Int) = new ObjVisitor[IndexedJs, IndexedJs] {
       val out = mutable.Buffer.empty[(String, IndexedJs)]
       var currentKey: String = _
       def subVisitor = Builder.this
       def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
-      def add(v: IndexedJs, index: Int): Unit = {
+      def visitValue(v: IndexedJs, index: Int): Unit = {
         out.append((currentKey, v))
       }
-      def finish(index: Int): IndexedJs = IndexedJs.Obj(i, out:_*)
+      def visitEnd(index: Int): IndexedJs = IndexedJs.Obj(i, out:_*)
     }
 
-    def jnull(i: Int) = IndexedJs.Null(i)
+    def visitNull(i: Int) = IndexedJs.Null(i)
 
-    def jfalse(i: Int) = IndexedJs.False(i)
+    def visitFalse(i: Int) = IndexedJs.False(i)
 
-    def jtrue(i: Int) = IndexedJs.True(i)
+    def visitTrue(i: Int) = IndexedJs.True(i)
 
-    def jnum(s: CharSequence, decIndex: Int, expIndex: Int, i: Int) = IndexedJs.Num(i, s, decIndex, expIndex)
+    def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, i: Int) = IndexedJs.Num(i, s, decIndex, expIndex)
 
-    def jstring(s: CharSequence, i: Int) = IndexedJs.Str(i, s)
+    def visitString(s: CharSequence, i: Int) = IndexedJs.Str(i, s)
   }
 }

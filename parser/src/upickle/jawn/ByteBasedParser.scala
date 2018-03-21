@@ -92,7 +92,7 @@ trait ByteBasedParser[J] extends Parser[J] {
     }
     val s = sb.makeString
 
-    (facade.jstring(s, i), s, j + 1)
+    (facade.visitString(s, i), s, j + 1)
   }
   /**
    * Parse the string according to JSON rules, and add to the given context.
@@ -104,7 +104,7 @@ trait ByteBasedParser[J] extends Parser[J] {
     val k = parseStringSimple(i + 1)
     if (k != -1) {
       val s = at(i + 1, k - 1)
-      (if (key) null.asInstanceOf[J] else facade.jstring(s, i), s, k)
+      (if (key) null.asInstanceOf[J] else facade.visitString(s, i), s, k)
     }else{
       parseStringComplex(i)
 

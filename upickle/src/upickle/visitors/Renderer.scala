@@ -21,18 +21,18 @@ class Renderer(out: java.io.Writer,
       renderIndent()
     }
   }
-  def arrayContext(index: Int) = new ArrVisitor[Unit, Unit] {
+  def visitArray(index: Int) = new ArrVisitor[Unit, Unit] {
     flushBuffer()
     out.append('[')
 
     depth += 1
     renderIndent()
     def subVisitor = Renderer.this
-    def add(v: Unit, index: Int): Unit = {
+    def visitValue(v: Unit, index: Int): Unit = {
       flushBuffer()
       commaBuffered = true
     }
-    def finish(index: Int): Unit = {
+    def visitEnd(index: Int): Unit = {
       commaBuffered = false
       depth -= 1
       renderIndent()
@@ -40,7 +40,7 @@ class Renderer(out: java.io.Writer,
     }
   }
 
-  def objectContext(index: Int) = new ObjVisitor[Unit, Unit] {
+  def visitObject(index: Int) = new ObjVisitor[Unit, Unit] {
     flushBuffer()
     out.append('{')
     depth += 1
@@ -53,10 +53,10 @@ class Renderer(out: java.io.Writer,
 
       out.append(colonSnippet)
     }
-    def add(v: Unit, index: Int): Unit = {
+    def visitValue(v: Unit, index: Int): Unit = {
       commaBuffered = true
     }
-    def finish(index: Int): Unit = {
+    def visitEnd(index: Int): Unit = {
       commaBuffered = false
       depth -= 1
       renderIndent()
@@ -64,27 +64,27 @@ class Renderer(out: java.io.Writer,
     }
   }
 
-  def jnull(index: Int) = {
+  def visitNull(index: Int) = {
     flushBuffer()
     out.append("null")
   }
 
-  def jfalse(index: Int) = {
+  def visitFalse(index: Int) = {
     flushBuffer()
     out.append("false")
   }
 
-  def jtrue(index: Int) = {
+  def visitTrue(index: Int) = {
     flushBuffer()
     out.append("true")
   }
 
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     flushBuffer()
     out.append(s)
   }
 
-  def jstring(s: CharSequence, index: Int) = {
+  def visitString(s: CharSequence, index: Int) = {
     flushBuffer()
     if (s == null) out.append("null")
     else Renderer.escape(out, s, true)

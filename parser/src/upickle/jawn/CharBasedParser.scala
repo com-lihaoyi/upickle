@@ -101,7 +101,7 @@ trait CharBasedParser[J] extends Parser[J] {
 
     val value =
       if (key) null.asInstanceOf[J]
-      else facade.jstring(res._1, i)
+      else facade.visitString(res._1, i)
 
     (value, res._1, res._2)
   }

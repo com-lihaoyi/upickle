@@ -9,19 +9,19 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object StringWriter extends Writer[String] {
-    def write[R](out: upickle.jawn.Visitor[_, R], v: String): R = out.jstring(v)
+    def write[R](out: upickle.jawn.Visitor[_, R], v: String): R = out.visitString(v)
   }
   implicit object UnitWriter extends Writer[Unit] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: Unit): R = {
-      if (v == null) out.jnull(-1)
-      else out.objectContext(-1).finish(-1)
+      if (v == null) out.visitNull(-1)
+      else out.visitObject(-1).visitEnd(-1)
     }
   }
 
   object NumStringWriter extends Writer[String] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: String): R = v match{
-      case "-Infinity" | "Infinity" | "NaN" => out.jstring(v)
-      case _ => out.jnum(v, -1, -1)
+      case "-Infinity" | "Infinity" | "NaN" => out.visitString(v)
+      case _ => out.visitNum(v, -1, -1)
     }
   }
   implicit val DoubleWriter: Writer[Double] = NumStringWriter.comap[Double](_.toString)
@@ -32,7 +32,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit object BooleanWriter extends Writer[Boolean] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: Boolean): R = {
-      if(v) out.jtrue() else out.jfalse()
+      if(v) out.visitTrue() else out.visitFalse()
     }
   }
   implicit val CharWriter: Writer[Char] = StringWriter.comap[Char](_.toString)
@@ -47,44 +47,44 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def NoneWriter: Writer[None.type] = OptionWriter[Unit].narrow[None.type]
   implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]) = new Writer[C[T]] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: C[T]): R = {
-      if (v == null) out.jnull()
+      if (v == null) out.visitNull()
       else{
-        val ctx = out.arrayContext().narrow
+        val ctx = out.visitArray().narrow
         val x = v.iterator
         while(x.nonEmpty){
           val next = x.next().asInstanceOf[T]
           val written = r.write(out, next)
-          ctx.add(written, -1)
+          ctx.visitValue(written, -1)
 
         }
-        ctx.finish(-1)
+        ctx.visitEnd(-1)
       }
     }
   }
   implicit def ArrayWriter[T](implicit r: Writer[T]) = new Writer[Array[T]] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: Array[T]): R = {
-      val ctx = out.arrayContext().narrow
+      val ctx = out.visitArray().narrow
       var i = 0
       while(i < v.length){
-        ctx.add(r.write(out, v(i)), -1)
+        ctx.visitValue(r.write(out, v(i)), -1)
         i += 1
       }
 
-      ctx.finish(-1)
+      ctx.visitEnd(-1)
     }
   }
 
   implicit def MapWriter[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[Map[K, V]] = {
     if (kw eq StringWriter) new Writer[Map[String, V]]{
       def write[R](out: upickle.jawn.Visitor[_, R], v: Map[String, V]): R = {
-        val ctx = out.objectContext().narrow
+        val ctx = out.visitObject().narrow
         for(pair <- v){
           val (k1, v1) = pair
           ctx.visitKey(k1, -1)
-          ctx.add(vw.write(out, v1), -1)
+          ctx.visitValue(vw.write(out, v1), -1)
 
         }
-        ctx.finish(-1)
+        ctx.visitEnd(-1)
       }
     }.asInstanceOf[Writer[Map[K, V]]]
     else SeqLikeWriter[Seq, (K, V)].comap[Map[K, V]](_.toSeq)
@@ -92,10 +92,10 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit object DurationWriter extends Writer[Duration]{
     def write[R](out: upickle.jawn.Visitor[_, R], v: Duration): R = v match{
-      case Duration.Inf => out.jstring("inf", -1)
-      case Duration.MinusInf => out.jstring("-inf", -1)
-      case x if x eq Duration.Undefined => out.jstring("undef", -1)
-      case _ => out.jstring(v.toNanos.toString, -1)
+      case Duration.Inf => out.visitString("inf", -1)
+      case Duration.MinusInf => out.visitString("-inf", -1)
+      case x if x eq Duration.Undefined => out.visitString("undef", -1)
+      case _ => out.visitString(v.toNanos.toString, -1)
     }
   }
 
@@ -105,19 +105,19 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def EitherWriter[T1: Writer, T2: Writer] = new Writer[Either[T1, T2]]{
     def write[R](out: upickle.jawn.Visitor[_, R], v: Either[T1, T2]): R = v match{
       case Left(t1) =>
-        val ctx = out.arrayContext().narrow
-        ctx.add(out.jnum("0", -1, -1), -1)
+        val ctx = out.visitArray().narrow
+        ctx.visitValue(out.visitNum("0", -1, -1), -1)
 
-        ctx.add(implicitly[Writer[T1]].write(out, t1), -1)
+        ctx.visitValue(implicitly[Writer[T1]].write(out, t1), -1)
 
-        ctx.finish(-1)
+        ctx.visitEnd(-1)
       case Right(t2) =>
-        val ctx = out.arrayContext().narrow
-        ctx.add(out.jnum("1", -1, -1), -1)
+        val ctx = out.visitArray().narrow
+        ctx.visitValue(out.visitNum("1", -1, -1), -1)
 
-        ctx.add(implicitly[Writer[T2]].write(out, t2), -1)
+        ctx.visitValue(implicitly[Writer[T2]].write(out, t2), -1)
 
-        ctx.finish(-1)
+        ctx.visitEnd(-1)
     }
   }
   implicit def RightWriter[T1: Writer, T2: Writer] =
@@ -136,27 +136,27 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     def write[R](out: upickle.jawn.Visitor[_, R], v: Js.Value): R = {
       v match{
         case v: Js.Obj =>
-          val ctx = out.objectContext(-1).narrow
+          val ctx = out.visitObject(-1).narrow
           for((k, item) <- v.value){
 
             ctx.visitKey(k, -1)
-            ctx.add(JsValueW.write(out, item), -1)
+            ctx.visitValue(JsValueW.write(out, item), -1)
           }
 
-          ctx.finish(-1)
+          ctx.visitEnd(-1)
         case v: Js.Arr =>
-          val ctx = out.arrayContext(-1).narrow
+          val ctx = out.visitArray(-1).narrow
           for(item <- v.value){
-            ctx.add(JsValueW.write(out, item), -1)
+            ctx.visitValue(JsValueW.write(out, item), -1)
 
           }
 
-          ctx.finish(-1)
-        case v: Js.Str => out.jstring(v.value, -1)
-        case v: Js.Num => out.jnum(v.value.toString, -1, -1, -1)
-        case v: Js.False.type => out.jfalse(-1)
-        case v: Js.True.type => out.jtrue(-1)
-        case v: Js.Null.type => out.jnull(-1)
+          ctx.visitEnd(-1)
+        case v: Js.Str => out.visitString(v.value, -1)
+        case v: Js.Num => out.visitNum(v.value.toString, -1, -1, -1)
+        case v: Js.False.type => out.visitFalse(-1)
+        case v: Js.True.type => out.visitTrue(-1)
+        case v: Js.Null.type => out.visitNull(-1)
       }
     }
   }

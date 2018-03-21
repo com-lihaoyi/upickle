@@ -264,7 +264,7 @@ object Macros {
         )
 
         new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
-          override def objectContext(index: Int) = new CaseObjectContext{
+          override def visitObject(index: Int) = new CaseObjectContext{
             def visitKey(s: CharSequence, index: Int): Unit = {
               currentIndex = s.toString match {
                 case ..${
@@ -276,7 +276,7 @@ object Macros {
             }
 
 
-            def finish(index: Int) = {
+            def visitEnd(index: Int) = {
               ..${
                 for(i <- rawArgs.indices if hasDefaults(i))
                 yield q"if (!found($i)) {count += 1; found($i) = true; aggregated($i) = ${defaults(i)}}"
@@ -349,7 +349,7 @@ object Macros {
           if (${!hasDefaults(i)} || v.${TermName(rawArgs(i))} != ${defaults(i)}){
             ctx.visitKey(${mappedArgs(i)}, -1)
             val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
-            ctx.add(
+            ctx.visitValue(
               w.write(
                 out.asInstanceOf[upickle.jawn.Visitor[Any, Nothing]],
                 v.${TermName(rawArgs(i))}

@@ -171,7 +171,7 @@ abstract class Parser[J] {
       if (j0 == j)  die(i, "expected digit")
     }
 
-    ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
+    ctxt.visitValue(facade.visitNum(at(i, j), decIndex, expIndex, i), i)
     j
   }
 
@@ -203,7 +203,7 @@ abstract class Parser[J] {
     if (c == '0') {
       j += 1
       if (atEof(j)) {
-        return (facade.jnum(at(i, j), decIndex, expIndex, i), j)
+        return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
       }
       c = at(j)
     } else {
@@ -211,7 +211,7 @@ abstract class Parser[J] {
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          return (facade.jnum(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
@@ -227,7 +227,7 @@ abstract class Parser[J] {
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          return (facade.jnum(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
@@ -248,14 +248,14 @@ abstract class Parser[J] {
         j += 1
         if (atEof(j)) {
 
-          return (facade.jnum(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
 
-    (facade.jnum(at(i, j), decIndex, expIndex, i), j)
+    (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
   }
 
   /**
@@ -289,7 +289,7 @@ abstract class Parser[J] {
    */
   protected[this] final def parseTrue(i: Int)(implicit facade: Visitor[_, J]): J =
     if (at(i + 1) == 'r' && at(i + 2) == 'u' && at(i + 3) == 'e') {
-      facade.jtrue(i)
+      facade.visitTrue(i)
     } else {
       die(i, "expected true")
     }
@@ -301,7 +301,7 @@ abstract class Parser[J] {
    */
   protected[this] final def parseFalse(i: Int)(implicit facade: Visitor[_, J]): J =
     if (at(i + 1) == 'a' && at(i + 2) == 'l' && at(i + 3) == 's' && at(i + 4) == 'e') {
-      facade.jfalse(i)
+      facade.visitFalse(i)
     } else {
       die(i, "expected false")
     }
@@ -313,7 +313,7 @@ abstract class Parser[J] {
    */
   protected[this] final def parseNull(i: Int)(implicit facade: Visitor[_, J]): J =
     if (at(i + 1) == 'u' && at(i + 2) == 'l' && at(i + 3) == 'l') {
-      facade.jnull(i)
+      facade.visitNull(i)
     } else {
       die(i, "expected null")
     }
@@ -331,8 +331,8 @@ abstract class Parser[J] {
 
       // if we have a recursive top-level structure, we'll delegate the parsing
       // duties to our good friend rparse().
-      case '[' => rparse(ARRBEG, i + 1, facade.arrayContext(i) :: Nil, null :: Nil)
-      case '{' => rparse(OBJBEG, i + 1, facade.objectContext(i) :: Nil, null :: Nil)
+      case '[' => rparse(ARRBEG, i + 1, facade.visitArray(i) :: Nil, null :: Nil)
+      case '{' => rparse(OBJBEG, i + 1, facade.visitObject(i) :: Nil, null :: Nil)
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
@@ -396,10 +396,10 @@ abstract class Parser[J] {
     } else if (state == DATA) {
       // we are inside an object or array expecting to see data
       if (c == '[') {
-        val ctx = try facade.arrayContext(i) catch reject(j, path)
+        val ctx = try facade.visitArray(i) catch reject(j, path)
         rparse(ARRBEG, i + 1, ctx :: stack, null :: path)
       } else if (c == '{') {
-        val ctx = try facade.objectContext(i) catch reject(j, path)
+        val ctx = try facade.visitObject(i) catch reject(j, path)
         rparse(OBJBEG, i + 1, ctx :: stack, null :: path)
       } else {
         val ctxt = stack.head.narrow
@@ -410,18 +410,18 @@ abstract class Parser[J] {
         } else if (c == '"') {
           val nextJ = try {
             val (v, _, j) = parseString(i, false)
-            ctxt.add(v, i)
+            ctxt.visitValue(v, i)
             j
           } catch reject(i, path)
           rparse(if (ctxt.isObj) OBJEND else ARREND, nextJ, stack, path)
         } else if (c == 't') {
-          ctxt.add(try parseTrue(i) catch reject(i, path), i)
+          ctxt.visitValue(try parseTrue(i) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
         } else if (c == 'f') {
-          ctxt.add(try parseFalse(i) catch reject(i, path), i)
+          ctxt.visitValue(try parseFalse(i) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 5, stack, path)
         } else if (c == 'n') {
-          ctxt.add(try parseNull(i) catch reject(i, path), i)
+          ctxt.visitValue(try parseNull(i) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
         } else {
           die(i, "expected json value")
@@ -439,10 +439,10 @@ abstract class Parser[J] {
         val ctxt1 = stack.head
         val tail = stack.tail
         if (tail.isEmpty) {
-          (try ctxt1.finish(i) catch reject(i, path), i + 1)
+          (try ctxt1.visitEnd(i) catch reject(i, path), i + 1)
         } else {
           val ctxt2 = tail.head.narrow
-          try ctxt2.add(ctxt1.finish(i) , i) catch reject(i, path)
+          try ctxt2.visitValue(ctxt1.visitEnd(i) , i) catch reject(i, path)
           rparse(if (ctxt2.isObj) OBJEND else ARREND, i + 1, tail, path.tail)
         }
       }

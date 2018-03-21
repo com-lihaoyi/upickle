@@ -10,22 +10,22 @@ import scala.collection.mutable
 object JsVisitor extends jawn.Walker[Js.Value]{
   def visit[T](j: Js.Value, f: upickle.jawn.Visitor[_, T]): T = {
     j match{
-      case Js.Null => f.jnull(-1)
-      case Js.True => f.jtrue(-1)
-      case Js.False => f.jfalse(-1)
-      case Js.Str(s) => f.jstring(s, -1)
-      case Js.Num(d) => f.jnum(d.toString, -1, -1, -1)
+      case Js.Null => f.visitNull(-1)
+      case Js.True => f.visitTrue(-1)
+      case Js.False => f.visitFalse(-1)
+      case Js.Str(s) => f.visitString(s, -1)
+      case Js.Num(d) => f.visitNum(d.toString, -1, -1, -1)
       case Js.Arr(items @ _*) =>
-        val ctx = f.arrayContext(-1).narrow
-        for(item <- items) ctx.add(visit(item, ctx.subVisitor), -1)
-        ctx.finish(-1)
+        val ctx = f.visitArray(-1).narrow
+        for(item <- items) ctx.visitValue(visit(item, ctx.subVisitor), -1)
+        ctx.visitEnd(-1)
       case Js.Obj(items @ _*) =>
-        val ctx = f.objectContext(-1).narrow
+        val ctx = f.visitObject(-1).narrow
         for((k, item) <- items) {
           ctx.visitKey(k, -1)
-          ctx.add(visit(item, ctx.subVisitor), -1)
+          ctx.visitValue(visit(item, ctx.subVisitor), -1)
         }
-        ctx.finish(-1)
+        ctx.visitEnd(-1)
     }
   }
   def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
@@ -37,35 +37,35 @@ object JsVisitor extends jawn.Walker[Js.Value]{
 
 
 object JsBuilder extends upickle.jawn.Visitor[Js.Value, Js.Value]{
-  def arrayContext(index: Int) = new ArrVisitor[Js.Value, Js.Value] {
+  def visitArray(index: Int) = new ArrVisitor[Js.Value, Js.Value] {
     val out = mutable.Buffer.empty[Js.Value]
     def subVisitor = JsBuilder.this
-    def add(v: Js.Value, index: Int): Unit = {
+    def visitValue(v: Js.Value, index: Int): Unit = {
       out.append(v)
     }
-    def finish(index: Int): Js.Value = Js.Arr(out:_*)
+    def visitEnd(index: Int): Js.Value = Js.Arr(out:_*)
   }
 
-  def objectContext(index: Int) = new ObjVisitor[Js.Value, Js.Value] {
+  def visitObject(index: Int) = new ObjVisitor[Js.Value, Js.Value] {
     val out = mutable.Buffer.empty[(String, Js.Value)]
     var currentKey: String = _
     def subVisitor = JsBuilder.this
     def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
-    def add(v: Js.Value, index: Int): Unit = {
+    def visitValue(v: Js.Value, index: Int): Unit = {
       out.append((currentKey, v))
     }
-    def finish(index: Int): Js.Value = Js.Obj(out:_*)
+    def visitEnd(index: Int): Js.Value = Js.Obj(out:_*)
   }
 
-  def jnull(index: Int) = Js.Null
+  def visitNull(index: Int) = Js.Null
 
-  def jfalse(index: Int) = Js.False
+  def visitFalse(index: Int) = Js.False
 
-  def jtrue(index: Int) = Js.True
+  def visitTrue(index: Int) = Js.True
 
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     Js.Num(s.toString.toDouble)
   }
 
-  def jstring(s: CharSequence, index: Int) = Js.Str(s)
+  def visitString(s: CharSequence, index: Int) = Js.Str(s)
 }

@@ -8,24 +8,24 @@ package upickle.jawn
  * usually want to define both.
  */
 trait Visitor[-T, +J] {
-  def arrayContext(index: Int): ArrVisitor[T, J]
-  def objectContext(index: Int): ObjVisitor[T, J]
+  def visitArray(index: Int): ArrVisitor[T, J]
+  def visitObject(index: Int): ObjVisitor[T, J]
 
-  def jnull(index: Int): J
-  def jfalse(index: Int): J
-  def jtrue(index: Int): J
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): J
-  def jstring(s: CharSequence, index: Int): J
+  def visitNull(index: Int): J
+  def visitFalse(index: Int): J
+  def visitTrue(index: Int): J
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): J
+  def visitString(s: CharSequence, index: Int): J
 
 
-  def arrayContext(): ArrVisitor[T, J] = arrayContext(-1)
-  def objectContext(): ObjVisitor[T, J] = objectContext(-1)
+  def visitArray(): ArrVisitor[T, J] = visitArray(-1)
+  def visitObject(): ObjVisitor[T, J] = visitObject(-1)
 
-  def jnull(): J = jnull(-1)
-  def jfalse(): J = jfalse(-1)
-  def jtrue(): J = jtrue(-1)
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int): J = jnum(s, decIndex, expIndex, -1)
-  def jstring(s: CharSequence): J = jstring(s, -1)
+  def visitNull(): J = visitNull(-1)
+  def visitFalse(): J = visitFalse(-1)
+  def visitTrue(): J = visitTrue(-1)
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int): J = visitNum(s, decIndex, expIndex, -1)
+  def visitString(s: CharSequence): J = visitString(s, -1)
 }
 
 
@@ -39,8 +39,8 @@ trait Visitor[-T, +J] {
 sealed trait ObjArrVisitor[-J, +T] {
   def subVisitor: Visitor[Nothing, Any]
 
-  def add(v: J, index: Int): Unit
-  def finish(index: Int): T
+  def visitValue(v: J, index: Int): Unit
+  def visitEnd(index: Int): T
   def isObj: Boolean
   def narrow = this.asInstanceOf[ObjArrVisitor[Any, T]]
 

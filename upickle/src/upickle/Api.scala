@@ -60,7 +60,7 @@ trait LegacyApi extends Api{
       case TaggedReaderState.Parsed(res) => NullFacade
     }
 
-    def add(v: Any, index: Int): Unit = state match{
+    def visitValue(v: Any, index: Int): Unit = state match{
       case TaggedReaderState.Initializing =>
         val typeName = v.toString
         val delegate = taggedReader.findReader(typeName)
@@ -74,19 +74,19 @@ trait LegacyApi extends Api{
         throw new AbortJsonProcessingException("expected tagged dictionary")
     }
 
-    def finish(index: Int) = state match{
+    def visitEnd(index: Int) = state match{
       case TaggedReaderState.Parsed(res) => res.asInstanceOf[T]
       case _ => throw new AbortJsonProcessingException("expected tagged dictionary")
     }
 
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
-    val ctx = out.asInstanceOf[Visitor[Any, R]].arrayContext(-1)
-    ctx.add(out.jstring(tag, -1), -1)
+    val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(-1)
+    ctx.visitValue(out.visitString(tag, -1), -1)
 
-    ctx.add(w.write(out, v), -1)
+    ctx.visitValue(w.write(out, v), -1)
 
-    ctx.finish(-1)
+    ctx.visitEnd(-1)
   }
 }
 
@@ -119,7 +119,7 @@ trait AttributeTagged extends Api{
         case TaggedReaderState.Initializing =>
           if (s.toString == tagName) () //do nothing
           else {
-            val slowCtx = IndexedJsObjR.objectContext(index)
+            val slowCtx = IndexedJsObjR.visitObject(index)
             slowCtx.visitKey(s, index)
             state = TaggedReaderState.SlowPath(slowCtx)
           }
@@ -133,49 +133,49 @@ trait AttributeTagged extends Api{
         case TaggedReaderState.SlowPath(ctx) => ctx.subVisitor
       }
 
-      def add(v: Any, index: Int): Unit = state match{
+      def visitValue(v: Any, index: Int): Unit = state match{
         case TaggedReaderState.Initializing =>
           val typeName = v.toString
           val facade0 = taggedReader.findReader(typeName)
           if (facade0 == null) {
             throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
           }
-          state = TaggedReaderState.FastPath(facade0.objectContext(index))
-        case TaggedReaderState.FastPath(ctx) => ctx.add(v, index)
-        case TaggedReaderState.SlowPath(ctx) => ctx.add(v, index)
+          state = TaggedReaderState.FastPath(facade0.visitObject(index))
+        case TaggedReaderState.FastPath(ctx) => ctx.visitValue(v, index)
+        case TaggedReaderState.SlowPath(ctx) => ctx.visitValue(v, index)
       }
 
-      def finish(index: Int) = state match{
+      def visitEnd(index: Int) = state match{
         case TaggedReaderState.Initializing => throw new AbortJsonProcessingException("expected tagged dictionary")
-        case TaggedReaderState.FastPath(ctx) => ctx.finish(index).asInstanceOf[T]
+        case TaggedReaderState.FastPath(ctx) => ctx.visitEnd(index).asInstanceOf[T]
         case TaggedReaderState.SlowPath(ctx) =>
-          val x = ctx.finish(index)
+          val x = ctx.visitEnd(index)
           val keyAttr = x.value0.find(_._1.toString == tagName).get._2
           val key = keyAttr.asInstanceOf[IndexedJs.Str].value0.toString
           val delegate = taggedReader.findReader(key)
           if (delegate == null){
             throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil, null)
           }
-          val ctx2 = delegate.objectContext(-1)
+          val ctx2 = delegate.visitObject(-1)
           for (p <- x.value0) {
             val (k0, v) = p
             val k = k0.toString
             if (k != tagName){
               ctx2.visitKey(k, -1)
-              ctx2.add(IndexedJs.visit(v, ctx2.subVisitor), -1)
+              ctx2.visitValue(IndexedJs.visit(v, ctx2.subVisitor), -1)
             }
           }
-          ctx2.finish(index)
+          ctx2.visitEnd(index)
       }
 
     }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
-    val ctx = out.asInstanceOf[Visitor[Any, R]].objectContext(-1)
+    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(-1)
     ctx.visitKey(tagName, -1)
-    ctx.add(out.jstring(tag, -1), -1)
+    ctx.visitValue(out.visitString(tag, -1), -1)
     w.writeToObject(ctx, out, v)
-    ctx.finish(-1)
+    ctx.visitEnd(-1)
   }
 }
 

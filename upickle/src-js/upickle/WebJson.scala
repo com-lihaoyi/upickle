@@ -20,58 +20,58 @@ trait WebJson extends upickle.core.Types {
 object WebJson extends jawn.Walker[js.Any]{
   def visit[T](j: js.Any, f: upickle.jawn.Visitor[_, T]): T = {
     (j: Any) match{
-      case s: String => f.jstring(s, -1)
+      case s: String => f.visitString(s, -1)
       case n: Double =>
         val s = n.toString
-        f.jnum(s, s.indexOf('.'), s.indexOf('E'), -1)
-      case true => f.jtrue(-1)
-      case false => f.jfalse(-1)
-      case null => f.jnull(-1)
+        f.visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
+      case true => f.visitTrue(-1)
+      case false => f.visitFalse(-1)
+      case null => f.visitNull(-1)
       case s: js.Array[js.Any] =>
-        val ctx = f.arrayContext(-1).narrow
-        for(i <- s) ctx.add(visit(i, ctx.subVisitor), -1)
-        ctx.finish(-1)
+        val ctx = f.visitArray(-1).narrow
+        for(i <- s) ctx.visitValue(visit(i, ctx.subVisitor), -1)
+        ctx.visitEnd(-1)
       case s: js.Object =>
-        val ctx = f.objectContext(-1).narrow
+        val ctx = f.visitObject(-1).narrow
         for(p <- s.asInstanceOf[js.Dictionary[js.Any]]) {
           ctx.visitKey(p._1, -1)
-          ctx.add(visit(p._2, ctx.subVisitor), -1)
+          ctx.visitValue(visit(p._2, ctx.subVisitor), -1)
         }
-        ctx.finish(-1)
+        ctx.visitEnd(-1)
     }
   }
 
   object Builder extends upickle.jawn.Visitor[js.Any, js.Any]{
-    def arrayContext(index: Int) = new ArrVisitor[js.Any, js.Any] {
+    def visitArray(index: Int) = new ArrVisitor[js.Any, js.Any] {
       val out = new js.Array[js.Any]
       def subVisitor = Builder.this
-      def add(v: js.Any, index: Int): Unit = out.append(v)
+      def visitValue(v: js.Any, index: Int): Unit = out.append(v)
 
-      def finish(index: Int): js.Any = out
+      def visitEnd(index: Int): js.Any = out
     }
 
-    def objectContext(index: Int) = new ObjVisitor[js.Any, js.Any] {
+    def visitObject(index: Int) = new ObjVisitor[js.Any, js.Any] {
       val out = js.Dictionary[js.Any]()
       var currentKey: String = _
       def subVisitor = Builder.this
       def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
-      def add(v: js.Any, index: Int): Unit = {
+      def visitValue(v: js.Any, index: Int): Unit = {
         out(currentKey) = v
       }
-      def finish(index: Int) = out
+      def visitEnd(index: Int) = out
     }
 
-    def jnull(index: Int) = null.asInstanceOf[js.Any]
+    def visitNull(index: Int) = null.asInstanceOf[js.Any]
 
-    def jfalse(index: Int) = false.asInstanceOf[js.Any]
+    def visitFalse(index: Int) = false.asInstanceOf[js.Any]
 
-    def jtrue(index: Int) = true.asInstanceOf[js.Any]
+    def visitTrue(index: Int) = true.asInstanceOf[js.Any]
 
-    def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toDouble.asInstanceOf[js.Any]
     }
 
-    def jstring(s: CharSequence, index: Int) = s.toString.asInstanceOf[js.Any]
+    def visitString(s: CharSequence, index: Int) = s.toString.asInstanceOf[js.Any]
   }
 }
 
