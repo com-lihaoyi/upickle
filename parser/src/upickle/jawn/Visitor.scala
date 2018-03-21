@@ -8,7 +8,7 @@ package upickle.jawn
  * usually want to define both.
  */
 trait Visitor[-T, +J] {
-  def singleContext(index: Int): ObjArrVisitor[T, J]
+  def singleContext(index: Int): ArrVisitor[T, J]
   def arrayContext(index: Int): ArrVisitor[T, J]
   def objectContext(index: Int): ObjVisitor[T, J]
 
@@ -44,13 +44,17 @@ sealed trait ObjArrVisitor[-J, +T] {
   def add(v: J, index: Int): Unit
   def finish(index: Int): T
   def isObj: Boolean
+  def narrow = this.asInstanceOf[ObjArrVisitor[Any, T]]
+
 }
 trait ObjVisitor[-J, +T] extends ObjArrVisitor[J, T]{
   def visitKey(s: CharSequence, index: Int): Unit
   def isObj = true
+  override def narrow = this.asInstanceOf[ObjVisitor[Any, T]]
 }
 trait ArrVisitor[-J, +T] extends ObjArrVisitor[J, T]{
   def isObj = false
+  override def narrow = this.asInstanceOf[ArrVisitor[Any, T]]
 }
 
 /**

@@ -16,11 +16,11 @@ object JsVisitor extends jawn.Walker[Js.Value]{
       case Js.Str(s) => f.jstring(s, -1)
       case Js.Num(d) => f.jnum(d.toString, -1, -1, -1)
       case Js.Arr(items @ _*) =>
-        val ctx = f.arrayContext(-1).asInstanceOf[ArrVisitor[Any, T]]
+        val ctx = f.arrayContext(-1).narrow
         for(item <- items) ctx.add(visit(item, ctx.subVisitor), -1)
         ctx.finish(-1)
       case Js.Obj(items @ _*) =>
-        val ctx = f.objectContext(-1).asInstanceOf[ObjVisitor[Any, T]]
+        val ctx = f.objectContext(-1).narrow
         for((k, item) <- items) {
           ctx.visitKey(k, -1)
           ctx.add(visit(item, ctx.subVisitor), -1)

@@ -28,11 +28,11 @@ object WebJson extends jawn.Walker[js.Any]{
       case false => f.jfalse(-1)
       case null => f.jnull(-1)
       case s: js.Array[js.Any] =>
-        val ctx = f.arrayContext(-1).asInstanceOf[ArrVisitor[Any, T]]
+        val ctx = f.arrayContext(-1).narrow
         for(i <- s) ctx.add(visit(i, ctx.subVisitor), -1)
         ctx.finish(-1)
       case s: js.Object =>
-        val ctx = f.objectContext(-1).asInstanceOf[ObjVisitor[Any, T]]
+        val ctx = f.objectContext(-1).narrow
         for(p <- s.asInstanceOf[js.Dictionary[js.Any]]) {
           ctx.visitKey(p._1, -1)
           ctx.add(visit(p._2, ctx.subVisitor), -1)

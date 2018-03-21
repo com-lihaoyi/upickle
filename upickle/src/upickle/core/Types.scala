@@ -60,7 +60,7 @@ trait Types{ types =>
     }
     def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z](this, f)
     def mapNulls[Z](f: V => Z) = new BaseReader.MapReaderNullable[T, V, Z](this, f)
-    def singleContext(index: Int) = new ObjVisitor[T, V] {
+    def singleContext(index: Int) = new ArrVisitor[T, V] {
       var res: V = _
 
       def subVisitor = BaseReader.this

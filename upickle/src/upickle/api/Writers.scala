@@ -49,7 +49,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     def write[R](out: upickle.jawn.Visitor[_, R], v: C[T]): R = {
       if (v == null) out.jnull()
       else{
-        val ctx = out.arrayContext().asInstanceOf[ObjArrVisitor[Any, R]]
+        val ctx = out.arrayContext().narrow
         val x = v.iterator
         while(x.nonEmpty){
           val next = x.next().asInstanceOf[T]
@@ -63,7 +63,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   }
   implicit def ArrayWriter[T](implicit r: Writer[T]) = new Writer[Array[T]] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: Array[T]): R = {
-      val ctx = out.arrayContext().asInstanceOf[ObjArrVisitor[Any, R]]
+      val ctx = out.arrayContext().narrow
       var i = 0
       while(i < v.length){
         ctx.add(r.write(out, v(i)), -1)
@@ -77,7 +77,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def MapWriter[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[Map[K, V]] = {
     if (kw eq StringWriter) new Writer[Map[String, V]]{
       def write[R](out: upickle.jawn.Visitor[_, R], v: Map[String, V]): R = {
-        val ctx = out.objectContext().asInstanceOf[ObjVisitor[Any, R]]
+        val ctx = out.objectContext().narrow
         for(pair <- v){
           val (k1, v1) = pair
           ctx.visitKey(k1, -1)
@@ -99,20 +99,20 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
 
-  implicit val InfiniteDurationWriter = DurationWriter.asInstanceOf[Writer[Duration.Infinite]]
-  implicit val FiniteDurationWriter = DurationWriter.asInstanceOf[Writer[FiniteDuration]]
+  implicit val InfiniteDurationWriter = DurationWriter.narrow[Duration.Infinite]
+  implicit val FiniteDurationWriter = DurationWriter.narrow[FiniteDuration]
 
   implicit def EitherWriter[T1: Writer, T2: Writer] = new Writer[Either[T1, T2]]{
     def write[R](out: upickle.jawn.Visitor[_, R], v: Either[T1, T2]): R = v match{
       case Left(t1) =>
-        val ctx = out.arrayContext().asInstanceOf[ObjArrVisitor[Any, R]]
+        val ctx = out.arrayContext().narrow
         ctx.add(out.jnum("0", -1, -1), -1)
 
         ctx.add(implicitly[Writer[T1]].write(out, t1), -1)
 
         ctx.finish(-1)
       case Right(t2) =>
-        val ctx = out.arrayContext().asInstanceOf[ObjArrVisitor[Any, R]]
+        val ctx = out.arrayContext().narrow
         ctx.add(out.jnum("1", -1, -1), -1)
 
         ctx.add(implicitly[Writer[T2]].write(out, t2), -1)
@@ -121,22 +121,22 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
   implicit def RightWriter[T1: Writer, T2: Writer] =
-    EitherWriter[T1, T2].asInstanceOf[Writer[Right[T1, T2]]]
+    EitherWriter[T1, T2].narrow[Right[T1, T2]]
   implicit def LeftWriter[T1: Writer, T2: Writer] =
-    EitherWriter[T1, T2].asInstanceOf[Writer[Left[T1, T2]]]
+    EitherWriter[T1, T2].narrow[Left[T1, T2]]
 
-  implicit def JsObjW: Writer[Js.Obj] = JsValueW.asInstanceOf[Writer[Js.Obj]]
-  implicit def JsArrW: Writer[Js.Arr] = JsValueW.asInstanceOf[Writer[Js.Arr]]
-  implicit def JsStrW: Writer[Js.Str] = JsValueW.asInstanceOf[Writer[Js.Str]]
-  implicit def JsNumW: Writer[Js.Num] = JsValueW.asInstanceOf[Writer[Js.Num]]
-  implicit def JsTrueW: Writer[Js.True.type] = JsValueW.asInstanceOf[Writer[Js.True.type]]
-  implicit def JsFalseW: Writer[Js.False.type] = JsValueW.asInstanceOf[Writer[Js.False.type]]
-  implicit def JsNullW: Writer[Js.Null.type] = JsValueW.asInstanceOf[Writer[Js.Null.type]]
+  implicit def JsObjW: Writer[Js.Obj] = JsValueW.narrow[Js.Obj]
+  implicit def JsArrW: Writer[Js.Arr] = JsValueW.narrow[Js.Arr]
+  implicit def JsStrW: Writer[Js.Str] = JsValueW.narrow[Js.Str]
+  implicit def JsNumW: Writer[Js.Num] = JsValueW.narrow[Js.Num]
+  implicit def JsTrueW: Writer[Js.True.type] = JsValueW.narrow[Js.True.type]
+  implicit def JsFalseW: Writer[Js.False.type] = JsValueW.narrow[Js.False.type]
+  implicit def JsNullW: Writer[Js.Null.type] = JsValueW.narrow[Js.Null.type]
   implicit object JsValueW extends Writer[Js.Value] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: Js.Value): R = {
       v match{
         case v: Js.Obj =>
-          val ctx = out.objectContext(-1).asInstanceOf[ObjVisitor[Any, R]]
+          val ctx = out.objectContext(-1).narrow
           for((k, item) <- v.value){
 
             ctx.visitKey(k, -1)
@@ -145,7 +145,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
           ctx.finish(-1)
         case v: Js.Arr =>
-          val ctx = out.arrayContext(-1).asInstanceOf[ArrVisitor[Any, R]]
+          val ctx = out.arrayContext(-1).narrow
           for(item <- v.value){
             ctx.add(JsValueW.write(out, item), -1)
 

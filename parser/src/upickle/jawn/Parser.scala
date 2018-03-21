@@ -341,7 +341,7 @@ abstract class Parser[J] {
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-        val ctxt = facade.singleContext(i).asInstanceOf[ObjArrVisitor[Any, J]]
+        val ctxt = facade.singleContext(i).narrow
         val j = parseNumSlow(i, ctxt)
         (try ctxt.finish(i) catch reject(i, Nil), j)
 
@@ -408,7 +408,7 @@ abstract class Parser[J] {
         val ctx = try facade.objectContext(i) catch reject(j, path)
         rparse(OBJBEG, i + 1, ctx :: stack, null :: path)
       } else {
-        val ctxt = stack.head.asInstanceOf[ObjArrVisitor[Any, J]]
+        val ctxt = stack.head.narrow
 
         if ((c >= '0' && c <= '9') || c == '-') {
           val j = try parseNum(i, ctxt) catch reject(i, path)
@@ -443,7 +443,7 @@ abstract class Parser[J] {
         if (tail.isEmpty) {
           (try ctxt1.finish(i) catch reject(i, path), i + 1)
         } else {
-          val ctxt2 = tail.head.asInstanceOf[ObjArrVisitor[Any, J]]
+          val ctxt2 = tail.head.narrow
           try ctxt2.add(ctxt1.finish(i) , i) catch reject(i, path)
           rparse(if (ctxt2.isObj) OBJEND else ARREND, i + 1, tail, path.tail)
         }

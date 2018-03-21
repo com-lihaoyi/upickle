@@ -14,9 +14,8 @@ object NullFacade extends Visitor[Unit, Unit] {
 
 
 
-  def singleContext(index: Int) = new ObjVisitor[Unit, Unit] {
+  def singleContext(index: Int) = new ArrVisitor[Unit, Unit] {
     def subVisitor = NullFacade.this
-    def visitKey(s: CharSequence, index: Int): Unit = ()
     def add(v: Unit, index: Int): Unit = ()
     def finish(index: Int): Unit = ()
   }

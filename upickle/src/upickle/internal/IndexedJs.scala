@@ -38,11 +38,11 @@ object IndexedJs extends Walker[IndexedJs]{
       case IndexedJs.Str(i, s) => f.jstring(s, i)
       case IndexedJs.Num(i, s, d, e) => f.jnum(s, d, e, i)
       case IndexedJs.Arr(i, items @_*) =>
-        val ctx = f.arrayContext(-1).asInstanceOf[ArrVisitor[Any, T]]
+        val ctx = f.arrayContext(-1).narrow
         for(item <- items) try ctx.add(visit(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
         ctx.finish(i)
       case IndexedJs.Obj(i, items @_*) =>
-        val ctx = f.objectContext(-1).asInstanceOf[ObjVisitor[Any, T]]
+        val ctx = f.objectContext(-1).narrow
         for((k, item) <- items) {
           try ctx.visitKey(k, i) catch reject(i, Nil)
           try ctx.add(visit(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
