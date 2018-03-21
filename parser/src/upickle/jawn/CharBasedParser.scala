@@ -39,8 +39,7 @@ trait CharBasedParser[J] extends Parser[J] {
    */
   protected[this] final def parseStringComplex(pre: Int,
                                                i: Int,
-                                               key: Boolean)
-                                              (implicit facade: Visitor[_, J]): (CharSequence, Int) = {
+                                               key: Boolean): (CharSequence, Int) = {
 
     val sb = charBuilder.reset()
     sb.extend(at(pre, i))
@@ -91,18 +90,11 @@ trait CharBasedParser[J] extends Parser[J] {
    * Char. It performs the correct checks to make sure that we don't
    * interpret a multi-char code point incorrectly.
    */
-  protected[this] final def parseString(i: Int,  key: Boolean)
-                                        (implicit facade: Visitor[_, J]): (J, CharSequence, Int) = {
+  protected[this] final def parseString(i: Int,  key: Boolean): (CharSequence, Int) = {
 
     val k = parseStringSimple(i + 1)
-    val res =
-      if (k >= 0) (at(i + 1, k - 1), k)
-      else parseStringComplex(i + 1, (-k) - 1, key)
 
-    val value =
-      if (key) null.asInstanceOf[J]
-      else facade.visitString(res._1, i)
-
-    (value, res._1, res._2)
+    if (k >= 0) (at(i + 1, k - 1), k)
+    else parseStringComplex(i + 1, (-k) - 1, key)
   }
 }

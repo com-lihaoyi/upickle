@@ -37,8 +37,7 @@ trait ByteBasedParser[J] extends Parser[J] {
     j + 1
   }
 
-  protected[this] final def parseStringComplex(i: Int)
-                                              (implicit facade: Visitor[_, J])= {
+  protected[this] final def parseStringComplex(i: Int) = {
 
 
     // TODO: we might be able to do better by identifying where
@@ -92,19 +91,18 @@ trait ByteBasedParser[J] extends Parser[J] {
     }
     val s = sb.makeString
 
-    (facade.visitString(s, i), s, j + 1)
+    (s, j + 1)
   }
   /**
    * Parse the string according to JSON rules, and add to the given context.
    *
    * This method expects the data to be in UTF-8 and accesses it as bytes.
    */
-  protected[this] final def parseString(i: Int, key: Boolean)
-                                       (implicit facade: Visitor[_, J]): (J, CharSequence, Int) = {
+  protected[this] final def parseString(i: Int, key: Boolean): (CharSequence, Int) = {
     val k = parseStringSimple(i + 1)
     if (k != -1) {
       val s = at(i + 1, k - 1)
-      (if (key) null.asInstanceOf[J] else facade.visitString(s, i), s, k)
+      (s, k)
     }else{
       parseStringComplex(i)
 

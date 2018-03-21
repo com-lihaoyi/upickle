@@ -278,9 +278,7 @@ abstract class Parser[J] {
   /**
    * Parse the JSON string starting at 'i' and save it into 'ctxt'.
    */
-  protected[this] def parseString(i: Int,
-                                  key: Boolean)
-                                 (implicit facade: Visitor[_, J]): (J, CharSequence, Int)
+  protected[this] def parseString(i: Int, key: Boolean): (CharSequence, Int)
 
   /**
    * Parse the JSON constant "true".
@@ -341,7 +339,8 @@ abstract class Parser[J] {
       // we have a single top-level string
       case '"' =>
         try {
-          val (v, _, j) = parseString(i, false)
+          val (s, j) = parseString(i, false)
+          val v = facade.visitString(s, i)
           (v, j)
         } catch reject(i, Nil)
 
@@ -409,7 +408,8 @@ abstract class Parser[J] {
           rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack, path)
         } else if (c == '"') {
           val nextJ = try {
-            val (v, _, j) = parseString(i, false)
+            val (s, j) = parseString(i, false)
+            val v = facade.visitString(s, i)
             ctxt.visitValue(v, i)
             j
           } catch reject(i, path)
@@ -449,7 +449,7 @@ abstract class Parser[J] {
     } else if (state == KEY) {
       // we are in an object expecting to see a key.
       if (c == '"') {
-        val (_, s, j) = parseString(i, true)
+        val (s, j) = parseString(i, true)
         stack.head.asInstanceOf[ObjVisitor[Any, _]].visitKey(s, j)
         rparse(SEP, j, stack, s :: path.tail)
       } else die(i, "expected \"")
