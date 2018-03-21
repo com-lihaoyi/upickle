@@ -21,8 +21,12 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
 
   def write[T: Writer](t: T, indent: Int = -1) = {
     val out = new java.io.StringWriter()
-    implicitly[Writer[T]].write(new visitors.Renderer(out, indent = indent), t)
+    writeTo(t, out, indent)
     out.toString
+  }
+
+  def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1) = {
+    implicitly[Writer[T]].write(new visitors.Renderer(out, indent = indent), t)
   }
 }
 
