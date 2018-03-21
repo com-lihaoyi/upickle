@@ -1,6 +1,6 @@
 package upickle.internal
 
-import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor, Walker}
+import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor, Transformer}
 import upickle.visitors.JsVisitor.{reject}
 
 import scala.collection.mutable
@@ -14,7 +14,7 @@ import scala.collection.mutable
 sealed trait IndexedJs {
   def index: Int
 }
-object IndexedJs extends Walker[IndexedJs]{
+object IndexedJs extends Transformer[IndexedJs]{
   
   case class Str(index: Int, value0: java.lang.CharSequence) extends IndexedJs
   case class Obj(index: Int, value0: (java.lang.CharSequence, IndexedJs)*) extends IndexedJs
@@ -30,7 +30,7 @@ object IndexedJs extends Walker[IndexedJs]{
     def value = null
   }
 
-  def walk[T](j: IndexedJs, f: upickle.jawn.Visitor[_, T]): T = try{
+  def transform[T](j: IndexedJs, f: upickle.jawn.Visitor[_, T]): T = try{
     j match{
       case IndexedJs.Null(i) => f.visitNull(i)
       case IndexedJs.True(i) => f.visitTrue(i)
@@ -39,13 +39,13 @@ object IndexedJs extends Walker[IndexedJs]{
       case IndexedJs.Num(i, s, d, e) => f.visitNum(s, d, e, i)
       case IndexedJs.Arr(i, items @_*) =>
         val ctx = f.visitArray(-1).narrow
-        for(item <- items) try ctx.visitValue(walk(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
+        for(item <- items) try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
         ctx.visitEnd(i)
       case IndexedJs.Obj(i, items @_*) =>
         val ctx = f.visitObject(-1).narrow
         for((k, item) <- items) {
           try ctx.visitKey(k, i) catch reject(i, Nil)
-          try ctx.visitValue(walk(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
+          try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
         }
         ctx.visitEnd(i)
     }

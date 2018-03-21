@@ -3,7 +3,7 @@ package upickle.jawn.util
 /**
  * CharBuilder is a specialized way to build Strings.
  *
- * It wraps a (growable) array of characters, and can walk
+ * It wraps a (growable) array of characters, and can transform
  * additional String or Char data to be added to its buffer.
  */
 private[jawn] final class CharBuilder {

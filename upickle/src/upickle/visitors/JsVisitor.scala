@@ -7,8 +7,8 @@ import upickle.jawn._
 import scala.collection.mutable
 
 
-object JsVisitor extends jawn.Walker[Js.Value]{
-  def walk[T](j: Js.Value, f: upickle.jawn.Visitor[_, T]): T = {
+object JsVisitor extends jawn.Transformer[Js.Value]{
+  def transform[T](j: Js.Value, f: upickle.jawn.Visitor[_, T]): T = {
     j match{
       case Js.Null => f.visitNull(-1)
       case Js.True => f.visitTrue(-1)
@@ -17,13 +17,13 @@ object JsVisitor extends jawn.Walker[Js.Value]{
       case Js.Num(d) => f.visitNum(d.toString, -1, -1, -1)
       case Js.Arr(items @ _*) =>
         val ctx = f.visitArray(-1).narrow
-        for(item <- items) ctx.visitValue(walk(item, ctx.subVisitor), -1)
+        for(item <- items) ctx.visitValue(transform(item, ctx.subVisitor), -1)
         ctx.visitEnd(-1)
       case Js.Obj(items @ _*) =>
         val ctx = f.visitObject(-1).narrow
         for((k, item) <- items) {
           ctx.visitKey(k, -1)
-          ctx.visitValue(walk(item, ctx.subVisitor), -1)
+          ctx.visitValue(transform(item, ctx.subVisitor), -1)
         }
         ctx.visitEnd(-1)
     }

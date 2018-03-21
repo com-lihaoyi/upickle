@@ -16,8 +16,7 @@ import scala.reflect.ClassTag
  * trait instance is tagged during reading and writing.
  */
 trait Api extends upickle.core.Types with api.Implicits with WebJson{
-  def read[T: Reader](s: Source) = s.walk(implicitly[Reader[T]])
-
+  def read[T: Reader](s: Source) = s.transform(implicitly[Reader[T]])
 
   def write[T: Writer](t: T, indent: Int = -1) = {
     val out = new java.io.StringWriter()
@@ -27,6 +26,13 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
 
   def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1) = {
     implicitly[Writer[T]].write(new visitors.Renderer(out, indent = indent), t)
+  }
+
+  case class source[T: Writer](t: T) extends Source{
+    def transform[V](f: upickle.jawn.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
+  }
+  def transform[T: Writer, V: Reader](t: T, indent: Int = -1) = {
+    implicitly[Writer[T]].write(implicitly[Reader[V]], t)
   }
 }
 
@@ -166,7 +172,7 @@ trait AttributeTagged extends Api{
             val k = k0.toString
             if (k != tagName){
               ctx2.visitKey(k, -1)
-              ctx2.visitValue(IndexedJs.walk(v, ctx2.subVisitor), -1)
+              ctx2.visitValue(IndexedJs.transform(v, ctx2.subVisitor), -1)
             }
           }
           ctx2.visitEnd(index)
@@ -185,12 +191,14 @@ trait AttributeTagged extends Api{
 
 object json{
   val jsRW = upickle.default.macroRW0[Js.Value](implicitly, implicitly)
-  def read(s: Source) = s.walk(jsRW)
+  def read(s: Source) = s.transform(jsRW)
   def write(t: Js.Value): String = {
     val out = new java.io.StringWriter()
     jsRW.write(new visitors.Renderer(out), t)
     out.toString
   }
+
+  def transform[T](t: Source, v: Visitor[_, T]) = t.transform(v)
 }
 
 case class key(s: String) extends StaticAnnotation
