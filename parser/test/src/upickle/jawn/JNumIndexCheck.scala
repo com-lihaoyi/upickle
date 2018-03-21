@@ -6,33 +6,46 @@ import java.nio.ByteBuffer
 import org.scalatest.{Matchers, PropSpec}
 import org.scalatest.prop.PropertyChecks
 import scala.util.Success
-object JNumIndexCheckFacade extends Facade[Boolean] {
-  class JNumIndexCheckContext(val isObj: Boolean) extends FContext[Boolean] {
+object JNumIndexCheckFacade extends Visitor[Boolean, Boolean] {
+  def singleContext(index: Int) = new ObjVisitor[Boolean, Boolean] {
     var failed = false
-    def facade: RawFacade[_, Any] = JNumIndexCheckFacade
-    def visitKey(s: CharSequence): Unit = ()
-    def add(s: CharSequence): Unit = ()
-    def add(v: Boolean): Unit = {
+    def subVisitor = JNumIndexCheckFacade
+    def visitKey(s: CharSequence, index: Int): Unit = ()
+    def add(v: Boolean, index: Int): Unit = {
       if (!v) failed = true
     }
-    def finish: Boolean = !failed
+    def finish(index: Int): Boolean = !failed
+  }
+  def arrayContext(index: Int)  = new ArrVisitor[Boolean, Boolean] {
+    var failed = false
+    def subVisitor = JNumIndexCheckFacade
+    def visitKey(s: CharSequence, index: Int): Unit = ()
+    def add(v: Boolean, index: Int): Unit = {
+      if (!v) failed = true
+    }
+    def finish(index: Int): Boolean = !failed
+  }
+  def objectContext(index: Int) = new ObjVisitor[Boolean, Boolean] {
+    var failed = false
+    def subVisitor = JNumIndexCheckFacade
+    def visitKey(s: CharSequence, index: Int): Unit = ()
+    def add(v: Boolean, index: Int): Unit = {
+      if (!v) failed = true
+    }
+    def finish(index: Int): Boolean = !failed
   }
 
-  val singleContext: ObjArrVisitor[Boolean, Boolean] = new JNumIndexCheckContext(false)
-  val arrayContext: ObjArrVisitor[Boolean, Boolean] = new JNumIndexCheckContext(false)
-  val objectContext: ObjArrVisitor[Boolean, Boolean] = new JNumIndexCheckContext(true)
-
-  def jnull(): Boolean = true
-  def jfalse(): Boolean = true
-  def jtrue(): Boolean = true
-  def jnum(s: CharSequence, decIndex: Int, expIndex: Int): Boolean = {
+  def jnull(index: Int): Boolean = true
+  def jfalse(index: Int): Boolean = true
+  def jtrue(index: Int): Boolean = true
+  def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Boolean = {
     val input = s.toString
     val inputDecIndex = input.indexOf('.')
     val inputExpIndex = if (input.indexOf('e') == -1) input.indexOf("E") else input.indexOf('e')
 
     decIndex == inputDecIndex && expIndex == inputExpIndex
   }
-  def jstring(s: CharSequence): Boolean = true
+  def jstring(s: CharSequence, index: Int): Boolean = true
 }
 
 

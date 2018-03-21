@@ -49,7 +49,7 @@ trait ByteBasedParser[J] extends Parser[J] {
       val str =
         if (key) {
           val s = at(i + 1, k - 1)
-          ctxt.visitKey(s, i)
+          ctxt.asInstanceOf[ObjVisitor[_, J]].visitKey(s, i)
           s
         } else {
           val s = at(i + 1, k - 1)
@@ -111,7 +111,7 @@ trait ByteBasedParser[J] extends Parser[J] {
     val str =
       if (key) {
         val s = sb.makeString
-        ctxt.visitKey(s, i)
+        ctxt.asInstanceOf[ObjVisitor[_, J]].visitKey(s, i)
         s
       } else {
         val s = sb.makeString

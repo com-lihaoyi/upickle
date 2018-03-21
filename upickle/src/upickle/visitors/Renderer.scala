@@ -3,7 +3,7 @@ package visitors
 
 import java.io.{ByteArrayOutputStream, StringWriter, Writer}
 
-import upickle.jawn.ObjArrVisitor
+import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor}
 
 import scala.annotation.switch
 
@@ -22,14 +22,13 @@ class Renderer(out: java.io.Writer,
       renderIndent()
     }
   }
-  def arrayContext(index: Int) = new ObjArrVisitor[Unit, Unit] {
+  def arrayContext(index: Int) = new ArrVisitor[Unit, Unit] {
     flushBuffer()
     out.append('[')
 
     depth += 1
     renderIndent()
-    def facade = Renderer.this
-    def visitKey(s: CharSequence, index: Int): Unit = ???
+    def subVisitor = Renderer.this
     def add(v: Unit, index: Int): Unit = {
       flushBuffer()
       commaBuffered = true
@@ -40,15 +39,14 @@ class Renderer(out: java.io.Writer,
       renderIndent()
       out.append(']')
     }
-    def isObj = false
   }
 
-  def objectContext(index: Int) = new ObjArrVisitor[Unit, Unit] {
+  def objectContext(index: Int) = new ObjVisitor[Unit, Unit] {
     flushBuffer()
     out.append('{')
     depth += 1
     renderIndent()
-    def facade = Renderer.this
+    def subVisitor = Renderer.this
     def visitKey(s: CharSequence, index: Int): Unit = {
       flushBuffer()
 
@@ -65,7 +63,6 @@ class Renderer(out: java.io.Writer,
       renderIndent()
       out.append('}')
     }
-    def isObj = false
   }
 
   def jnull(index: Int) = {

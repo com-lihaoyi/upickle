@@ -1,7 +1,7 @@
 package upickle
 
 import upickle.internal.IndexedJs
-import upickle.jawn.{AbortJsonProcessingException, JsonProcessingException, ObjArrVisitor}
+import upickle.jawn._
 
 import scala.collection.mutable
 import scala.scalajs.js
@@ -28,55 +28,52 @@ object WebJson extends jawn.Walker[js.Any]{
       case false => f.jfalse(-1)
       case null => f.jnull(-1)
       case s: js.Array[js.Any] =>
-        val ctx = f.arrayContext(-1).asInstanceOf[ObjArrVisitor[Any, T]]
-        for(i <- s) ctx.add(visit(i, ctx.SimpleVisitor), -1)
+        val ctx = f.arrayContext(-1).asInstanceOf[ArrVisitor[Any, T]]
+        for(i <- s) ctx.add(visit(i, ctx.subVisitor), -1)
         ctx.finish(-1)
       case s: js.Object =>
-        val ctx = f.objectContext(-1).asInstanceOf[ObjArrVisitor[Any, T]]
+        val ctx = f.objectContext(-1).asInstanceOf[ObjVisitor[Any, T]]
         for(p <- s.asInstanceOf[js.Dictionary[js.Any]]) {
           ctx.visitKey(p._1, -1)
-          ctx.add(visit(p._2, ctx.SimpleVisitor), -1)
+          ctx.add(visit(p._2, ctx.subVisitor), -1)
         }
         ctx.finish(-1)
     }
   }
 
-  object Builder extends upickle.jawn.SimpleVisitor[js.Any]{
-    def singleContext() = ???
+  object Builder extends upickle.jawn.Visitor[js.Any, js.Any]{
+    def singleContext(index: Int) = ???
 
-    def arrayContext() = new ObjArrVisitor[js.Any, js.Any] {
+    def arrayContext(index: Int) = new ArrVisitor[js.Any, js.Any] {
       val out = new js.Array[js.Any]
-      def facade = Builder.this
-      def visitKey(s: CharSequence, index: Int): Unit = ???
+      def subVisitor = Builder.this
       def add(v: js.Any, index: Int): Unit = out.append(v)
 
       def finish(index: Int): js.Any = out
-      def isObj = false
     }
 
-    def objectContext() = new ObjArrVisitor[js.Any, js.Any] {
+    def objectContext(index: Int) = new ObjVisitor[js.Any, js.Any] {
       val out = js.Dictionary[js.Any]()
       var currentKey: String = _
-      def facade = Builder.this
+      def subVisitor = Builder.this
       def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
       def add(v: js.Any, index: Int): Unit = {
         out(currentKey) = v
       }
       def finish(index: Int) = out
-      def isObj = true
     }
 
-    def jnull() = null.asInstanceOf[js.Any]
+    def jnull(index: Int) = null.asInstanceOf[js.Any]
 
-    def jfalse() = false.asInstanceOf[js.Any]
+    def jfalse(index: Int) = false.asInstanceOf[js.Any]
 
-    def jtrue() = true.asInstanceOf[js.Any]
+    def jtrue(index: Int) = true.asInstanceOf[js.Any]
 
-    def jnum(s: CharSequence, decIndex: Int, expIndex: Int) = {
+    def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toDouble.asInstanceOf[js.Any]
     }
 
-    def jstring(s: CharSequence) = s.toString.asInstanceOf[js.Any]
+    def jstring(s: CharSequence, index: Int) = s.toString.asInstanceOf[js.Any]
   }
 }
 

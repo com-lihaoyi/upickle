@@ -3,7 +3,7 @@ package api
 
 import java.util.UUID
 
-import upickle.jawn.ObjArrVisitor
+import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor}
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -13,7 +13,8 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   }
   implicit object UnitWriter extends Writer[Unit] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: Unit): R = {
-      out.objectContext(-1).finish(-1)
+      if (v == null) out.jnull(-1)
+      else out.objectContext(-1).finish(-1)
     }
   }
 
@@ -42,8 +43,8 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit val SymbolWriter: Writer[Symbol] = StringWriter.comap[Symbol](_.name)
 
   implicit def OptionWriter[T: Writer]: Writer[Option[T]] = SeqLikeWriter[Seq, T].comap[Option[T]](_.toSeq)
-  implicit def SomeWriter[T: Writer]: Writer[Some[T]] = OptionWriter[T].asInstanceOf[Writer[Some[T]]]
-  implicit def NoneWriter: Writer[None.type] = OptionWriter[Unit].asInstanceOf[Writer[None.type]]
+  implicit def SomeWriter[T: Writer]: Writer[Some[T]] = OptionWriter[T].narrow[Some[T]]
+  implicit def NoneWriter: Writer[None.type] = OptionWriter[Unit].narrow[None.type]
   implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]) = new Writer[C[T]] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: C[T]): R = {
       if (v == null) out.jnull()
@@ -76,7 +77,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def MapWriter[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[Map[K, V]] = {
     if (kw eq StringWriter) new Writer[Map[String, V]]{
       def write[R](out: upickle.jawn.Visitor[_, R], v: Map[String, V]): R = {
-        val ctx = out.objectContext().asInstanceOf[ObjArrVisitor[Any, R]]
+        val ctx = out.objectContext().asInstanceOf[ObjVisitor[Any, R]]
         for(pair <- v){
           val (k1, v1) = pair
           ctx.visitKey(k1, -1)
@@ -135,7 +136,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     def write[R](out: upickle.jawn.Visitor[_, R], v: Js.Value): R = {
       v match{
         case v: Js.Obj =>
-          val ctx = out.objectContext(-1).asInstanceOf[ObjArrVisitor[Any, R]]
+          val ctx = out.objectContext(-1).asInstanceOf[ObjVisitor[Any, R]]
           for((k, item) <- v.value){
 
             ctx.visitKey(k, -1)
@@ -144,7 +145,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
           ctx.finish(-1)
         case v: Js.Arr =>
-          val ctx = out.arrayContext(-1).asInstanceOf[ObjArrVisitor[Any, R]]
+          val ctx = out.arrayContext(-1).asInstanceOf[ArrVisitor[Any, R]]
           for(item <- v.value){
             ctx.add(JsValueW.write(out, item), -1)
 

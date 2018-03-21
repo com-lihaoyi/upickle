@@ -51,12 +51,10 @@ trait LegacyApi extends Api{
     case class Parsing(f: Reader[_]) extends TaggedReaderState
     case class Parsed(res: Any) extends TaggedReaderState
   }
-  override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new ObjArrVisitor[Any, T] {
+  override def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int) = new ArrVisitor[Any, T] {
     var state: TaggedReaderState = TaggedReaderState.Initializing
 
-    def visitKey(s: CharSequence, index: Int): Unit = throw new Exception(s + " " + index)
-
-    def facade = state match{
+    def subVisitor = state match{
       case TaggedReaderState.Initializing => StringReader
       case TaggedReaderState.Parsing(f) => f
       case TaggedReaderState.Parsed(res) => NullFacade
@@ -81,7 +79,6 @@ trait LegacyApi extends Api{
       case _ => throw new AbortJsonProcessingException("expected tagged dictionary")
     }
 
-    def isObj = false
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].arrayContext(-1)
@@ -112,11 +109,11 @@ trait AttributeTagged extends Api{
   sealed trait TaggedReaderState
   object TaggedReaderState{
     case object Initializing extends TaggedReaderState
-    case class FastPath(ctx: ObjArrVisitor[Any, _]) extends TaggedReaderState
-    case class SlowPath(ctx: ObjArrVisitor[Any, IndexedJs.Obj]) extends TaggedReaderState
+    case class FastPath(ctx: ObjVisitor[Any, _]) extends TaggedReaderState
+    case class SlowPath(ctx: ObjVisitor[Any, IndexedJs.Obj]) extends TaggedReaderState
   }
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
-    new upickle.jawn.ObjArrVisitor[Any, T]{
+    new upickle.jawn.ObjVisitor[Any, T]{
       var state: TaggedReaderState = TaggedReaderState.Initializing
       def visitKey(s: CharSequence, index: Int): Unit = state match{
         case TaggedReaderState.Initializing =>
@@ -130,10 +127,10 @@ trait AttributeTagged extends Api{
         case TaggedReaderState.SlowPath(ctx) => ctx.visitKey(s, index)
       }
 
-      def facade = state match{
+      def subVisitor = state match{
         case TaggedReaderState.Initializing => StringReader
-        case TaggedReaderState.FastPath(ctx) => ctx.facade
-        case TaggedReaderState.SlowPath(ctx) => ctx.facade
+        case TaggedReaderState.FastPath(ctx) => ctx.subVisitor
+        case TaggedReaderState.SlowPath(ctx) => ctx.subVisitor
       }
 
       def add(v: Any, index: Int): Unit = state match{
@@ -165,13 +162,12 @@ trait AttributeTagged extends Api{
             val k = k0.toString
             if (k != tagName){
               ctx2.visitKey(k, -1)
-              ctx2.add(IndexedJs.visit(v, ctx2.facade), -1)
+              ctx2.add(IndexedJs.visit(v, ctx2.subVisitor), -1)
             }
           }
           ctx2.finish(index)
       }
 
-      def isObj = true
     }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {

@@ -12,16 +12,25 @@ package upickle.jawn
  */
 object NullFacade extends Visitor[Unit, Unit] {
 
-  case class NullContext(isObj: Boolean) extends ObjArrVisitor[Unit, Unit] {
-    def facade = NullFacade.this
+
+
+  def singleContext(index: Int) = new ObjVisitor[Unit, Unit] {
+    def subVisitor = NullFacade.this
     def visitKey(s: CharSequence, index: Int): Unit = ()
     def add(v: Unit, index: Int): Unit = ()
     def finish(index: Int): Unit = ()
   }
-
-  def singleContext(index: Int): ObjArrVisitor[Unit, Unit] = NullContext(false)
-  def arrayContext(index: Int): ObjArrVisitor[Unit, Unit] = NullContext(false)
-  def objectContext(index: Int): ObjArrVisitor[Unit, Unit] = NullContext(true)
+  def arrayContext(index: Int) = new ArrVisitor[Unit, Unit] {
+    def subVisitor = NullFacade.this
+    def add(v: Unit, index: Int): Unit = ()
+    def finish(index: Int): Unit = ()
+  }
+  def objectContext(index: Int) = new ObjVisitor[Unit, Unit] {
+    def subVisitor = NullFacade.this
+    def visitKey(s: CharSequence, index: Int): Unit = ()
+    def add(v: Unit, index: Int): Unit = ()
+    def finish(index: Int): Unit = ()
+  }
 
   def jnull(index: Int): Unit = ()
   def jfalse(index: Int): Unit = ()

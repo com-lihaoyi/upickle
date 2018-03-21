@@ -100,7 +100,7 @@ trait CharBasedParser[J] extends Parser[J] {
       if (k >= 0) (at(i + 1, k - 1), k)
       else parseStringComplex(i + 1, (-k) - 1, ctxt, key)
 
-    if (key) ctxt.visitKey(res._1, i)
+    if (key) ctxt.asInstanceOf[ObjVisitor[_, J]].visitKey(res._1, i)
     else ctxt.asInstanceOf[ObjArrVisitor[J, J]].add(facade.jstring(res._1, i), i)
 
     res

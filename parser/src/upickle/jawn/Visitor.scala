@@ -9,8 +9,8 @@ package upickle.jawn
  */
 trait Visitor[-T, +J] {
   def singleContext(index: Int): ObjArrVisitor[T, J]
-  def arrayContext(index: Int): ObjArrVisitor[T, J]
-  def objectContext(index: Int): ObjArrVisitor[T, J]
+  def arrayContext(index: Int): ArrVisitor[T, J]
+  def objectContext(index: Int): ObjVisitor[T, J]
 
   def jnull(index: Int): J
   def jfalse(index: Int): J
@@ -20,8 +20,8 @@ trait Visitor[-T, +J] {
 
 
   def singleContext(): ObjArrVisitor[T, J] = singleContext(-1)
-  def arrayContext(): ObjArrVisitor[T, J] = arrayContext(-1)
-  def objectContext(): ObjArrVisitor[T, J] = objectContext(-1)
+  def arrayContext(): ArrVisitor[T, J] = arrayContext(-1)
+  def objectContext(): ObjVisitor[T, J] = objectContext(-1)
 
   def jnull(): J = jnull(-1)
   def jfalse(): J = jfalse(-1)
@@ -38,12 +38,19 @@ trait Visitor[-T, +J] {
  * this type is also used to build a single top-level JSON element, in
  * cases where the entire JSON document consists of "333.33".
  */
-trait ObjArrVisitor[-J, +T] {
-  def facade: Visitor[Nothing, Any]
-  def visitKey(s: CharSequence, index: Int): Unit
+sealed trait ObjArrVisitor[-J, +T] {
+  def subVisitor: Visitor[Nothing, Any]
+
   def add(v: J, index: Int): Unit
   def finish(index: Int): T
   def isObj: Boolean
+}
+trait ObjVisitor[-J, +T] extends ObjArrVisitor[J, T]{
+  def visitKey(s: CharSequence, index: Int): Unit
+  def isObj = true
+}
+trait ArrVisitor[-J, +T] extends ObjArrVisitor[J, T]{
+  def isObj = false
 }
 
 /**

@@ -1,6 +1,6 @@
 package upickle.internal
 
-import upickle.jawn.{ObjArrVisitor, Walker}
+import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor, Walker}
 import upickle.visitors.JsVisitor.{reject, visit}
 
 import scala.collection.mutable
@@ -38,14 +38,14 @@ object IndexedJs extends Walker[IndexedJs]{
       case IndexedJs.Str(i, s) => f.jstring(s, i)
       case IndexedJs.Num(i, s, d, e) => f.jnum(s, d, e, i)
       case IndexedJs.Arr(i, items @_*) =>
-        val ctx = f.arrayContext(-1).asInstanceOf[ObjArrVisitor[Any, T]]
-        for(item <- items) try ctx.add(visit(item, ctx.facade), item.index) catch reject(item.index, Nil)
+        val ctx = f.arrayContext(-1).asInstanceOf[ArrVisitor[Any, T]]
+        for(item <- items) try ctx.add(visit(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
         ctx.finish(i)
       case IndexedJs.Obj(i, items @_*) =>
-        val ctx = f.objectContext(-1).asInstanceOf[ObjArrVisitor[Any, T]]
+        val ctx = f.objectContext(-1).asInstanceOf[ObjVisitor[Any, T]]
         for((k, item) <- items) {
           try ctx.visitKey(k, i) catch reject(i, Nil)
-          try ctx.add(visit(item, ctx.facade), item.index) catch reject(item.index, Nil)
+          try ctx.add(visit(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
         }
         ctx.finish(i)
     }
@@ -55,27 +55,24 @@ object IndexedJs extends Walker[IndexedJs]{
   object Builder extends upickle.jawn.Visitor[IndexedJs, IndexedJs]{
     def singleContext(i: Int) = ???
 
-    def arrayContext(i: Int) = new ObjArrVisitor[IndexedJs, IndexedJs] {
+    def arrayContext(i: Int) = new ArrVisitor[IndexedJs, IndexedJs] {
       val out = mutable.Buffer.empty[IndexedJs]
-      def facade = Builder.this
-      def visitKey(s: CharSequence, index: Int): Unit = ???
+      def subVisitor = Builder.this
       def add(v: IndexedJs, index: Int): Unit = {
         out.append(v)
       }
       def finish(index: Int): IndexedJs = IndexedJs.Arr(i, out:_*)
-      def isObj = false
     }
 
-    def objectContext(i: Int) = new ObjArrVisitor[IndexedJs, IndexedJs] {
+    def objectContext(i: Int) = new ObjVisitor[IndexedJs, IndexedJs] {
       val out = mutable.Buffer.empty[(String, IndexedJs)]
       var currentKey: String = _
-      def facade = Builder.this
+      def subVisitor = Builder.this
       def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
       def add(v: IndexedJs, index: Int): Unit = {
         out.append((currentKey, v))
       }
       def finish(index: Int): IndexedJs = IndexedJs.Obj(i, out:_*)
-      def isObj = true
     }
 
     def jnull(i: Int) = IndexedJs.Null(i)

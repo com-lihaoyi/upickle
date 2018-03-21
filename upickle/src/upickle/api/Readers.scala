@@ -5,7 +5,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import upickle.internal.IndexedJs
-import upickle.jawn.{AbortJsonProcessingException, ObjArrVisitor}
+import upickle.jawn.{AbortJsonProcessingException, ArrVisitor, ObjArrVisitor, ObjVisitor}
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
@@ -14,16 +14,14 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object UnitReader extends Reader[Unit] {
-    override def objectContext(index: Int) = new ObjArrVisitor[Any, Unit] {
-      def facade = UnitReader
+    override def objectContext(index: Int) = new ObjVisitor[Any, Unit] {
+      def subVisitor = UnitReader
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 
       def add(v: Any, index: Int): Unit = ???
 
       def finish(index: Int) = ()
-
-      def isObj = true
     }
   }
   implicit object BooleanReader extends Reader[Boolean] {
@@ -99,10 +97,10 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def MapReader[K, V](implicit k: Reader[K], v: Reader[V]): Reader[Map[K, V]] = {
     if (k ne StringReader) SeqLikeReader[Array, (K, V)].map(_.toMap)
     else new Reader[Map[K, V]]{
-      override def objectContext(index: Int) = new ObjArrVisitor[Any, Map[K, V]] {
+      override def objectContext(index: Int) = new ObjVisitor[Any, Map[K, V]] {
         val strings = mutable.Buffer.empty[K]
         val values = mutable.Buffer.empty[V]
-        def facade = v
+        def subVisitor = v
 
         def visitKey(s: CharSequence, index: Int): Unit = {
           strings.append(s.toString.asInstanceOf[K])
@@ -112,7 +110,6 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
         def finish(index: Int) = strings.zip(values).toMap
 
-        def isObj = true
       }
     }
   }
@@ -123,10 +120,8 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def expectedMsg = "expected sequence"
-    override def arrayContext(index: Int) = new upickle.jawn.ObjArrVisitor[Any, C[T]] {
+    override def arrayContext(index: Int) = new upickle.jawn.ArrVisitor[Any, C[T]] {
       val b = cbf.apply()
-
-      def visitKey(s: CharSequence, index: Int): Unit = ???
 
       def add(v: Any, index: Int): Unit = {
         b += v.asInstanceOf[T]
@@ -134,9 +129,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
       def finish(index: Int) = b.result()
 
-      def isObj = false
-
-      def facade = r
+      def subVisitor = r
     }
   }
 
@@ -167,10 +160,9 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit def EitherReader[T1: Reader, T2: Reader] = new Reader[Either[T1, T2]]{
     override def expectedMsg = "expected sequence"
-    override def arrayContext(index: Int) = new upickle.jawn.ObjArrVisitor[Any, Either[T1, T2]] {
+    override def arrayContext(index: Int) = new upickle.jawn.ArrVisitor[Any, Either[T1, T2]] {
       var right: java.lang.Boolean = null
       var value: Either[T1, T2] = _
-      def visitKey(s: CharSequence, index: Int): Unit = ???
       def add(v: Any, index: Int): Unit = right match {
         case null =>
           v match {
@@ -183,9 +175,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
       def finish(index: Int) = value
 
-      def isObj = false
-
-      def facade = right match{
+      def subVisitor = right match{
         case null => IntReader
         case java.lang.Boolean.TRUE => implicitly[Reader[T2]]
         case java.lang.Boolean.FALSE => implicitly[Reader[T1]]
@@ -199,10 +189,10 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit object JsValueR extends Reader[Js.Value]{
     override def objectContext(index: Int) = {
-      new ObjArrVisitor[Any, Js.Obj] {
+      new ObjVisitor[Any, Js.Obj] {
         val output = mutable.Buffer.empty[(String, Js.Value)]
         var lastKey: String = null
-        def facade = JsValueR
+        def subVisitor = JsValueR
 
         def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
 
@@ -211,14 +201,12 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
         }
 
         def finish(index: Int) = Js.Obj(output:_*)
-
-        def isObj = true
       }
     }
     override def arrayContext(index: Int) = {
-      new ObjArrVisitor[Any, Js.Arr] {
+      new ArrVisitor[Any, Js.Arr] {
         val output = mutable.Buffer.empty[Js.Value]
-        def facade = JsValueR
+        def subVisitor = JsValueR
 
         def visitKey(s: CharSequence, index: Int): Unit = ???
 
@@ -227,8 +215,6 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
         }
 
         def finish(index: Int) = Js.Arr(output:_*)
-
-        def isObj = false
       }
     }
     override def jstring(s: CharSequence, index: Int) = Js.Str(s)
@@ -260,10 +246,10 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit object IndexedJsValueR extends Reader[IndexedJs]{
     override def objectContext(index: Int) = {
-      new ObjArrVisitor[Any, IndexedJs.Obj] {
+      new ObjVisitor[Any, IndexedJs.Obj] {
         val output = mutable.Buffer.empty[(String, IndexedJs)]
         var lastKey: String = null
-        def facade = IndexedJsValueR
+        def subVisitor = IndexedJsValueR
 
         def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
 
@@ -273,23 +259,18 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
         def finish(index: Int) = IndexedJs.Obj(index, output:_*)
 
-        def isObj = true
       }
     }
     override def arrayContext(index: Int) = {
-      new ObjArrVisitor[Any, IndexedJs.Arr] {
+      new ArrVisitor[Any, IndexedJs.Arr] {
         val output = mutable.Buffer.empty[IndexedJs]
-        def facade = IndexedJsValueR
-
-        def visitKey(s: CharSequence, index: Int): Unit = ???
+        def subVisitor = IndexedJsValueR
 
         def add(v: Any, index: Int): Unit = {
           output.append(v.asInstanceOf[IndexedJs])
         }
 
         def finish(index: Int) = IndexedJs.Arr(index, output:_*)
-
-        def isObj = false
       }
     }
     override def jstring(s: CharSequence, index: Int) = IndexedJs.Str(index, s)

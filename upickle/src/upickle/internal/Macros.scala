@@ -305,7 +305,7 @@ object Macros {
               )
             }
 
-            def facade: upickle.jawn.Visitor[_, _] =
+            def subVisitor: upickle.jawn.Visitor[_, _] =
               if (currentIndex == -1) upickle.jawn.NullFacade
               else localReaders(currentIndex)
           }
@@ -361,7 +361,7 @@ object Macros {
       }
       q"""
         new ${c.prefix}.CaseW[$targetType]{
-          def writeToObject[R](ctx: upickle.jawn.ObjArrVisitor[_, R],
+          def writeToObject[R](ctx: upickle.jawn.ObjVisitor[_, R],
                                out: upickle.jawn.Visitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}

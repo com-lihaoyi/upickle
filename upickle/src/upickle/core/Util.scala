@@ -4,17 +4,6 @@ package core
 import upickle.jawn.ObjArrVisitor
 
 object Util {
-  def mapContext[T, V, Z](in: ObjArrVisitor[T, V])(f: V => Z) = new ObjArrVisitor[T, Z] {
-    def facade = in.facade
-
-    def visitKey(s: CharSequence, index: Int): Unit = in.visitKey(s, index)
-
-    def add(v: T, index: Int): Unit = in.add(v, index)
-
-    def finish(index: Int) = f(in.finish(index))
-
-    def isObj = in.isObj
-  }
   def parseLong(cs: CharSequence, start: Int, len: Int): Long = {
 
     // we store the inverse of the positive sum, to ensure we don't

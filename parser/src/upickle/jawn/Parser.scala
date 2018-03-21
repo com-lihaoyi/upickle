@@ -391,7 +391,7 @@ abstract class Parser[J] {
                                    path: List[Any]) : (J, Int) = {
     val i = reset(j)
     checkpoint(state, i, stack)
-    implicit val facade: Visitor[_, J] = stack.head.facade.asInstanceOf[Visitor[_, J]]
+    implicit val facade: Visitor[_, J] = stack.head.subVisitor.asInstanceOf[Visitor[_, J]]
     val c = at(i)
 
     if (c == '\n') {

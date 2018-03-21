@@ -4,38 +4,23 @@ import acyclic.file
 import upickle.{Js, TestUtil}
 import utest._
 import example.Simple.Thing
-import upickle.jawn.Visitor
-
 
 case class Opt(a: Option[String], b: Option[Int])
 object Opt{
   implicit def rw: OptionPickler.ReadWriter[Opt] = OptionPickler.macroRW
 }
 object OptionPickler extends upickle.AttributeTagged {
-  override implicit def OptionWriter[T: Writer]: Writer[Option[T]] = new Writer[Option[T]] {
-    override def write[R](out: Visitor[_, R], v: Option[T]): R = v match{
-      case None    => out.jnull(-1)
-      case Some(s) => implicitly[Writer[T]].write(out, s)
+  override implicit def OptionWriter[T: Writer]: Writer[Option[T]] =
+    implicitly[Writer[T]].comap[Option[T]] {
+      case None => null.asInstanceOf[T]
+      case Some(x) => x
     }
-  }
 
-  override implicit def OptionReader[T: Reader]: Reader[Option[T]] = new Reader[Option[T]] {
-    val delegate = implicitly[Reader[T]]
-    override def jnull(index: Int) = None
-    override def jfalse(index: Int) = Some(delegate.jfalse(index))
-    override def jtrue(index: Int) = Some(delegate.jtrue(index))
-    override def jnum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Some(delegate.jnum(s, decIndex, expIndex, index))
+  override implicit def OptionReader[T: Reader]: Reader[Option[T]] =
+    implicitly[Reader[T]].mapNulls{
+      case null => None
+      case x => Some(x)
     }
-    override def jstring(s: CharSequence, index: Int) = Some(delegate.jstring(s, index))
-
-    override def objectContext(index: Int) = {
-      upickle.core.Util.mapContext(delegate.objectContext(index))(Some(_))
-    }
-    override def arrayContext(index: Int) = {
-      upickle.core.Util.mapContext(delegate.arrayContext(index))(Some(_))
-    }
-  }
 }
 // end_ex
 
