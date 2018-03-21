@@ -196,10 +196,10 @@ object ExampleTests extends TestSuite {
           """{"name":"bearrr","foos":[{"i":1},{"i":2},{"i":3}]}"""
 
       }
-//      'null{
-//        write(Bar(null, Seq(Foo(1), null, Foo(3)))) ==>
-//          """{"name": null, "foos": [{"i": 1}, null, {"i": 3}]}"""
-//      }
+      'null{
+        write(Bar(null, Seq(Foo(1), null, Foo(3)))) ==>
+          """{"name":null,"foos":[{"i":1},null,{"i":3}]}"""
+      }
     }
     'sources{
       import upickle.default._
