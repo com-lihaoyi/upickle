@@ -11,7 +11,6 @@ class Renderer(out: java.io.Writer,
                var indent: Int = -1,
                var depth: Int = 0) extends upickle.jawn.Visitor[Unit, Unit]{
   val colonSnippet = if (indent == -1) ":" else ": "
-  def singleContext(index: Int) = ???
 
   var commaBuffered = false
 

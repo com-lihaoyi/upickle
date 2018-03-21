@@ -53,8 +53,6 @@ object IndexedJs extends Walker[IndexedJs]{
 
 
   object Builder extends upickle.jawn.Visitor[IndexedJs, IndexedJs]{
-    def singleContext(i: Int) = ???
-
     def arrayContext(i: Int) = new ArrVisitor[IndexedJs, IndexedJs] {
       val out = mutable.Buffer.empty[IndexedJs]
       def subVisitor = Builder.this

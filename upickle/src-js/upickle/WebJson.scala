@@ -42,8 +42,6 @@ object WebJson extends jawn.Walker[js.Any]{
   }
 
   object Builder extends upickle.jawn.Visitor[js.Any, js.Any]{
-    def singleContext(index: Int) = ???
-
     def arrayContext(index: Int) = new ArrVisitor[js.Any, js.Any] {
       val out = new js.Array[js.Any]
       def subVisitor = Builder.this

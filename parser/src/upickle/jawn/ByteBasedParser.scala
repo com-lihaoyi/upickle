@@ -25,7 +25,7 @@ trait ByteBasedParser[J] extends Parser[J] {
    * This method expects the data to be in UTF-8 and accesses it as bytes. Thus
    * we can just ignore any bytes with the highest bit set.
    */
-  protected[this] final def parseStringSimple(i: Int, ctxt: ObjArrVisitor[_, J]): Int = {
+  protected[this] final def parseStringSimple(i: Int): Int = {
     var j = i
     var c: Int = byte(j) & 0xff
     while (c != 34) {
@@ -37,27 +37,9 @@ trait ByteBasedParser[J] extends Parser[J] {
     j + 1
   }
 
-  /**
-   * Parse the string according to JSON rules, and add to the given context.
-   *
-   * This method expects the data to be in UTF-8 and accesses it as bytes.
-   */
-  protected[this] final def parseString(i: Int, ctxt: ObjArrVisitor[_, J], key: Boolean)
-                                       (implicit facade: Visitor[_, J]): (CharSequence, Int) = {
-    val k = parseStringSimple(i + 1, ctxt)
-    if (k != -1) {
-      val str =
-        if (key) {
-          val s = at(i + 1, k - 1)
-          ctxt.asInstanceOf[ObjVisitor[_, J]].visitKey(s, i)
-          s
-        } else {
-          val s = at(i + 1, k - 1)
-          ctxt.asInstanceOf[ObjArrVisitor[J, J]].add(facade.jstring(s, i), i)
-          s
-        }
-      return (str, k)
-    }
+  protected[this] final def parseStringComplex(i: Int)
+                                              (implicit facade: Visitor[_, J])= {
+
 
     // TODO: we might be able to do better by identifying where
     // escapes occur, and then translating the intermediate strings in
@@ -108,16 +90,24 @@ trait ByteBasedParser[J] extends Parser[J] {
       }
       c = byte(j) & 0xff
     }
-    val str =
-      if (key) {
-        val s = sb.makeString
-        ctxt.asInstanceOf[ObjVisitor[_, J]].visitKey(s, i)
-        s
-      } else {
-        val s = sb.makeString
-        ctxt.asInstanceOf[ObjArrVisitor[J, J]].add(facade.jstring(s, i), i)
-        s
-      }
-    (str, j + 1)
+    val s = sb.makeString
+
+    (facade.jstring(s, i), s, j + 1)
+  }
+  /**
+   * Parse the string according to JSON rules, and add to the given context.
+   *
+   * This method expects the data to be in UTF-8 and accesses it as bytes.
+   */
+  protected[this] final def parseString(i: Int, key: Boolean)
+                                       (implicit facade: Visitor[_, J]): (J, CharSequence, Int) = {
+    val k = parseStringSimple(i + 1)
+    if (k != -1) {
+      val s = at(i + 1, k - 1)
+      (if (key) null.asInstanceOf[J] else facade.jstring(s, i), s, k)
+    }else{
+      parseStringComplex(i)
+
+    }
   }
 }

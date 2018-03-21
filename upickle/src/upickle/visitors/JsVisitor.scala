@@ -37,8 +37,6 @@ object JsVisitor extends jawn.Walker[Js.Value]{
 
 
 object JsBuilder extends upickle.jawn.Visitor[Js.Value, Js.Value]{
-  def singleContext(index: Int) = ???
-
   def arrayContext(index: Int) = new ArrVisitor[Js.Value, Js.Value] {
     val out = mutable.Buffer.empty[Js.Value]
     def subVisitor = JsBuilder.this

@@ -12,13 +12,6 @@ package upickle.jawn
  */
 object NullFacade extends Visitor[Unit, Unit] {
 
-
-
-  def singleContext(index: Int) = new ArrVisitor[Unit, Unit] {
-    def subVisitor = NullFacade.this
-    def add(v: Unit, index: Int): Unit = ()
-    def finish(index: Int): Unit = ()
-  }
   def arrayContext(index: Int) = new ArrVisitor[Unit, Unit] {
     def subVisitor = NullFacade.this
     def add(v: Unit, index: Int): Unit = ()

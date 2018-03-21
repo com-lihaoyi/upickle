@@ -189,7 +189,7 @@ abstract class Parser[J] {
    *
    * This method has all the same caveats as the previous method.
    */
-  protected[this] final def parseNumSlow(i: Int, ctxt: ObjArrVisitor[Any, J])(implicit facade: Visitor[_, J]): Int = {
+  protected[this] final def parseNumSlow(i: Int)(implicit facade: Visitor[_, J]): (J, Int) = {
     var j = i
     var c = at(j)
     var decIndex = -1
@@ -203,8 +203,7 @@ abstract class Parser[J] {
     if (c == '0') {
       j += 1
       if (atEof(j)) {
-        ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
-        return j
+        return (facade.jnum(at(i, j), decIndex, expIndex, i), j)
       }
       c = at(j)
     } else {
@@ -212,8 +211,7 @@ abstract class Parser[J] {
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
-          return j
+          return (facade.jnum(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
@@ -229,8 +227,7 @@ abstract class Parser[J] {
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
-          return j
+          return (facade.jnum(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
@@ -250,16 +247,15 @@ abstract class Parser[J] {
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
-          return j
+
+          return (facade.jnum(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
 
-    ctxt.add(facade.jnum(at(i, j), decIndex, expIndex, i), i)
-    j
+    (facade.jnum(at(i, j), decIndex, expIndex, i), j)
   }
 
   /**
@@ -283,9 +279,8 @@ abstract class Parser[J] {
    * Parse the JSON string starting at 'i' and save it into 'ctxt'.
    */
   protected[this] def parseString(i: Int,
-                                  ctxt: ObjArrVisitor[_, J],
                                   key: Boolean)
-                                 (implicit facade: Visitor[_, J]): (CharSequence, Int)
+                                 (implicit facade: Visitor[_, J]): (J, CharSequence, Int)
 
   /**
    * Parse the JSON constant "true".
@@ -341,15 +336,14 @@ abstract class Parser[J] {
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-        val ctxt = facade.singleContext(i).narrow
-        val j = parseNumSlow(i, ctxt)
-        (try ctxt.finish(i) catch reject(i, Nil), j)
+        try parseNumSlow(i) catch reject(i, Nil)
 
       // we have a single top-level string
       case '"' =>
-        val ctxt = facade.singleContext(i)
-        val (_, j) = parseString(i, ctxt, false)
-        (try ctxt.finish(i) catch reject(i, Nil), j)
+        try {
+          val (v, _, j) = parseString(i, false)
+          (v, j)
+        } catch reject(i, Nil)
 
       // we have a single top-level constant
       case 't' => (parseTrue(i), i + 4)
@@ -414,8 +408,12 @@ abstract class Parser[J] {
           val j = try parseNum(i, ctxt) catch reject(i, path)
           rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack, path)
         } else if (c == '"') {
-          val (_, j) = try parseString(i, ctxt, false) catch reject(i, path)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack, path)
+          val nextJ = try {
+            val (v, _, j) = parseString(i, false)
+            ctxt.add(v, i)
+            j
+          } catch reject(i, path)
+          rparse(if (ctxt.isObj) OBJEND else ARREND, nextJ, stack, path)
         } else if (c == 't') {
           ctxt.add(try parseTrue(i) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
@@ -451,8 +449,9 @@ abstract class Parser[J] {
     } else if (state == KEY) {
       // we are in an object expecting to see a key.
       if (c == '"') {
-        val (s, v) = parseString(i, stack.head, true)
-        rparse(SEP, v, stack, s :: path.tail)
+        val (_, s, j) = parseString(i, true)
+        stack.head.asInstanceOf[ObjVisitor[Any, _]].visitKey(s, j)
+        rparse(SEP, j, stack, s :: path.tail)
       } else die(i, "expected \"")
     } else if (state == SEP) {
       // we are in an object just after a key, expecting to see a colon.

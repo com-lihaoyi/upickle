@@ -60,19 +60,6 @@ trait Types{ types =>
     }
     def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z](this, f)
     def mapNulls[Z](f: V => Z) = new BaseReader.MapReaderNullable[T, V, Z](this, f)
-    def singleContext(index: Int) = new ArrVisitor[T, V] {
-      var res: V = _
-
-      def subVisitor = BaseReader.this
-
-      def visitKey(s: CharSequence, index: Int): Unit = ???
-
-      def add(v: T, index: Int): Unit = {
-        res = v.asInstanceOf[V]
-      }
-
-      def finish(index: Int) = res
-    }
   }
 
   object BaseReader {
@@ -90,7 +77,6 @@ trait Types{ types =>
 
       override def objectContext(index: Int) = delegatedReader.objectContext(index)
       override def arrayContext(index: Int) = delegatedReader.arrayContext(index)
-      override def singleContext(index: Int) = delegatedReader.singleContext(index)
     }
     class MapReaderNullable[-T, V, Z](src: BaseReader[T, V], f: V => Z) extends MapReader[T, V, Z](src, f ){
       override def f1(v: V): Z = f(v)

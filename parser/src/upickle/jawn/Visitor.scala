@@ -8,7 +8,6 @@ package upickle.jawn
  * usually want to define both.
  */
 trait Visitor[-T, +J] {
-  def singleContext(index: Int): ArrVisitor[T, J]
   def arrayContext(index: Int): ArrVisitor[T, J]
   def objectContext(index: Int): ObjVisitor[T, J]
 
@@ -19,7 +18,6 @@ trait Visitor[-T, +J] {
   def jstring(s: CharSequence, index: Int): J
 
 
-  def singleContext(): ObjArrVisitor[T, J] = singleContext(-1)
   def arrayContext(): ArrVisitor[T, J] = arrayContext(-1)
   def objectContext(): ObjVisitor[T, J] = objectContext(-1)
 

@@ -7,15 +7,6 @@ import org.scalatest.{Matchers, PropSpec}
 import org.scalatest.prop.PropertyChecks
 import scala.util.Success
 object JNumIndexCheckFacade extends Visitor[Boolean, Boolean] {
-  def singleContext(index: Int) = new ObjVisitor[Boolean, Boolean] {
-    var failed = false
-    def subVisitor = JNumIndexCheckFacade
-    def visitKey(s: CharSequence, index: Int): Unit = ()
-    def add(v: Boolean, index: Int): Unit = {
-      if (!v) failed = true
-    }
-    def finish(index: Int): Boolean = !failed
-  }
   def arrayContext(index: Int)  = new ArrVisitor[Boolean, Boolean] {
     var failed = false
     def subVisitor = JNumIndexCheckFacade
