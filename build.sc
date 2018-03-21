@@ -120,7 +120,7 @@ trait UpickleModule extends CommonPublishModule{
   trait UpickleTestModule extends Tests with CommonModule{
     def platformSegment = UpickleModule.this.platformSegment
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.6.0",
+      ivy"com.lihaoyi::utest::0.6.4",
       ivy"com.lihaoyi::acyclic:0.1.5"
     )
 
