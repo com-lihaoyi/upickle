@@ -9,7 +9,7 @@ import scala.scalajs.js
 trait WebJson extends upickle.core.Types {
   object web{
     def read[T: Reader](s: String) = {
-      WebJson.visit(js.JSON.parse(s), implicitly[Reader[T]])
+      WebJson.walk(js.JSON.parse(s), implicitly[Reader[T]])
     }
 
     def write[T: Writer](t: T, indent: Int = -1) = {
@@ -18,7 +18,7 @@ trait WebJson extends upickle.core.Types {
   }
 }
 object WebJson extends jawn.Walker[js.Any]{
-  def visit[T](j: js.Any, f: upickle.jawn.Visitor[_, T]): T = {
+  def walk[T](j: js.Any, f: upickle.jawn.Visitor[_, T]): T = {
     (j: Any) match{
       case s: String => f.visitString(s, -1)
       case n: Double =>
@@ -29,13 +29,13 @@ object WebJson extends jawn.Walker[js.Any]{
       case null => f.visitNull(-1)
       case s: js.Array[js.Any] =>
         val ctx = f.visitArray(-1).narrow
-        for(i <- s) ctx.visitValue(visit(i, ctx.subVisitor), -1)
+        for(i <- s) ctx.visitValue(walk(i, ctx.subVisitor), -1)
         ctx.visitEnd(-1)
       case s: js.Object =>
         val ctx = f.visitObject(-1).narrow
         for(p <- s.asInstanceOf[js.Dictionary[js.Any]]) {
           ctx.visitKey(p._1, -1)
-          ctx.visitValue(visit(p._2, ctx.subVisitor), -1)
+          ctx.visitValue(walk(p._2, ctx.subVisitor), -1)
         }
         ctx.visitEnd(-1)
     }

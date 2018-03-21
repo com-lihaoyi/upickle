@@ -132,8 +132,9 @@ trait Types{ types =>
       def visitEnd(index: Int) = f(src.visitEnd(index))
     }
   }
-  trait Writer[T]{
+  trait Writer[T] extends Walker[T]{
     def narrow[K <: T] = this.asInstanceOf[Writer[K]]
+    def walk[V](v: T, out: upickle.jawn.Visitor[_, V]) = write(out, v)
     def write[V](out: upickle.jawn.Visitor[_, V], v: T): V
     def comapNulls[U](f: U => T) = new Writer.MapWriterNulls[U, T](this, f)
     def comap[U](f: U => T) = new Writer.MapWriter[U, T](this, f)

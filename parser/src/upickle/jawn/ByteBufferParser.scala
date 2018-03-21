@@ -41,5 +41,5 @@ final class ByteBufferParser[J](src: ByteBuffer) extends SyncParser[J] with Byte
   protected[this] final def atEof(i: Int) = i >= limit
 }
 object ByteBufferParser extends Walker[ByteBuffer]{
-  def visit[T](j: ByteBuffer, f: Visitor[_, T]) = new ByteBufferParser(j).parse()(f)
+  def walk[T](j: ByteBuffer, f: Visitor[_, T]) = new ByteBufferParser(j).parse()(f)
 }

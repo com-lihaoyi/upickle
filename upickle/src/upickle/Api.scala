@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
  * trait instance is tagged during reading and writing.
  */
 trait Api extends upickle.core.Types with api.Implicits with WebJson{
-  def read[T: Reader](s: Source) = s.apply(implicitly[Reader[T]])
+  def read[T: Reader](s: Source) = s.walk(implicitly[Reader[T]])
 
 
   def write[T: Writer](t: T, indent: Int = -1) = {
@@ -166,7 +166,7 @@ trait AttributeTagged extends Api{
             val k = k0.toString
             if (k != tagName){
               ctx2.visitKey(k, -1)
-              ctx2.visitValue(IndexedJs.visit(v, ctx2.subVisitor), -1)
+              ctx2.visitValue(IndexedJs.walk(v, ctx2.subVisitor), -1)
             }
           }
           ctx2.visitEnd(index)
@@ -185,7 +185,7 @@ trait AttributeTagged extends Api{
 
 object json{
   val jsRW = upickle.default.macroRW0[Js.Value](implicitly, implicitly)
-  def read(s: Source) = s.apply(jsRW)
+  def read(s: Source) = s.walk(jsRW)
   def write(t: Js.Value): String = {
     val out = new java.io.StringWriter()
     jsRW.write(new visitors.Renderer(out), t)

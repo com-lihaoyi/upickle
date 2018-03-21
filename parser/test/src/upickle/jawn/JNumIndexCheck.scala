@@ -45,7 +45,7 @@ class JNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
   property("visitNum provides the correct indices with parseFromString") {
     forAll { (value: BigDecimal) =>
       val json = s"""{ "num": ${value.toString} }"""
-      StringParser.visit(json, JNumIndexCheckFacade) shouldBe true
+      StringParser.walk(json, JNumIndexCheckFacade) shouldBe true
     }
   }
 
@@ -53,20 +53,20 @@ class JNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
     forAll { (value: BigDecimal) =>
       val json = s"""{ "num": ${value.toString} }"""
       val bb = ByteBuffer.wrap(json.getBytes("UTF-8"))
-      ByteBufferParser.visit(bb, JNumIndexCheckFacade) shouldBe true
+      ByteBufferParser.walk(bb, JNumIndexCheckFacade) shouldBe true
     }
   }
 
   property("visitNum provides the correct indices at the top level with parseFromString") {
     forAll { (value: BigDecimal) =>
-      StringParser.visit(value.toString, JNumIndexCheckFacade) shouldBe true
+      StringParser.walk(value.toString, JNumIndexCheckFacade) shouldBe true
     }
   }
 
   property("visitNum provides the correct indices at the top level with parseFromByteBuffer") {
     forAll { (value: BigDecimal) =>
       val bb = ByteBuffer.wrap(value.toString.getBytes("UTF-8"))
-      ByteBufferParser.visit(bb, JNumIndexCheckFacade) shouldBe true
+      ByteBufferParser.walk(bb, JNumIndexCheckFacade) shouldBe true
     }
   }
 }

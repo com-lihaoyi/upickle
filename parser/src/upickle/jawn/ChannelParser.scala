@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
 
 object FileParser extends Walker[java.io.File]{
-  def visit[T](j: java.io.File, f: Visitor[_, T]) = {
+  def walk[T](j: java.io.File, f: Visitor[_, T]) = {
     val channel = java.nio.file.Files.newByteChannel(j.toPath)
     try new ChannelParser(channel, ChannelParser.DefaultBufferSize).parse()(f)
     finally channel.close()
@@ -14,7 +14,7 @@ object FileParser extends Walker[java.io.File]{
 }
 
 object PathParser extends Walker[java.nio.file.Path]{
-  def visit[T](j: java.nio.file.Path, f: Visitor[_, T]) = {
+  def walk[T](j: java.nio.file.Path, f: Visitor[_, T]) = {
     val channel = java.nio.file.Files.newByteChannel(j)
     try new ChannelParser(channel, ChannelParser.DefaultBufferSize).parse()(f)
     finally channel.close()
@@ -22,7 +22,7 @@ object PathParser extends Walker[java.nio.file.Path]{
 }
 
 object ChannelParser extends Walker[ReadableByteChannel]{
-  def visit[T](j: ReadableByteChannel, f: Visitor[_, T]) = {
+  def walk[T](j: ReadableByteChannel, f: Visitor[_, T]) = {
     new ChannelParser(j, DefaultBufferSize).parse()(f)
   }
 

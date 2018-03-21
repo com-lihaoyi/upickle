@@ -4,12 +4,12 @@ import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
 
 abstract class Source {
-  def apply[T](f: upickle.jawn.Visitor[_, T]): T
+  def walk[T](f: upickle.jawn.Visitor[_, T]): T
 }
 object Source{
   class WalkerSource[T](t: T, w: Walker[T]) extends Source{
-    def apply[T](f: upickle.jawn.Visitor[_, T]): T = {
-      w.visit(t, f)
+    def walk[T](f: upickle.jawn.Visitor[_, T]): T = {
+      w.walk(t, f)
     }
   }
   implicit def fromString(s: String) = new WalkerSource(s, StringParser)

@@ -33,5 +33,5 @@ final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0)
   protected[this] final def atEof(i: Int) = i >= limit
 }
 object ByteArrayParser extends Walker[Array[Byte]]{
-  def visit[T](j: Array[Byte], f: Visitor[_, T]) = new ByteArrayParser(j).parse()(f)
+  def walk[T](j: Array[Byte], f: Visitor[_, T]) = new ByteArrayParser(j).parse()(f)
 }
