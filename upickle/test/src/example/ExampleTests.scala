@@ -6,6 +6,7 @@ import upickle.{Js, TestUtil, default, jawn}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
 import upickle.jawn.{IncompleteParseException, NoOpVisitor, ParseException, Transformable}
+import upickle.visitors.{BytesRenderer, StringRenderer}
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{
@@ -257,24 +258,31 @@ object ExampleTests extends TestSuite {
 //          Seq(1, 2, 3), implicitly[default.Writer[Seq[Int]]]), ) ==>
 //          "[1,2,3]"
 
-        // It can be used for parsing JSON
+        // It can be used for parsing JSON into an AST
         upickle.json.transform("[1, 2, 3]", upickle.Js.Builder) ==>
           Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
 
-        // Re-formatting JSON, either compacting it or indenting it
-        val out = new StringWriter()
-        upickle.json.transform("[1, 2, 3]", new upickle.visitors.Renderer(out))
-        out.toString ==> "[1,2,3]"
+        // Rendering the AST to a string
+        upickle.json.transform(Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3)), StringRenderer()).toString ==>
+          "[1.0,2.0,3.0]"
 
-        // `transform` takes any `Transformable`, including byte arrays and files
-        val out2 = new StringWriter()
-        upickle.json.transform("[1, 2, 3]".getBytes, new upickle.visitors.Renderer(out2, indent=4))
-        out2.toString ==>
+        // Or to a byte array
+        upickle.json.transform(Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3)), BytesRenderer()).toBytes ==>
+          "[1.0,2.0,3.0]".getBytes
+
+        // Re-formatting JSON, either compacting it
+        upickle.json.transform("[1, 2, 3]", StringRenderer()).toString ==> "[1,2,3]"
+
+        // or indenting it
+        upickle.json.transform("[1, 2, 3]".getBytes, StringRenderer(indent = 4)).toString ==>
           """[
             |    1,
             |    2,
             |    3
             |]""".stripMargin
+
+        // `transform` takes any `Transformable`, including byte arrays and files
+        upickle.json.transform("[1, 2, 3]".getBytes, StringRenderer()).toString ==> "[1,2,3]"
 
         // Validating JSON
         upickle.json.transform("[1, 2, 3]", NoOpVisitor)

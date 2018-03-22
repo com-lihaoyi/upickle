@@ -1,7 +1,7 @@
 package upickle
 
 import upickle.Js._
-import upickle.jawn.{AbortJsonProcessingException, ArrVisitor, JsonProcessingException, ObjVisitor}
+import upickle.jawn._
 
 import scala.annotation.switch
 import scala.collection.mutable
@@ -39,7 +39,7 @@ object Invalid{
 
 }
 
-sealed trait Js{
+sealed trait Js extends Transformable{
   def value: Any
 
   /**
@@ -86,6 +86,7 @@ sealed trait Js{
     */
   def apply(s: java.lang.String): Value = this.obj(s)
 
+  def transform[T](f: upickle.jawn.Visitor[_, T]) = Js.transform(this, f)
   //    override def toString = upickle.json.write(this, indent = 4)
 }
 

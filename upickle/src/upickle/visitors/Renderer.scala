@@ -6,25 +6,31 @@ import java.io.{ByteArrayOutputStream, StringWriter, Writer}
 import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor, Visitor}
 
 import scala.annotation.switch
-class StringRenderer(indent: Int = -1,
-                     depth: Int = 0) extends Visitor[StringWriter, StringWriter]{// extends Renderer(new StringWriter(), indent, depth){
-  def visitArray(index: Int) = ???
 
-  def visitObject(index: Int) = ???
-
-  def visitNull(index: Int) = ???
-
-  def visitFalse(index: Int) = ???
-
-  def visitTrue(index: Int) = ???
-
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = ???
-
-  def visitString(s: CharSequence, index: Int) = ???
+case class BytesRenderer(indent: Int = -1)
+  extends BaseRenderer(new BytesRenderer.BytesWriter(), indent){
 }
-class Renderer(out: java.io.Writer,
-               var indent: Int = -1,
-               var depth: Int = 0) extends upickle.jawn.Visitor[Unit, Unit]{
+
+object BytesRenderer{
+  class BytesWriter(out: java.io.ByteArrayOutputStream = new ByteArrayOutputStream())
+    extends java.io.OutputStreamWriter(out){
+    def toBytes = {
+      this.flush()
+      out.toByteArray
+    }
+
+  }
+}
+case class StringRenderer(indent: Int = -1)
+  extends BaseRenderer(new java.io.StringWriter(), indent)
+
+case class Renderer(out: java.io.Writer,
+                    indent: Int = -1) extends BaseRenderer[java.io.Writer](out, indent)
+
+class BaseRenderer[T <: java.io.Writer]
+                  (out: T,
+                   indent: Int = -1) extends upickle.jawn.Visitor[T, T]{
+  var depth: Int = 0
   val colonSnippet = if (indent == -1) ":" else ": "
 
   var commaBuffered = false
@@ -36,31 +42,32 @@ class Renderer(out: java.io.Writer,
       renderIndent()
     }
   }
-  def visitArray(index: Int) = new ArrVisitor[Unit, Unit] {
+  def visitArray(index: Int) = new ArrVisitor[T, T] {
     flushBuffer()
     out.append('[')
 
     depth += 1
     renderIndent()
-    def subVisitor = Renderer.this
-    def visitValue(v: Unit, index: Int): Unit = {
+    def subVisitor = BaseRenderer.this
+    def visitValue(v: T, index: Int): Unit = {
       flushBuffer()
       commaBuffered = true
     }
-    def visitEnd(index: Int): Unit = {
+    def visitEnd(index: Int) = {
       commaBuffered = false
       depth -= 1
       renderIndent()
       out.append(']')
+      out
     }
   }
 
-  def visitObject(index: Int) = new ObjVisitor[Unit, Unit] {
+  def visitObject(index: Int) = new ObjVisitor[T, T] {
     flushBuffer()
     out.append('{')
     depth += 1
     renderIndent()
-    def subVisitor = Renderer.this
+    def subVisitor = BaseRenderer.this
     def visitKey(s: CharSequence, index: Int): Unit = {
       flushBuffer()
 
@@ -68,41 +75,48 @@ class Renderer(out: java.io.Writer,
 
       out.append(colonSnippet)
     }
-    def visitValue(v: Unit, index: Int): Unit = {
+    def visitValue(v: T, index: Int): Unit = {
       commaBuffered = true
     }
-    def visitEnd(index: Int): Unit = {
+    def visitEnd(index: Int) = {
       commaBuffered = false
       depth -= 1
       renderIndent()
       out.append('}')
+      out
     }
   }
 
   def visitNull(index: Int) = {
     flushBuffer()
     out.append("null")
+    out
   }
 
   def visitFalse(index: Int) = {
     flushBuffer()
     out.append("false")
+    out
   }
 
   def visitTrue(index: Int) = {
     flushBuffer()
     out.append("true")
+    out
   }
 
   def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     flushBuffer()
     out.append(s)
+    out
   }
 
   def visitString(s: CharSequence, index: Int) = {
     flushBuffer()
     if (s == null) out.append("null")
     else Renderer.escape(out, s, true)
+
+    out
   }
 
   final def renderIndent() = {
