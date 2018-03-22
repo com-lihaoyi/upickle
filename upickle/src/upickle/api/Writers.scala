@@ -134,30 +134,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def JsNullW: Writer[Js.Null.type] = JsValueW.narrow[Js.Null.type]
   implicit object JsValueW extends Writer[Js.Value] {
     def write[R](out: upickle.jawn.Visitor[_, R], v: Js.Value): R = {
-      v match{
-        case v: Js.Obj =>
-          val ctx = out.visitObject(-1).narrow
-          for((k, item) <- v.value){
-
-            ctx.visitKey(k, -1)
-            ctx.visitValue(JsValueW.write(out, item), -1)
-          }
-
-          ctx.visitEnd(-1)
-        case v: Js.Arr =>
-          val ctx = out.visitArray(-1).narrow
-          for(item <- v.value){
-            ctx.visitValue(JsValueW.write(out, item), -1)
-
-          }
-
-          ctx.visitEnd(-1)
-        case v: Js.Str => out.visitString(v.value, -1)
-        case v: Js.Num => out.visitNum(v.value.toString, -1, -1, -1)
-        case v: Js.False.type => out.visitFalse(-1)
-        case v: Js.True.type => out.visitTrue(-1)
-        case v: Js.Null.type => out.visitNull(-1)
-      }
+      Js.transform(v, out)
     }
   }
 }

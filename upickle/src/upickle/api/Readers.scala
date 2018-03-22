@@ -188,105 +188,22 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     EitherReader[T1, T2].narrow[Left[T1, T2]]
 
   implicit object JsValueR extends Reader[Js.Value]{
-    override def visitObject(index: Int) = {
-      new ObjVisitor[Any, Js.Obj] {
-        val output = mutable.Buffer.empty[(String, Js.Value)]
-        var lastKey: String = null
-        def subVisitor = JsValueR
-
-        def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
-
-        def visitValue(v: Any, index: Int): Unit = {
-          output.append((lastKey, v.asInstanceOf[Js.Value]))
-        }
-
-        def visitEnd(index: Int) = Js.Obj(output:_*)
-      }
+    override def visitObject(index: Int) = Js.Builder.visitObject(index).narrow
+    override def visitArray(index: Int) = Js.Builder.visitArray(index).narrow
+    override def visitString(s: CharSequence, index: Int) = Js.Builder.visitString(s, index)
+    override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      Js.Builder.visitNum(s, decIndex, expIndex, index)
     }
-    override def visitArray(index: Int) = {
-      new ArrVisitor[Any, Js.Arr] {
-        val output = mutable.Buffer.empty[Js.Value]
-        def subVisitor = JsValueR
-
-        def visitKey(s: CharSequence, index: Int): Unit = ???
-
-        def visitValue(v: Any, index: Int): Unit = {
-          output.append(v.asInstanceOf[Js.Value])
-        }
-
-        def visitEnd(index: Int) = Js.Arr(output:_*)
-      }
-    }
-    override def visitString(s: CharSequence, index: Int) = Js.Str(s)
-    override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = Js.Num(s.toString.toDouble)
-    override def visitTrue(index: Int) = Js.True
-    override def visitFalse(index: Int) = Js.False
-    override def visitNull(index: Int) = Js.Null
+    override def visitTrue(index: Int) = Js.Builder.visitTrue(index)
+    override def visitFalse(index: Int) = Js.Builder.visitFalse(index)
+    override def visitNull(index: Int) = Js.Builder.visitNull(index)
   }
 
   implicit def JsObjR: Reader[Js.Obj] = JsValueR.narrow[Js.Obj]
-
-
   implicit def JsArrR: Reader[Js.Arr] = JsValueR.narrow[Js.Arr]
-
-
-
   implicit def JsStrR: Reader[Js.Str] = JsValueR.narrow[Js.Str]
-
-
   implicit def JsNumR: Reader[Js.Num] = JsValueR.narrow[Js.Num]
-
-
   implicit def JsTrueR: Reader[Js.True.type] = JsValueR.narrow[Js.True.type]
-
   implicit def JsFalseR: Reader[Js.False.type] = JsValueR.narrow[Js.False.type]
-
-
   implicit def JsNullR: Reader[Js.Null.type] = JsValueR.narrow[Js.Null.type]
-
-  implicit object IndexedJsValueR extends Reader[IndexedJs]{
-    override def visitObject(index: Int) = {
-      new ObjVisitor[Any, IndexedJs.Obj] {
-        val output = mutable.Buffer.empty[(String, IndexedJs)]
-        var lastKey: String = null
-        def subVisitor = IndexedJsValueR
-
-        def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
-
-        def visitValue(v: Any, index: Int): Unit = {
-          output.append((lastKey, v.asInstanceOf[IndexedJs]))
-        }
-
-        def visitEnd(index: Int) = IndexedJs.Obj(index, output:_*)
-
-      }
-    }
-    override def visitArray(index: Int) = {
-      new ArrVisitor[Any, IndexedJs.Arr] {
-        val output = mutable.Buffer.empty[IndexedJs]
-        def subVisitor = IndexedJsValueR
-
-        def visitValue(v: Any, index: Int): Unit = {
-          output.append(v.asInstanceOf[IndexedJs])
-        }
-
-        def visitEnd(index: Int) = IndexedJs.Arr(index, output:_*)
-      }
-    }
-    override def visitString(s: CharSequence, index: Int) = IndexedJs.Str(index, s)
-    override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      IndexedJs.Num(index, s, decIndex, expIndex)
-    }
-    override def visitTrue(index: Int) = IndexedJs.True(index)
-    override def visitFalse(index: Int) = IndexedJs.False(index)
-    override def visitNull(index: Int) = IndexedJs.Null(index)
-  }
-
-  implicit def IndexedJsObjR: Reader[IndexedJs.Obj] = IndexedJsValueR.narrow[IndexedJs.Obj]
-  implicit def IndexedJsArrR: Reader[IndexedJs.Arr] = IndexedJsValueR.narrow[IndexedJs.Arr]
-  implicit def IndexedJsStrR: Reader[IndexedJs.Str] = IndexedJsValueR.narrow[IndexedJs.Str]
-  implicit def IndexedJsNumR: Reader[IndexedJs.Num] = IndexedJsValueR.narrow[IndexedJs.Num]
-  implicit def IndexedJsTrueR: Reader[IndexedJs.True] = IndexedJsValueR.narrow[IndexedJs.True]
-  implicit def IndexedJsFalseR: Reader[IndexedJs.False] = IndexedJsValueR.narrow[IndexedJs.False]
-  implicit def IndexedJsNullR: Reader[IndexedJs.Null] = IndexedJsValueR.narrow[IndexedJs.Null]
 }

@@ -31,6 +31,7 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
   case class transform[T: Writer](t: T) extends Transformable{
     def transform[V](f: upickle.jawn.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
     def to[V](f: upickle.jawn.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
+    def to[V](implicit f: Reader[V]): V = implicitly[Writer[T]].transform(t, f)
   }
   object transform{
     def apply[T: Writer, V: Reader](t: T, indent: Int = -1) = {
@@ -132,7 +133,7 @@ trait AttributeTagged extends Api{
         case TaggedReaderState.Initializing =>
           if (s.toString == tagName) () //do nothing
           else {
-            val slowCtx = IndexedJsObjR.visitObject(index)
+            val slowCtx = IndexedJs.Builder.visitObject(index).narrow
             slowCtx.visitKey(s, index)
             state = TaggedReaderState.SlowPath(slowCtx)
           }

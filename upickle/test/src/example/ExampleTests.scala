@@ -1,8 +1,11 @@
 package example
+import java.io.StringWriter
+
 import acyclic.file
-import upickle.{Js, TestUtil}
+import upickle.{Js, TestUtil, default, jawn}
 import utest._
-import upickle.default.{ReadWriter => RW, macroRW}
+import upickle.default.{macroRW, ReadWriter => RW}
+import upickle.jawn.{IncompleteParseException, NoOpVisitor, ParseException, Transformable}
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{
@@ -201,6 +204,20 @@ object ExampleTests extends TestSuite {
           """{"name":null,"foos":[{"i":1},null,{"i":3}]}"""
       }
     }
+    'defaults{
+      import upickle.default._
+      'reading{
+
+        read[FooDefault]("{}")                ==> FooDefault(10, "lol")
+        read[FooDefault]("""{"i": 123}""")    ==> FooDefault(123,"lol")
+      }
+      'writing{
+        write(FooDefault(i = 11, s = "lol"))  ==> """{"i":11}"""
+        write(FooDefault(i = 10, s = "lol"))  ==> """{}"""
+        write(FooDefault())                   ==> """{}"""
+      }
+    }
+
     'sources{
       import upickle.default._
       val original = """{"myFieldA":1,"myFieldB":"gg"}"""
@@ -216,17 +233,58 @@ object ExampleTests extends TestSuite {
       read[Thing](f.toFile) ==> Thing(1, "gg")
       read[Thing](Files.newByteChannel(f)) ==> Thing(1, "gg")
     }
-    'defaults{
-      import upickle.default._
-      'reading{
+    'transforms{
+      'json{
+        import upickle.default._
+        transform(1).to[Js.Value] ==> Js.Num(1)
+        transform("hello").to[Js.Value] ==> Js.Str("hello")
+        transform(("hello", 9)).to[Js.Value] ==> Js.Arr(Js.Str("hello"), Js.Num(9))
+        transform(Thing(3, "3")).to[Js.Value] ==>
+          Js.Obj("myFieldA" -> Js.Num(3), "myFieldB" -> Js.Str("3"))
 
-        read[FooDefault]("{}")                ==> FooDefault(10, "lol")
-        read[FooDefault]("""{"i": 123}""")    ==> FooDefault(123,"lol")
+        transform(Js.Num(1)).to[Int] ==> 1
+        transform(Js.Str("hello")).to[String] ==> "hello"
+        transform(Js.Arr(Js.Str("hello"), Js.Num(9))).to[(String, Int)] ==> ("hello", 9)
+        transform(Js.Obj("myFieldA" -> Js.Num(3), "myFieldB" -> Js.Str("3"))).to[Thing] ==>
+          Thing(3, "3")
       }
-      'writing{
-        write(FooDefault(i = 11, s = "lol"))  ==> """{"i":11}"""
-        write(FooDefault(i = 10, s = "lol"))  ==> """{}"""
-        write(FooDefault())                   ==> """{}"""
+      'misc{
+        // upickle.json.transform is long-hand for upickle.default.{read,write,transform}
+        upickle.json.transform("[1, 2, 3]", implicitly[upickle.default.Reader[Seq[Int]]]) ==>
+          Seq(1, 2, 3)
+
+//        upickle.json.transform(new jawn.Transformable.WalkerTransformable[]()(
+//          Seq(1, 2, 3), implicitly[default.Writer[Seq[Int]]]), ) ==>
+//          "[1,2,3]"
+
+        // It can be used for parsing JSON
+        upickle.json.transform("[1, 2, 3]", upickle.Js.Builder) ==>
+          Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
+
+        // Re-formatting JSON, either compacting it or indenting it
+        val out = new StringWriter()
+        upickle.json.transform("[1, 2, 3]", new upickle.visitors.Renderer(out))
+        out.toString ==> "[1,2,3]"
+
+        // `transform` takes any `Transformable`, including byte arrays and files
+        val out2 = new StringWriter()
+        upickle.json.transform("[1, 2, 3]".getBytes, new upickle.visitors.Renderer(out2, indent=4))
+        out2.toString ==>
+          """[
+            |    1,
+            |    2,
+            |    3
+            |]""".stripMargin
+
+        // Validating JSON
+        upickle.json.transform("[1, 2, 3]", NoOpVisitor)
+
+        intercept[IncompleteParseException]{
+          upickle.json.transform("[1, 2, 3", NoOpVisitor)
+        }
+        intercept[ParseException]{
+          upickle.json.transform("[1, 2, 3]]", NoOpVisitor)
+        }
       }
     }
     'keyed{

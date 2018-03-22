@@ -1,7 +1,7 @@
 package upickle.internal
 
 import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor, Transformer}
-import upickle.visitors.JsVisitor.{reject}
+import upickle.Js.reject
 
 import scala.collection.mutable
 
@@ -53,16 +53,16 @@ object IndexedJs extends Transformer[IndexedJs]{
 
 
   object Builder extends upickle.jawn.Visitor[IndexedJs, IndexedJs]{
-    def visitArray(i: Int) = new ArrVisitor[IndexedJs, IndexedJs] {
+    def visitArray(i: Int) = new ArrVisitor[IndexedJs, IndexedJs.Arr] {
       val out = mutable.Buffer.empty[IndexedJs]
       def subVisitor = Builder.this
       def visitValue(v: IndexedJs, index: Int): Unit = {
         out.append(v)
       }
-      def visitEnd(index: Int): IndexedJs = IndexedJs.Arr(i, out:_*)
+      def visitEnd(index: Int): IndexedJs.Arr = IndexedJs.Arr(i, out:_*)
     }
 
-    def visitObject(i: Int) = new ObjVisitor[IndexedJs, IndexedJs] {
+    def visitObject(i: Int) = new ObjVisitor[IndexedJs, IndexedJs.Obj] {
       val out = mutable.Buffer.empty[(String, IndexedJs)]
       var currentKey: String = _
       def subVisitor = Builder.this
@@ -70,7 +70,7 @@ object IndexedJs extends Transformer[IndexedJs]{
       def visitValue(v: IndexedJs, index: Int): Unit = {
         out.append((currentKey, v))
       }
-      def visitEnd(index: Int): IndexedJs = IndexedJs.Obj(i, out:_*)
+      def visitEnd(index: Int): IndexedJs.Obj = IndexedJs.Obj(i, out:_*)
     }
 
     def visitNull(i: Int) = IndexedJs.Null(i)

@@ -3,10 +3,25 @@ package visitors
 
 import java.io.{ByteArrayOutputStream, StringWriter, Writer}
 
-import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor}
+import upickle.jawn.{ArrVisitor, ObjArrVisitor, ObjVisitor, Visitor}
 
 import scala.annotation.switch
+class StringRenderer(indent: Int = -1,
+                     depth: Int = 0) extends Visitor[StringWriter, StringWriter]{// extends Renderer(new StringWriter(), indent, depth){
+  def visitArray(index: Int) = ???
 
+  def visitObject(index: Int) = ???
+
+  def visitNull(index: Int) = ???
+
+  def visitFalse(index: Int) = ???
+
+  def visitTrue(index: Int) = ???
+
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = ???
+
+  def visitString(s: CharSequence, index: Int) = ???
+}
 class Renderer(out: java.io.Writer,
                var indent: Int = -1,
                var depth: Int = 0) extends upickle.jawn.Visitor[Unit, Unit]{
@@ -102,7 +117,7 @@ class Renderer(out: java.io.Writer,
     }
   }
 }
-object Renderer{
+object Renderer {
   final def escape(sb: java.io.Writer, s: CharSequence, unicode: Boolean): Unit = {
     sb.append('"')
     var i = 0
