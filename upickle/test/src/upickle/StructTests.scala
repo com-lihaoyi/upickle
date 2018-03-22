@@ -1,10 +1,14 @@
 package upickle
 import utest._
 import upickle.legacy.{read, write}
+
 import scala.concurrent.duration._
 import TestUtil._
 import java.util.UUID
+
 import acyclic.file
+import upickle.json.Js
+
 import scala.reflect.ClassTag
 import language.postfixOps
 

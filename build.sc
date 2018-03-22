@@ -27,10 +27,10 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
   )
 }
 
-trait JawnModule extends CommonPublishModule{
-  def millSourcePath = build.millSourcePath / "parser"
+trait JsonModule extends CommonPublishModule{
+  def millSourcePath = build.millSourcePath / "json"
   trait JawnTestModule extends Tests with CommonModule{
-    def platformSegment = JawnModule.this.platformSegment
+    def platformSegment = JsonModule.this.platformSegment
     def ivyDeps = Agg(
       ivy"org.scalatest::scalatest::3.0.3",
       ivy"org.scalacheck::scalacheck::1.13.5"
@@ -39,9 +39,9 @@ trait JawnModule extends CommonPublishModule{
   }
 }
 
-object parser extends Module{
-  object js extends Cross[JawnJsModule]("2.11.11", "2.12.4")
-  class JawnJsModule(val crossScalaVersion: String) extends JawnModule with ScalaJSModule {
+object json extends Module{
+  object js extends Cross[JsonJsModule]("2.11.11", "2.12.4")
+  class JsonJsModule(val crossScalaVersion: String) extends JsonModule with ScalaJSModule {
 
     def scalaJSVersion = "0.6.22"
     def platformSegment = "js"
@@ -49,8 +49,8 @@ object parser extends Module{
     object test extends JawnTestModule
   }
 
-  object jvm extends Cross[JawnJvmModule]("2.11.11", "2.12.4")
-  class JawnJvmModule(val crossScalaVersion: String) extends JawnModule{
+  object jvm extends Cross[JsonJvmModule]("2.11.11", "2.12.4")
+  class JsonJvmModule(val crossScalaVersion: String) extends JsonModule{
     def platformSegment = "jvm"
 
     object test extends JawnTestModule
@@ -134,14 +134,14 @@ object upickle extends Module{
   object jvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
   class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
     def platformSegment = "jvm"
-    def moduleDeps = Seq(parser.jvm())
+    def moduleDeps = Seq(json .jvm())
 
     object test extends UpickleTestModule
   }
 
   object js extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
   class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
-    def moduleDeps = Seq(parser.js())
+    def moduleDeps = Seq(json.js())
     def platformSegment = "js"
 
     def scalaJSVersion = "0.6.22"

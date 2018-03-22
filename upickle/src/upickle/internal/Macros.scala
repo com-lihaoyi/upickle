@@ -292,7 +292,7 @@ object Macros {
                     yield cq"$i => ${mappedArgs(i)}"
                   }
                 }
-                throw new upickle.jawn.AbortJsonProcessingException(
+                throw new upickle.json.AbortJsonProcessingException(
                   "missing keys in dictionary: " + keys.mkString(", ")
                 )
               }
@@ -306,8 +306,8 @@ object Macros {
               )
             }
 
-            def subVisitor: upickle.jawn.Visitor[_, _] =
-              if (currentIndex == -1) upickle.jawn.NoOpVisitor
+            def subVisitor: upickle.json.Visitor[_, _] =
+              if (currentIndex == -1) upickle.json.NoOpVisitor
               else localReaders(currentIndex)
           }
         }
@@ -352,7 +352,7 @@ object Macros {
             val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
             ctx.visitValue(
               w.write(
-                out.asInstanceOf[upickle.jawn.Visitor[Any, Nothing]],
+                out.asInstanceOf[upickle.json.Visitor[Any, Nothing]],
                 v.${TermName(rawArgs(i))}
               ),
               -1
@@ -362,8 +362,8 @@ object Macros {
       }
       q"""
         new ${c.prefix}.CaseW[$targetType]{
-          def writeToObject[R](ctx: upickle.jawn.ObjVisitor[_, R],
-                               out: upickle.jawn.Visitor[_, R],
+          def writeToObject[R](ctx: upickle.json.ObjVisitor[_, R],
+                               out: upickle.json.Visitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}
 

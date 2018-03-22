@@ -1,7 +1,6 @@
 package example
 
 import acyclic.file
-import upickle.{Js, TestUtil}
 import utest._
 import example.Simple.Thing
 

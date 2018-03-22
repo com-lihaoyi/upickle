@@ -1,7 +1,7 @@
 package upickle
 package core
 
-import upickle.jawn.ObjArrVisitor
+import upickle.json.ObjArrVisitor
 
 object Util {
   def parseLong(cs: CharSequence, start: Int, len: Int): Long = {

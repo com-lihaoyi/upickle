@@ -2,11 +2,11 @@ package example
 import java.io.StringWriter
 
 import acyclic.file
-import upickle.{Js, TestUtil, default, jawn}
+import upickle.{TestUtil, default, json}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
-import upickle.jawn.{IncompleteParseException, NoOpVisitor, ParseException, Transformable}
-import upickle.visitors.{BytesRenderer, StringRenderer}
+import upickle.json.{IncompleteParseException, NoOpVisitor, ParseException, Transformable}
+import upickle.json.{Js, BytesRenderer, StringRenderer}
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{
@@ -278,7 +278,7 @@ object ExampleTests extends TestSuite {
 
         // It can be used for parsing JSON into an AST
         val exampleAst = Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
-        upickle.json.transform("[1, 2, 3]", upickle.Js.Builder) ==> exampleAst
+        upickle.json.transform("[1, 2, 3]", Js.Builder) ==> exampleAst
 
         // Rendering the AST to a string
         upickle.json.transform(exampleAst, StringRenderer()).toString ==> "[1.0,2.0,3.0]"

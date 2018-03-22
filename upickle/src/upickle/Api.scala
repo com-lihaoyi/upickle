@@ -3,7 +3,8 @@ package upickle
 
 
 import upickle.internal.IndexedJs
-import upickle.jawn._
+import upickle.json._
+import upickle.json.StringRenderer
 
 import language.experimental.macros
 import language.higherKinds
@@ -21,20 +22,18 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
   def reader[T: Reader] = implicitly[Reader[T]]
 
   def write[T: Writer](t: T, indent: Int = -1) = {
-    val out = new java.io.StringWriter()
-    writeTo(t, out, indent)
-    out.toString
+    transform(t).to(StringRenderer(indent)).toString
   }
 
   def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1) = {
-    implicitly[Writer[T]].write(new visitors.Renderer(out, indent = indent), t)
+    implicitly[Writer[T]].write(new Renderer(out, indent = indent), t)
   }
 
   def writable[T: Writer](t: T) = Transformable.fromTransformer(t, implicitly[Writer[T]])
 
   case class transform[T: Writer](t: T) extends Transformable{
-    def transform[V](f: upickle.jawn.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
-    def to[V](f: upickle.jawn.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
+    def transform[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
+    def to[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
     def to[V](implicit f: Reader[V]): V = implicitly[Writer[T]].transform(t, f)
   }
   object transform{
@@ -131,7 +130,7 @@ trait AttributeTagged extends Api{
     case class SlowPath(ctx: ObjVisitor[Any, IndexedJs.Obj]) extends TaggedReaderState
   }
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
-    new upickle.jawn.ObjVisitor[Any, T]{
+    new upickle.json.ObjVisitor[Any, T]{
       var state: TaggedReaderState = TaggedReaderState.Initializing
       def visitKey(s: CharSequence, index: Int): Unit = state match{
         case TaggedReaderState.Initializing =>
@@ -197,16 +196,5 @@ trait AttributeTagged extends Api{
   }
 }
 
-object json{
-  val jsRW = upickle.default.macroRW0[Js.Value](implicitly, implicitly)
-  def read(s: Transformable) = s.transform(jsRW)
-  def write(t: Js.Value): String = {
-    val out = new java.io.StringWriter()
-    jsRW.write(new visitors.Renderer(out), t)
-    out.toString
-  }
-
-  def transform[T](t: Transformable, v: Visitor[_, T]) = t.transform(v)
-}
 
 case class key(s: String) extends StaticAnnotation

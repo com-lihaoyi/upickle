@@ -1,7 +1,7 @@
 package upickle
 
 import upickle.internal.IndexedJs
-import upickle.jawn._
+import upickle.json._
 
 import scala.collection.mutable
 import scala.scalajs.js
@@ -17,8 +17,8 @@ trait WebJson extends upickle.core.Types {
     }
   }
 }
-object WebJson extends jawn.Transformer[js.Any]{
-  def transform[T](j: js.Any, f: upickle.jawn.Visitor[_, T]): T = {
+object WebJson extends json.Transformer[js.Any]{
+  def transform[T](j: js.Any, f: upickle.json.Visitor[_, T]): T = {
     (j: Any) match{
       case s: String => f.visitString(s, -1)
       case n: Double =>
@@ -41,7 +41,7 @@ object WebJson extends jawn.Transformer[js.Any]{
     }
   }
 
-  object Builder extends upickle.jawn.Visitor[js.Any, js.Any]{
+  object Builder extends upickle.json.Visitor[js.Any, js.Any]{
     def visitArray(index: Int) = new ArrVisitor[js.Any, js.Any] {
       val out = new js.Array[js.Any]
       def subVisitor = Builder.this

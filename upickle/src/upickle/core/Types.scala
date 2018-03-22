@@ -1,7 +1,7 @@
 package upickle
 package core
 
-import upickle.jawn._
+import upickle.json._
 
 import scala.language.experimental.macros
 import scala.language.higherKinds
@@ -38,7 +38,7 @@ trait Types{ types =>
     }
   }
   type Reader[T] = BaseReader[Any, T]
-  trait BaseReader[-T, V] extends upickle.jawn.Visitor[T, V] {
+  trait BaseReader[-T, V] extends upickle.json.Visitor[T, V] {
     def expectedMsg = ""
     def narrow[K <: V] = this.asInstanceOf[BaseReader[T, K]]
     def visitNull(index: Int): V = null.asInstanceOf[V]
@@ -52,10 +52,10 @@ trait Types{ types =>
       throw new AbortJsonProcessingException(expectedMsg + " got number")
     }
 
-    def visitObject(index: Int): upickle.jawn.ObjVisitor[T, V] = {
+    def visitObject(index: Int): upickle.json.ObjVisitor[T, V] = {
       throw new AbortJsonProcessingException(expectedMsg + " got dictionary")
     }
-    def visitArray(index: Int): upickle.jawn.ArrVisitor[T, V] = {
+    def visitArray(index: Int): upickle.json.ArrVisitor[T, V] = {
       throw new AbortJsonProcessingException(expectedMsg + " got sequence")
     }
     def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z](this, f)
@@ -94,10 +94,10 @@ trait Types{ types =>
       }
       override def visitTrue(index: Int) = f(src.visitTrue(index))
 
-      override def visitObject(index: Int): upickle.jawn.ObjVisitor[T, Z] = {
+      override def visitObject(index: Int): upickle.json.ObjVisitor[T, Z] = {
         new MapObjContext[T, V, Z](src.visitObject(index), f)
       }
-      override def visitArray(index: Int): upickle.jawn.ArrVisitor[T, Z] = {
+      override def visitArray(index: Int): upickle.json.ArrVisitor[T, Z] = {
         new MapArrContext[T, V, Z](src.visitArray(index), f)
       }
 
@@ -112,8 +112,8 @@ trait Types{ types =>
       // }
     }
 
-    class MapArrContext[T, V, Z](src: upickle.jawn.ArrVisitor[T, V],
-                               f: V => Z) extends upickle.jawn.ArrVisitor[T, Z]{
+    class MapArrContext[T, V, Z](src: upickle.json.ArrVisitor[T, V],
+                                 f: V => Z) extends upickle.json.ArrVisitor[T, Z]{
       def subVisitor = src.subVisitor
 
       def visitValue(v: T, index: Int): Unit = src.visitValue(v, index)
@@ -121,8 +121,8 @@ trait Types{ types =>
       def visitEnd(index: Int) = f(src.visitEnd(index))
     }
 
-    class MapObjContext[T, V, Z](src: upickle.jawn.ObjVisitor[T, V],
-                               f: V => Z) extends upickle.jawn.ObjVisitor[T, Z]{
+    class MapObjContext[T, V, Z](src: upickle.json.ObjVisitor[T, V],
+                                 f: V => Z) extends upickle.json.ObjVisitor[T, Z]{
       def subVisitor = src.subVisitor
 
       def visitKey(s: CharSequence, index: Int) = src.visitKey(s, index)
@@ -134,20 +134,20 @@ trait Types{ types =>
   }
   trait Writer[T] extends Transformer[T]{
     def narrow[K <: T] = this.asInstanceOf[Writer[K]]
-    def transform[V](v: T, out: upickle.jawn.Visitor[_, V]) = write(out, v)
-    def write[V](out: upickle.jawn.Visitor[_, V], v: T): V
+    def transform[V](v: T, out: upickle.json.Visitor[_, V]) = write(out, v)
+    def write[V](out: upickle.json.Visitor[_, V], v: T): V
     def comapNulls[U](f: U => T) = new Writer.MapWriterNulls[U, T](this, f)
     def comap[U](f: U => T) = new Writer.MapWriter[U, T](this, f)
   }
   object Writer {
 
     class MapWriterNulls[U, T](src: Writer[T], f: U => T) extends Writer[U] {
-      def write[R](out: upickle.jawn.Visitor[_, R], v: U): R = {
+      def write[R](out: upickle.json.Visitor[_, R], v: U): R = {
         src.write(out, f(v))
       }
     }
     class MapWriter[U, T](src: Writer[T], f: U => T) extends Writer[U] {
-      def write[R](out: upickle.jawn.Visitor[_, R], v: U): R = {
+      def write[R](out: upickle.json.Visitor[_, R], v: U): R = {
         if (v == null) out.visitNull(-1)
         else src.write(out, f(v))
       }
@@ -158,7 +158,7 @@ trait Types{ types =>
   }
 
   class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{
-    def write[R](out: upickle.jawn.Visitor[_, R], v: V): R = {
+    def write[R](out: upickle.json.Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
         val ctx = out.visitArray()
@@ -182,7 +182,7 @@ trait Types{ types =>
   class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends Reader[V]{
 
     override def expectedMsg = "expected sequence"
-    override def visitArray(index: Int) = new upickle.jawn.ArrVisitor[Any, V] {
+    override def visitArray(index: Int) = new upickle.json.ArrVisitor[Any, V] {
       val b = new Array[Any](readers.length)
       var facadesIndex = 0
 
@@ -213,7 +213,7 @@ trait Types{ types =>
 
   abstract class CaseR[V](val argCount: Int) extends Reader[V]{
     override def expectedMsg = "expected dictionary"
-    trait CaseObjectContext extends upickle.jawn.ObjVisitor[Any, V]{
+    trait CaseObjectContext extends upickle.json.ObjVisitor[Any, V]{
       val aggregated = new Array[Any](argCount)
       val found = new Array[Boolean](argCount)
       var currentIndex = -1
@@ -229,9 +229,9 @@ trait Types{ types =>
   }
   trait CaseW[V] extends Writer[V]{
     def writeToObject[R](ctx: ObjVisitor[_, R],
-                         out: upickle.jawn.Visitor[_, R],
+                         out: upickle.json.Visitor[_, R],
                          v: V): Unit
-    def write[R](out: upickle.jawn.Visitor[_, R], v: V): R = {
+    def write[R](out: upickle.json.Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
         val ctx = out.visitObject(-1)
@@ -243,7 +243,7 @@ trait Types{ types =>
   class SingletonR[T](t: T) extends CaseR[T](0){
     override def expectedMsg = "expected dictionary"
     override def visitObject(index: Int) = new ObjVisitor[Any, T] {
-      def subVisitor = upickle.jawn.NoOpVisitor
+      def subVisitor = upickle.json.NoOpVisitor
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 

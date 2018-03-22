@@ -1,7 +1,8 @@
 package upickle
 
 //import upickle.ADTs.ADT0
-import default.{Reader => R, Writer => W, ReadWriter => RW}
+import default.{ReadWriter => RW, Reader => R, Writer => W}
+import upickle.json.Js
 /*
  * A whole bunch of test data that can be used by client libraries to try out
  * their typeclass derivation to make sure it's doing the right thing. Contains
@@ -470,4 +471,4 @@ object Ast{
   }
 }
 
-case class CaseClassWithJson(json:Js.Value)
+case class CaseClassWithJson(json: Js.Value)
