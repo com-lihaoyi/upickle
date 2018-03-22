@@ -15,6 +15,19 @@ trait Visitor[-T, +J] {
   def visitFalse(index: Int): J
   def visitTrue(index: Int): J
   def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): J
+
+  /**
+    * Optional handler for raw double values; can be overriden for performance
+    * in cases where you're translating directly between numbers to avoid the
+    * overhead of stringifying and re-parsing your numbers (e.g. the WebJson
+    * transformer gets raw doubles from the underlying Json.parse).
+    *
+    * Delegates to `visitNum` if not overriden
+    */
+  def visitNumRaw(d: Double, index: Int): J = {
+    val s = d.toString
+    visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
+  }
   def visitString(s: CharSequence, index: Int): J
 
 

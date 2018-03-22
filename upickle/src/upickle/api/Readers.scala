@@ -30,52 +30,72 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def visitFalse(index: Int) = false
   }
 
-  object NumStringReader extends Reader[String] {
+  class FloatingNumReader[T](f1: Double => T, f2: String => T) extends Reader[T] {
     override def expectedMsg = "expected number or double string"
-    override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = s.toString
-    override def visitString(s: CharSequence, index: Int) = s.toString
+    override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = f2(s.toString)
+    override def visitNumRaw(d: Double, index: Int) = f1(d)
+    override def visitString(s: CharSequence, index: Int) = f2(s.toString)
   }
-  class NumReader[T](f: Long => T) extends Reader[T] {
+
+  class IntegralNumReader[T](f1: Double => T, f2: Long => T) extends Reader[T] {
     override def expectedMsg = "expected number"
+    override def visitNumRaw(d: Double, index: Int) = f1(d)
     override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      if (expIndex != -1) throw new AbortJsonProcessingException("expected integer")
-      if (decIndex != -1) {
-        var i = decIndex + 1
-        while(i < s.length) {
-          if (s.charAt(i) != '0') throw new AbortJsonProcessingException("expected integer")
-          i += 1
+
+      val expMul =
+        if (expIndex == -1) 1
+        else{
+          var mult = 1
+          val e = upickle.core.Util.parseLong(s, expIndex + 1, s.length())
+          var i = 0
+          while(i < e){
+            if (mult >= Long.MaxValue / 10) throw new AbortJsonProcessingException("expected integer")
+            mult = mult * 10
+            i += 1
+          }
+          mult
         }
+
+      val intPortion = {
+        val end = if(decIndex != -1) decIndex else s.length
+        upickle.core.Util.parseLong(s, 0, end) * expMul
       }
 
-
-      val end = if(decIndex != -1) decIndex else s.length
-      var l = upickle.core.Util.parseLong(s, 0, end)
-      if (expIndex == -1) f(l)
-      else{
-        val e = upickle.core.Util.parseLong(s, expIndex, s.length())
-        var i = 0
-        while(i < e){
-          if (l >= Long.MaxValue / 10) throw new AbortJsonProcessingException("expected integer")
-          l = l * 10
-          i += 1
+      val decPortion =
+        if (decIndex == -1) 0
+        else{
+          val end = if(expIndex != -1) expIndex else s.length
+          var value = upickle.core.Util.parseLong(s, decIndex + 1, end) * expMul
+          var i = end - (decIndex + 1)
+          while(i > 0) {
+            value = value / 10
+            i -= 1
+          }
+          if (s.charAt(0) == '-') -value else value
         }
-        f(l)
-      }
+
+      f2(intPortion + decPortion)
     }
   }
-  implicit val DoubleReader: Reader[Double] = NumStringReader.map(_.toDouble)
-  implicit val IntReader: Reader[Int] = new NumReader(l =>
-    if (l > Int.MaxValue || l < Int.MinValue) throw new AbortJsonProcessingException("expected integer")
-    else l.toInt
+  implicit val DoubleReader: Reader[Double] = new FloatingNumReader(identity, _.toDouble)
+  implicit val IntReader: Reader[Int] = new IntegralNumReader(
+    _.toInt,
+    l =>
+      if (l > Int.MaxValue || l < Int.MinValue) throw new AbortJsonProcessingException("expected integer")
+      else l.toInt
   )
-  implicit val FloatReader: Reader[Float] = NumStringReader.map(_.toFloat)
-  implicit val ShortReader: Reader[Short] = new NumReader(l =>
-    if (l > Short.MaxValue || l < Short.MinValue) throw new AbortJsonProcessingException("expected short")
-    else l.toShort
+  implicit val FloatReader: Reader[Float] = new FloatingNumReader(_.toFloat, _.toFloat)
+  implicit val ShortReader: Reader[Short] = new IntegralNumReader(
+    _.toShort,
+    l =>
+      if (l > Short.MaxValue || l < Short.MinValue) throw new AbortJsonProcessingException("expected short")
+      else l.toShort
   )
-  implicit val ByteReader: Reader[Byte] = new NumReader(l =>
-    if (l > Byte.MaxValue || l < Byte.MinValue) throw new AbortJsonProcessingException("expected byte")
-    else l.toByte
+  implicit val ByteReader: Reader[Byte] = new IntegralNumReader(
+    _.toByte,
+    l =>
+      if (l > Byte.MaxValue || l < Byte.MinValue) throw new AbortJsonProcessingException("expected byte")
+      else l.toByte
   )
 
   implicit object StringReader extends Reader[String] {
@@ -193,6 +213,9 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def visitString(s: CharSequence, index: Int) = Js.Builder.visitString(s, index)
     override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Js.Builder.visitNum(s, decIndex, expIndex, index)
+    }
+    override def visitNumRaw(d: Double, index: Int) = {
+      Js.Builder.visitNumRaw(d, index)
     }
     override def visitTrue(index: Int) = Js.Builder.visitTrue(index)
     override def visitFalse(index: Int) = Js.Builder.visitFalse(index)

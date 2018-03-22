@@ -18,17 +18,35 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
 
-  object NumStringWriter extends Writer[String] {
-    def write[R](out: upickle.json.Visitor[_, R], v: String): R = v match{
-      case "-Infinity" | "Infinity" | "NaN" => out.visitString(v)
-      case _ => out.visitNum(v, -1, -1)
+  class IntegralNumWriter[T](f: T => Double) extends Writer[T] {
+    def write[R](out: upickle.json.Visitor[_, R], v: T): R = {
+      out.visitNumRaw(f(v), -1)
     }
   }
-  implicit val DoubleWriter: Writer[Double] = NumStringWriter.comap[Double](_.toString)
-  implicit val IntWriter: Writer[Int] = NumStringWriter.comap[Int](_.toString)
-  implicit val FloatWriter: Writer[Float] = NumStringWriter.comap[Float](_.toString)
-  implicit val ShortWriter: Writer[Short] = NumStringWriter.comap[Short](_.toString)
-  implicit val ByteWriter: Writer[Byte] = NumStringWriter.comap[Byte](_.toString)
+  implicit object DoubleWriter extends Writer[Double] {
+    def write[R](out: upickle.json.Visitor[_, R], v: Double): R = {
+      v match{
+        case Double.PositiveInfinity => out.visitString("Infinity")
+        case Double.NegativeInfinity => out.visitString("-Infinity")
+        case d if java.lang.Double.isNaN(d) => out.visitString("NaN")
+        case d => out.visitNumRaw(v, -1)
+      }
+    }
+  }
+  implicit val IntWriter: Writer[Int] = new IntegralNumWriter(_.toDouble)
+
+  implicit object FloatWriter extends Writer[Float] {
+    def write[R](out: upickle.json.Visitor[_, R], v: Float): R = {
+      v match{
+        case Float.PositiveInfinity => out.visitString("Infinity")
+        case Float.NegativeInfinity => out.visitString("-Infinity")
+        case d if java.lang.Float.isNaN(d) => out.visitString("NaN")
+        case d => out.visitNumRaw(v, -1)
+      }
+    }
+  }
+  implicit val ShortWriter: Writer[Short] = new IntegralNumWriter(_.toDouble)
+  implicit val ByteWriter: Writer[Byte] = new IntegralNumWriter(_.toDouble)
 
   implicit object BooleanWriter extends Writer[Boolean] {
     def write[R](out: upickle.json.Visitor[_, R], v: Boolean): R = {
@@ -108,14 +126,14 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
         val ctx = out.visitArray().narrow
         ctx.visitValue(out.visitNum("0", -1, -1), -1)
 
-        ctx.visitValue(implicitly[Writer[T1]].write(out, t1), -1)
+        ctx.visitValue(implicitly[Writer[T1]].write(ctx.subVisitor, t1), -1)
 
         ctx.visitEnd(-1)
       case Right(t2) =>
         val ctx = out.visitArray().narrow
         ctx.visitValue(out.visitNum("1", -1, -1), -1)
 
-        ctx.visitValue(implicitly[Writer[T2]].write(out, t2), -1)
+        ctx.visitValue(implicitly[Writer[T2]].write(ctx.subVisitor, t2), -1)
 
         ctx.visitEnd(-1)
     }

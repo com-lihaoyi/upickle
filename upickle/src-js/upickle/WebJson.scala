@@ -21,9 +21,7 @@ object WebJson extends json.Transformer[js.Any]{
   def transform[T](j: js.Any, f: upickle.json.Visitor[_, T]): T = {
     (j: Any) match{
       case s: String => f.visitString(s, -1)
-      case n: Double =>
-        val s = n.toString
-        f.visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
+      case n: Double => f.visitNumRaw(n, -1)
       case true => f.visitTrue(-1)
       case false => f.visitFalse(-1)
       case null => f.visitNull(-1)
@@ -69,6 +67,10 @@ object WebJson extends json.Transformer[js.Any]{
 
     def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toDouble.asInstanceOf[js.Any]
+    }
+
+    override def visitNumRaw(d: Double, index: Int) = {
+      d.asInstanceOf[js.Any]
     }
 
     def visitString(s: CharSequence, index: Int) = s.toString.asInstanceOf[js.Any]

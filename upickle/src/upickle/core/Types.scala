@@ -75,6 +75,9 @@ trait Types{ types =>
         delegatedReader.visitNum(s, decIndex, expIndex, index)
       }
 
+      override def visitNumRaw(d: Double, index: Int) = {
+        delegatedReader.visitNumRaw(d, index)
+      }
       override def visitObject(index: Int) = delegatedReader.visitObject(index)
       override def visitArray(index: Int) = delegatedReader.visitArray(index)
     }
@@ -88,6 +91,9 @@ trait Types{ types =>
       override def visitNull(index: Int) = f1(src.visitNull(index))
       override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
         f1(src.visitNum(s, decIndex, expIndex, index))
+      }
+      override def visitNumRaw(d: Double, index: Int) = {
+        f1(src.visitNumRaw(d, index))
       }
       override def visitString(s: CharSequence, index: Int) = {
         f1(src.visitString(s, index))

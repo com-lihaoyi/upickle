@@ -110,6 +110,14 @@ class BaseRenderer[T <: java.io.Writer]
     out
   }
 
+  override def visitNumRaw(d: Double, index: Int) = {
+    val i = d.toInt
+    if (d == i) visitNum(i.toString, -1, -1, index)
+    else super.visitNumRaw(d, index)
+    flushBuffer()
+    out
+  }
+
   def visitString(s: CharSequence, index: Int) = {
     flushBuffer()
     if (s == null) out.append("null")
