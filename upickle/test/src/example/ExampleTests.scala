@@ -254,9 +254,8 @@ object ExampleTests extends TestSuite {
         upickle.json.transform("[1, 2, 3]", implicitly[upickle.default.Reader[Seq[Int]]]) ==>
           Seq(1, 2, 3)
 
-//        upickle.json.transform(new jawn.Transformable.WalkerTransformable[]()(
-//          Seq(1, 2, 3), implicitly[default.Writer[Seq[Int]]]), ) ==>
-//          "[1,2,3]"
+        upickle.json.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
+          "[1,2,3]"
 
         // It can be used for parsing JSON into an AST
         upickle.json.transform("[1, 2, 3]", upickle.Js.Builder) ==>
