@@ -3,9 +3,7 @@ package upickle
 import upickle.Js._
 import upickle.jawn._
 
-import scala.annotation.switch
 import scala.collection.mutable
-import scala.collection.mutable.StringBuilder
 
 /**
 * Exceptions that can be thrown by upickle; placed in the same file
@@ -55,7 +53,7 @@ sealed trait Js extends Transformable{
     * a [[Js.Obj]]
     */
   def obj = this match{
-    case Obj(value @_*) => value.toMap
+    case Obj(value) => value
     case _ => throw Invalid.Data(this, "Expected Js.Obj")
   }
   /**
@@ -63,7 +61,7 @@ sealed trait Js extends Transformable{
     * a [[Js.Arr]]
     */
   def arr = this match{
-    case Arr(value @ _*) => value
+    case Arr(value) => value
     case _ => throw Invalid.Data(this, "Expected Js.Arr")
   }
   /**
@@ -98,13 +96,15 @@ sealed trait Js extends Transformable{
 */
 object Js extends jawn.Transformer[Js]{
 
-  case class Str(value0: java.lang.CharSequence) extends Value{
-    lazy val value: String = value0.toString
+  case class Str(value: String) extends Value
+  case class Obj(value: Map[String, Value]) extends Value
+  object Obj{
+    def apply(items: (String, Value)*): Obj = Obj(items.toMap)
   }
-  case class Obj(value0: (java.lang.CharSequence, Value)*) extends Value{
-    lazy val value: Seq[(String, Value)] = value0.map{case (k, v) => (k.toString, v)}
+  case class Arr(value: IndexedSeq[Value]) extends Value
+  object Arr{
+    def apply(items: Value*): Arr = Arr(items.toArray)
   }
-  case class Arr(value: Value*) extends Value
   case class Num(value: Double) extends Value
   case object False extends Value{
     def value = false
@@ -127,11 +127,11 @@ object Js extends jawn.Transformer[Js]{
         val s = d.toString
         f.visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
 
-      case Js.Arr(items @ _*) =>
+      case Js.Arr(items) =>
         val ctx = f.visitArray(-1).narrow
         for(item <- items) ctx.visitValue(transform(item, ctx.subVisitor), -1)
         ctx.visitEnd(-1)
-      case Js.Obj(items @ _*) =>
+      case Js.Obj(items) =>
         val ctx = f.visitObject(-1).narrow
         for((k, item) <- items) {
           ctx.visitKey(k, -1)
@@ -177,7 +177,7 @@ object Js extends jawn.Transformer[Js]{
       Js.Num(s.toString.toDouble)
     }
 
-    def visitString(s: CharSequence, index: Int) = Js.Str(s)
+    def visitString(s: CharSequence, index: Int) = Js.Str(s.toString)
   }
 
 }
