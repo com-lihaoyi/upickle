@@ -53,10 +53,10 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
         val x = v.iterator
         while(x.nonEmpty){
           val next = x.next().asInstanceOf[T]
-          val written = r.write(out, next)
+          val written = r.write(ctx.subVisitor, next)
           ctx.visitValue(written, -1)
-
         }
+
         ctx.visitEnd(-1)
       }
     }
@@ -66,7 +66,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
       val ctx = out.visitArray().narrow
       var i = 0
       while(i < v.length){
-        ctx.visitValue(r.write(out, v(i)), -1)
+        ctx.visitValue(r.write(ctx.subVisitor, v(i)), -1)
         i += 1
       }
 
@@ -81,7 +81,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
         for(pair <- v){
           val (k1, v1) = pair
           ctx.visitKey(k1, -1)
-          ctx.visitValue(vw.write(out, v1), -1)
+          ctx.visitValue(vw.write(ctx.subVisitor, v1), -1)
 
         }
         ctx.visitEnd(-1)

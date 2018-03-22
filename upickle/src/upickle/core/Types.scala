@@ -205,7 +205,9 @@ trait Types{ types =>
 
       }
 
-      def subVisitor = readers(facadesIndex % readers.length)
+      def subVisitor = {
+        readers(facadesIndex % readers.length)
+      }
     }
   }
 
@@ -233,7 +235,7 @@ trait Types{ types =>
       if (v == null) out.visitNull(-1)
       else{
         val ctx = out.visitObject(-1)
-        writeToObject(ctx, out, v)
+        writeToObject(ctx, ctx.subVisitor, v)
         ctx.visitEnd(-1)
       }
     }

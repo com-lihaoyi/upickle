@@ -249,6 +249,25 @@ object ExampleTests extends TestSuite {
         transform(Js.Obj("myFieldA" -> Js.Num(3), "myFieldB" -> Js.Str("3"))).to[Thing] ==>
           Thing(3, "3")
       }
+
+      'defaultTransform{
+
+        // upickle.default.transform can be used to convert between
+        // JSON-equivalent data-structures without an intermediate AST
+        upickle.default.transform(Seq(1, 2, 3)).to[(Int, Int, Int)] ==> (1, 2, 3)
+
+        val bar = Bar("omg", Seq(Foo(1), Foo(2)))
+
+        upickle.default.transform(bar).to[Map[String, Js.Value]] ==>
+          Map(
+            "name" -> Js.Str("omg"),
+            "foos" -> Js.Arr(
+              Js.Obj("i" -> Js.Num(1)),
+              Js.Obj("i" -> Js.Num(2))
+            )
+          )
+
+      }
       'misc{
         // upickle.json.transform is long-hand for upickle.default.{read,write,transform}
         upickle.json.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
@@ -256,23 +275,6 @@ object ExampleTests extends TestSuite {
 
         upickle.json.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
           "[1,2,3]"
-
-        // `transform` can convert between structured data types without an intermediate AST
-        val converted = upickle.json.transform(
-          upickle.default.writable(Seq(1, 2, 3)),
-          upickle.default.reader[(Int, Int, Int)]
-        )
-
-        converted ==> (1, 1.0, 1)
-
-        // Or between structured data types to semi-structured data types
-
-        val converted2 = upickle.json.transform(
-          upickle.default.writable(FooDefault(1, "omg")),
-          upickle.default.reader[Map[String, Js.Obj]]
-        )
-
-        converted2 ==> Map("i" -> Js.Num(1), "s" -> Js.Str("omg"))
 
         // It can be used for parsing JSON into an AST
         val exampleAst = Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
@@ -288,7 +290,7 @@ object ExampleTests extends TestSuite {
         upickle.json.transform("[1, 2, 3]", StringRenderer()).toString ==> "[1,2,3]"
 
         // or indenting it
-        upickle.json.transform("[1, 2, 3]".getBytes, StringRenderer(indent = 4)).toString ==>
+        upickle.json.transform("[1, 2, 3]", StringRenderer(indent = 4)).toString ==>
           """[
             |    1,
             |    2,
