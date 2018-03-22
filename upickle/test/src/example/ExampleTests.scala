@@ -251,23 +251,38 @@ object ExampleTests extends TestSuite {
       }
       'misc{
         // upickle.json.transform is long-hand for upickle.default.{read,write,transform}
-        upickle.json.transform("[1, 2, 3]", implicitly[upickle.default.Reader[Seq[Int]]]) ==>
+        upickle.json.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
           Seq(1, 2, 3)
 
         upickle.json.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
           "[1,2,3]"
 
+        // `transform` can convert between structured data types without an intermediate AST
+        val converted = upickle.json.transform(
+          upickle.default.writable(Seq(1, 2, 3)),
+          upickle.default.reader[(Int, Int, Int)]
+        )
+
+        converted ==> (1, 1.0, 1)
+
+        // Or between structured data types to semi-structured data types
+
+        val converted2 = upickle.json.transform(
+          upickle.default.writable(FooDefault(1, "omg")),
+          upickle.default.reader[Map[String, Js.Obj]]
+        )
+
+        converted2 ==> Map("i" -> Js.Num(1), "s" -> Js.Str("omg"))
+
         // It can be used for parsing JSON into an AST
-        upickle.json.transform("[1, 2, 3]", upickle.Js.Builder) ==>
-          Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
+        val exampleAst = Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
+        upickle.json.transform("[1, 2, 3]", upickle.Js.Builder) ==> exampleAst
 
         // Rendering the AST to a string
-        upickle.json.transform(Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3)), StringRenderer()).toString ==>
-          "[1.0,2.0,3.0]"
+        upickle.json.transform(exampleAst, StringRenderer()).toString ==> "[1.0,2.0,3.0]"
 
         // Or to a byte array
-        upickle.json.transform(Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3)), BytesRenderer()).toBytes ==>
-          "[1.0,2.0,3.0]".getBytes
+        upickle.json.transform(exampleAst, BytesRenderer()).toBytes ==> "[1.0,2.0,3.0]".getBytes
 
         // Re-formatting JSON, either compacting it
         upickle.json.transform("[1, 2, 3]", StringRenderer()).toString ==> "[1,2,3]"
@@ -283,7 +298,7 @@ object ExampleTests extends TestSuite {
         // `transform` takes any `Transformable`, including byte arrays and files
         upickle.json.transform("[1, 2, 3]".getBytes, StringRenderer()).toString ==> "[1,2,3]"
 
-        // Validating JSON
+        // `transform` can also be used for validating JSON without constructing anything
         upickle.json.transform("[1, 2, 3]", NoOpVisitor)
 
         intercept[IncompleteParseException]{

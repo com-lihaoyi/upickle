@@ -18,6 +18,8 @@ import scala.reflect.ClassTag
 trait Api extends upickle.core.Types with api.Implicits with WebJson{
   def read[T: Reader](s: Transformable) = s.transform(implicitly[Reader[T]])
 
+  def reader[T: Reader] = implicitly[Reader[T]]
+
   def write[T: Writer](t: T, indent: Int = -1) = {
     val out = new java.io.StringWriter()
     writeTo(t, out, indent)
