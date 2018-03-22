@@ -1,7 +1,7 @@
 package upickle
 import utest._
 import acyclic.file
-import upickle.json.{Invalid, Js}
+import upickle.json.Js
 object JsonTests extends TestSuite {
   val tests = Tests {
     val ugly =
@@ -89,9 +89,9 @@ object JsonTests extends TestSuite {
         json.read("{\"1\": 1}").obj ==> Map("1" -> Js.Num(1))
       }
       'negative{
-        intercept[Invalid.Data]{json.read("[1]").obj}
-        intercept[Invalid.Data]{json.read("1").obj}
-        intercept[Invalid.Data]{json.read("\"1\"").obj}
+        intercept[Js.InvalidData]{json.read("[1]").obj}
+        intercept[Js.InvalidData]{json.read("1").obj}
+        intercept[Js.InvalidData]{json.read("\"1\"").obj}
 
       }
     }

@@ -3,40 +3,9 @@ package upickle.json
 
 import scala.collection.mutable
 
-/**
-* Exceptions that can be thrown by upickle; placed in the same file
-* as JSON parser due to circular dependencies between exception types
-* and JSON types
-*/
-sealed trait Invalid extends Exception
-object Invalid{
-
-  /**
-   * Thrown when the JSON parser finds itself trying to parse invalid JSON.
-   *
-   * @param msg Human-readable text saying what went wrong
-   * @param input The `String` it was trying to parse
-   */
-  case class Json(msg: String, input: String)
-    extends scala.Exception(s"$msg (input: $input)")
-    with Invalid
-
-  /**
-   * Thrown when uPickle tries to convert a JSON blob into a given data
-   * structure but fails because part the blob is invalid
-   *
-   * @param data The section of the JSON blob that uPickle tried to convert.
-   *             This could be the entire blob, or it could be some subtree.
-   * @param msg Human-readable text saying what went wrong
-   */
-  case class Data(data: Js.Value, msg: String)
-    extends Exception(s"$msg (data: $data)")
-    with Invalid
-
-}
-
 sealed trait Js extends Transformable{
   def value: Any
+
 
   /**
     * Returns the `String` value of this [[Js.Value]], fails if it is not
@@ -44,7 +13,7 @@ sealed trait Js extends Transformable{
     */
   def str = this match{
     case Js.Str(value) => value
-    case _ => throw Invalid.Data(this, "Expected Js.Str")
+    case _ => throw Js.InvalidData(this, "Expected Js.Str")
   }
   /**
     * Returns the key/value map of this [[Js.Value]], fails if it is not
@@ -52,7 +21,7 @@ sealed trait Js extends Transformable{
     */
   def obj = this match{
     case Js.Obj(value) => value
-    case _ => throw Invalid.Data(this, "Expected Js.Obj")
+    case _ => throw Js.InvalidData(this, "Expected Js.Obj")
   }
   /**
     * Returns the elements of this [[Js.Value]], fails if it is not
@@ -60,7 +29,7 @@ sealed trait Js extends Transformable{
     */
   def arr = this match{
     case Js.Arr(value) => value
-    case _ => throw Invalid.Data(this, "Expected Js.Arr")
+    case _ => throw Js.InvalidData(this, "Expected Js.Arr")
   }
   /**
     * Returns the `Double` value of this [[Js.Value]], fails if it is not
@@ -68,7 +37,7 @@ sealed trait Js extends Transformable{
     */
   def num = this match{
     case Js.Num(value) => value
-    case _ => throw Invalid.Data(this, "Expected Js.Num")
+    case _ => throw Js.InvalidData(this, "Expected Js.Num")
   }
 
   /**
@@ -178,5 +147,15 @@ object Js extends Transformer[Js]{
     def visitString(s: CharSequence, index: Int) = Js.Str(s.toString)
   }
 
+  /**
+    * Thrown when uPickle tries to convert a JSON blob into a given data
+    * structure but fails because part the blob is invalid
+    *
+    * @param data The section of the JSON blob that uPickle tried to convert.
+    *             This could be the entire blob, or it could be some subtree.
+    * @param msg Human-readable text saying what went wrong
+    */
+  case class InvalidData(data: Js.Value, msg: String)
+    extends Exception(s"$msg (data: $data)")
 }
 
