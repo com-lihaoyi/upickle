@@ -46,7 +46,9 @@ object json extends Module{
     def scalaJSVersion = "0.6.22"
     def platformSegment = "js"
 
-    object test extends JawnTestModule
+    object test extends JawnTestModule with TestScalaJSModule{
+      def scalaJSVersion = "0.6.22"
+    }
   }
 
   object jvm extends Cross[JsonJvmModule]("2.11.11", "2.12.4")
@@ -134,7 +136,7 @@ object upickle extends Module{
   object jvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
   class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
     def platformSegment = "jvm"
-    def moduleDeps = Seq(json .jvm())
+    def moduleDeps = Seq(json.jvm())
 
     object test extends UpickleTestModule
   }
@@ -152,7 +154,9 @@ object upickle extends Module{
         s"-P:scalajs:mapSourceURI:$a->$g/v${publishVersion()}/"
       })
     }
-    object test extends UpickleTestModule
+    object test extends UpickleTestModule with TestScalaJSModule{
+      def scalaJSVersion = "0.6.22"
+    }
   }
 }
 
@@ -172,19 +176,19 @@ object bench extends Module {
     def scalaJSVersion = "0.6.22"
     def platformSegment = "js"
     def moduleDeps = Seq(upickle.js("2.12.4").test)
-//    def run(args: String*) = T.command {
-//      finalMainClassOpt() match{
-//        case Left(err) => mill.eval.Result.Failure(err)
-//        case Right(_) =>
-//          ScalaJSBridge.scalaJSBridge().run(
-//            toolsClasspath().map(_.path),
-//            nodeJSConfig(),
-//            fullOpt().path.toIO
-//          )
-//          mill.eval.Result.Success(())
-//      }
-//
-//    }
+    def run(args: String*) = T.command {
+      finalMainClassOpt() match{
+        case Left(err) => mill.eval.Result.Failure(err)
+        case Right(_) =>
+          ScalaJSBridge.scalaJSBridge().run(
+            toolsClasspath().map(_.path),
+            nodeJSConfig(),
+            fullOpt().path.toIO
+          )
+          mill.eval.Result.Success(())
+      }
+
+    }
   }
 
   object jvm extends BenchModule {

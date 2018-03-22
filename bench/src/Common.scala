@@ -96,7 +96,7 @@ object Common{
 
 
     bench("upickleLegacy", duration)(
-      upickle.legacy.read[Data],
+      upickle.legacy.read[Data](_),
       upickle.legacy.write(_)
     )
 
@@ -105,7 +105,7 @@ object Common{
   def upickleDefault(duration: Int) = {
 
     bench("upickleDefault", duration)(
-      upickle.default.read[Data],
+      upickle.default.read[Data](_),
       upickle.default.write(_)
     )
   }
@@ -183,7 +183,7 @@ object Common{
     implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
 
     bench("upickleLegacyCached", duration)(
-      upickle.legacy.read[Data],
+      upickle.legacy.read[Data](_),
       upickle.legacy.write(_)
     )
   }
@@ -200,7 +200,7 @@ object Common{
     implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
 
     bench("upickleDefaultCached", duration)(
-      upickle.default.read[Data],
+      upickle.default.read[Data](_),
       upickle.default.write(_)
     )
   }
