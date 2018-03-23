@@ -13,29 +13,31 @@ import scala.reflect.ClassTag
 * package to form the public API1
 */
 trait Types{ types =>
-  type ReadWriter[T] = Reader[T] with Writer[T]
-
-
-  object ReadWriter{
-    def apply[T: Reader: Writer, V](f: T => V, g: V => T): ReadWriter[V] = {
-      new BaseReader.MapReader[Any, T, V](implicitly[Reader[T]], f) with Writer[V] {
-        override def narrow[K <: V] = this.asInstanceOf[ReadWriter[K]]
+  trait ReadWriter[T] extends Reader[T] with Writer[T]{
+    override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
+    def bimap[V](f: T => V, g: V => T): ReadWriter[V] = {
+      new ReadWriter[V] with BaseReader.MapReader[Any, T, V]{
+        override def delegatedReader = ReadWriter.this
         def write0[Z](out: Visitor[_, Z], v: V) = {
-          implicitly[Writer[T]].write(out, g(v.asInstanceOf[V]))
+          ReadWriter.this.write(out, g(v.asInstanceOf[V]))
         }
+
+        override def mapNonNullsFunction(t: T) = f(t)
       }
     }
+  }
+
+  object ReadWriter{
+
     def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
       new TaggedReadWriter.Node(rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
 
-    def join[T: Reader: Writer]: ReadWriter[T] = new Reader[T] with Writer[T] with BaseReader.Delegate[Any, T]{
+    implicit def join[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T] = new ReadWriter[T] with BaseReader.Delegate[Any, T]{
       override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
-      def delegatedReader = implicitly[Reader[T]]
+      def delegatedReader = r0
+      def write0[R](out: Visitor[_, R], v: T): R = w0.write(out, v)
 
-      def write0[R](out: Visitor[_, R], v: T): R = {
-        implicitly[Writer[T]].write(out, v)
-      }
     }
   }
 
@@ -66,8 +68,15 @@ trait Types{ types =>
     def visitArray(index: Int): upickle.json.ArrVisitor[T, V] = {
       throw new AbortJsonProcessingException(expectedMsg + " got sequence")
     }
-    def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z](this, f)
-    def mapNulls[Z](f: V => Z) = new BaseReader.MapReaderNullable[T, V, Z](this, f)
+    def map[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z]{
+      override def delegatedReader = BaseReader.this
+      def mapNonNullsFunction(v: V): Z = f(v)
+    }
+    def mapNulls[Z](f: V => Z) = new BaseReader.MapReader[T, V, Z]{
+      override def delegatedReader = BaseReader.this
+      override def mapFunction(v: V): Z = f(v)
+      def mapNonNullsFunction(v: V): Z = f(v)
+    }
   }
 
   object BaseReader {
@@ -89,41 +98,33 @@ trait Types{ types =>
       override def visitObject(index: Int) = delegatedReader.visitObject(index)
       override def visitArray(index: Int) = delegatedReader.visitArray(index)
     }
-    class MapReaderNullable[-T, V, Z](src: BaseReader[T, V], f: V => Z) extends MapReader[T, V, Z](src, f ){
-      override def f1(v: V): Z = f(v)
-    }
-    class MapReader[-T, V, Z](src: BaseReader[T, V], f: V => Z) extends BaseReader[T, Z] {
-      def f1(v: V): Z = if(v == null) null.asInstanceOf[Z] else f(v)
 
-      override def visitFalse(index: Int) = f1(src.visitFalse(index))
-      override def visitNull(index: Int) = f1(src.visitNull(index))
+    trait MapReader[-T, V, Z] extends BaseReader[T, Z] {
+      def delegatedReader: BaseReader[T, V]
+      def mapNonNullsFunction(t: V) : Z
+      def mapFunction(v: V): Z =
+        if(v == null) null.asInstanceOf[Z]
+        else mapNonNullsFunction(v)
+
+      override def visitFalse(index: Int) = mapFunction(delegatedReader.visitFalse(index))
+      override def visitNull(index: Int) = mapFunction(delegatedReader.visitNull(index))
       override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-        f1(src.visitNum(s, decIndex, expIndex, index))
+        mapFunction(delegatedReader.visitNum(s, decIndex, expIndex, index))
       }
       override def visitNumRaw(d: Double, index: Int) = {
-        f1(src.visitNumRaw(d, index))
+        mapFunction(delegatedReader.visitNumRaw(d, index))
       }
       override def visitString(s: CharSequence, index: Int) = {
-        f1(src.visitString(s, index))
+        mapFunction(delegatedReader.visitString(s, index))
       }
-      override def visitTrue(index: Int) = f(src.visitTrue(index))
+      override def visitTrue(index: Int) = mapFunction(delegatedReader.visitTrue(index))
 
       override def visitObject(index: Int): upickle.json.ObjVisitor[T, Z] = {
-        new MapObjContext[T, V, Z](src.visitObject(index), f)
+        new MapObjContext[T, V, Z](delegatedReader.visitObject(index), mapNonNullsFunction)
       }
       override def visitArray(index: Int): upickle.json.ArrVisitor[T, Z] = {
-        new MapArrContext[T, V, Z](src.visitArray(index), f)
+        new MapArrContext[T, V, Z](delegatedReader.visitArray(index), mapNonNullsFunction)
       }
-
-      // We do not override the singleContext with a MapFContext, because
-      // unlike array/object-Contexts, the value being returned by the `visitEnd`
-      // of singleContext is the same as the value being `add`ed to it. That
-      // value has already been transformed by `f` when it was added, and so
-      // does not need to be transformed again by the MapFContext
-      //
-      // override def singleContext(index: Int): upickle.jawn.ObjArrVisitor[T, Z] = {
-      //   new MapFContext[T, V, Z](src.singleContext(index), f)
-      // }
     }
 
     class MapArrContext[T, V, Z](src: upickle.json.ArrVisitor[T, V],
@@ -321,7 +322,7 @@ trait Types{ types =>
     }
   }
 
-  trait TaggedReadWriter[T] extends TaggedReader[T] with TaggedWriter[T]{
+  trait TaggedReadWriter[T] extends ReadWriter[T] with TaggedReader[T] with TaggedWriter[T]{
     override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
     override def visitArray(index: Int) = taggedArrayContext(this, index)
     override def visitObject(index: Int) = taggedObjectContext(this, index)

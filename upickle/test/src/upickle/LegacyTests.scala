@@ -1,7 +1,7 @@
 package upickle
 import utest._
 import LegacyTestUtil.rw
-import upickle.json.Js
+
 import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
 object LegacyTests extends TestSuite {
 

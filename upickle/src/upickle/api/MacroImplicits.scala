@@ -46,7 +46,7 @@ trait MacroImplicits{ this: core.Types =>
   implicit def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro MacroImplicits.applyRW[T]
   def macroR[T]: Reader[T] = macro MacroImplicits.applyR[T]
   def macroW[T]: Writer[T] = macro MacroImplicits.applyW[T]
-  def macroRW[T]: Reader[T] with Writer[T] = macro MacroImplicits.applyRW[Reader[T] with Writer[T]]
+  def macroRW[T]: ReadWriter[T] = macro MacroImplicits.applyRW[ReadWriter[T]]
   def macroRW0[T](r: Reader[T], w: Writer[T]): ReadWriter[T] = (r, w) match{
     case (r1: TaggedReader[T], w1: TaggedWriter[T]) =>
       new TaggedReadWriter[T] {
@@ -55,8 +55,7 @@ trait MacroImplicits{ this: core.Types =>
       }
 
     case _ =>
-      new BaseReader.Delegate[Any, T] with Writer[T]{
-        override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
+      new BaseReader.Delegate[Any, T] with ReadWriter[T]{
         def delegatedReader = r
         def write0[V](out: Visitor[_, V], v: T) = w.write(out, v)
       }
