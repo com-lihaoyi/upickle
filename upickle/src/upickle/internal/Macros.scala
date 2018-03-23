@@ -346,19 +346,19 @@ object Macros {
       val defaults = deriveDefaults(companion, hasDefaults)
 
       def write(i: Int) = {
-        q"""
-          if (${!hasDefaults(i)} || v.${TermName(rawArgs(i))} != ${defaults(i)}){
-            ctx.visitKey(${mappedArgs(i)}, -1)
-            val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
-            ctx.visitValue(
-              w.write(
-                out.asInstanceOf[upickle.json.Visitor[Any, Nothing]],
-                v.${TermName(rawArgs(i))}
-              ),
-              -1
-            )
-          }
-         """
+        val snippet = q"""
+          ctx.visitKey(${mappedArgs(i)}, -1)
+          val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
+          ctx.visitValue(
+            w.write(
+              out.asInstanceOf[upickle.json.Visitor[Any, Nothing]],
+              v.${TermName(rawArgs(i))}
+            ),
+            -1
+          )
+        """
+        if (!hasDefaults(i)) snippet
+        else q"""if (v.${TermName(rawArgs(i))} != ${defaults(i)}) $snippet"""
       }
       q"""
         new ${c.prefix}.CaseW[$targetType]{
