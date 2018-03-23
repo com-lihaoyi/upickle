@@ -10,8 +10,7 @@ trait CommonModule extends ScalaModule {
   )
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def artifactName = "mill-" + super.artifactName()
-  def publishVersion = "0.5.1"
+  def publishVersion = "0.6.0-RC1"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -25,9 +24,35 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
   )
+
+  def docJar = T {
+    import ammonite.ops._
+    val outDir = T.ctx().dest
+
+    val javadocDir = outDir / 'javadoc
+    mkdir(javadocDir)
+
+    val files = for{
+      ref <- allSources()
+      if exists(ref.path)
+      p <- ls.rec(ref.path)
+      if p.isFile
+    } yield p.toNIO.toString
+
+    val options = Seq("-d", javadocDir.toNIO.toString, "-usejavacp")
+
+    if (files.nonEmpty) mill.modules.Jvm.subprocess(
+      "scala.tools.nsc.ScalaDoc",
+      scalaCompilerClasspath().map(_.path) ++ compileClasspath().filter(_.path.ext != "pom").map(_.path),
+      mainArgs = (files ++ options).toSeq
+    )
+
+    mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
+  }
 }
 
 trait JsonModule extends CommonPublishModule{
+  def artifactName = "upickle-json"
   def millSourcePath = build.millSourcePath / "json"
   trait JawnTestModule extends Tests with CommonModule{
     def platformSegment = JsonModule.this.platformSegment
@@ -60,6 +85,7 @@ object json extends Module{
 }
 
 trait UpickleModule extends CommonPublishModule{
+  def artifactName = "upickle"
   def millSourcePath = build.millSourcePath / "upickle"
   def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
     ivy"com.lihaoyi::acyclic:0.1.5"
