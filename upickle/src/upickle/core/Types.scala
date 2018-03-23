@@ -15,14 +15,14 @@ import scala.reflect.ClassTag
 trait Types{ types =>
   trait ReadWriter[T] extends Reader[T] with Writer[T]{
     override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
-    def bimap[V](f: T => V, g: V => T): ReadWriter[V] = {
+    def bimap[V](f: V => T, g: T => V): ReadWriter[V] = {
       new ReadWriter[V] with BaseReader.MapReader[Any, T, V]{
         override def delegatedReader = ReadWriter.this
         def write0[Z](out: Visitor[_, Z], v: V) = {
-          ReadWriter.this.write(out, g(v.asInstanceOf[V]))
+          ReadWriter.this.write(out, f(v.asInstanceOf[V]))
         }
 
-        override def mapNonNullsFunction(t: T) = f(t)
+        override def mapNonNullsFunction(t: T) = g(t)
       }
     }
   }
@@ -33,11 +33,25 @@ trait Types{ types =>
       new TaggedReadWriter.Node(rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
 
-    implicit def join[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T] = new ReadWriter[T] with BaseReader.Delegate[Any, T]{
-      override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
-      def delegatedReader = r0
-      def write0[R](out: Visitor[_, R], v: T): R = w0.write(out, v)
+    implicit def join[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T] = (r0, w0) match{
+      // Make sure we preserve the tagged-ness of the Readers/Writers being
+      // pulled in; we need to do this because the macros that generate tagged
+      // Readers/Writers do not know until post-typechecking whether or not the
+      // Reader/Writer needs to be tagged, and thus cannot communicate that
+      // fact in the returned type of the macro call. Thus we are forced to
+      // wait until runtime before inspecting it and seeing if the tags exist
 
+      case (r1: TaggedReader[T], w1: TaggedWriter[T]) =>
+        new TaggedReadWriter[T] {
+          def findReader(s: String) = r1.findReader(s)
+          def findWriter(v: Any) = w1.findWriter(v)
+        }
+
+      case _ =>
+        new BaseReader.Delegate[Any, T] with ReadWriter[T]{
+          def delegatedReader = r0
+          def write0[V](out: Visitor[_, V], v: T) = w0.write(out, v)
+        }
     }
   }
 
