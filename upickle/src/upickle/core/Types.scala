@@ -25,7 +25,7 @@ trait Types{ types =>
       override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
       def delegatedReader = implicitly[Reader[T]]
 
-      def write[R](out: Visitor[_, R], v: T): R = {
+      def write0[R](out: Visitor[_, R], v: T): R = {
         implicitly[Writer[T]].write(out, v)
       }
     }
@@ -141,22 +141,22 @@ trait Types{ types =>
   trait Writer[T] extends Transformer[T]{
     def narrow[K <: T] = this.asInstanceOf[Writer[K]]
     def transform[V](v: T, out: upickle.json.Visitor[_, V]) = write(out, v)
-    def write[V](out: upickle.json.Visitor[_, V], v: T): V
+    def write0[V](out: upickle.json.Visitor[_, V], v: T): V
+    def write[V](out: upickle.json.Visitor[_, V], v: T): V = {
+      if (v == null) out.visitNull(-1)
+      else write0(out, v)
+    }
     def comapNulls[U](f: U => T) = new Writer.MapWriterNulls[U, T](this, f)
     def comap[U](f: U => T) = new Writer.MapWriter[U, T](this, f)
   }
   object Writer {
 
     class MapWriterNulls[U, T](src: Writer[T], f: U => T) extends Writer[U] {
-      def write[R](out: upickle.json.Visitor[_, R], v: U): R = {
-        src.write(out, f(v))
-      }
+      override def write[R](out: upickle.json.Visitor[_, R], v: U): R = src.write(out, f(v))
+      def write0[R](out: upickle.json.Visitor[_, R], v: U): R = src.write(out, f(v))
     }
     class MapWriter[U, T](src: Writer[T], f: U => T) extends Writer[U] {
-      def write[R](out: upickle.json.Visitor[_, R], v: U): R = {
-        if (v == null) out.visitNull(-1)
-        else src.write(out, f(v))
-      }
+      def write0[R](out: upickle.json.Visitor[_, R], v: U): R = src.write(out, f(v))
     }
     def merge[T](writers: Writer[_ <: T]*) = {
       new TaggedWriter.Node(writers.asInstanceOf[Seq[TaggedWriter[T]]]:_*)
@@ -164,7 +164,7 @@ trait Types{ types =>
   }
 
   class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{
-    def write[R](out: upickle.json.Visitor[_, R], v: V): R = {
+    def write0[R](out: upickle.json.Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
         val ctx = out.visitArray()
@@ -237,7 +237,7 @@ trait Types{ types =>
     def writeToObject[R](ctx: ObjVisitor[_, R],
                          out: upickle.json.Visitor[_, R],
                          v: V): Unit
-    def write[R](out: upickle.json.Visitor[_, R], v: V): R = {
+    def write0[R](out: upickle.json.Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
         val ctx = out.visitObject(-1)
@@ -295,7 +295,7 @@ trait Types{ types =>
 
   trait TaggedWriter[T] extends Writer[T]{
     def findWriter(v: Any): (String, CaseW[T])
-    def write[R](out: Visitor[_, R], v: T): R = {
+    def write0[R](out: Visitor[_, R], v: T): R = {
       val (tag, w) = findWriter(v)
       taggedWrite(w, tag, out, v)
 

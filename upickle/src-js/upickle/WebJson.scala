@@ -12,7 +12,7 @@ trait WebJson extends upickle.core.Types {
       WebJson.transform(js.JSON.parse(s), implicitly[Reader[T]])
     }
 
-    def write[T: Writer](t: T, indent: Int = -1) = {
+    def write0[T: Writer](t: T, indent: Int = -1) = {
       js.JSON.stringify(implicitly[Writer[T]].write(WebJson.Builder, t))
     }
   }

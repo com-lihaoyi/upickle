@@ -58,7 +58,7 @@ trait MacroImplicits{ this: core.Types =>
       new BaseReader.Delegate[Any, T] with Writer[T]{
         override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
         def delegatedReader = r
-        def write[V](out: Visitor[_, V], v: T) = w.write(out, v)
+        def write0[V](out: Visitor[_, V], v: T) = w.write(out, v)
       }
   }
   def macroR0[T, M[_]]: Reader[T] = macro internal.Macros.macroRImpl[T, M]
