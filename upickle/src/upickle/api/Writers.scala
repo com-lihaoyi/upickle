@@ -20,7 +20,8 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
   class IntegralNumWriter[T](f: T => Double) extends Writer[T] {
     def write[R](out: upickle.json.Visitor[_, R], v: T): R = {
-      out.visitNumRaw(f(v), -1)
+      if (v == null) out.visitNull(-1)
+      else out.visitNumRaw(f(v), -1)
     }
   }
   implicit object DoubleWriter extends Writer[Double] {

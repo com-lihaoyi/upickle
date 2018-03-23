@@ -1,4 +1,5 @@
-package example
+package upickle.example
+
 import java.io.StringWriter
 
 import acyclic.file
@@ -179,14 +180,14 @@ object ExampleTests extends TestSuite {
 
 
       'sealed{
-        write(IntThing(1)) ==> """{"$type":"example.Sealed.IntThing","i":1}"""
+        write(IntThing(1)) ==> """{"$type":"upickle.example.Sealed.IntThing","i":1}"""
 
         write(TupleThing("naeem", (1, 2))) ==>
-          """{"$type":"example.Sealed.TupleThing","name":"naeem","t":[1,2]}"""
+          """{"$type":"upickle.example.Sealed.TupleThing","name":"naeem","t":[1,2]}"""
 
         // You can read tagged value without knowing its
         // type in advance, just use type of the sealed trait
-        read[IntOrTuple]("""{"$type":"example.Sealed.IntThing","i":1}""") ==> IntThing(1)
+        read[IntOrTuple]("""{"$type":"upickle.example.Sealed.IntThing","i":1}""") ==> IntThing(1)
 
       }
       'recursive{

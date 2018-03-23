@@ -1,8 +1,8 @@
-package example
+package upickle.example
 
 import acyclic.file
 import utest._
-import example.Simple.Thing
+import upickle.example.Simple.Thing
 
 case class Opt(a: Option[String], b: Option[Int])
 object Opt{
