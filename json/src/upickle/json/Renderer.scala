@@ -1,8 +1,8 @@
 package upickle.json
 
-import java.io.{ByteArrayOutputStream, StringWriter, Writer}
+import java.io.ByteArrayOutputStream
 
-import upickle.json.{ArrVisitor, ObjArrVisitor, ObjVisitor, Visitor}
+
 
 import scala.annotation.switch
 

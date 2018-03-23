@@ -1,9 +1,7 @@
 package upickle
 
-import upickle.internal.IndexedJs
 import upickle.json._
 
-import scala.collection.mutable
 import scala.scalajs.js
 
 trait WebJson extends upickle.core.Types {

@@ -27,11 +27,13 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
     transform(t).to(StringRenderer(indent)).toString
   }
 
-  def writeJs[T: Writer](t: T, indent: Int = -1) = transform(t).to[Js.Value]
+  def writeJs[T: Writer](t: T) = transform(t).to[Js.Value]
 
-  def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1) = {
-    implicitly[Writer[T]].write(new Renderer(out, indent = indent), t)
+  def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1): Unit = {
+    transform(t).to(new Renderer(out, indent = indent))
   }
+
+  def writer[T: Writer] = implicitly[Writer[T]]
 
   def writable[T: Writer](t: T) = Transformable.fromTransformer(t, implicitly[Writer[T]])
 
@@ -39,11 +41,6 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
     def transform[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
     def to[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
     def to[V](implicit f: Reader[V]): V = implicitly[Writer[T]].transform(t, f)
-  }
-  object transform{
-    def apply[T: Writer, V: Reader](t: T, indent: Int = -1) = {
-      implicitly[Writer[T]].write(implicitly[Reader[V]], t)
-    }
   }
 }
 
