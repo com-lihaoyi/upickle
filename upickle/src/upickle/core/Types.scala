@@ -15,8 +15,16 @@ import scala.reflect.ClassTag
 trait Types{ types =>
   type ReadWriter[T] = Reader[T] with Writer[T]
 
-  object ReadWriter{
 
+  object ReadWriter{
+    def apply[T: Reader: Writer, V](f: T => V, g: V => T): ReadWriter[V] = {
+      new BaseReader.MapReader[Any, T, V](implicitly[Reader[T]], f) with Writer[V] {
+        override def narrow[K <: V] = this.asInstanceOf[ReadWriter[K]]
+        def write0[Z](out: Visitor[_, Z], v: V) = {
+          implicitly[Writer[T]].write(out, g(v.asInstanceOf[V]))
+        }
+      }
+    }
     def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
       new TaggedReadWriter.Node(rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
