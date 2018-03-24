@@ -81,6 +81,29 @@ object ujson extends Module{
 
     object test extends JawnTestModule
   }
+
+  object argonaut extends Cross[ArgonautModule]("2.11.11", "2.12.4")
+  class ArgonautModule(val crossScalaVersion: String) extends CrossScalaModule{
+    def moduleDeps = Seq(ujson.jvm())
+    def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2")
+  }
+  object json4s extends Cross[Json4sModule]("2.11.11", "2.12.4")
+  class Json4sModule(val crossScalaVersion: String) extends CrossScalaModule{
+    def moduleDeps = Seq(ujson.jvm())
+    def ivyDeps = Agg(ivy"org.json4s::json4s-ast:3.5.2")
+  }
+
+  object circe extends Cross[CirceModule]("2.11.11", "2.12.4")
+  class CirceModule(val crossScalaVersion: String) extends CrossScalaModule{
+    def moduleDeps = Seq(ujson.jvm())
+    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.9.1")
+  }
+
+  object play extends Cross[PlayModule]("2.11.11", "2.12.4")
+  class PlayModule(val crossScalaVersion: String) extends CrossScalaModule{
+    def moduleDeps = Seq(ujson.jvm())
+    def ivyDeps = Agg(ivy"com.typesafe.play::play-json:2.6.9")
+  }
 }
 
 trait UpickleModule extends CommonPublishModule{

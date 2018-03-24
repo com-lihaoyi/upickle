@@ -1,7 +1,4 @@
-package upickle
-package core
-
-import ujson.ObjArrVisitor
+package ujson.util
 
 object Util {
   def parseLong(cs: CharSequence, start: Int, len: Int): Long = {
