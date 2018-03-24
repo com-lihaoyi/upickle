@@ -46,7 +46,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
         if (expIndex == -1) 1
         else{
           var mult = 1
-          val e = upickle.core.Util.parseLong(s, expIndex + 1, s.length())
+          val e = ujson.util.Util.parseLong(s, expIndex + 1, s.length())
           var i = 0
           while(i < e){
             if (mult >= Long.MaxValue / 10) throw new AbortJsonProcessingException("expected integer")
@@ -58,14 +58,14 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
       val intPortion = {
         val end = if(decIndex != -1) decIndex else s.length
-        upickle.core.Util.parseLong(s, 0, end) * expMul
+        ujson.util.Util.parseLong(s, 0, end) * expMul
       }
 
       val decPortion =
         if (decIndex == -1) 0
         else{
           val end = if(expIndex != -1) expIndex else s.length
-          var value = upickle.core.Util.parseLong(s, decIndex + 1, end) * expMul
+          var value = ujson.util.Util.parseLong(s, decIndex + 1, end) * expMul
           var i = end - (decIndex + 1)
           while(i > 0) {
             value = value / 10
@@ -109,7 +109,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit val CharReader: Reader[Char] = new MapStringReader(_.charAt(0))
   implicit val UUIDReader: Reader[UUID] = new MapStringReader(s => UUID.fromString(s.toString))
-  implicit val LongReader: Reader[Long] = new MapStringReader(s => core.Util.parseLong(s, 0, s.length()))
+  implicit val LongReader: Reader[Long] = new MapStringReader(s => ujson.util.Util.parseLong(s, 0, s.length()))
   implicit val BigIntReader: Reader[BigInt] = new MapStringReader(s => BigInt(s.toString))
   implicit val BigDecimalReader: Reader[BigDecimal] = new MapStringReader(s => BigDecimal(s.toString))
   implicit val SymbolReader: Reader[Symbol] = new MapStringReader(s => Symbol(s.toString))
@@ -172,7 +172,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
                s.charAt(4) == 'f' &&
                s.length() == 5){
       Duration.Undefined
-    }else Duration(core.Util.parseLong(s, 0, s.length()), TimeUnit.NANOSECONDS)
+    }else Duration(ujson.util.Util.parseLong(s, 0, s.length()), TimeUnit.NANOSECONDS)
   )
 
   implicit val InfiniteDurationReader = DurationReader.narrow[Duration.Infinite]

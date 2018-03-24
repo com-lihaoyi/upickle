@@ -186,7 +186,9 @@ object upickle extends Module{
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
 
-    object test extends UpickleTestModule
+    object test extends UpickleTestModule{
+      def ivyDeps = super.ivyDeps() ++ bench.jvm.ivyDeps()
+    }
   }
 
   object js extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
@@ -215,7 +217,9 @@ trait BenchModule extends CommonModule{
     ivy"io.circe::circe-core::0.9.1",
     ivy"io.circe::circe-generic::0.9.1",
     ivy"io.circe::circe-parser::0.9.1",
-    ivy"com.typesafe.play::play-json::2.6.7"
+    ivy"com.typesafe.play::play-json::2.6.7",
+    ivy"io.argonaut::argonaut:6.2",
+    ivy"org.json4s::json4s-ast:3.5.2"
   )
 }
 
