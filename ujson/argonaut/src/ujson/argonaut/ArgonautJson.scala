@@ -5,7 +5,7 @@ import ujson.{ArrVisitor, ObjVisitor, Visitor}
 
 import scala.collection.mutable
 
-object ArgonautJson extends ujson.Transformer[Json]{
+object ArgonautJson extends ujson.AstTransformer[Json]{
   override def transform[T](j: Json, f: Visitor[_, T]) = j.fold(
     f.visitNull(),
     if (_) f.visitTrue() else f.visitFalse(),
@@ -16,28 +16,13 @@ object ArgonautJson extends ujson.Transformer[Json]{
         f.visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
     },
     f.visitString(_),
-    arr => {
-      val ctx = f.visitArray().narrow
-      for(x <- arr) ctx.visitValue(x, -1)
-      ctx.visitEnd(-1)
-    },
-    obj => {
-      val ctx = f.visitObject().narrow
-      for(k <- obj.fields) {
-        ctx.visitKey(k, -1)
-        ctx.visitValue(obj.apply(k), -1)
-      }
-      ctx.visitEnd(-1)
-    }
+    arr => transformArray(f, arr),
+    obj => transformObject(f, obj.toList)
   )
 
-  object Builder extends ujson.Visitor[Json, Json]{
-    def visitArray(index: Int) = new ArrVisitor.Simple[Json, Json](
-      Builder,
-      xs => Json.jArray(xs.toList)
-    )
-    def visitObject(index: Int) = new ObjVisitor.Simple[Json, Json](
-      Builder,
+  object Builder extends Builder{
+    def visitArray(index: Int) = new AstArrVisitor(xs => Json.jArray(xs.toList))
+    def visitObject(index: Int) = new AstObjVisitor(
       vs => Json.jObject(JsonObject.fromTraversableOnce(vs))
     )
 

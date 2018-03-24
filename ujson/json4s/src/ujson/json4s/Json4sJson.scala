@@ -1,19 +1,14 @@
 package ujson.json4s
 
-
-import scala.collection.mutable
 import org.json4s.JsonAST._
 import ujson.{ArrVisitor, ObjVisitor, Visitor}
 
 object Json4sJson extends Json4sJson(false, false)
 
 class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
-  extends ujson.Transformer[JValue] {
+  extends ujson.AstTransformer[JValue] {
   def transform[T](j: JValue, f: Visitor[_, T]) = j match{
-    case JArray(xs) =>
-      val ctx = f.visitArray().narrow
-      for(x <- xs) ctx.visitValue(x, -1)
-      ctx.visitEnd(-1)
+    case JArray(xs) => transformArray(f, xs)
     case JBool(b) => if (b) f.visitTrue() else f.visitFalse()
     case JDecimal(d) =>
       val s = d.toString
@@ -23,31 +18,15 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
     case JLong(l) => f.visitNum(l.toString, -1, -1, -1)
     case JNothing => f.visitNull()
     case JNull => f.visitNull()
-    case JObject(kvs) =>
-      val ctx = f.visitObject().narrow
-      for((k, v) <- kvs) {
-        ctx.visitKey(k, -1)
-        ctx.visitValue(v, -1)
-      }
-      ctx.visitEnd(-1)
-    case JSet(xs) =>
-      val ctx = f.visitArray().narrow
-      for(x <- xs) ctx.visitValue(x, -1)
-      ctx.visitEnd(-1)
+    case JObject(kvs) => transformObject(f, kvs)
+    case JSet(xs) => transformArray(f, xs)
     case JString(s) => f.visitString(s)
   }
 
 
-  object Builder extends ujson.Visitor[JValue, JValue] {
-    def visitArray(index: Int) = new ArrVisitor.Simple[JValue, JValue](
-      Builder,
-      x => JArray(x.toList)
-
-)
-    def visitObject(index: Int) = new ObjVisitor.Simple[JValue, JValue](
-      Builder,
-      x => JObject(x.toList)
-    )
+  object Builder extends Builder{
+    def visitArray(index: Int) = new AstArrVisitor(x => JArray(x.toList))
+    def visitObject(index: Int) = new AstObjVisitor(x => JObject(x.toList))
 
     def visitNull(index: Int) = JNull
 

@@ -1,8 +1,7 @@
 package upickle.internal
 
-import ujson.{ArrVisitor, ObjArrVisitor, ObjVisitor, Transformer}
-import ujson.Js.reject
-
+import ujson._
+import ujson.util.Util.reject
 import scala.collection.mutable
 
 /**
@@ -57,7 +56,7 @@ object IndexedJs extends Transformer[IndexedJs]{
   object Builder extends ujson.Visitor[IndexedJs, IndexedJs]{
     def visitArray(i: Int) = new ArrVisitor[IndexedJs, IndexedJs.Arr] {
       val out = mutable.Buffer.empty[IndexedJs]
-      def subVisitor = Builder.this
+      def subVisitor = Builder
       def visitValue(v: IndexedJs, index: Int): Unit = {
         out.append(v)
       }
@@ -67,7 +66,7 @@ object IndexedJs extends Transformer[IndexedJs]{
     def visitObject(i: Int) = new ObjVisitor[IndexedJs, IndexedJs.Obj] {
       val out = mutable.Buffer.empty[(String, IndexedJs)]
       var currentKey: String = _
-      def subVisitor = Builder.this
+      def subVisitor = Builder
       def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
       def visitValue(v: IndexedJs, index: Int): Unit = {
         out.append((currentKey, v))

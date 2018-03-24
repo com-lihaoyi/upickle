@@ -63,7 +63,7 @@ sealed trait Js extends Transformable{
 * we don't use so we don't pull in the bulk of Spire) and the Javascript
 * JSON AST.
 */
-object Js extends Transformer[Js]{
+object Js extends AstTransformer[Js]{
 
   case class Str(value: String) extends Value
   case class Obj(value: mutable.Map[String, Value]) extends Value
@@ -93,29 +93,15 @@ object Js extends Transformer[Js]{
       case Js.False => f.visitFalse(-1)
       case Js.Str(s) => f.visitString(s, -1)
       case Js.Num(d) => f.visitNumRaw(d, -1)
-      case Js.Arr(items) =>
-        val ctx = f.visitArray(-1).narrow
-        for(item <- items) ctx.visitValue(transform(item, ctx.subVisitor), -1)
-        ctx.visitEnd(-1)
-      case Js.Obj(items) =>
-        val ctx = f.visitObject(-1).narrow
-        for((k, item) <- items) {
-          ctx.visitKey(k, -1)
-          ctx.visitValue(transform(item, ctx.subVisitor), -1)
-        }
-        ctx.visitEnd(-1)
+      case Js.Arr(items) => transformArray(f, items)
+      case Js.Obj(items) => transformObject(f, items)
     }
   }
-  def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
-    case e: AbortJsonProcessingException =>
 
-      throw new JsonProcessingException(e.msg, j, -1, -1, path, e)
-  }
+  object Builder extends Builder{
+    def visitArray(index: Int) = new AstArrVisitor(xs => Js.Arr(xs))
 
-  object Builder extends ujson.Visitor[Js.Value, Js.Value]{
-    def visitArray(index: Int) = new ArrVisitor.Simple[Js.Value, Js.Value](Builder, xs => Js.Arr(xs))
-
-    def visitObject(index: Int) = new ObjVisitor.Simple[Js.Value, Js.Value](Builder, xs => Js.Obj(xs:_*))
+    def visitObject(index: Int) = new AstObjVisitor(xs => Js.Obj(xs:_*))
 
     def visitNull(index: Int) = Js.Null
 
@@ -126,9 +112,7 @@ object Js extends Transformer[Js]{
     def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Js.Num(s.toString.toDouble)
     }
-    override def visitNumRaw(d: Double, index: Int) = {
-      Js.Num(d)
-    }
+    override def visitNumRaw(d: Double, index: Int) = Js.Num(d)
 
     def visitString(s: CharSequence, index: Int) = Js.Str(s.toString)
   }

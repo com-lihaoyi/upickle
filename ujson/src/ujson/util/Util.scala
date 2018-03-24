@@ -1,5 +1,7 @@
 package ujson.util
 
+import ujson.{AbortJsonProcessingException, JsonProcessingException}
+
 object Util {
   def parseLong(cs: CharSequence, start: Int, len: Int): Long = {
 
@@ -32,6 +34,11 @@ object Util {
     }
 
     inverseSum * inverseSign
+  }
+
+  def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
+    case e: AbortJsonProcessingException =>
+      throw new JsonProcessingException(e.msg, j, -1, -1, path, e)
   }
 }
 
