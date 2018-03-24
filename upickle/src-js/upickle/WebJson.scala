@@ -5,12 +5,12 @@ import upickle.json._
 import scala.scalajs.js
 
 trait WebJson extends upickle.core.Types {
-  object web{
+  object web {
     def read[T: Reader](s: String) = {
       WebJson.transform(js.JSON.parse(s), implicitly[Reader[T]])
     }
 
-    def write0[T: Writer](t: T, indent: Int = -1) = {
+    def write[T: Writer](t: T, indent: Int = -1) = {
       js.JSON.stringify(implicitly[Writer[T]].write(WebJson.Builder, t))
     }
   }
