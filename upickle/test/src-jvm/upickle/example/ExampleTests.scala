@@ -281,13 +281,14 @@ object ExampleTests extends TestSuite {
 
         // It can be used for parsing JSON into an AST
         val exampleAst = Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
+
         upickle.json.transform("[1, 2, 3]", Js.Builder) ==> exampleAst
 
         // Rendering the AST to a string
-        upickle.json.transform(exampleAst, StringRenderer()).toString ==> "[1.0,2.0,3.0]"
+        upickle.json.transform(exampleAst, StringRenderer()).toString ==> "[1,2,3]"
 
         // Or to a byte array
-        upickle.json.transform(exampleAst, BytesRenderer()).toBytes ==> "[1.0,2.0,3.0]".getBytes
+        upickle.json.transform(exampleAst, BytesRenderer()).toBytes ==> "[1,2,3]".getBytes
 
         // Re-formatting JSON, either compacting it
         upickle.json.transform("[1, 2, 3]", StringRenderer()).toString ==> "[1,2,3]"
@@ -313,6 +314,13 @@ object ExampleTests extends TestSuite {
           upickle.json.transform("[1, 2, 3]]", NoOpVisitor)
         }
       }
+    }
+    'mapped{
+      import upickle.default._
+      case class Wrap(i: Int)
+      implicit val fooReadWrite: ReadWriter[Wrap] = readwriter[Int].bimap[Wrap](_.i, Wrap(_))
+      write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==> "[1,10,100]"
+      read[Seq[Wrap]]("[1,10,100]")            ==> Seq(Wrap(1), Wrap(10), Wrap(100))
     }
     'keyed{
       import upickle.default._

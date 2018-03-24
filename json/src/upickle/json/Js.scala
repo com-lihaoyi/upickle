@@ -2,6 +2,7 @@ package upickle.json
 
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 sealed trait Js extends Transformable{
   def value: Any
@@ -70,9 +71,9 @@ object Js extends Transformer[Js]{
   object Obj{
     def apply(items: (String, Value)*): Obj = Obj(mutable.Map(items:_*))
   }
-  case class Arr(value: Array[Value]) extends Value
+  case class Arr(value: ArrayBuffer[Value]) extends Value
   object Arr{
-    def apply(items: Value*): Arr = Arr(items.toArray)
+    def apply(items: Value*): Arr = Arr(items.to[mutable.ArrayBuffer])
   }
   case class Num(value: Double) extends Value
   case object False extends Value{
