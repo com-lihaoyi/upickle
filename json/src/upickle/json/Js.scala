@@ -45,11 +45,13 @@ sealed trait Js extends Transformable{
     * otherwise if it's not a [[Js.Arr]]
     */
   def apply(i: Int): Js.Value = this.arr(i)
+  def update(i: Int, v: Js.Value): Unit = this.arr(i) = v
   /**
     * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
     * otherwise if it's not a [[Js.Obj]]
     */
   def apply(s: java.lang.String): Js.Value = this.obj(s)
+  def update(s: String, v: Js.Value): Unit = this.obj(s) = v
 
   def transform[T](f: upickle.json.Visitor[_, T]) = Js.transform(this, f)
   override def toString = this.transform(StringRenderer(4)).toString
@@ -64,11 +66,11 @@ sealed trait Js extends Transformable{
 object Js extends Transformer[Js]{
 
   case class Str(value: String) extends Value
-  case class Obj(value: Map[String, Value]) extends Value
+  case class Obj(value: mutable.Map[String, Value]) extends Value
   object Obj{
-    def apply(items: (String, Value)*): Obj = Obj(items.toMap)
+    def apply(items: (String, Value)*): Obj = Obj(mutable.Map(items:_*))
   }
-  case class Arr(value: IndexedSeq[Value]) extends Value
+  case class Arr(value: Array[Value]) extends Value
   object Arr{
     def apply(items: Value*): Arr = Arr(items.toArray)
   }
