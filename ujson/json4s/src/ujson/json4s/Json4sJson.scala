@@ -10,9 +10,7 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
   def transform[T](j: JValue, f: Visitor[_, T]) = j match{
     case JArray(xs) => transformArray(f, xs)
     case JBool(b) => if (b) f.visitTrue() else f.visitFalse()
-    case JDecimal(d) =>
-      val s = d.toString
-      f.visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
+    case JDecimal(d) => f.visitNumRawString(d.toString, -1)
     case JDouble(d) => f.visitNumRaw(d, -1)
     case JInt(i) => f.visitNum(i.toString, -1, -1, -1)
     case JLong(l) => f.visitNum(l.toString, -1, -1, -1)

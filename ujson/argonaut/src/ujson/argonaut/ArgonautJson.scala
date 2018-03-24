@@ -11,9 +11,7 @@ object ArgonautJson extends ujson.AstTransformer[Json]{
     if (_) f.visitTrue() else f.visitFalse(),
     n => n.toDouble match{
       case Some(d) => f.visitNumRaw(d, -1)
-      case None =>
-        val s = n.asJson.toString()
-        f.visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
+      case None => f.visitNumRawString(n.asJson.toString(), -1)
     },
     f.visitString(_),
     arr => transformArray(f, arr),

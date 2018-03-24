@@ -1,8 +1,5 @@
 package ujson
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-
 /**
  * Facade is a type class that describes how Jawn should construct
  * JSON AST elements of type J.
@@ -29,14 +26,18 @@ trait Visitor[-T, +J] {
     */
   def visitNumRaw(d: Double, index: Int): J = {
     val i = d.toInt
-    if(i == d){
-      visitNum(i.toString, -1, -1, -1)
-    }else{
-      val s = d.toString
-      visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
-    }
-
+    if(i == d) visitNum(i.toString, -1, -1, index)
+    else visitNumRawString(d.toString, index)
   }
+
+  /**
+    * Convenience methods to help you compute the decimal-point-index and
+    * exponent-index of an arbitrary numeric string
+    */
+  def visitNumRawString(s: String, index: Int): J = {
+    visitNum(s, s.indexOf('.'), s.indexOf('E') match{case -1 => s.indexOf('e') case n => n}, -1)
+  }
+
   def visitString(s: CharSequence, index: Int): J
 
 

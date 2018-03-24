@@ -9,9 +9,7 @@ object PlayJson extends ujson.AstTransformer[JsValue] {
     case JsArray(xs) => transformArray(f, xs)
     case JsBoolean(b) => if (b) f.visitTrue() else f.visitFalse()
     case JsNull => f.visitNull()
-    case JsNumber(d) =>
-      val s = d.toString()
-      f.visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
+    case JsNumber(d) => f.visitNumRawString(d.toString, -1)
     case JsObject(kvs) => transformObject(f, kvs)
     case JsString(s) => f.visitString(s)
   }
