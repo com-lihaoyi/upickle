@@ -90,10 +90,7 @@ object Js extends Transformer[Js]{
       case Js.True => f.visitTrue(-1)
       case Js.False => f.visitFalse(-1)
       case Js.Str(s) => f.visitString(s, -1)
-      case Js.Num(d) =>
-        val s = d.toString
-        f.visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
-
+      case Js.Num(d) => f.visitNumRaw(d, -1)
       case Js.Arr(items) =>
         val ctx = f.visitArray(-1).narrow
         for(item <- items) ctx.visitValue(transform(item, ctx.subVisitor), -1)
@@ -142,6 +139,9 @@ object Js extends Transformer[Js]{
 
     def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Js.Num(s.toString.toDouble)
+    }
+    override def visitNumRaw(d: Double, index: Int) = {
+      Js.Num(d)
     }
 
     def visitString(s: CharSequence, index: Int) = Js.Str(s.toString)

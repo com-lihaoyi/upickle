@@ -20,6 +20,7 @@ object IndexedJs extends Transformer[IndexedJs]{
   case class Obj(index: Int, value0: (java.lang.CharSequence, IndexedJs)*) extends IndexedJs
   case class Arr(index: Int, value: IndexedJs*) extends IndexedJs
   case class Num(index: Int, s: CharSequence, decIndex: Int, expIndex: Int) extends IndexedJs
+  case class NumRaw(index: Int, d: Double) extends IndexedJs
   case class False(index: Int) extends IndexedJs{
     def value = false
   }
@@ -37,6 +38,7 @@ object IndexedJs extends Transformer[IndexedJs]{
       case IndexedJs.False(i) => f.visitFalse(i)
       case IndexedJs.Str(i, s) => f.visitString(s, i)
       case IndexedJs.Num(i, s, d, e) => f.visitNum(s, d, e, i)
+      case IndexedJs.NumRaw(i, d) => f.visitNumRaw(d, i)
       case IndexedJs.Arr(i, items @_*) =>
         val ctx = f.visitArray(-1).narrow
         for(item <- items) try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
@@ -80,6 +82,7 @@ object IndexedJs extends Transformer[IndexedJs]{
     def visitTrue(i: Int) = IndexedJs.True(i)
 
     def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, i: Int) = IndexedJs.Num(i, s, decIndex, expIndex)
+    override def visitNumRaw(d: Double, i: Int) = IndexedJs.NumRaw(i, d)
 
     def visitString(s: CharSequence, i: Int) = IndexedJs.Str(i, s)
   }
