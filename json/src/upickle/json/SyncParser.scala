@@ -20,8 +20,8 @@ abstract class SyncParser[J] extends Parser[J] {
    * valid, as well as more traditional documents like [1,2,3,4,5]. However,
    * multiple top-level objects are not allowed.
    */
-  final def parse()(implicit facade: Visitor[_, J]): J = {
-    val (value, i) = parse(0)
+  final def parse(facade: Visitor[_, J]): J = {
+    val (value, i) = parse(0, facade)
     var j = i
     while (!atEof(j)) {
       (at(j): @switch) match {

@@ -25,5 +25,5 @@ private[json] final class StringParser[J](s: String) extends SyncParser[J] with 
 }
 
 object StringParser extends Transformer[String]{
-  def transform[T](j: String, f: Visitor[_, T]) = new StringParser(j).parse()(f)
+  def transform[T](j: String, f: Visitor[_, T]) = new StringParser(j).parse(f)
 }

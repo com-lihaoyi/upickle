@@ -77,25 +77,25 @@ final class AsyncParser[J] protected[json](
   final def copy() =
     new AsyncParser(state, curr, stack, data.clone, len, allocated, offset, done, streamMode)
 
-  final def absorb(buf: ByteBuffer)(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
+  final def absorb(buf: ByteBuffer, facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = false
     val buflen = buf.limit - buf.position
     val need = len + buflen
     resizeIfNecessary(need)
     buf.get(data, len, buflen)
     len = need
-    churn()
+    churn(facade)
   }
 
-  final def absorb(bytes: Array[Byte])(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] =
-    absorb(ByteBuffer.wrap(bytes))
+  final def absorb(bytes: Array[Byte], facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] =
+    absorb(ByteBuffer.wrap(bytes), facade)
 
-  final def absorb(s: String)(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] =
-    absorb(ByteBuffer.wrap(s.getBytes(utf8)))
+  final def absorb(s: String, facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] =
+    absorb(ByteBuffer.wrap(s.getBytes(utf8)), facade)
 
-  final def finish()(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
+  final def finish(facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = true
-    try churn()
+    try churn(facade)
     catch{case e: ParsingFailedException => Left(e)}
   }
 
@@ -141,7 +141,7 @@ final class AsyncParser[J] protected[json](
   @inline private[this] final def ASYNC_POSTVAL = -2
   @inline private[this] final def ASYNC_PREVAL = -1
 
-  protected[json] def churn()(implicit facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
+  protected[json] def churn(facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
 
     // accumulates json values
     val results = mutable.ArrayBuffer.empty[J]
@@ -209,7 +209,7 @@ final class AsyncParser[J] protected[json](
           // jump straight back into rparse
           offset = reset(offset)
           val (value, j) = if (state <= 0) {
-            parse(offset)
+            parse(offset, facade)
           } else {
             rparse(state, curr, stack, Nil)
           }

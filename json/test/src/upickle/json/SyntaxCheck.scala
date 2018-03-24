@@ -72,7 +72,7 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
     if (r1 == r2) r1 else sys.error(s"String/ByteBuffer parsing disagree($r1, $r2): $s")
 
     val async = AsyncParser[Unit](AsyncParser.SingleValue)
-    val r3 = async.absorb(s)(NoOpVisitor).isRight && async.finish()(NoOpVisitor).isRight
+    val r3 = async.absorb(s, NoOpVisitor).isRight && async.finish(NoOpVisitor).isRight
     if (r1 == r3) r1 else sys.error(s"Sync/Async parsing disagree($r1, $r3): $s")
   }
 

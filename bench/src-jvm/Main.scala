@@ -17,18 +17,18 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(50000000, 25000)){
+    for(duration <- Seq(5000, 25000)){
       println("RUN JVM: " + duration)
       println()
-//      Main.jacksonModuleScala(duration)
-//      Common.playJson(duration)
-//      Common.circe(duration)
-//      Common.upickleDefault(duration)
-//      Common.upickleLegacy(duration)
-//      Common.playJsonCached(duration)
-//      Common.circeCached(duration)
+      Main.jacksonModuleScala(duration)
+      Common.playJson(duration)
+      Common.circe(duration)
+      Common.upickleDefault(duration)
+      Common.upickleLegacy(duration)
+      Common.playJsonCached(duration)
+      Common.circeCached(duration)
       Common.upickleDefaultCached(duration)
-//      Common.upickleLegacyCached(duration)
+      Common.upickleLegacyCached(duration)
       println()
     }
   }

@@ -130,7 +130,7 @@ abstract class Parser[J] {
    * side-effect that we know exactly how the user represented the
    * number.
    */
-  protected[this] final def parseNum(i: Int, ctxt: ObjArrVisitor[Any, J])(implicit facade: Visitor[_, J]): Int = {
+  protected[this] final def parseNum(i: Int, ctxt: ObjArrVisitor[Any, J], facade: Visitor[_, J]): Int = {
     var j = i
     var c = at(j)
     var decIndex = -1
@@ -189,7 +189,7 @@ abstract class Parser[J] {
    *
    * This method has all the same caveats as the previous method.
    */
-  protected[this] final def parseNumSlow(i: Int)(implicit facade: Visitor[_, J]): (J, Int) = {
+  protected[this] final def parseNumSlow(i: Int, facade: Visitor[_, J]): (J, Int) = {
     var j = i
     var c = at(j)
     var decIndex = -1
@@ -285,7 +285,7 @@ abstract class Parser[J] {
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseTrue(i: Int)(implicit facade: Visitor[_, J]): J =
+  protected[this] final def parseTrue(i: Int, facade: Visitor[_, J]): J =
     if (at(i + 1) == 'r' && at(i + 2) == 'u' && at(i + 3) == 'e') {
       facade.visitTrue(i)
     } else {
@@ -297,7 +297,7 @@ abstract class Parser[J] {
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseFalse(i: Int)(implicit facade: Visitor[_, J]): J =
+  protected[this] final def parseFalse(i: Int, facade: Visitor[_, J]): J =
     if (at(i + 1) == 'a' && at(i + 2) == 'l' && at(i + 3) == 's' && at(i + 4) == 'e') {
       facade.visitFalse(i)
     } else {
@@ -309,7 +309,7 @@ abstract class Parser[J] {
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseNull(i: Int)(implicit facade: Visitor[_, J]): J =
+  protected[this] final def parseNull(i: Int, facade: Visitor[_, J]): J =
     if (at(i + 1) == 'u' && at(i + 2) == 'l' && at(i + 3) == 'l') {
       facade.visitNull(i)
     } else {
@@ -319,13 +319,13 @@ abstract class Parser[J] {
   /**
    * Parse and return the next JSON value and the position beyond it.
    */
-  protected[this] final def parse(i: Int)(implicit facade: Visitor[_, J]): (J, Int) = try {
+  protected[this] final def parse(i: Int, facade: Visitor[_, J]): (J, Int) = try {
     (at(i): @switch) match {
       // ignore whitespace
-      case ' ' => parse(i + 1)
-      case '\t' => parse(i + 1)
-      case '\r' => parse(i + 1)
-      case '\n' => newline(i); parse(i + 1)
+      case ' ' => parse(i + 1, facade)
+      case '\t' => parse(i + 1, facade)
+      case '\r' => parse(i + 1, facade)
+      case '\n' => newline(i); parse(i + 1, facade)
 
       // if we have a recursive top-level structure, we'll delegate the parsing
       // duties to our good friend rparse().
@@ -334,7 +334,7 @@ abstract class Parser[J] {
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-        try parseNumSlow(i) catch reject(i, Nil)
+        try parseNumSlow(i, facade) catch reject(i, Nil)
 
       // we have a single top-level string
       case '"' =>
@@ -345,9 +345,9 @@ abstract class Parser[J] {
         } catch reject(i, Nil)
 
       // we have a single top-level constant
-      case 't' => (parseTrue(i), i + 4)
-      case 'f' => (parseFalse(i), i + 5)
-      case 'n' => (parseNull(i), i + 4)
+      case 't' => (parseTrue(i, facade), i + 4)
+      case 'f' => (parseFalse(i, facade), i + 5)
+      case 'n' => (parseNull(i, facade), i + 4)
 
       // invalid
       case _ => die(i, "expected json value")
@@ -384,7 +384,7 @@ abstract class Parser[J] {
                                    path: List[Any]) : (J, Int) = {
     val i = reset(j)
     checkpoint(state, i, stack)
-    implicit val facade: Visitor[_, J] = stack.head.subVisitor.asInstanceOf[Visitor[_, J]]
+    def facade: Visitor[_, J] = stack.head.subVisitor.asInstanceOf[Visitor[_, J]]
     val c = at(i)
 
     if (c == '\n') {
@@ -404,7 +404,7 @@ abstract class Parser[J] {
         val ctxt = stack.head.narrow
 
         if ((c >= '0' && c <= '9') || c == '-') {
-          val j = try parseNum(i, ctxt) catch reject(i, path)
+          val j = try parseNum(i, ctxt, facade) catch reject(i, path)
           rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack, path)
         } else if (c == '"') {
           val nextJ = try {
@@ -415,13 +415,13 @@ abstract class Parser[J] {
           } catch reject(i, path)
           rparse(if (ctxt.isObj) OBJEND else ARREND, nextJ, stack, path)
         } else if (c == 't') {
-          ctxt.visitValue(try parseTrue(i) catch reject(i, path), i)
+          ctxt.visitValue(try parseTrue(i, facade) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
         } else if (c == 'f') {
-          ctxt.visitValue(try parseFalse(i) catch reject(i, path), i)
+          ctxt.visitValue(try parseFalse(i, facade) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 5, stack, path)
         } else if (c == 'n') {
-          ctxt.visitValue(try parseNull(i) catch reject(i, path), i)
+          ctxt.visitValue(try parseNull(i, facade) catch reject(i, path), i)
           rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack, path)
         } else {
           die(i, "expected json value")

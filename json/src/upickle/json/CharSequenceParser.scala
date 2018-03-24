@@ -18,5 +18,5 @@ private[json] final class CharSequenceParser[J](cs: CharSequence) extends SyncPa
 }
 
 object CharSequenceParser extends Transformer[CharSequence]{
-  def transform[T](j: CharSequence, f: Visitor[_, T]) = new CharSequenceParser(j).parse()(f)
+  def transform[T](j: CharSequence, f: Visitor[_, T]) = new CharSequenceParser(j).parse(f)
 }

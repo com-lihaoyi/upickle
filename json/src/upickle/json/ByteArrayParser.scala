@@ -33,5 +33,5 @@ final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0)
   protected[this] final def atEof(i: Int) = i >= limit
 }
 object ByteArrayParser extends Transformer[Array[Byte]]{
-  def transform[T](j: Array[Byte], f: Visitor[_, T]) = new ByteArrayParser(j).parse()(f)
+  def transform[T](j: Array[Byte], f: Visitor[_, T]) = new ByteArrayParser(j).parse(f)
 }
