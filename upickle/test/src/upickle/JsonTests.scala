@@ -65,11 +65,11 @@ object JsonTests extends TestSuite {
         |1e00,2e+00,2e-00
         |,"rosebud"]
       """.stripMargin
-    val parsed = json.read(ugly)
+    val parsed = ujson.read(ugly)
 
     'correctness - {
-      val unparsed = json.write(parsed)
-      val reparsed = json.read(unparsed)
+      val unparsed = ujson.write(parsed)
+      val reparsed = ujson.read(unparsed)
       for (json <- Seq(parsed, reparsed)){
         assert(
           json(0).value == "JSON Test Pattern pass1",
@@ -83,42 +83,17 @@ object JsonTests extends TestSuite {
     }
     'shortcuts{
       'positive{
-        json.read("[1]").arr        ==> Seq(Js.Num(1))
-        json.read("1").num          ==> 1
-        json.read("\"1\"").str      ==> "1"
-        json.read("{\"1\": 1}").obj ==> Map("1" -> Js.Num(1))
+        ujson.read("[1]").arr        ==> Seq(Js.Num(1))
+        ujson.read("1").num          ==> 1
+        ujson.read("\"1\"").str      ==> "1"
+        ujson.read("{\"1\": 1}").obj ==> Map("1" -> Js.Num(1))
       }
       'negative{
-        intercept[Js.InvalidData]{json.read("[1]").obj}
-        intercept[Js.InvalidData]{json.read("1").obj}
-        intercept[Js.InvalidData]{json.read("\"1\"").obj}
+        intercept[Js.InvalidData]{ujson.read("[1]").obj}
+        intercept[Js.InvalidData]{ujson.read("1").obj}
+        intercept[Js.InvalidData]{ujson.read("\"1\"").obj}
 
       }
     }
-
-//    "performance" - {
-//      "read" - {
-//        var n = 0
-//        val start = System.currentTimeMillis()
-//        var parsed: Js.Value = Js.Null
-//        while(System.currentTimeMillis() < start + 5000){
-//          parsed = Js.Null
-//          parsed = json.read(ugly)
-//          n += 1
-//        }
-//        n
-//      }
-//      "write" - {
-//        var n = 0
-//        val start = System.currentTimeMillis()
-//        var output = ""
-//        while(System.currentTimeMillis() < start + 5000){
-//          output = json.write(parsed)
-//          output = ""
-//          n += 1
-//        }
-//        n
-//      }
-//    }
   }
 }

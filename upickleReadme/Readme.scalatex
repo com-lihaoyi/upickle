@@ -376,7 +376,7 @@
             */
           def apply(s: java.lang.String): Value = this.obj(s)
 
-          override def toString = upickle.json.write(this, indent = 4)
+          override def toString = ujson.write(this, indent = 4)
         }
         case class Str(value0: java.lang.CharSequence) extends Value{
           lazy val value: String = value0.toString
@@ -398,7 +398,7 @@
       }
 
     @p
-      As well as in the @hl.scala{upickle.json.read} and @hl.scala{upickle.json.write} functions:
+      As well as in the @hl.scala{ujson.read} and @hl.scala{ujson.write} functions:
 
     @hl.scala
       def read(s: String): Js.Value
@@ -442,14 +442,14 @@
           define a serializer for each case class you want to deal with, preferably
           in the companion object
         @li
-          Upgrade Jawn version to 0.11.0, add helpers in @code{upickle.json} to
+          Upgrade Jawn version to 0.11.0, add helpers in @code{ujson} to
           parse JSON coming from files.
         @li
-          New @code{upickle.json.writeTo} function for serializing JSON directly
+          New @code{ujson.writeTo} function for serializing JSON directly
           to a @code{java.io.Writer}, rather than creating a @code{String}
 
         @li
-          @code{upickle.json.write} now takes an optional `sortKeys` flag, if
+          @code{ujson.write} now takes an optional `sortKeys` flag, if
           you want the JSON dictionaries to rendered in a standardized order
 
         @li

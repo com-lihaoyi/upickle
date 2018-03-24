@@ -5,7 +5,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import upickle.internal.IndexedJs
-import upickle.json._
+import ujson._
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
@@ -140,7 +140,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def expectedMsg = "expected sequence"
-    override def visitArray(index: Int) = new upickle.json.ArrVisitor[Any, C[T]] {
+    override def visitArray(index: Int) = new ujson.ArrVisitor[Any, C[T]] {
       val b = cbf.apply()
 
       def visitValue(v: Any, index: Int): Unit = {
@@ -180,7 +180,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit def EitherReader[T1: Reader, T2: Reader] = new Reader[Either[T1, T2]]{
     override def expectedMsg = "expected sequence"
-    override def visitArray(index: Int) = new upickle.json.ArrVisitor[Any, Either[T1, T2]] {
+    override def visitArray(index: Int) = new ujson.ArrVisitor[Any, Either[T1, T2]] {
       var right: java.lang.Boolean = null
       var value: Either[T1, T2] = _
       def visitValue(v: Any, index: Int): Unit = right match {

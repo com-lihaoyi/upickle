@@ -10,7 +10,7 @@ trait CommonModule extends ScalaModule {
   )
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def publishVersion = "0.6.0-RC6"
+  def publishVersion = "0.6.0-RC2"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -52,8 +52,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
 }
 
 trait JsonModule extends CommonPublishModule{
-  def artifactName = "upickle-json"
-  def millSourcePath = build.millSourcePath / "json"
+  def millSourcePath = build.millSourcePath / "ujson"
   trait JawnTestModule extends Tests with CommonModule{
     def platformSegment = JsonModule.this.platformSegment
     def ivyDeps = Agg(
@@ -64,7 +63,7 @@ trait JsonModule extends CommonPublishModule{
   }
 }
 
-object json extends Module{
+object ujson extends Module{
   object js extends Cross[JsonJsModule]("2.11.11", "2.12.4")
   class JsonJsModule(val crossScalaVersion: String) extends JsonModule with ScalaJSModule {
 
@@ -162,14 +161,14 @@ object upickle extends Module{
   object jvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
   class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
     def platformSegment = "jvm"
-    def moduleDeps = Seq(json.jvm())
+    def moduleDeps = Seq(ujson.jvm())
 
     object test extends UpickleTestModule
   }
 
   object js extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
   class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
-    def moduleDeps = Seq(json.js())
+    def moduleDeps = Seq(ujson.js())
     def platformSegment = "js"
 
     def scalaJSVersion = "0.6.22"

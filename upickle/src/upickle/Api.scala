@@ -3,8 +3,8 @@ package upickle
 
 
 import upickle.internal.IndexedJs
-import upickle.json._
-import upickle.json.StringRenderer
+import ujson._
+import ujson.StringRenderer
 
 import language.experimental.macros
 import language.higherKinds
@@ -40,8 +40,8 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
   def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
 
   case class transform[T: Writer](t: T) extends Transformable{
-    def transform[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
-    def to[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
+    def transform[V](f: ujson.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
+    def to[V](f: ujson.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
     def to[V](implicit f: Reader[V]): V = implicitly[Writer[T]].transform(t, f)
   }
 
@@ -138,7 +138,7 @@ trait AttributeTagged extends Api{
 
   def taggedExpectedMsg = "expected dictionary"
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
-    new upickle.json.ObjVisitor[Any, T]{
+    new ujson.ObjVisitor[Any, T]{
       private[this] var fastPath = false
       private[this] var context: ObjVisitor[Any, _] = null
       def subVisitor: Visitor[Nothing, Any] =

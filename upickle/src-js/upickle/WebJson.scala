@@ -1,6 +1,6 @@
 package upickle
 
-import upickle.json._
+import ujson._
 
 import scala.scalajs.js
 
@@ -15,8 +15,8 @@ trait WebJson extends upickle.core.Types {
     }
   }
 }
-object WebJson extends json.Transformer[js.Any]{
-  def transform[T](j: js.Any, f: upickle.json.Visitor[_, T]): T = {
+object WebJson extends ujson.Transformer[js.Any]{
+  def transform[T](j: js.Any, f: ujson.Visitor[_, T]): T = {
     (j: Any) match{
       case s: String => f.visitString(s, -1)
       case n: Double => f.visitNumRaw(n, -1)
@@ -37,7 +37,7 @@ object WebJson extends json.Transformer[js.Any]{
     }
   }
 
-  object Builder extends upickle.json.Visitor[js.Any, js.Any]{
+  object Builder extends ujson.Visitor[js.Any, js.Any]{
     def visitArray(index: Int) = new ArrVisitor[js.Any, js.Any] {
       val out = new js.Array[js.Any]
       def subVisitor = Builder.this

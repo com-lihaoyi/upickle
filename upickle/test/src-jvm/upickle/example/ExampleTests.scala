@@ -3,11 +3,11 @@ package upickle.example
 import java.io.StringWriter
 
 import acyclic.file
-import upickle.{TestUtil, default, json}
+import upickle.{TestUtil, default}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
-import upickle.json.{IncompleteParseException, NoOpVisitor, ParseException, Transformable}
-import upickle.json.{Js, BytesRenderer, StringRenderer}
+import ujson.{IncompleteParseException, NoOpVisitor, ParseException, Transformable}
+import ujson.{Js, BytesRenderer, StringRenderer}
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{
@@ -272,29 +272,29 @@ object ExampleTests extends TestSuite {
 
       }
       'misc{
-        // upickle.json.transform is long-hand for upickle.default.{read,write,transform}
-        upickle.json.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
+        // ujson.transform is long-hand for upickle.default.{read,write,transform}
+        ujson.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
           Seq(1, 2, 3)
 
-        upickle.json.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
+        ujson.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
           "[1,2,3]"
 
         // It can be used for parsing JSON into an AST
         val exampleAst = Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
 
-        upickle.json.transform("[1, 2, 3]", Js.Builder) ==> exampleAst
+        ujson.transform("[1, 2, 3]", Js.Builder) ==> exampleAst
 
         // Rendering the AST to a string
-        upickle.json.transform(exampleAst, StringRenderer()).toString ==> "[1,2,3]"
+        ujson.transform(exampleAst, StringRenderer()).toString ==> "[1,2,3]"
 
         // Or to a byte array
-        upickle.json.transform(exampleAst, BytesRenderer()).toBytes ==> "[1,2,3]".getBytes
+        ujson.transform(exampleAst, BytesRenderer()).toBytes ==> "[1,2,3]".getBytes
 
         // Re-formatting JSON, either compacting it
-        upickle.json.transform("[1, 2, 3]", StringRenderer()).toString ==> "[1,2,3]"
+        ujson.transform("[1, 2, 3]", StringRenderer()).toString ==> "[1,2,3]"
 
         // or indenting it
-        upickle.json.transform("[1, 2, 3]", StringRenderer(indent = 4)).toString ==>
+        ujson.transform("[1, 2, 3]", StringRenderer(indent = 4)).toString ==>
           """[
             |    1,
             |    2,
@@ -302,16 +302,16 @@ object ExampleTests extends TestSuite {
             |]""".stripMargin
 
         // `transform` takes any `Transformable`, including byte arrays and files
-        upickle.json.transform("[1, 2, 3]".getBytes, StringRenderer()).toString ==> "[1,2,3]"
+        ujson.transform("[1, 2, 3]".getBytes, StringRenderer()).toString ==> "[1,2,3]"
 
         // `transform` can also be used for validating JSON without constructing anything
-        upickle.json.transform("[1, 2, 3]", NoOpVisitor)
+        ujson.transform("[1, 2, 3]", NoOpVisitor)
 
         intercept[IncompleteParseException]{
-          upickle.json.transform("[1, 2, 3", NoOpVisitor)
+          ujson.transform("[1, 2, 3", NoOpVisitor)
         }
         intercept[ParseException]{
-          upickle.json.transform("[1, 2, 3]]", NoOpVisitor)
+          ujson.transform("[1, 2, 3]]", NoOpVisitor)
         }
       }
     }

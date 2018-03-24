@@ -1,7 +1,7 @@
 package upickle.internal
 
-import upickle.json.{ArrVisitor, ObjArrVisitor, ObjVisitor, Transformer}
-import upickle.json.Js.reject
+import ujson.{ArrVisitor, ObjArrVisitor, ObjVisitor, Transformer}
+import ujson.Js.reject
 
 import scala.collection.mutable
 
@@ -31,7 +31,7 @@ object IndexedJs extends Transformer[IndexedJs]{
     def value = null
   }
 
-  def transform[T](j: IndexedJs, f: upickle.json.Visitor[_, T]): T = try{
+  def transform[T](j: IndexedJs, f: ujson.Visitor[_, T]): T = try{
     j match{
       case IndexedJs.Null(i) => f.visitNull(i)
       case IndexedJs.True(i) => f.visitTrue(i)
@@ -54,7 +54,7 @@ object IndexedJs extends Transformer[IndexedJs]{
   } catch reject(j.index, Nil)
 
 
-  object Builder extends upickle.json.Visitor[IndexedJs, IndexedJs]{
+  object Builder extends ujson.Visitor[IndexedJs, IndexedJs]{
     def visitArray(i: Int) = new ArrVisitor[IndexedJs, IndexedJs.Arr] {
       val out = mutable.Buffer.empty[IndexedJs]
       def subVisitor = Builder.this
