@@ -1,7 +1,6 @@
 package upickle
 package api
 
-import upickle.json.{AbortJsonProcessingException, ObjArrVisitor, Visitor}
 
 import language.experimental.macros
 

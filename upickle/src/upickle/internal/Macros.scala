@@ -266,7 +266,7 @@ object Macros {
         new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
           override def visitObject(index: Int) = new CaseObjectContext{
             def visitKey(s: CharSequence, index: Int): Unit = {
-              currentIndex = s.toString match {
+              currentIndex = ${c.prefix}.objectAttributeKeyReadMap(s).toString match {
                 case ..${
                   for(i <- mappedArgs.indices)
                   yield cq"${mappedArgs(i)} => $i"
@@ -347,7 +347,7 @@ object Macros {
 
       def write(i: Int) = {
         val snippet = q"""
-          ctx.visitKey(${mappedArgs(i)}, -1)
+          ctx.visitKey(${c.prefix}.objectAttributeKeyWriteMap(${mappedArgs(i)}), -1)
           val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
           ctx.visitValue(
             w.write(

@@ -44,6 +44,12 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
     def to[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
     def to[V](implicit f: Reader[V]): V = implicitly[Writer[T]].transform(t, f)
   }
+
+  def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
+  def objectAttributeKeyWriteMap(s: CharSequence): CharSequence = s
+
+  def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
+  def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
 }
 
 /**
@@ -82,7 +88,7 @@ trait LegacyApi extends Api{
 
     def visitValue(v: Any, index: Int): Unit = state match{
       case TaggedReaderState.Initializing =>
-        val typeName = v.toString
+        val typeName = objectTypeKeyReadMap(v.toString).toString
         val delegate = taggedReader.findReader(typeName)
         if (delegate == null) {
           throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
@@ -102,7 +108,7 @@ trait LegacyApi extends Api{
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(-1)
-    ctx.visitValue(out.visitString(tag, -1), -1)
+    ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
 
     ctx.visitValue(w.write(out, v), -1)
 
@@ -155,7 +161,7 @@ trait AttributeTagged extends Api{
 
       def visitValue(v: Any, index: Int): Unit = state match{
         case TaggedReaderState.Initializing =>
-          val typeName = v.toString
+          val typeName = objectTypeKeyReadMap(v.toString).toString
           val facade0 = taggedReader.findReader(typeName)
           if (facade0 == null) {
             throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
@@ -193,7 +199,7 @@ trait AttributeTagged extends Api{
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(-1)
     ctx.visitKey(tagName, -1)
-    ctx.visitValue(out.visitString(tag, -1), -1)
+    ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
     w.writeToObject(ctx, out, v)
     ctx.visitEnd(-1)
   }

@@ -333,32 +333,30 @@ object ExampleTests extends TestSuite {
         read[B]("""{"$type":"Bee","i":10}""") ==> B(10)
       }
       'snakeCase{
-//        object SnakePickle extends upickle.AttributeTagged{
-//          def camelToSnake(s: String) = {
-//            val res = s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
-//            res
-//          }
-//          override def CaseR[T: this.Reader, V]
-//                            (f: T => V,
-//                             names: Array[String],
-//                             defaults: Array[Js.Value]) = {
-//            super.CaseR[T, V](f, names.map(camelToSnake), defaults)
-//          }
-//          override def CaseW[T: this.Writer, V]
-//                            (f: V => Option[T],
-//                             names: Array[String],
-//                             defaults: Array[Js.Value]) = {
-//            super.CaseW[T, V](f, names.map(camelToSnake), defaults)
-//          }
-//        }
+        object SnakePickle extends upickle.AttributeTagged{
+          def camelToSnake(s: String) = {
+            s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
+          }
+          def snakeToCamel(s: String) = {
+            val res = s.split("_", -1).map(x => x(0).toUpper + x.drop(1)).mkString
+            s(0).toLower + res.drop(1)
+          }
+
+
+          override def objectAttributeKeyReadMap(s: CharSequence) = snakeToCamel(s.toString)
+          override def objectAttributeKeyWriteMap(s: CharSequence) = camelToSnake(s.toString)
+
+          override def objectTypeKeyReadMap(s: CharSequence) = snakeToCamel(s.toString)
+          override def objectTypeKeyWriteMap(s: CharSequence) = camelToSnake(s.toString)
+        }
         // Default read-writing
         upickle.default.write(Thing(1, "gg")) ==> """{"myFieldA":1,"myFieldB":"gg"}"""
         upickle.default.read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> Thing(1, "gg")
 
-//        implicit def thingRW: SnakePickle.ReadWriter[Thing] = SnakePickle.macroRW
+        implicit def thingRW: SnakePickle.ReadWriter[Thing] = SnakePickle.macroRW
         // snake_case_keys read-writing
-//        SnakePickle.write(Thing(1, "gg")) ==> """{"my_field_a":1,"my_field_b":"gg"}"""
-//        SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") ==> Thing(1, "gg")
+        SnakePickle.write(Thing(1, "gg")) ==> """{"my_field_a":1,"my_field_b":"gg"}"""
+        SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") ==> Thing(1, "gg")
       }
     }
   }
