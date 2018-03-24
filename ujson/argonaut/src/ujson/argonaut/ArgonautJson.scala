@@ -32,27 +32,14 @@ object ArgonautJson extends ujson.Transformer[Json]{
   )
 
   object Builder extends ujson.Visitor[Json, Json]{
-    def visitArray(index: Int) = new ArrVisitor[Json, Json] {
-      val vs = mutable.ArrayBuffer.empty[Json]
-      def subVisitor = Builder
-
-      def visitValue(v: Json, index: Int): Unit = vs.append(v)
-
-      def visitEnd(index: Int) = Json.jArray(vs.toList)
-    }
-
-    def visitObject(index: Int) = new ObjVisitor[Json, Json] {
-      var key: String = null
-
-      val vs = mutable.ArrayBuffer.empty[(String, Json)]
-      def visitKey(s: CharSequence, index: Int): Unit = key = s.toString
-
-      def subVisitor = Builder
-
-      def visitValue(v: Json, index: Int): Unit = vs.append(key.toString -> v)
-
-      def visitEnd(index: Int) = Json.jObject(JsonObject.fromTraversableOnce(vs))
-    }
+    def visitArray(index: Int) = new ArrVisitor.Simple[Json, Json](
+      Builder,
+      xs => Json.jArray(xs.toList)
+    )
+    def visitObject(index: Int) = new ObjVisitor.Simple[Json, Json](
+      Builder,
+      vs => Json.jObject(JsonObject.fromTraversableOnce(vs))
+    )
 
     def visitNull(index: Int) = Json.jNull
 

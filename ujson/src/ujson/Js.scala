@@ -113,25 +113,9 @@ object Js extends Transformer[Js]{
   }
 
   object Builder extends ujson.Visitor[Js.Value, Js.Value]{
-    def visitArray(index: Int) = new ArrVisitor[Js.Value, Js.Value] {
-      val out = mutable.Buffer.empty[Js.Value]
-      def subVisitor = Builder.this
-      def visitValue(v: Js.Value, index: Int): Unit = {
-        out.append(v)
-      }
-      def visitEnd(index: Int): Js.Value = Js.Arr(out:_*)
-    }
+    def visitArray(index: Int) = new ArrVisitor.Simple[Js.Value, Js.Value](Builder, xs => Js.Arr(xs))
 
-    def visitObject(index: Int) = new ObjVisitor[Js.Value, Js.Value] {
-      val out = mutable.Buffer.empty[(String, Js.Value)]
-      var currentKey: String = _
-      def subVisitor = Builder.this
-      def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
-      def visitValue(v: Js.Value, index: Int): Unit = {
-        out.append((currentKey, v))
-      }
-      def visitEnd(index: Int): Js.Value = Js.Obj(out:_*)
-    }
+    def visitObject(index: Int) = new ObjVisitor.Simple[Js.Value, Js.Value](Builder, xs => Js.Obj(xs:_*))
 
     def visitNull(index: Int) = Js.Null
 

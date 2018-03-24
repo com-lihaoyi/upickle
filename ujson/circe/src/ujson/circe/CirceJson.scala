@@ -27,27 +27,9 @@ object CirceJson extends ujson.Transformer[Json]{
   )
 
   object Builder extends ujson.Visitor[Json, Json]{
-    def visitArray(index: Int) = new ArrVisitor[Json, Json] {
-      val vs = mutable.ArrayBuffer.empty[Json]
-      def subVisitor = Builder
+    def visitArray(index: Int) = new ArrVisitor.Simple[Json, Json](Builder, x => Json.arr(x:_*))
 
-      def visitValue(v: Json, index: Int): Unit = vs.append(v)
-
-      def visitEnd(index: Int) = Json.arr(vs:_*)
-    }
-
-    def visitObject(index: Int) = new ObjVisitor[Json, Json] {
-      var key: String = null
-
-      val vs = mutable.ArrayBuffer.empty[(String, Json)]
-      def visitKey(s: CharSequence, index: Int): Unit = key = s.toString
-
-      def subVisitor = Builder
-
-      def visitValue(v: Json, index: Int): Unit = vs.append(key.toString -> v)
-
-      def visitEnd(index: Int) = Json.obj(vs:_*)
-    }
+    def visitObject(index: Int) = new ObjVisitor.Simple[Json, Json](Builder, vs => Json.obj(vs:_*))
 
     def visitNull(index: Int) = Json.Null
 

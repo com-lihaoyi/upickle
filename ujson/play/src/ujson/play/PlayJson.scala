@@ -27,27 +27,9 @@ object PlayJson extends ujson.Transformer[JsValue] {
     case JsString(s) => f.visitString(s)
   }
   object Builder extends ujson.Visitor[JsValue, JsValue]{
-    def visitArray(index: Int) = new ArrVisitor[JsValue, JsValue] {
-      val vs = mutable.ArrayBuffer.empty[JsValue]
-      def subVisitor = Builder
+    def visitArray(index: Int) = new ArrVisitor.Simple[JsValue, JsValue](Builder, JsArray(_))
 
-      def visitValue(v: JsValue, index: Int): Unit = vs.append(v)
-
-      def visitEnd(index: Int) = JsArray(vs)
-    }
-
-    def visitObject(index: Int) = new ObjVisitor[JsValue, JsValue] {
-      var key: String = null
-
-      val vs = mutable.ArrayBuffer.empty[(String, JsValue)]
-      def visitKey(s: CharSequence, index: Int): Unit = key = s.toString
-
-      def subVisitor = Builder
-
-      def visitValue(v: JsValue, index: Int): Unit = vs.append(key -> v)
-
-      def visitEnd(index: Int) = JsObject(vs)
-    }
+    def visitObject(index: Int) = new ObjVisitor.Simple[JsValue, JsValue](Builder, JsObject(_))
 
     def visitNull(index: Int) = JsNull
 

@@ -39,29 +39,15 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
 
 
   object Builder extends ujson.Visitor[JValue, JValue] {
-    def visitArray(index: Int) = new ArrVisitor[JValue, JValue] {
-      val vs = mutable.ListBuffer.empty[JValue]
-      def subVisitor = Builder
+    def visitArray(index: Int) = new ArrVisitor.Simple[JValue, JValue](
+      Builder,
+      x => JArray(x.toList)
 
-      def visitValue(v: JValue, index: Int): Unit = vs += v
-
-      def visitEnd(index: Int) = JArray(vs.toList)
-    }
-
-    def visitObject(index: Int) = new ObjVisitor[JValue, JValue] {
-      var key: String = null
-      val vs = mutable.ListBuffer.empty[JField]
-
-      def visitKey(s: CharSequence, index: Int): Unit = key = s.toString
-
-      def subVisitor = Builder
-
-      def visitValue(v: JValue, index: Int): Unit = {
-        vs += JField(key, v)
-      }
-
-      def visitEnd(index: Int) = JObject(vs.toList)
-    }
+)
+    def visitObject(index: Int) = new ObjVisitor.Simple[JValue, JValue](
+      Builder,
+      x => JObject(x.toList)
+    )
 
     def visitNull(index: Int) = JNull
 

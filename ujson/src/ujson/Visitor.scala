@@ -1,5 +1,8 @@
 package ujson
 
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
 /**
  * Facade is a type class that describes how Jawn should construct
  * JSON AST elements of type J.
@@ -69,9 +72,31 @@ trait ObjVisitor[-J, +T] extends ObjArrVisitor[J, T]{
   def isObj = true
   override def narrow = this.asInstanceOf[ObjVisitor[Any, T]]
 }
+object ObjVisitor{
+  class Simple[-J, +T](val subVisitor: Visitor[Nothing, Any],
+                       build: ArrayBuffer[(String, J)] => T) extends ObjVisitor[J, T] {
+    private[this] var key: String = null
+    private[this] val vs = mutable.ArrayBuffer.empty[(String, J)]
+
+    def visitKey(s: CharSequence, index: Int): Unit = key = s.toString
+
+    def visitValue(v: J, index: Int): Unit = vs += (key -> v)
+
+    def visitEnd(index: Int) = build(vs)
+  }
+}
 trait ArrVisitor[-J, +T] extends ObjArrVisitor[J, T]{
   def isObj = false
   override def narrow = this.asInstanceOf[ArrVisitor[Any, T]]
+}
+object ArrVisitor{
+  class Simple[-J, +T](val subVisitor: Visitor[Nothing, Any],
+                       build: ArrayBuffer[J] => T) extends ArrVisitor[J, T]{
+    private[this] val vs = mutable.ArrayBuffer.empty[J]
+    def visitValue(v: J, index: Int): Unit = vs.append(v)
+
+    def visitEnd(index: Int) = build(vs)
+  }
 }
 
 /**
