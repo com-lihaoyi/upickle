@@ -37,6 +37,8 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
 
   def writable[T: Writer](t: T) = Transformable.fromTransformer(t, implicitly[Writer[T]])
 
+  def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
+
   case class transform[T: Writer](t: T) extends Transformable{
     def transform[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
     def to[V](f: upickle.json.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)

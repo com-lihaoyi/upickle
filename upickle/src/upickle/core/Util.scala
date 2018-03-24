@@ -21,7 +21,6 @@ object Util {
     val size = len - i
     if (i >= len) throw new NumberFormatException(cs.toString)
     if (size > 19) throw new NumberFormatException(cs.toString)
-    if (cs.charAt(i) == '0' && size > 1) throw new NumberFormatException(cs.toString)
 
     while (i < len) {
       val digit = cs.charAt(i).toInt - 48

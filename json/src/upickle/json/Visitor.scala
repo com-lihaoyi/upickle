@@ -25,8 +25,14 @@ trait Visitor[-T, +J] {
     * Delegates to `visitNum` if not overriden
     */
   def visitNumRaw(d: Double, index: Int): J = {
-    val s = d.toString
-    visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
+    val i = d.toInt
+    if(i == d){
+      visitNum(i.toString, -1, -1, -1)
+    }else{
+      val s = d.toString
+      visitNum(s, s.indexOf('.'), s.indexOf('E'), -1)
+    }
+
   }
   def visitString(s: CharSequence, index: Int): J
 
