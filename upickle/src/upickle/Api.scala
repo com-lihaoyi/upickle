@@ -51,7 +51,12 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
   def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
   def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
 }
-
+object Api{
+  object StringVisitor extends CustomVisitor[Nothing, Any] {
+    def expectedMsg = "expected string"
+    override def visitString(s: CharSequence, index: Int) = s
+  }
+}
 /**
  * The default way of accessing upickle
  */
@@ -132,50 +137,44 @@ trait AttributeTagged extends Api{
   }
 
   def taggedExpectedMsg = "expected dictionary"
-  sealed trait TaggedReaderState
-  object TaggedReaderState{
-    case object Initializing extends TaggedReaderState
-    case class FastPath(ctx: ObjVisitor[Any, _]) extends TaggedReaderState
-    case class SlowPath(ctx: ObjVisitor[Any, IndexedJs.Obj]) extends TaggedReaderState
-  }
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
     new upickle.json.ObjVisitor[Any, T]{
-      var state: TaggedReaderState = TaggedReaderState.Initializing
-      def visitKey(s: CharSequence, index: Int): Unit = state match{
-        case TaggedReaderState.Initializing =>
+      private[this] var fastPath = false
+      private[this] var context: ObjVisitor[Any, _] = null
+      def subVisitor: Visitor[Nothing, Any] =
+        if (context == null) Api.StringVisitor
+        else context.subVisitor
+
+      def visitKey(s: CharSequence, index: Int): Unit = {
+        if (context != null) context.visitKey(s, index)
+        else {
           if (s.toString == tagName) () //do nothing
           else {
             val slowCtx = IndexedJs.Builder.visitObject(index).narrow
             slowCtx.visitKey(s, index)
-            state = TaggedReaderState.SlowPath(slowCtx)
+            context = slowCtx
           }
-        case TaggedReaderState.FastPath(ctx) => ctx.visitKey(s, index)
-        case TaggedReaderState.SlowPath(ctx) => ctx.visitKey(s, index)
+        }
       }
 
-      def subVisitor = state match{
-        case TaggedReaderState.Initializing => StringReader
-        case TaggedReaderState.FastPath(ctx) => ctx.subVisitor
-        case TaggedReaderState.SlowPath(ctx) => ctx.subVisitor
-      }
-
-      def visitValue(v: Any, index: Int): Unit = state match{
-        case TaggedReaderState.Initializing =>
+      def visitValue(v: Any, index: Int): Unit =
+        if (context != null) context.visitValue(v, index)
+        else {
           val typeName = objectTypeKeyReadMap(v.toString).toString
           val facade0 = taggedReader.findReader(typeName)
           if (facade0 == null) {
             throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
           }
-          state = TaggedReaderState.FastPath(facade0.visitObject(index))
-        case TaggedReaderState.FastPath(ctx) => ctx.visitValue(v, index)
-        case TaggedReaderState.SlowPath(ctx) => ctx.visitValue(v, index)
+          val fastCtx = facade0.visitObject(index)
+          context = fastCtx
+          fastPath = true
       }
 
-      def visitEnd(index: Int) = state match{
-        case TaggedReaderState.Initializing => throw new AbortJsonProcessingException("expected tagged dictionary")
-        case TaggedReaderState.FastPath(ctx) => ctx.visitEnd(index).asInstanceOf[T]
-        case TaggedReaderState.SlowPath(ctx) =>
-          val x = ctx.visitEnd(index)
+      def visitEnd(index: Int) = {
+        if (context == null) throw new AbortJsonProcessingException("expected tagged dictionary")
+        else if (fastPath) context.visitEnd(index).asInstanceOf[T]
+        else{
+          val x = context.visitEnd(index).asInstanceOf[IndexedJs.Obj]
           val keyAttr = x.value0.find(_._1.toString == tagName).get._2
           val key = keyAttr.asInstanceOf[IndexedJs.Str].value0.toString
           val delegate = taggedReader.findReader(key)
@@ -192,6 +191,7 @@ trait AttributeTagged extends Api{
             }
           }
           ctx2.visitEnd(index)
+        }
       }
 
     }
