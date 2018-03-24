@@ -8,7 +8,7 @@ import upickle.Recursive.{End, LL, Node}
 
 object Main{
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(5000, 50000)){
+    for(duration <- Seq(5000, 25000)){
       println("RUN JS: " + duration)
       println()
       Common.playJson(duration)

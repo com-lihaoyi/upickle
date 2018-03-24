@@ -17,7 +17,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(5000, 50000)){
+    for(duration <- Seq(5000, 25000)){
       println("RUN JVM: " + duration)
       println()
       Main.jacksonModuleScala(duration)
