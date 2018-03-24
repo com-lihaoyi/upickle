@@ -52,7 +52,7 @@ sealed trait Js extends Transformable{
   def apply(s: java.lang.String): Js.Value = this.obj(s)
 
   def transform[T](f: upickle.json.Visitor[_, T]) = Js.transform(this, f)
-  override def toString = this.transform(StringRenderer()).toString
+  override def toString = this.transform(StringRenderer(4)).toString
 }
 
 /**

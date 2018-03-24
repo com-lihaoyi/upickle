@@ -116,6 +116,8 @@ object ExampleTests extends TestSuite {
         write(12: Int)                    ==> "12"
         write(12: Short)                  ==> "12"
         write(12: Byte)                   ==> "12"
+        write(Int.MaxValue)               ==> "2147483647"
+        write(Int.MinValue)               ==> "-2147483648"
         write(12.5f: Float)               ==> "12.5"
         write(12.5: Double)               ==> "12.5"
       }
