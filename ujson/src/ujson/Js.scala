@@ -125,8 +125,10 @@ object Js extends AstTransformer[Js]{
 
 
   override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-    if (decIndex == -1 && expIndex == -1) Util.parseIntegralNum(s, decIndex, expIndex, index)
-    else s.toString.toDouble
+    Js.Num(
+      if (decIndex != -1 || expIndex != -1) s.toString.toDouble
+      else Util.parseIntegralNum(s, decIndex, expIndex, index)
+    )
   }
 
   override def visitNumRaw(d: Double, index: Int) = Js.Num(d)
