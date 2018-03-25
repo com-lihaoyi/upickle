@@ -4,6 +4,8 @@ package ujson.play
 import play.api.libs.json._
 import ujson.Visitor
 
+import scala.collection.mutable.ArrayBuffer
+
 object PlayJson extends ujson.AstTransformer[JsValue] {
   def transform[T](j: JsValue, f: Visitor[_, T]): T = j match{
     case JsArray(xs) => transformArray(f, xs)
@@ -15,7 +17,7 @@ object PlayJson extends ujson.AstTransformer[JsValue] {
   }
   def visitArray(index: Int) = new AstArrVisitor[Array](JsArray(_))
 
-  def visitObject(index: Int) = new AstObjVisitor(JsObject(_))
+  def visitObject(index: Int) = new AstObjVisitor[ArrayBuffer[(String, JsValue)]](JsObject(_))
 
   def visitNull(index: Int) = JsNull
 

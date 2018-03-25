@@ -4,6 +4,7 @@ import argonaut.{Json, JsonNumber, JsonObject}
 import ujson.{ArrVisitor, ObjVisitor, Visitor}
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 object ArgonautJson extends ujson.AstTransformer[Json]{
   override def transform[T](j: Json, f: Visitor[_, T]) = j.fold(
@@ -19,7 +20,7 @@ object ArgonautJson extends ujson.AstTransformer[Json]{
   )
 
   def visitArray(index: Int) = new AstArrVisitor[List](xs => Json.jArray(xs))
-  def visitObject(index: Int) = new AstObjVisitor(
+  def visitObject(index: Int) = new AstObjVisitor[ArrayBuffer[(String, Json)]](
     vs => Json.jObject(JsonObject.fromTraversableOnce(vs))
   )
 

@@ -19,19 +19,20 @@ trait AstTransformer[I] extends Transformer[I] with ujson.Visitor[I, I]{
     ctx.visitEnd(-1)
   }
 
-  class AstObjVisitor(build: ArrayBuffer[(String, I)] => I) extends ObjVisitor[I, I] {
+  class AstObjVisitor[T](build: T => I)
+                        (implicit cbf: CanBuildFrom[Nothing, (String, I), T])extends ObjVisitor[I, I] {
 
     private[this] var key: String = null
-    private[this] val vs = mutable.ArrayBuffer.empty[(String, I)]
+    private[this] val vs = cbf.apply()
     def subVisitor = AstTransformer.this
     def visitKey(s: CharSequence, index: Int): Unit = key = s.toString
 
     def visitValue(v: I, index: Int): Unit = vs += (key -> v)
 
-    def visitEnd(index: Int) = build(vs)
+    def visitEnd(index: Int) = build(vs.result)
   }
   class AstArrVisitor[T[_]](build: T[I] => I)
-                           (implicit cbf: CanBuildFrom[Nothing, I, T[I]])extends ArrVisitor[I, I]{
+                           (implicit cbf: CanBuildFrom[Nothing, I, T[I]]) extends ArrVisitor[I, I]{
     def subVisitor = AstTransformer.this
     private[this] val vs = cbf.apply()
     def visitValue(v: I, index: Int): Unit = vs += v

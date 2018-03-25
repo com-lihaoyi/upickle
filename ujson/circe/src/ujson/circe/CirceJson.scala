@@ -2,6 +2,8 @@ package ujson.circe
 
 import ujson.{Transformable, Visitor}
 import io.circe.{Json, JsonNumber}
+
+import scala.collection.mutable.ArrayBuffer
 object CirceJson extends ujson.AstTransformer[Json]{
 
   override def transform[T](j: Json, f: Visitor[_, T]) = j.fold(
@@ -15,7 +17,7 @@ object CirceJson extends ujson.AstTransformer[Json]{
 
   def visitArray(index: Int) = new AstArrVisitor[Vector](x => Json.arr(x:_*))
 
-  def visitObject(index: Int) = new AstObjVisitor(vs => Json.obj(vs:_*))
+  def visitObject(index: Int) = new AstObjVisitor[ArrayBuffer[(String, Json)]](vs => Json.obj(vs:_*))
 
   def visitNull(index: Int) = Json.Null
 
