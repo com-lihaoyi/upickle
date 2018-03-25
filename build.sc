@@ -90,7 +90,10 @@ object ujson extends Module{
   object json4s extends Cross[Json4sModule]("2.11.11", "2.12.4")
   class Json4sModule(val crossScalaVersion: String) extends CrossScalaModule{
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(ivy"org.json4s::json4s-ast:3.5.2")
+    def ivyDeps = Agg(
+      ivy"org.json4s::json4s-ast:3.5.2",
+      ivy"org.json4s::json4s-native:3.5.2"
+    )
   }
 
   object circe extends Cross[CirceModule]("2.11.11", "2.12.4")
@@ -102,7 +105,10 @@ object ujson extends Module{
   object play extends Cross[PlayModule]("2.11.11", "2.12.4")
   class PlayModule(val crossScalaVersion: String) extends CrossScalaModule{
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(ivy"com.typesafe.play::play-json:2.6.9")
+    def ivyDeps = Agg(
+      ivy"com.typesafe.play::play-json:2.6.9",
+      ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4"
+    )
   }
 }
 
@@ -225,7 +231,8 @@ trait BenchModule extends CommonModule{
     ivy"io.circe::circe-parser::0.9.1",
     ivy"com.typesafe.play::play-json::2.6.7",
     ivy"io.argonaut::argonaut:6.2",
-    ivy"org.json4s::json4s-ast:3.5.2"
+    ivy"org.json4s::json4s-ast:3.5.2",
+    ivy"com.lihaoyi::sourcecode:0.1.4",
   )
 }
 
@@ -254,6 +261,7 @@ object bench extends Module {
     def moduleDeps = Seq(upickle.jvm("2.12.4").test)
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
+      ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
     )
   }
 }

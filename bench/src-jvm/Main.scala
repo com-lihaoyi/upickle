@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.util.TokenBuffer
 import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
+import ujson.StringRenderer
 
 
 object Main{
@@ -21,6 +22,14 @@ object Main{
       println("RUN JVM: " + duration)
       println()
       Main.jacksonModuleScala(duration)
+      Main.playJsonAst(duration)
+      Main.uJsonPlayJsonAst(duration)
+      Main.circeJsonAst(duration)
+      Main.uJsonCirceJsonAst(duration)
+      Main.argonautJsonAst(duration)
+      Main.uJsonArgonautJsonAst(duration)
+      Main.json4sJsonAst(duration)
+      Main.uJsonJson4sJsonAst(duration)
       Common.playJson(duration)
       Common.circe(duration)
       Common.upickleDefault(duration)
@@ -32,7 +41,56 @@ object Main{
       println()
     }
   }
+  def playJsonAst(duration: Int) = {
+    Common.bench0[play.api.libs.json.JsValue](duration, Common.benchmarkSampleJson)(
+      play.api.libs.json.Json.parse(_),
+      play.api.libs.json.Json.stringify(_)
+    )
+  }
+  def uJsonPlayJsonAst(duration: Int) = {
+    Common.bench0[play.api.libs.json.JsValue](duration, Common.benchmarkSampleJson)(
+      ujson.play.PlayJson(_),
+      ujson.play.PlayJson.transform(_, StringRenderer()).toString
+    )
+  }
 
+  def circeJsonAst(duration: Int) = {
+    Common.bench0[io.circe.Json](duration, Common.benchmarkSampleJson)(
+      io.circe.parser.parse(_).right.get,
+      _.toString()
+    )
+  }
+  def uJsonCirceJsonAst(duration: Int) = {
+    Common.bench0[io.circe.Json](duration, Common.benchmarkSampleJson)(
+      ujson.circe.CirceJson(_),
+      ujson.circe.CirceJson.transform(_, StringRenderer()).toString
+    )
+  }
+
+  def argonautJsonAst(duration: Int) = {
+    Common.bench0[argonaut.Json](duration, Common.benchmarkSampleJson)(
+      argonaut.Parse.parse(_).right.get,
+      _.toString()
+    )
+  }
+  def uJsonArgonautJsonAst(duration: Int) = {
+    Common.bench0[argonaut.Json](duration, Common.benchmarkSampleJson)(
+      ujson.argonaut.ArgonautJson(_),
+      ujson.argonaut.ArgonautJson.transform(_, StringRenderer()).toString
+    )
+  }
+  def json4sJsonAst(duration: Int) = {
+    Common.bench0[org.json4s.JsonAST.JValue](duration, Common.benchmarkSampleJson)(
+      org.json4s.native.JsonMethods.parse(_),
+      x => org.json4s.native.JsonMethods.compact(org.json4s.native.JsonMethods.render(x))
+    )
+  }
+  def uJsonJson4sJsonAst(duration: Int) = {
+    Common.bench0[org.json4s.JsonAST.JValue](duration, Common.benchmarkSampleJson)(
+      ujson.json4s.Json4sJson(_),
+      ujson.json4s.Json4sJson.transform(_, StringRenderer()).toString
+    )
+  }
   def jacksonModuleScala(duration: Int) = {
     val mapper = new ObjectMapper() with ScalaObjectMapper
     val m = new SimpleModule
@@ -81,7 +139,7 @@ object Main{
 
     val jacksonType = new TypeReference[Common.Data] {}
 
-    Common.bench("jackson", duration)(
+    Common.bench(duration)(
       mapper.readValue[Common.Data](_, jacksonType),
       mapper.writeValueAsString(_)
     )

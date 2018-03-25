@@ -8,7 +8,7 @@ object Common{
   import Hierarchy._
   import Recursive._
   type Data = ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]
-  def benchmarkSampledata: Data = ADT(
+  val benchmarkSampleData: Data = ADT(
     Vector((1, 2), (3, 4), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13)),
     """
       |I am cow, hear me moo
@@ -20,6 +20,7 @@ object Common{
     ADTc(i = 1234567890, s = "i am a strange loop"),
     ADT0()
   )
+  val benchmarkSampleJson = upickle.default.write(benchmarkSampleData)
 
 
   def circe(duration: Int) = {
@@ -47,7 +48,7 @@ object Common{
     implicit def _w8: Encoder[ADTc] = deriveEncoder
     implicit def _w9: Encoder[ADT0] = deriveEncoder
 
-    bench("circe", duration)(
+    bench(duration)(
       decode[Data](_).right.get,
       implicitly[Encoder[Data]].apply(_).toString()
     )
@@ -75,7 +76,7 @@ object Common{
     }
 
 
-    bench("playJson", duration)(
+    bench(duration)(
       s => Json.fromJson[Data](Json.parse(s)).get,
       d => Json.stringify(Json.toJson(d))
     )
@@ -95,7 +96,7 @@ object Common{
     implicit def rw9: RW[ADT0] = upickle.legacy.macroRW
 
 
-    bench("upickleLegacy", duration)(
+    bench(duration)(
       upickle.legacy.read[Data](_),
       upickle.legacy.write(_)
     )
@@ -104,7 +105,7 @@ object Common{
   }
   def upickleDefault(duration: Int) = {
 
-    bench("upickleDefault", duration)(
+    bench(duration)(
       upickle.default.read[Data](_),
       upickle.default.write(_)
     )
@@ -134,7 +135,7 @@ object Common{
     implicit lazy val _w8: Encoder[ADTc] = deriveEncoder
     implicit lazy val _w9: Encoder[ADT0] = deriveEncoder
 
-    bench("circeCached", duration)(
+    bench(duration)(
       decode[Data](_).right.get,
       implicitly[Encoder[Data]].apply(_).toString()
     )
@@ -162,7 +163,7 @@ object Common{
 
 
 
-    bench("playJsonCached", duration)(
+    bench(duration)(
       s => Json.fromJson[Data](Json.parse(s)).get,
       d => Json.stringify(Json.toJson(d))
     )
@@ -182,7 +183,7 @@ object Common{
     implicit lazy val rw8: RW[ADTc] = upickle.legacy.macroRW
     implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
 
-    bench("upickleLegacyCached", duration)(
+    bench(duration)(
       upickle.legacy.read[Data](_),
       upickle.legacy.write(_)
     )
@@ -199,23 +200,28 @@ object Common{
     implicit lazy val rw8: upickle.default.ReadWriter[ADTc] = upickle.default.macroRW
     implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
 
-    bench("upickleDefaultCached", duration)(
+    bench(duration)(
       upickle.default.read[Data](_),
       upickle.default.write(_)
     )
   }
 
-  def bench(name: String, duration: Int)
-           (f1: String => Data, f2: Data => String) = {
-    val stringified = f2(benchmarkSampledata)
+  def bench(duration: Int)
+           (f1: String => Data, f2: Data => String)
+           (implicit name: sourcecode.Name) = {
+    val stringified = f2(benchmarkSampleData)
     val r1 = f1(stringified)
-    val equal = benchmarkSampledata == r1
+    val equal = benchmarkSampleData == r1
 
     assert(equal)
     val rewritten = f2(f1(stringified))
 
     assert(stringified == rewritten)
-
+    bench0[Data](duration, stringified)(f1, f2)
+  }
+  def bench0[T](duration: Int, stringified: String)
+               (f1: String => T, f2: T => String)
+               (implicit name: sourcecode.Name)= {
     {
       var n = 0
       val start = System.currentTimeMillis()
@@ -223,17 +229,19 @@ object Common{
         f1(stringified)
         n += 1
       }
-      println(name + " Read " + n)
+      println(name.value + " Read " + n)
     }
+
+    val parsed = f1(stringified)
 
     {
       var n = 0
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
-        f2(benchmarkSampledata)
+        f2(parsed)
         n += 1
       }
-      println(name + " Write " + n)
+      println(name.value + " Write " + n)
     }
   }
 }
