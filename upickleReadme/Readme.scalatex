@@ -406,11 +406,11 @@
     @p
       uJson is uPickle's JSON library, which can be used to easily
       manipulate JSON source and data structures without converting them into
-      Scala case-classes. This all lives in the @code{ujson} package.
-    @p
-      If you just need to parse & manipulate some JSON, without converting it
-      into Scala data-types first, uJson and @code{ujson.Js} will probably be
-      able to do what you need.
+      Scala case-classes. This all lives in the @code{ujson} package. Unlike
+      many other Scala JSON libraries that come with their own zoo of new
+      concepts, abstractions, and techniques, uJson has a simple & predictable
+      JSON API that should be instantly familiar to anyone coming from
+      scripting languages like Ruby, Python or Javascript.
 
     @p
       uJson comes bundled with uPickle, or can be used stand-alone via the
