@@ -258,12 +258,25 @@
 
 
   @sect{Customization}
-    @sect{Mapped Picklers}
+    @sect{Custom Picklers}
       @hl.ref(exampleTests, Seq("'mapped", ""), "}")
       @p
         You can use the @code{readwriter[T].bimap[V]} function to create a pickler
         that reads/writes a type @code{V}, using the pickler for type @code{T},
         by providing a conversion function between them.
+
+      @p
+        The type you are @code{.bimap}ing to doesn't need to be a case class,
+        or be pickleable in any way, as long as the type you are
+        @code{.bimap}ing from is pickleable. The following example demonstrates
+        using @code{.bimap} to define a serializer for non-case Scala class
+
+      @hl.ref(exampleTests, Seq("object Custom2", ""))
+
+      @p
+        Note that when writing custom picklers, it is entirely up to you to get
+        it right, e.g. making sure that an object that gets round-trip
+        pickled/unpickled comes out the same as when it started.
 
     @sect{Custom Keys}
       @p
@@ -304,28 +317,6 @@
         @li
           you try to tackle the resource issue (bandwidth, storage, CPU) because
           FQNs might get quite long
-
-    @sect{Custom Picklers}
-
-
-      @p
-        Apart from customizing the keys used to store the fields of a class,
-        uPickle also allows you to completely replace the default
-        @code{Reader}/@code{Writer} used to write that class. For classes you
-        control. You need to provide an implicit @code{Reader}/@code{Writer}
-        pair in the companion object:
-
-      @hl.ref(exampleTests, Seq("object Custom2", ""))
-
-      @p
-        In this example, instead of pickling to a normal @code{Js.Obj}, we
-        pickle to a @code{Js.Str}, storing both @code{i} and @code{s} as part
-        of that single string.
-
-      @p
-        Note that when writing custom picklers, it is entirely up to you to get
-        it right, e.g. making sure that an object that gets round-trip
-        pickled/unpickled comes out the same as when it started.
 
     @sect{Custom Configuration}
       @p

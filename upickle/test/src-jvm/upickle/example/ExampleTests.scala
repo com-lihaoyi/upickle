@@ -68,20 +68,19 @@ object KeyedTag{
   }
   case object C extends A
 }
-//object Custom2{
-//  import upickle.Js
-//  class CustomThing2(val i: Int, val s: String)
-//  object CustomThing2{
-//    implicit val thing2Writer = upickle.default.Writer[CustomThing2]{
-//      case t => Js.Str(t.i + " " + t.s)
-//    }
-//    implicit val thing2Reader = upickle.default.Reader[CustomThing2]{
-//      case Js.Str(str) =>
-//        val Array(i, s) = str.toString.split(" ")
-//        new CustomThing2(i.toInt, s)
-//    }
-//  }
-//}
+object Custom2{
+  import upickle.Js
+  class CustomThing2(val i: Int, val s: String)
+  object CustomThing2 {
+    implicit val rw = upickle.default.readwriter[String].bimap[CustomThing2](
+      x => x.i + " " + x.s,
+      str => {
+        val Array(i, s) = str.split(" ", 2)
+        new CustomThing2(i.toInt, s)
+      }
+    )
+  }
+}
 
 import KeyedTag._
 import Keyed._
