@@ -22,7 +22,7 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
   }
 
 
-  def visitArray(index: Int) = new AstArrVisitor(x => JArray(x.toList))
+  def visitArray(index: Int) = new AstArrVisitor[List](x => JArray(x))
   def visitObject(index: Int) = new AstObjVisitor(x => JObject(x.toList))
 
   def visitNull(index: Int) = JNull

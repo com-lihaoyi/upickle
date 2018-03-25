@@ -1,5 +1,6 @@
 package ujson
 
+import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -29,11 +30,12 @@ trait AstTransformer[I] extends Transformer[I] with ujson.Visitor[I, I]{
 
     def visitEnd(index: Int) = build(vs)
   }
-  class AstArrVisitor(build: ArrayBuffer[I] => I) extends ArrVisitor[I, I]{
+  class AstArrVisitor[T[_]](build: T[I] => I)
+                           (implicit cbf: CanBuildFrom[Nothing, I, T[I]])extends ArrVisitor[I, I]{
     def subVisitor = AstTransformer.this
-    private[this] val vs = mutable.ArrayBuffer.empty[I]
-    def visitValue(v: I, index: Int): Unit = vs.append(v)
+    private[this] val vs = cbf.apply()
+    def visitValue(v: I, index: Int): Unit = vs += v
 
-    def visitEnd(index: Int) = build(vs)
+    def visitEnd(index: Int) = build(vs.result())
   }
 }

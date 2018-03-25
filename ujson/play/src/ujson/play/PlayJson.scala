@@ -13,7 +13,7 @@ object PlayJson extends ujson.AstTransformer[JsValue] {
     case JsObject(kvs) => transformObject(f, kvs)
     case JsString(s) => f.visitString(s)
   }
-  def visitArray(index: Int) = new AstArrVisitor(JsArray(_))
+  def visitArray(index: Int) = new AstArrVisitor[Array](JsArray(_))
 
   def visitObject(index: Int) = new AstObjVisitor(JsObject(_))
 

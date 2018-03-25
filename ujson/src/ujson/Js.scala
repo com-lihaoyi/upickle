@@ -111,7 +111,7 @@ object Js extends AstTransformer[Js]{
     }
   }
 
-  def visitArray(index: Int) = new AstArrVisitor(xs => Js.Arr(xs))
+  def visitArray(index: Int) = new AstArrVisitor[ArrayBuffer](xs => Js.Arr(xs))
 
   def visitObject(index: Int) = new AstObjVisitor(xs => Js.Obj(xs:_*))
 

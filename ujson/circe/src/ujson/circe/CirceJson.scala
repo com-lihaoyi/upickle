@@ -13,7 +13,7 @@ object CirceJson extends ujson.AstTransformer[Json]{
     obj => transformObject(f, obj.toList)
   )
 
-  def visitArray(index: Int) = new AstArrVisitor(x => Json.arr(x:_*))
+  def visitArray(index: Int) = new AstArrVisitor[Vector](x => Json.arr(x:_*))
 
   def visitObject(index: Int) = new AstObjVisitor(vs => Json.obj(vs:_*))
 
