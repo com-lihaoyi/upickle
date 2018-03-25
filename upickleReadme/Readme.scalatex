@@ -490,12 +490,46 @@
       @p
         As mentioned earlier, conversions are fast and direct, and happen
         without creating intermediate JSON structures in the process. The
-        following sections demonstrate how to use these conversions.
+        following examples demonstrate how to use the conversions for
+        @lnk("Argonaut", "http://argonaut.io/doc/"),
+        @lnk("Circe", "https://github.com/circe/circe"),
+        @lnk("Json4s", "https://github.com/json4s/json4s"), and
+        @lnk("Play Json", "https://github.com/playframework/play-json").
+      @p
+        Each example parses JSON from a string into that particular library's
+        JSON AST, manipulates the AST using that library, un-pickles it into
+        Scala data types, then serializes those data types first into that
+        library's AST then back to a st.ring
 
       @sect{Argonaut}
+        @b{Maven Coordinates}
+
+        @hl.scala
+          libraryDependencies += "com.lihaoyi" %% "ujson-argonaut" % "0.6.0"
+
+        @b{Usage}
         @hl.ref(exampleTests, Seq("'argonaut", ""), "}")
+
       @sect{Circe}
+        @b{Maven Coordinates}
+        @hl.scala
+          libraryDependencies += "com.lihaoyi" %% "ujson-circe" % "0.6.0"
+        @b{Usage}
         @hl.ref(exampleTests, Seq("'circe", ""), "}")
+
+      @sect{Play-Json}
+        @b{Maven Coordinates}
+        @hl.scala
+          libraryDependencies += "com.lihaoyi" %% "ujson-play" % "0.6.0"
+        @b{Usage}
+        @hl.ref(exampleTests, Seq("'play", ""), "}")
+
+      @sect{Json4s}
+        @b{Maven Coordinates}
+        @hl.scala
+          libraryDependencies += "com.lihaoyi" %% "ujson-json4s" % "0.6.0"
+        @b{Usage}
+        @hl.ref(exampleTests, Seq("'json4s", ""), "}")
 
   @sect{Version History}
     @sect{0.5.1}

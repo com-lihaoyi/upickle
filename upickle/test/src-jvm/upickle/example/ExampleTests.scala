@@ -3,11 +3,14 @@ package upickle.example
 import java.io.StringWriter
 
 import acyclic.file
+import play.api.libs.json.JsArray
+import ujson.circe.CirceJson
+import ujson.json4s.Json4sJson
 import upickle.{TestUtil, default}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
 import ujson.{IncompleteParseException, NoOpVisitor, ParseException, Transformable}
-import ujson.{Js, BytesRenderer, StringRenderer}
+import ujson.{BytesRenderer, Js, StringRenderer}
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{
@@ -427,15 +430,15 @@ object ExampleTests extends TestSuite {
         }
         'circe{
           import ujson.circe.CirceJson
-          val argJson: io.circe.Json = ujson.transform(
+          val circeJson: io.circe.Json = ujson.transform(
             """["hello", "world"]""",
             CirceJson
           )
 
-          val updatedArgJson = argJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
+          val updatedCirceJson = circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
 
           val items: Seq[String] = CirceJson.transform(
-            updatedArgJson,
+            updatedCirceJson,
             upickle.default.reader[Seq[String]]
           )
 
@@ -448,10 +451,55 @@ object ExampleTests extends TestSuite {
           stringified ==> """["HELLO","WORLD"]"""
         }
         'json4s{
+          import org.json4s.JsonAST
+          val json4sJson: JsonAST.JValue = ujson.transform(
+            """["hello", "world"]""",
+            Json4sJson
+          )
 
+          val updatedJson4sJson = JsonAST.JArray(
+            for(v <- json4sJson.children)
+            yield JsonAST.JString(v.values.toString.toUpperCase())
+          )
+
+          val items: Seq[String] = Json4sJson.transform(
+            updatedJson4sJson,
+            upickle.default.reader[Seq[String]]
+          )
+
+          items ==> Seq("HELLO", "WORLD")
+
+          val rewritten = upickle.default.transform(items).to(Json4sJson)
+
+          val stringified = Json4sJson.transform(rewritten, StringRenderer()).toString
+
+          stringified ==> """["HELLO","WORLD"]"""
         }
         'playJson{
+          import ujson.play.PlayJson
+          import play.api.libs.json._
+          val playJson: play.api.libs.json.JsValue = ujson.transform(
+            """["hello", "world"]""",
+            PlayJson
+          )
 
+          val updatedPlayJson = JsArray(
+            for(v <- playJson.as[JsArray].value)
+            yield JsString(v.as[String].toUpperCase())
+          )
+
+          val items: Seq[String] = PlayJson.transform(
+            updatedPlayJson,
+            upickle.default.reader[Seq[String]]
+          )
+
+          items ==> Seq("HELLO", "WORLD")
+
+          val rewritten = upickle.default.transform(items).to(PlayJson)
+
+          val stringified = PlayJson.transform(rewritten, StringRenderer()).toString
+
+          stringified ==> """["HELLO","WORLD"]"""
         }
       }
     }
