@@ -435,7 +435,8 @@ object ExampleTests extends TestSuite {
             CirceJson
           )
 
-          val updatedCirceJson = circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
+          val updatedCirceJson =
+            circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
 
           val items: Seq[String] = CirceJson.transform(
             updatedCirceJson,
@@ -500,6 +501,33 @@ object ExampleTests extends TestSuite {
           val stringified = PlayJson.transform(rewritten, StringRenderer()).toString
 
           stringified ==> """["HELLO","WORLD"]"""
+        }
+        'crossAst{
+          import ujson.circe.CirceJson
+          val circeJson: io.circe.Json = ujson.transform(
+            """["hello", "world"]""",
+            CirceJson
+          )
+
+          val updatedCirceJson =
+            circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
+
+          import ujson.play.PlayJson
+          import play.api.libs.json._
+
+          val playJson: play.api.libs.json.JsValue = CirceJson.transform(
+            updatedCirceJson,
+            PlayJson
+          )
+
+          val updatedPlayJson = JsArray(
+            for(v <- playJson.as[JsArray].value)
+            yield JsString(v.as[String].reverse)
+          )
+
+          val stringified = PlayJson.transform(updatedPlayJson, StringRenderer()).toString
+
+          stringified ==> """["OLLEH","DLROW"]"""
         }
       }
     }

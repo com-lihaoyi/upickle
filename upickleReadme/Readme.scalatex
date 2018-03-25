@@ -490,7 +490,7 @@
       @p
         As mentioned earlier, conversions are fast and direct, and happen
         without creating intermediate JSON structures in the process. The
-        following examples demonstrate how to use the conversions for
+        following examples demonstrate how to use the conversion modules for
         @lnk("Argonaut", "http://argonaut.io/doc/"),
         @lnk("Circe", "https://github.com/circe/circe"),
         @lnk("Json4s", "https://github.com/json4s/json4s"), and
@@ -530,6 +530,18 @@
           libraryDependencies += "com.lihaoyi" %% "ujson-json4s" % "0.6.0"
         @b{Usage}
         @hl.ref(exampleTests, Seq("'json4s", ""), "}")
+
+      @sect{Cross-Library Conversions}
+        @p
+          uJson lets you convert between third-party ASTs efficiently and with
+          minimal overhead: uJson converts one AST to the other directly
+          and without any temporary compatibility data structures. The following
+          example demonstrates how this is done: we parse a JSON string using
+          Circe, perform some transformation, convert it to a Play-Json AST,
+          perform more transformations, and finally serialize it back to a
+          String and check that both transformations were applied:
+
+        @hl.ref(exampleTests, Seq("'crossAst", ""), "}")
 
   @sect{Version History}
     @sect{0.5.1}
