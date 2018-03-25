@@ -2,12 +2,10 @@
 
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
-@val exampleTests = wd/'upickle/'shared/'src/'test/'scala/'example/"ExampleTests.scala"
-@val macroTests = wd/'upickle/'shared/'src/'test/'scala/'upickle/"MacroTests.scala"
+@val exampleTests = wd/'upickle/'test/"src-jvm"/'upickle/'example/"ExampleTests.scala"
+@val macroTests = wd/'upickle/'test/'src/'upickle/"MacroTests.scala"
 
-@val optionsAsNullTests = wd/'upickle/'shared/'src/'test/'scala/'example/"OptionsAsNullTests.scala"
-
-@val autoPickleTests = wd/'upickle/'shared/'src/'test/'scala/'upickle/"AutoPickleTests.scala"
+@val optionsAsNullTests =  wd/'upickle/'test/"src-jvm"/'upickle/'example/"OptionsAsNullTests.scala"
 
 
 @a(
@@ -23,36 +21,43 @@
   )
 )
 
-
-@sect("µPickle "+ _root_.upickle.Constants.version)
+@sect("µPickle 0.6.0")
 
   @p
-    uPickle (pronounced micro-pickle) is a lightweight serialization library for Scala. It's key features are:
+    uPickle (pronounced micro-pickle) is a lightweight serialization library
+    for Scala. It's key features are:
   @ul
     @li
       Less than 1000 lines of code
     @li
       Zero-reflection 100% static serialization and deserialization
     @li
-      @sect.ref("Getting Started", "Human-readable JSON encoding"), with a fast @sect.ref{JSON API}
+      @sect.ref("Getting Started", "Human-readable JSON encoding"), with a
+      fast @sect.ref("uJson", "JSON API")
     @li
       @sect.ref("Supported Types", "A large, well-defined set of supported types, with well-defined semantics")
     @li
-      Handling of @sect.ref("Defaults", "default values") and @sect.ref("Custom Keys", "custom keys"), for maintaining backwards compatiblity while schemas change
+      Handling of @sect.ref("Defaults", "default values") and
+      @sect.ref("Custom Keys", "custom keys"), for maintaining backwards
+      compatiblity while schemas change
     @li
-      Minimal dependencies: Only depends on @lnk("Jawn", "https://github.com/non/jawn") on the JVM, and on the Javascript standard library in Scala.js
+      Minimal dependencies: Only depends on @lnk("Jawn",
+      "https://github.com/non/jawn") on the JVM, and on the Javascript
+      standard library in Scala.js
     @li
-      Works in @sect.ref("ScalaJS"), allowing transfer of structured data between the JVM and Javascript
+      Works in @sect.ref("ScalaJS"), allowing transfer of structured data
+      between the JVM and Javascript
 
   @sect{Getting Started}
     @p
       Add the following to your SBT config:
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %% "upickle" % "@_root_.upickle.Constants.version"
+      libraryDependencies += "com.lihaoyi" %% "upickle" % "0.6.0"
 
 
     @p
-      And then you can immediately start writing and reading common Scala objects to strings:
+      And then you can immediately start writing and reading common Scala
+      objects to strings:
 
     @hl.ref(exampleTests, Seq("'simple", ""))
 
@@ -60,235 +65,313 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        libraryDependencies += "com.lihaoyi" %%% "upickle" % "@_root_.upickle.Constants.version"
+        libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.6.0"
       @p
-
-        Other than that, everything is used the same way. upickle-0.5.0 is only compatible with ScalaJS 0.6.x.
+        Other than that, everything is used the same way. upickle-0.6.0
+        is only compatible with ScalaJS 0.6.x.
 
     @sect{Scala 2.10}
       @p
 
         uPickle 0.5.x does not support Scala 2.10; only 2.11 and 2.12 are supported
 
-  @sect{Supported Types}
-    @p
-      Out of the box, uPickle supports writing and reading the following types:
-    @ul
-      @li
-        @hl.scala{Boolean}, @code{Byte}, @code{Char}, @code{Short}, @code{Int}, @code{Long}, @code{Float}, @code{Double}
-      @li
-        @code{Tuple}s from 1 to 22
-      @li
-        Immutable @code{Seq}, @code{List}, @code{Vector}, @code{Set}, @code{SortedSet}, @code{Option}, @code{Array}, @code{Map}s, and all other collections with a reasonable @hl.scala{CanBuildFrom} implementation
-      @li
-        @code{Duration}, @code{Either}
-      @li
-        Stand-alone @hl.scala{case class}es and @hl.scala{case object}s, and their generic equivalents,
-      @li
-        Non-generic @hl.scala{case class}es and @hl.scala{case object}s that are part of a @hl.scala{sealed trait} or @hl.scala{sealed class} hierarchy
-      @li
-        @hl.scala{sealed trait} and @hl.scala{sealed class}es themselves, assuming that all subclasses are picklable
-      @li
-        @code{UUID}s
-      @li
-        @hl.scala{null}
-    @p
-      Readability/writability is recursive: a container such as a @code{Tuple} or @hl.scala{case class} is only readable if all its contents are readable, and only writable if all its contents are writable. That means that you cannot serialize a @hl.scala{List[Any]}, since uPickle doesn't provide a generic way of serializing @code{Any}. Case classes are only serializable up to 22 fields.
+  @sect{Basics}
+    @sect{Builtins}
+      @p
+        This is a non-comprehensive list of what the most commonly-used types
+         pickle to using uPickle. To begin, let's import upickle
 
-    @p
-      Case classes are serialized using the @hl.scala{apply} and @hl.scala{unapply} methods on their companion objects. This means that you can make your own classes serializable by giving them companions @hl.scala{apply} and @hl.scala{unapply}. @hl.scala{sealed} hierarchies are serialized as tagged unions: whatever the serialization of the actual object, together with the fully-qualified name of its class, so the correct class in the sealed hierarchy can be reconstituted later.
+      @hl.scala
+        import upickle.default._
 
-    @p
-      That concludes the list of supported types. Anything else is not supported.
+      @p
+        Booleans are serialized as JSON booleans
 
-  @sect{Default Picklers}
+      @hl.ref(exampleTests, Seq("'more", "'booleans", ""))
 
+      @p
+        Numbers are serialized as JSON numbers
 
-    @p
-      This is a non-comprehensive list of what the most commonly-used types pickle to using uPickle. To begin, let's import upickle
+      @hl.ref(exampleTests, Seq("'more", "'numbers", ""))
 
-    @hl.scala
-      import upickle.default._
+      @p
+        Except for @hl.scala{Long}s, which too large for Javascript. These are
+        serialized as JSON Strings, keeping the interchange format compatible
+         with the browser's own JSON parser, which provides the best
+          performance in Scala.js
 
-    @p
-      Booleans are serialized as JSON booleans
+      @hl.ref(exampleTests, Seq("'more", "'longs", ""))
 
-    @hl.ref(exampleTests, Seq("'more", "'booleans", ""))
+      @p
+        Special values of @hl.scala{Double}s and @hl.scala{Float}s are also
+        serialized as Strings
 
-    @p
-      Numbers are serialized as JSON numbers
+      @hl.ref(exampleTests, Seq("'more", "'specialNumbers", ""))
 
-    @hl.ref(exampleTests, Seq("'more", "'numbers", ""))
 
-    @p
-      Except for @hl.scala{Long}s, which too large for Javascript. These are serialized as JSON Strings, keeping the interchange format compatible with the browser's own JSON parser, which provides the best performance in Scala.js
 
-    @hl.ref(exampleTests, Seq("'more", "'longs", ""))
+      @p
+        Both @hl.scala{Char}s and @hl.scala{String}s are serialized as Strings
 
-    @p
-      Special values of @hl.scala{Double}s and @hl.scala{Float}s are also serialized as Strings
+      @hl.ref(exampleTests, Seq("'more", "'charStrings", ""))
 
-    @hl.ref(exampleTests, Seq("'more", "'specialNumbers", ""))
+      @p
+        @code{Array}s and most immutable collections are serialized as JSON lists
 
+      @hl.ref(exampleTests, Seq("'more", "'seqs", ""))
 
+      @p
+        @code{Option}s are serialized as JSON lists with 0 or 1 element
 
-    @p
-      Both @hl.scala{Char}s and @hl.scala{String}s are serialized as Strings
+      @hl.ref(exampleTests, Seq("'more", "'options", ""))
 
-    @hl.ref(exampleTests, Seq("'more", "'charStrings", ""))
 
-    @p
-      @code{Array}s and most immutable collections are serialized as JSON lists
+      @p
+        Tuples of all sizes (1-22) are serialized as heterogenous JSON lists
 
-    @hl.ref(exampleTests, Seq("'more", "'seqs", ""))
+      @hl.ref(exampleTests, Seq("'more", "'tuples", ""))
 
-    @p
-      @code{Option}s are serialized as JSON lists with 0 or 1 element
+      @p
+        Case classes of sizes 1-22 are serialized as JSON dictionaries with the
+        keys being the names of each field.
+        To begin with, you need to define a serializer in the Case Class's
+        companion object:
 
-    @hl.ref(exampleTests, Seq("'more", "'options", ""))
+      @hl.scala
+        import upickle.default.{ReadWriter => RW, macroRW}
 
+      @p
+        After that, you can begin serializing that case class.
 
-    @p
-      Tuples of all sizes (1-22) are serialized as heterogenous JSON lists
+      @hl.ref(exampleTests, Seq("object Simple", ""))
+      @hl.ref(exampleTests, Seq("'more", "'caseClass", ""), "  }")
 
-    @hl.ref(exampleTests, Seq("'more", "'tuples", ""))
+      @p
+        Sealed hierarchies are serialized as tagged values, the serialized
+        object tagged with the full name of the instance's class:
 
-    @p
-      Case classes of sizes 1-22 are serialized as JSON dictionaries with the keys being the names of each field.
-      To begin with, you need to define a serializer in the Case Class's companion object:
+      @hl.ref(exampleTests, Seq("object Sealed", ""))
+      @hl.ref(exampleTests, Seq("'more", "'sealed", ""), "  }")
 
-    @hl.scala
-      import upickle.default.{ReadWriter => RW, macroRW}
+      @p
+        Serializability is recursive; you can serialize a type only if all
+        its members are serializable. That means that collections, tuples and
+        case-classes made only of serializable members are themselves serializable
 
-    @p
-      After that, you can begin serializing that case class.
+      @hl.ref(exampleTests, Seq("object Recursive", ""))
+      @hl.ref(exampleTests, Seq("'more", "'recursive", ""), "  }")
 
-    @hl.ref(exampleTests, Seq("object Simple", ""))
-    @hl.ref(exampleTests, Seq("'more", "'caseClass", ""), "  }")
+      @p
 
-    @p
-      Sealed hierarchies are serialized as tagged values, the serialized object tagged with the full name of the instance's class:
+        Nulls serialize into JSON nulls, as you would expect
 
-    @hl.ref(exampleTests, Seq("object Sealed", ""))
-    @hl.ref(exampleTests, Seq("'more", "'sealed", ""), "  }")
+      @hl.ref(exampleTests, Seq("'more", "'null", ""), "  }")
 
-    @p
-      Serializability is recursive; you can serialize a type only if all its members are serializable. That means that collections, tuples and case-classes made only of serializable members are themselves serializable
+      @p
+        uPickle only throws exceptions on unpickling; if a pickler is
+        properly defined, serializing a data structure to a @hl.scala{String}
+        should never throw an exception.
 
-    @hl.ref(exampleTests, Seq("object Recursive", ""))
-    @hl.ref(exampleTests, Seq("'more", "'recursive", ""), "  }")
+    @sect{Reading & Writing Other Things}
 
-    @p
+      @p
+        Apart from reading & writing `java.lang.String`s, allows you to easily
+        read from alternate sources such as `CharSequence`s, `Array[Byte]`s,
+        `java.io.File`s and `java.nio.file.Path`s:
+
+      @hl.ref(exampleTests, Seq("'sources", ""), "  }")
+
+      @p
+        Reading from large files is automatically streamed so you do not read the
+        entire file into memory
+    @sect{Defaults}
+
+      @p
+        If a field is missing upon deserialization, uPickle uses the default
+        value if one exists
+
+      @hl.ref(exampleTests, Seq("'defaults", "'reading"), "  }")
+
+      @p
+
+        If a field at serialization time has the same value as the default,
+         uPickle leaves it out of the serialized blob
+
+      @hl.ref(exampleTests, Seq("'defaults", "'writing"), "  }")
+
+      @p
+
+        This allows you to make schema changes gradually, assuming you have
+        already pickled some data and want to add new fields to the case classes
+        you pickled. Simply give the new fields a default value (e.g.
+        @hl.scala{""} for Strings, or wrap it in an @hl.scala{Option[T]} and
+        make the default @hl.scala{None}) and uPickle will happily read the
+        old data, filling in the missing field using the default value.
+    @sect{Supported Types}
+      @p
+        Out of the box, uPickle supports writing and reading the following types:
+      @ul
+        @li
+          @hl.scala{Boolean}, @code{Byte}, @code{Char}, @code{Short},
+          @code{Int}, @code{Long}, @code{Float}, @code{Double}
+        @li
+          @code{Tuple}s from 1 to 22
+        @li
+          Immutable @code{Seq}, @code{List}, @code{Vector}, @code{Set},
+          @code{SortedSet}, @code{Option}, @code{Array}, @code{Map}s, and all
+          other collections with a reasonable @hl.scala{CanBuildFrom} implementation
+        @li
+          @code{Duration}, @code{Either}
+        @li
+          Stand-alone @hl.scala{case class}es and @hl.scala{case object}s, and
+           their generic equivalents,
+        @li
+          Non-generic @hl.scala{case class}es and @hl.scala{case object}s that
+          are part of a @hl.scala{sealed trait} or @hl.scala{sealed class} hierarchy
+        @li
+          @hl.scala{sealed trait} and @hl.scala{sealed class}es themselves,
+           assuming that all subclasses are picklable
+        @li
+          @code{UUID}s
+        @li
+          @hl.scala{null}
+      @p
+        Readability/writability is recursive: a container such as a @code{Tuple}
+        or @hl.scala{case class} is only readable if all its contents are
+         readable, and only writable if all its contents are writable. That means
+          that you cannot serialize a @hl.scala{List[Any]}, since uPickle doesn't
+           provide a generic way of serializing @code{Any}. Case classes are only
+           serializable up to 22 fields.
+
+      @p
+        Case classes are serialized using the @hl.scala{apply} and
+        @hl.scala{unapply} methods on their companion objects. This means that
+        you can make your own classes serializable by giving them companions
+         @hl.scala{apply} and @hl.scala{unapply}. @hl.scala{sealed} hierarchies
+         are serialized as tagged unions: whatever the serialization of the
+         actual object, together with the fully-qualified name of its class, so
+          the correct class in the sealed hierarchy can be reconstituted later.
+
+      @p
+        That concludes the list of supported types. Anything else is not supported.
+
+
+  @sect{Customization}
+    @sect{Mapped Picklers}
+      @hl.ref(exampleTests, Seq("'mapped", ""), "}")
+      @p
+        You can use the @code{readwriter[T].bimap[V]} function to create a pickler
+        that reads/writes a type @code{V}, using the pickler for type @code{T},
+        by providing a conversion function between them.
+
+    @sect{Custom Keys}
+      @p
+
+        uPickle allows you to specify the key that a field is serialized with
+        via a @hl.scala{@@key} annotation
+
+
+      @hl.ref(exampleTests, Seq("object Keyed", ""))
+      @hl.ref(exampleTests, Seq("'keyed", "'attrs", ""))
+
+      @p
+
+        Practically, this is useful if you want to rename the field within your
+        Scala code while still maintaining backwards compatibility with
+        previously-pickled objects. Simple rename the field and add a
+        @hl.scala{@@key("...")} with the old name so uPickle can continue to work
+        with the old objects correctly.
+      @p
+        You can also use @hl.scala{@@key} to change the name used when pickling
+        the case class itself. Normally case classes are pickled without their
+        name, but an exception is made for members of sealed hierarchies which
+        are tagged with their fully-qualified name. uPickle allows you to use
+        @hl.scala{@@key} to override what the class is tagged with:
+
+      @hl.ref(exampleTests, Seq("object KeyedTag", ""))
+      @hl.ref(exampleTests, Seq("'keyed", "'tag", ""))
+
+
+
+      @p
+        This is useful in cases where:
+      @ul
+        @li
+          you wish to rename the class within your Scala code, or move it to a
+          different package, but want to preserve backwards compatibility with
+          previously pickled instances of that class
+        @li
+          you try to tackle the resource issue (bandwidth, storage, CPU) because
+          FQNs might get quite long
+
+    @sect{Custom Picklers}
+
+
+      @p
+        Apart from customizing the keys used to store the fields of a class,
+        uPickle also allows you to completely replace the default
+        @code{Reader}/@code{Writer} used to write that class. For classes you
+        control. You need to provide an implicit @code{Reader}/@code{Writer}
+        pair in the companion object:
+
+      @hl.ref(exampleTests, Seq("object Custom2", ""))
+
+      @p
+        In this example, instead of pickling to a normal @code{Js.Obj}, we
+        pickle to a @code{Js.Str}, storing both @code{i} and @code{s} as part
+        of that single string.
+
+      @p
+        Note that when writing custom picklers, it is entirely up to you to get
+        it right, e.g. making sure that an object that gets round-trip
+        pickled/unpickled comes out the same as when it started.
+
+    @sect{Custom Configuration}
+      @p
+        Often, there will be times that you want to customize something on a
+        project-wide level. uPickle provides hooks in letting you subclass the
+        @hl.scala{upickle.Api} trait to create your own bundles apart from the
+        in-built @hl.scala{upickle.default} and @hl.scala{upickle.legacy}. You
+        have multiple levels of possible customization:
+
+      @ul
+        @li
+          @hl.scala{upickle.Api}, which lets you customize the @hl.scala{annotate}
+          methods, which are used to tag sealed hierarchies with their class
+          names. This is used to e.g. distinguish @hl.scala{upickle.default}'s
+          @hl.scala{$type} attribute vs @hl.scala{upickle.legacy}'s array-wrapper
+        @li
+          @hl.scala{upickle.AttributeTagged}, which assumes you want the standard
+          @hl.scala{annotate} method using a type attribute, but letting you
+          customize the attribute.
+        @li
+          In both these cases, you are also free to override the
+          @hl.scala{CaseR} and @hl.scala{CaseW} implicits, which controls how case
+          classes are serialized. For example, you could make it serialize to a
+          JSON array rather than a dictionary. Or, for example, convert the
+          @code{camelCase} Scala identifiers to @code{snake_case} or some other
+          convention:
+
+        @hl.ref(exampleTests, Seq("'snakeCase", ""))
+
+      @p
+        If you are using uPickle to convert JSON from another source into Scala
+        data structures, you may find the following encoding of
+        @hl.scala{Option[T]} more convenient than the defaults:
+
+      @hl.ref(optionsAsNullTests, "object OptionPickler", "// end_ex")
+
+      @p
+        This custom configuration allows you to treat @hl.scala{null}s as
+        @hl.scala{None}s and anything else as @hl.scala{Some(...)}s. Simply
+        @hl.scala{import OptionPickler._} instead of the normal uPickle import
+        throughout your project and you'll have the customized reading/writing
+        available to you.
 
-      Nulls serialize into JSON nulls, as you would expect
-
-    @hl.ref(exampleTests, Seq("'more", "'null", ""), "  }")
-
-    @p
-
-      uPickle only throws exceptions on unpickling; if a pickler is properly defined, serializing a data structure to a @hl.scala{String} should never throw an exception.
-    @p
-      On unpickling, uPickle throws one of two subclasses of @code{upickle.Invalid}:
-    @ul
-      @li
-        @code{upickle.Invalid.Json}: thrown when unpickling fails at the first step which attempst to convert the incoming @code{String} into semi-structured JSON data. The exception contains data about where parsing failed (@code{input}, @code{line}, @code{col}) as well as a human-readable error message.
-      @li
-        @code{upickle.Invalid.Data}: thrown when unpickling fails at the second step which attempts to convert the parsed JSON tree into structured data of the desired type. Contains the offending JSON subtree in @code{data}, along with a human-readable error message.
-
-  @sect{Manual Sealed Trait Picklers}
-    @p
-      Due to a bug in the Scala compiler SI-7046, automatic sealed trait
-      pickling can fail unpredictably. This can be worked around by instead
-      using the @code{macroRW} and @code{merge} methods to manually specify
-      which sub-types of a sealed trait to consider when pickling:
-
-    @hl.ref(macroTests, "sealed trait TypedFoo", "// End TypedFoo")
-
-  @sect{Defaults}
-
-    @p
-      If a field is missing upon deserialization, uPickle uses the default value if one exists
-
-    @hl.ref(exampleTests, Seq("'defaults", "'reading"), "  }")
-
-    @p
-
-      If a field at serialization time has the same value as the default, uPickle leaves it out of the serialized blob
-
-    @hl.ref(exampleTests, Seq("'defaults", "'writing"), "  }")
-
-    @p
-
-      This allows you to make schema changes gradually, assuming you have already pickled some data and want to add new fields to the case classes you pickled. Simply give the new fields a default value (e.g. @hl.scala{""} for Strings, or wrap it in an @hl.scala{Option[T]} and make the default @hl.scala{None}) and uPickle will happily read the old data, filling in the missing field using the default value.
-
-  @sect{Custom Keys}
-    @p
-
-      uPickle allows you to specify the key that a field is serialized with via a @hl.scala{@@key} annotation
-
-
-    @hl.ref(exampleTests, Seq("object Keyed", ""))
-    @hl.ref(exampleTests, Seq("'keyed", "'attrs", ""))
-
-    @p
-
-      Practically, this is useful if you want to rename the field within your Scala code while still maintaining backwards compatibility with previously-pickled objects. Simple rename the field and add a @hl.scala{@@key("...")} with the old name so uPickle can continue to work with the old objects correctly.
-    @p
-      You can also use @hl.scala{@@key} to change the name used when pickling the case class itself. Normally case classes are pickled without their name, but an exception is made for members of sealed hierarchies which are tagged with their fully-qualified name. uPickle allows you to use @hl.scala{@@key} to override what the class is tagged with:
-
-    @hl.ref(exampleTests, Seq("object KeyedTag", ""))
-    @hl.ref(exampleTests, Seq("'keyed", "'tag", ""))
-
-
-
-    @p
-      This is useful in cases where:
-    @ul
-      @li
-        you wish to rename the class within your Scala code, or move it to a different package, but want to preserve backwards compatibility with previously pickled instances of that class
-      @li
-        you try to tackle the resource issue (bandwidth, storage, CPU) because FQNs might get quite long
-
-  @sect{Custom Picklers}
-
-
-    @p
-      Apart from customizing the keys used to store the fields of a class, uPickle also allows you to completely replace the default @code{Reader}/@code{Writer} used to write that class. For classes you control. You need to provide an implicit @code{Reader}/@code{Writer} pair in the companion object:
-
-    @hl.ref(exampleTests, Seq("object Custom2", ""))
-
-    @p
-      In this example, instead of pickling to a normal @code{Js.Obj}, we pickle to a @code{Js.Str}, storing both @code{i} and @code{s} as part of that single string.
-
-    @p
-      Note that when writing custom picklers, it is entirely up to you to get it right, e.g. making sure that an object that gets round-trip pickled/unpickled comes out the same as when it started.
-
-  @sect{Custom Configuration}
-    @p
-      Often, there will be times that you want to customize something on a project-wide level. uPickle provides hooks in letting you subclass the @hl.scala{upickle.Api} trait to create your own bundles apart from the in-built @hl.scala{upickle.default} and @hl.scala{upickle.legacy}. You have multiple levels of possible customization:
-
-    @ul
-      @li
-        @hl.scala{upickle.Api}, which lets you customize the @hl.scala{annotate} methods, which are used to tag sealed hierarchies with their class names. This is used to e.g. distinguish @hl.scala{upickle.default}'s @hl.scala{$type} attribute vs @hl.scala{upickle.legacy}'s array-wrapper
-      @li
-        @hl.scala{upickle.AttributeTagged}, which assumes you want the standard @hl.scala{annotate} method using a type attribute, but letting you customize the attribute.
-      @li
-        In both these cases, you are also free to override the @hl.scala{CaseR} and @hl.scala{CaseW} implicits, which controls how case classes are serialized. For example, you could make it serialize to a JSON array rather than a dictionary. Or, for example, convert the @code{camelCase} Scala identifiers to @code{snake_case} or some other convention:
-
-      @hl.ref(exampleTests, Seq("'snakeCase", ""))
-
-    @p
-      If you are using uPickle to convert JSON from another source into Scala data structures, you may find the following encoding of @hl.scala{Option[T]} more convenient than the defaults:
-
-    @hl.ref(optionsAsNullTests, "object OptionPickler", "// end_ex")
-
-    @p
-      This custom configuration allows you to treat @hl.scala{null}s as @hl.scala{None}s and anything else as @hl.scala{Some(...)}s. Simply @hl.scala{import OptionPickler._} instead of the normal uPickle import throughout your project and you'll have the customized reading/writing available to you.
   @sect{Limitations}
 
     @p
-
-      uPickle is a work in progress, and doesn't currently support:
+      uPickle doesn't currently support:
     @ul
       @li
         Circular object graphs
@@ -301,138 +384,111 @@
       @li
         Read/writing case classes with multiple parameter lists.
     @p
-      Most of these limitations are inherent in the fact that ScalaJS does not support reflection, and are unlikely to ever go away. In general, uPickle is designed to serialize statically-typed, tree-shaped, immutable data structures. Anything more complex is out of scope.
+      Most of these limitations are inherent in the fact that ScalaJS does not
+      support reflection, and are unlikely to ever go away. In general, uPickle
+      is designed to serialize statically-typed, tree-shaped, immutable data
+      structures. Anything more complex is out of scope.
 
-  @sect{JSON API}
+    @sect{Manual Sealed Trait Picklers}
+      @p
+        Due to a bug in the Scala compiler SI-7046, automatic sealed trait
+        pickling can fail unpredictably. This can be worked around by instead
+        using the @code{macroRW} and @code{merge} methods to manually specify
+        which sub-types of a sealed trait to consider when pickling:
+    
+      @hl.ref(macroTests, "sealed trait TypedFoo", "// End TypedFoo")
+
+  @sect{uJson}
 
     @p
+      uJson is uPickle's JSON library, which can be used to easily
+      manipulate JSON source and data structures without converting them into
+      Scala case-classes. This all lives in the @code{ujson} package, and can be
+      used to manipulate @code{ujson.Js} ASTs without parsing them into case classes or
+      other Scala data structures:
 
-      Although uPickle's object read/writing API makes does not expose you to it, under the hood it uses a nice JSON serialization format. Despite being less-compact than binary formats, this allows for very-fast serializing and deserializing from Strings on both Scala-JVM (which has other alternatives) and ScalaJS, where JSON is really your only choice. The JSON API is minimal but nonetheless very convenient, and can be used directly.
+    @hl.ref(exampleTests, Seq("'json", "'simple", ""), "}")
+
     @p
-      uPickle bundles two very-fast JSON parsers, which it uses for parsing strings into structured-trees, before then marshalling them into typed objects.
-    @ul
-      @li
-        @lnk("Jawn", "https://github.com/non/jawn") on the JVM
-      @li
-        @lnk("JSON.parse", "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse") on Scala.js
+      @code{ujson.Js} ASTs are mutable, and can be modified before being re-serialized
+      to strings:
+
+    @hl.ref(exampleTests, Seq("'json", "'mutable", ""), "}")
+
     @p
-      That makes uPickle's JSON library competitive with the highest performance JSON libraries both on the JVM (GSON, Jackson, etc.) as well as in Javascript.
+      case classes or other Scala data structures can be converted to
+      @code{ujson.Js} ASTs using @code{upickle.default.writeJs}, and the
+      @code{ujson.Js} ASTs can be converted back using @code{upickle.default.readJs}
+      or plain @code{upickle.default.read}:
+
+    @hl.ref(exampleTests, Seq("'json", "'intermediate", ""), "}")
+
     @p
-      uPickle's JSON API is exposed in two places: in our @hl.scala{upickle.Js.*} AST:
+      If you just need to parse & manipulate some JSON, without converting it
+      into Scala data-types first, uJson and @code{ujson.Js} will probably be
+      able to do what you need.
+
+    @p
+      uJson comes bundled with uPickle, or can be used stand-alone via the
+      following package coordinates:
 
     @hl.scala
-      /**
-      * A very small, very simple JSON AST that uPickle uses as part of its
-      * serialization process. A common standard between the Jawn AST (which
-      * we don't use so we don't pull in the bulk of Spire) and the Javascript
-      * JSON AST.
-      */
-      object Js {
+      libraryDependencies += "com.lihaoyi" %% "ujson" % "0.6.0"
 
-        sealed trait Value extends Any {
-          def value: Any
+    @sect{Transformations}
+      @p
+        uJson allows you seamlessly convert between any of the following forms
+        you may find your JSON in:
 
-          /**
-            * Returns the `String` value of this [[Js.Value]], fails if it is not
-            * a [[Js.Str]]
-            */
-          def str = this match{
-            case Str(value) => value
-            case _ => throw Invalid.Data(this, "Expected Js.Str")
-          }
-          /**
-            * Returns the key/value map of this [[Js.Value]], fails if it is not
-            * a [[Js.Obj]]
-            */
-          def obj = this match{
-            case Obj(value @@_*) => value.toMap
-            case _ => throw Invalid.Data(this, "Expected Js.Obj")
-          }
-          /**
-            * Returns the elements of this [[Js.Value]], fails if it is not
-            * a [[Js.Arr]]
-            */
-          def arr = this match{
-            case Arr(value @@ _*) => value
-            case _ => throw Invalid.Data(this, "Expected Js.Arr")
-          }
-          /**
-            * Returns the `Double` value of this [[Js.Value]], fails if it is not
-            * a [[Js.Num]]
-            */
-          def num = this match{
-            case Num(value) => value
-            case _ => throw Invalid.Data(this, "Expected Js.Num")
-          }
+      @ul
+        @li
+          Case classes & Scala data-types
+        @li
+          @code{ujson.Js} ASTs
+        @li
+          @code{String}s
+        @li
+          @code{CharSequence}s
+        @li
+          @code{Array[Byte]}s
+        @li
+          Third-party JSON ASTs (Argonaut, Circe, Json4s, Play-Json)
+      @p
+        This is done using the @code{ujson.transform(source, dest)} function:
 
-          /**
-            * Looks up the [[Js.Value]] as a [[Js.Arr]] using an index, throws
-            * otherwise if it's not a [[Js.Arr]]
-            */
-          def apply(i: Int): Value = this.arr(i)
-          /**
-            * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
-            * otherwise if it's not a [[Js.Obj]]
-            */
-          def apply(s: java.lang.String): Value = this.obj(s)
+      @hl.ref(exampleTests, Seq("'json", "'misc", ""), "}")
 
-          override def toString = ujson.write(this, indent = 4)
-        }
-        case class Str(value0: java.lang.CharSequence) extends Value{
-          lazy val value: String = value0.toString
-        }
-        case class Obj(value0: (java.lang.CharSequence, Value)*) extends Value{
-          lazy val value: Seq[(String, Value)] = value0.map{case (k, v) => (k.toString, v)}
-        }
-        case class Arr(value: Value*) extends AnyVal with Value
-        case class Num(value: Double) extends AnyVal with Value
-        case object False extends Value{
-          def value = false
-        }
-        case object True extends Value{
-          def value = true
-        }
-        case object Null extends Value{
-          def value = null
-        }
-      }
+      @p
+        All transformations from A to B using @code{ujson.transform} happen
+        in a direct fashion: there are no intermediate JSON ASTs being generated,
+        and performance is generally very good.
 
-    @p
-      As well as in the @hl.scala{ujson.read} and @hl.scala{ujson.write} functions:
+      @p
+        You can use @code{ujson.transform} to validate JSON in a streaming
+        fashion:
 
-    @hl.scala
-      def read(s: String): Js.Value
-      def write(v: Js.Value): String
+      @hl.ref(exampleTests, Seq("'json", "'validate", ""), "}")
 
-    @p
-      Which you use to convert between structured @hl.scala{Js.*} trees and unstructured @hl.scala{String}s. As described earlier, the implementation of these functions differs between ScalaJVM/ScalaJS.
-    @p
-      You can use this JSON data structure for simple tasks:
+      @p
+        The normal @code{upickle.default.read/write} methods to serialize Scala
+        data-types is just shorthand for ujson.transform,
+        using a @code{upickle.default.writable(foo)} as the source or a
+        @code{upickle.default.reader[Foo]} as the destination:
 
-    @hl.ref(wd/'upickle/'shared/'src/'test/'scala/'upickle/"JsonTests.scala", Seq("'shortcuts", "'positive", ""))
-    @hl.ref(wd/'upickle/'shared/'src/'test/'scala/'upickle/"JsonTests.scala", Seq("'correctness", ""))
+      @hl.ref(exampleTests, Seq("'json", "'upickleDefault", ""), "}")
 
-    @p
-      uPickle does not provide any other utilities are JSON that other libraries do (zippers, lenses, combinators, ...). If you're looking for a compact JSON AST to construct or pattern match on, together with fast serializing and deserializing, it may do the trick.
+    @sect{Other ASTs}
+      @p
+        uJson does not provide any other utilities are JSON that other libraries
+        do: zippers, lenses, combinators, etc.. However, uJson can be used to
+        seamlessly convert between the JSON AST of other libraries! This means
+        if some other library provides a more convenient API for some kind of
+        processing you need to do, you can easily parse to that library's AST,
+        do whatever you need, and convert back after.
 
-    @p
-      uPickle's @hl.scala{Js.Value} type and subclasses are all themselves
-      serializable, and they serialize to themselves.
-
-
-  @sect{Why uPickle}
-    @p
-
-      I wrote uPickle because I needed a transparent serialization library that worked both in Scala-JVM and Scala-JS, and my dissatisfaction with existing solutions:
-    @ul
-      @li
-        None of the libraries I could find were pure Scala: @a("spray-json", href:="https://github.com/spray/spray-json") uses @a("parboiled1", href:="https://github.com/sirthias/parboiled/wiki") which is written in Java, @a("play-json", href:="http://www.playframework.com/documentation/2.2.x/ScalaJson") uses @a("Jackson", href:="http://jackson.codehaus.org/"), which uses Java/reflection. @a("scala-pickling", href:="https://github.com/scala/pickling") silently falls back to reflection. This makes them difficult to port to ScalaJS, which supports neither Java nor reflection.
-      @li
-        Those libraries also typically have non-trivial dependency chains. That also makes them hard to port to ScalaJS, since I'd need to port all of their dependencies too.
-      @li
-        Lastly, many aim for a very ambitious target: untyped serialization of arbitrary object graphs. That forces them to use reflection, and makes their internals and semantics much more complex.
-    @p
-      uPickle on the other hand aims much lower: by limiting the scope of the problem to statically-typed, tree-like, immutable data structures, it greatly simplifies both the internal implementation and the external API and behavior of the library. uPickle serializes objects using a very simple set of rules ("Does it have an implicit? Is it a class with @hl.scala{apply}/@hl.scala{unapply} on the companion?") that makes its behavior predictable and simple to understand.
+      @p
+        As mentioned earlier, conversions are fast and direct, and happen
+        without creating intermediate JSON structures in the process.
 
   @sect{Version History}
     @sect{0.5.1}

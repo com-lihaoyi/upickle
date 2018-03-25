@@ -237,6 +237,37 @@ object ExampleTests extends TestSuite {
       read[Thing](f.toFile) ==> Thing(1, "gg")
       read[Thing](Files.newByteChannel(f)) ==> Thing(1, "gg")
     }
+    'json{
+      'simple{
+        val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
+        val json = ujson.read(str)
+        json(0)("myFieldA").num   ==> 1
+        json(0)("myFieldB").str   ==> "g"
+        json(1)("myFieldA").num   ==> 2
+        json(1)("myFieldB").str   ==> "k"
+
+        ujson.write(json)         ==> str
+      }
+      'mutable{
+        val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
+        val json: ujson.Js = ujson.read(str)
+
+        json.arr.remove(1)
+        json(0).obj("myFieldA") = Js.Num(1337)
+
+        ujson.write(json) ==> """[{"myFieldA":1337,"myFieldB":"g"}]"""
+      }
+      'intermediate{
+        val data = Seq(Thing(1, "g"), Thing(2, "k"))
+        val json = upickle.default.writeJs(data)
+
+        json.arr.remove(1)
+        json(0).obj("myFieldA") = Js.Num(1337)
+
+        upickle.default.read[Seq[Thing]](json)   ==> Seq(Thing(1337, "g"))
+        upickle.default.readJs[Seq[Thing]](json) ==> Seq(Thing(1337, "g"))
+      }
+    }
     'transforms{
       'json{
         import upickle.default._
@@ -271,14 +302,7 @@ object ExampleTests extends TestSuite {
           )
 
       }
-      'misc{
-        // ujson.transform is long-hand for upickle.default.{read,write,transform}
-        ujson.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
-          Seq(1, 2, 3)
-
-        ujson.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
-          "[1,2,3]"
-
+      'misc {
         // It can be used for parsing JSON into an AST
         val exampleAst = Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
 
@@ -304,15 +328,23 @@ object ExampleTests extends TestSuite {
         // `transform` takes any `Transformable`, including byte arrays and files
         ujson.transform("[1, 2, 3]".getBytes, StringRenderer()).toString ==> "[1,2,3]"
 
-        // `transform` can also be used for validating JSON without constructing anything
+      }
+      'validate {
         ujson.transform("[1, 2, 3]", NoOpVisitor)
 
-        intercept[IncompleteParseException]{
+        intercept[IncompleteParseException](
           ujson.transform("[1, 2, 3", NoOpVisitor)
-        }
-        intercept[ParseException]{
+        )
+        intercept[ParseException](
           ujson.transform("[1, 2, 3]]", NoOpVisitor)
-        }
+        )
+      }
+      'upickleDefault{
+        ujson.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
+          Seq(1, 2, 3)
+
+        ujson.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
+          "[1,2,3]"
       }
     }
     'mapped{
@@ -342,21 +374,32 @@ object ExampleTests extends TestSuite {
             s(0).toLower + res.drop(1)
           }
 
+          override def objectAttributeKeyReadMap(s: CharSequence) =
+            snakeToCamel(s.toString)
+          override def objectAttributeKeyWriteMap(s: CharSequence) =
+            camelToSnake(s.toString)
 
-          override def objectAttributeKeyReadMap(s: CharSequence) = snakeToCamel(s.toString)
-          override def objectAttributeKeyWriteMap(s: CharSequence) = camelToSnake(s.toString)
-
-          override def objectTypeKeyReadMap(s: CharSequence) = snakeToCamel(s.toString)
-          override def objectTypeKeyWriteMap(s: CharSequence) = camelToSnake(s.toString)
+          override def objectTypeKeyReadMap(s: CharSequence) =
+            snakeToCamel(s.toString)
+          override def objectTypeKeyWriteMap(s: CharSequence) =
+            camelToSnake(s.toString)
         }
+
         // Default read-writing
-        upickle.default.write(Thing(1, "gg")) ==> """{"myFieldA":1,"myFieldB":"gg"}"""
-        upickle.default.read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> Thing(1, "gg")
+        upickle.default.write(Thing(1, "gg")) ==>
+          """{"myFieldA":1,"myFieldB":"gg"}"""
+
+        upickle.default.read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==>
+          Thing(1, "gg")
 
         implicit def thingRW: SnakePickle.ReadWriter[Thing] = SnakePickle.macroRW
+
         // snake_case_keys read-writing
-        SnakePickle.write(Thing(1, "gg")) ==> """{"my_field_a":1,"my_field_b":"gg"}"""
-        SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") ==> Thing(1, "gg")
+        SnakePickle.write(Thing(1, "gg")) ==>
+          """{"my_field_a":1,"my_field_b":"gg"}"""
+
+        SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") ==>
+          Thing(1, "gg")
       }
     }
   }

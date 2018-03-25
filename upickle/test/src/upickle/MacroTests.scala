@@ -37,18 +37,18 @@ import upickle.default.{read, write}
 //}
 //
 //// this can be un-sealed as long as `derivedSubclasses` is defined in the companion
-//sealed trait TypedFoo
-//object TypedFoo{
-//  import upickle.default._
-//  implicit val readWriter: ReadWriter[TypedFoo] = ReadWriter.merge(
-//    macroRW[Bar], macroRW[Baz], macroRW[Quz]
-//  )
-//
-//  case class Bar(i: Int) extends TypedFoo
-//  case class Baz(s: String) extends TypedFoo
-//  case class Quz(b: Boolean) extends TypedFoo
-//}
-//// End TypedFoo
+sealed trait TypedFoo
+object TypedFoo{
+  import upickle.default._
+  implicit val readWriter: ReadWriter[TypedFoo] = ReadWriter.merge(
+    macroRW[Bar], macroRW[Baz], macroRW[Quz]
+  )
+
+  case class Bar(i: Int) extends TypedFoo
+  case class Baz(s: String) extends TypedFoo
+  case class Quz(b: Boolean) extends TypedFoo
+}
+// End TypedFoo
 
 object MacroTests extends TestSuite {
 
