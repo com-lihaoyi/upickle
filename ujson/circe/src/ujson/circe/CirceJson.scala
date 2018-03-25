@@ -26,7 +26,10 @@ object CirceJson extends ujson.AstTransformer[Json]{
   def visitTrue(index: Int) = Json.True
 
   def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-    Json.fromJsonNumber(JsonNumber.fromString(s.toString).get)
+    Json.fromJsonNumber(
+      if (decIndex == -1 && expIndex == -1) JsonNumber.fromIntegralStringUnsafe(s.toString)
+      else JsonNumber.fromDecimalStringUnsafe(s.toString)
+    )
   }
 
   def visitString(s: CharSequence, index: Int) = Json.fromString(s.toString)

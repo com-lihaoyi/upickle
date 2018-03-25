@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 
 import upickle.internal.IndexedJs
 import ujson._
+import ujson.util.Util
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
@@ -41,40 +42,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def expectedMsg = "expected number"
     override def visitNumRaw(d: Double, index: Int) = f1(d)
     override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-
-      val expMul =
-        if (expIndex == -1) 1
-        else{
-          var mult = 1
-          val e = ujson.util.Util.parseLong(s, expIndex + 1, s.length())
-          var i = 0
-          while(i < e){
-            if (mult >= Long.MaxValue / 10) throw new AbortJsonProcessingException("expected integer")
-            mult = mult * 10
-            i += 1
-          }
-          mult
-        }
-
-      val intPortion = {
-        val end = if(decIndex != -1) decIndex else s.length
-        ujson.util.Util.parseLong(s, 0, end) * expMul
-      }
-
-      val decPortion =
-        if (decIndex == -1) 0
-        else{
-          val end = if(expIndex != -1) expIndex else s.length
-          var value = ujson.util.Util.parseLong(s, decIndex + 1, end) * expMul
-          var i = end - (decIndex + 1)
-          while(i > 0) {
-            value = value / 10
-            i -= 1
-          }
-          if (s.charAt(0) == '-') -value else value
-        }
-
-      f2(intPortion + decPortion)
+      f2(Util.parseIntegralNum(s, decIndex, expIndex, index))
     }
   }
   implicit val DoubleReader: Reader[Double] = new FloatingNumReader(identity, _.toDouble)

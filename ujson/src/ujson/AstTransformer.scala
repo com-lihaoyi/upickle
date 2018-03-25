@@ -1,8 +1,6 @@
 package ujson
 
 import scala.collection.generic.CanBuildFrom
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 trait AstTransformer[I] extends Transformer[I] with ujson.Visitor[I, I]{
   def transformArray[T](f: Visitor[_, T], items: TraversableOnce[I]) = {
@@ -12,9 +10,9 @@ trait AstTransformer[I] extends Transformer[I] with ujson.Visitor[I, I]{
   }
   def transformObject[T](f: Visitor[_, T], items: TraversableOnce[(String, I)]) = {
     val ctx = f.visitObject(-1).narrow
-    for((k, item) <- items) {
-      ctx.visitKey(k, -1)
-      ctx.visitValue(transform(item, ctx.subVisitor), -1)
+    for(kv <- items) {
+      ctx.visitKey(kv._1, -1)
+      ctx.visitValue(transform(kv._2, ctx.subVisitor), -1)
     }
     ctx.visitEnd(-1)
   }

@@ -18,10 +18,11 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(5000, 25000)){
+    for(duration <- Seq(500, 5000, 25000)){
       println("RUN JVM: " + duration)
       println()
-      Main.jacksonModuleScala(duration)
+
+      Main.ujsonAst(duration)
       Main.playJsonAst(duration)
       Main.uJsonPlayJsonAst(duration)
       Main.circeJsonAst(duration)
@@ -30,6 +31,8 @@ object Main{
       Main.uJsonArgonautJsonAst(duration)
       Main.json4sJsonAst(duration)
       Main.uJsonJson4sJsonAst(duration)
+
+      Main.jacksonModuleScala(duration)
       Common.playJson(duration)
       Common.circe(duration)
       Common.upickleDefault(duration)
@@ -40,6 +43,12 @@ object Main{
       Common.upickleLegacyCached(duration)
       println()
     }
+  }
+  def ujsonAst(duration: Int) = {
+    Common.bench0[ujson.Js](duration, Common.benchmarkSampleJson)(
+      ujson.read(_),
+      _.render()
+    )
   }
   def playJsonAst(duration: Int) = {
     Common.bench0[play.api.libs.json.JsValue](duration, Common.benchmarkSampleJson)(

@@ -1,6 +1,8 @@
 package ujson
 
 
+import ujson.util.Util
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -121,9 +123,12 @@ object Js extends AstTransformer[Js]{
 
   def visitTrue(index: Int) = Js.True
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-    Js.Num(s.toString.toDouble)
+
+  override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    if (decIndex == -1 && expIndex == -1) Util.parseIntegralNum(s, decIndex, expIndex, index)
+    else s.toString.toDouble
   }
+
   override def visitNumRaw(d: Double, index: Int) = Js.Num(d)
 
   def visitString(s: CharSequence, index: Int) = Js.Str(s.toString)
