@@ -5,12 +5,13 @@ import upickle.Common.{Data, bench}
 import upickle.Defaults.ADTc
 import upickle.Hierarchy.{A, B, C}
 import upickle.Recursive.{End, LL, Node}
-
+import scala.scalajs.js
 object Main{
   def main(args: Array[String]): Unit = {
     for(duration <- Seq(500, 5000, 25000)){
       println("RUN JS: " + duration)
       println()
+      rawJsonParseSerialize(duration)
       Common.playJson(duration)
       Common.circe(duration)
       Common.upickleDefault(duration)
@@ -27,6 +28,13 @@ object Main{
     }
   }
 
+  def rawJsonParseSerialize(duration: Int) = {
+
+    Common.bench0[js.Any](duration, Common.benchmarkSampleJson)(
+      js.JSON.parse(_),
+      js.JSON.stringify(_)
+    )
+  }
   def upickleWebDefault(duration: Int) = {
     import upickle.default.{ReadWriter => RW}
     implicit def rw1: RW[Data] = upickle.default.macroRW
