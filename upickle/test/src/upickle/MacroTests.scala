@@ -4,38 +4,37 @@ import utest._
 import upickle.TestUtil._
 import upickle.default.{read, write}
 
-//object Custom {
-//  trait ThingBase{
-//    val i: Int
-//    val s: String
-//    override def equals(o: Any) = {
-//      o.toString == this.toString
-//    }
-//
-//    override def toString() = {
-//      s"Thing($i, $s)"
-//    }
-//  }
-//
-//  class Thing2(val i: Int, val s: String) extends ThingBase
-//
-//  abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
-//    implicit val thing2Writer = upickle.default.Writer[T]{
-//      case t => Js.Str(t.i + " " + t.s)
-//    }
-//    implicit val thing2Reader = upickle.default.Reader[T]{
-//      case Js.Str(str) =>
-//        val Array(i, s) = str.toString.split(" ")
-//        f(i.toInt, s)
-//    }
-//  }
-//  object Thing2 extends ThingBaseCompanion[Thing2](new Thing2(_, _))
-//
-//  case class Thing3(i: Int, s: String) extends ThingBase
-//
-//  object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
-//}
-//
+object Custom {
+  trait ThingBase{
+    val i: Int
+    val s: String
+    override def equals(o: Any) = {
+      o.toString == this.toString
+    }
+
+    override def toString() = {
+      s"Thing($i, $s)"
+    }
+  }
+
+  class Thing2(val i: Int, val s: String) extends ThingBase
+
+  abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
+    implicit val thing2Writer = upickle.default.readwriter[String].bimap[T](
+      t => t.i + " " + t.s,
+      str => {
+        val Array(i, s) = str.toString.split(" ", 2)
+        f(i.toInt, s)
+      }
+    )
+  }
+  object Thing2 extends ThingBaseCompanion[Thing2](new Thing2(_, _))
+
+  case class Thing3(i: Int, s: String) extends ThingBase
+
+  object Thing3 extends ThingBaseCompanion[Thing3](new Thing3(_, _))
+}
+
 //// this can be un-sealed as long as `derivedSubclasses` is defined in the companion
 sealed trait TypedFoo
 object TypedFoo{
@@ -205,16 +204,16 @@ object MacroTests extends TestSuite {
       }
     }
 
-//    'custom {
-//      'clsReaderWriter {
-//        rw(new Custom.Thing2(1, "s"), """ "1 s" """)
-//        rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
-//      }
-//      'caseClsReaderWriter {
-//        rw(new Custom.Thing3(1, "s"), """ "1 s" """)
-//        rw(new Custom.Thing3(10, "sss"), """ "10 sss" """)
-//      }
-//    }
+    'custom {
+      'clsReaderWriter {
+        rw(new Custom.Thing2(1, "s"), """ "1 s" """)
+        rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
+      }
+      'caseClsReaderWriter {
+        rw(new Custom.Thing3(1, "s"), """ "1 s" """)
+        rw(new Custom.Thing3(10, "sss"), """ "10 sss" """)
+      }
+    }
     'varargs{
       rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")

@@ -173,7 +173,7 @@
         properly defined, serializing a data structure to a @hl.scala{String}
         should never throw an exception.
 
-    @sect{Reading & Writing Other Things}
+    @sect{Read/Writing Other Things}
 
       @p
         Apart from reading & writing `java.lang.String`s, allows you to easily
@@ -184,7 +184,11 @@
 
       @p
         Reading from large files is automatically streamed so you do not read the
-        entire file into memory
+        entire file into memory. You can use @code{writeTo} to serialize your
+        data to an arbitrary @code{java.io.Writer}/@code{java.io.OutputStream}:
+        this can be streamed directly to files or over the network without having
+        to accumulate the serialized JSON in memory.
+
     @sect{Defaults}
 
       @p
