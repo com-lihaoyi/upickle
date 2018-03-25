@@ -22,28 +22,26 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
   }
 
 
-  object Builder extends Builder{
-    def visitArray(index: Int) = new AstArrVisitor(x => JArray(x.toList))
-    def visitObject(index: Int) = new AstObjVisitor(x => JObject(x.toList))
+  def visitArray(index: Int) = new AstArrVisitor(x => JArray(x.toList))
+  def visitObject(index: Int) = new AstObjVisitor(x => JObject(x.toList))
 
-    def visitNull(index: Int) = JNull
+  def visitNull(index: Int) = JNull
 
-    def visitFalse(index: Int) = JBool(false)
+  def visitFalse(index: Int) = JBool(false)
 
-    def visitTrue(index: Int) = JBool(true)
+  def visitTrue(index: Int) = JBool(true)
 
-    override def visitNumRaw(d: Double, index: Int) = JDouble(d)
+  override def visitNumRaw(d: Double, index: Int) = JDouble(d)
 
-    def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      if (decIndex == -1 && expIndex == -1) {
-        if (useBigIntForLong) JInt(BigInt(s.toString))
-        else JLong(ujson.util.Util.parseLong(s, 0, s.length))
-      } else {
-        if (useBigDecimalForDouble) JDecimal(BigDecimal(s.toString))
-        else JDouble(s.toString.toDouble)
-      }
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    if (decIndex == -1 && expIndex == -1) {
+      if (useBigIntForLong) JInt(BigInt(s.toString))
+      else JLong(ujson.util.Util.parseLong(s, 0, s.length))
+    } else {
+      if (useBigDecimalForDouble) JDecimal(BigDecimal(s.toString))
+      else JDouble(s.toString.toDouble)
     }
-
-    def visitString(s: CharSequence, index: Int) = JString(s.toString)
   }
+
+  def visitString(s: CharSequence, index: Int) = JString(s.toString)
 }

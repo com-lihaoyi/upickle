@@ -14,21 +14,19 @@ object CirceJson extends ujson.AstTransformer[Json]{
     obj => transformObject(f, obj.toList)
   )
 
-  object Builder extends Builder{
-    def visitArray(index: Int) = new AstArrVisitor(x => Json.arr(x:_*))
+  def visitArray(index: Int) = new AstArrVisitor(x => Json.arr(x:_*))
 
-    def visitObject(index: Int) = new AstObjVisitor(vs => Json.obj(vs:_*))
+  def visitObject(index: Int) = new AstObjVisitor(vs => Json.obj(vs:_*))
 
-    def visitNull(index: Int) = Json.Null
+  def visitNull(index: Int) = Json.Null
 
-    def visitFalse(index: Int) = Json.False
+  def visitFalse(index: Int) = Json.False
 
-    def visitTrue(index: Int) = Json.True
+  def visitTrue(index: Int) = Json.True
 
-    def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Json.fromJsonNumber(JsonNumber.fromString(s.toString).get)
-    }
-
-    def visitString(s: CharSequence, index: Int) = Json.fromString(s.toString)
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    Json.fromJsonNumber(JsonNumber.fromString(s.toString).get)
   }
+
+  def visitString(s: CharSequence, index: Int) = Json.fromString(s.toString)
 }

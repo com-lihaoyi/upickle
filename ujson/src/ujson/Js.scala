@@ -98,24 +98,22 @@ object Js extends AstTransformer[Js]{
     }
   }
 
-  object Builder extends Builder{
-    def visitArray(index: Int) = new AstArrVisitor(xs => Js.Arr(xs))
+  def visitArray(index: Int) = new AstArrVisitor(xs => Js.Arr(xs))
 
-    def visitObject(index: Int) = new AstObjVisitor(xs => Js.Obj(xs:_*))
+  def visitObject(index: Int) = new AstObjVisitor(xs => Js.Obj(xs:_*))
 
-    def visitNull(index: Int) = Js.Null
+  def visitNull(index: Int) = Js.Null
 
-    def visitFalse(index: Int) = Js.False
+  def visitFalse(index: Int) = Js.False
 
-    def visitTrue(index: Int) = Js.True
+  def visitTrue(index: Int) = Js.True
 
-    def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Js.Num(s.toString.toDouble)
-    }
-    override def visitNumRaw(d: Double, index: Int) = Js.Num(d)
-
-    def visitString(s: CharSequence, index: Int) = Js.Str(s.toString)
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    Js.Num(s.toString.toDouble)
   }
+  override def visitNumRaw(d: Double, index: Int) = Js.Num(d)
+
+  def visitString(s: CharSequence, index: Int) = Js.Str(s.toString)
 
   /**
     * Thrown when uPickle tries to convert a JSON blob into a given data

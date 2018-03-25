@@ -362,7 +362,7 @@ object ExampleTests extends TestSuite {
         // It can be used for parsing JSON into an AST
         val exampleAst = Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
 
-        ujson.transform("[1, 2, 3]", Js.Builder) ==> exampleAst
+        ujson.transform("[1, 2, 3]", Js) ==> exampleAst
 
         // Rendering the AST to a string
         ujson.transform(exampleAst, StringRenderer()).toString ==> "[1,2,3]"
@@ -407,7 +407,7 @@ object ExampleTests extends TestSuite {
           import ujson.argonaut.ArgonautJson
           val argJson: argonaut.Json = ujson.transform(
             """["hello", "world"]""",
-            ArgonautJson.Builder
+            ArgonautJson
           )
 
           val updatedArgJson = argJson.withArray(_.map(_.withString(_.toUpperCase)))
@@ -419,7 +419,7 @@ object ExampleTests extends TestSuite {
 
           items ==> Seq("HELLO", "WORLD")
 
-          val rewritten = upickle.default.transform(items).to(ArgonautJson.Builder)
+          val rewritten = upickle.default.transform(items).to(ArgonautJson)
 
           val stringified = ArgonautJson.transform(rewritten, StringRenderer()).toString
 
@@ -429,7 +429,7 @@ object ExampleTests extends TestSuite {
           import ujson.circe.CirceJson
           val argJson: io.circe.Json = ujson.transform(
             """["hello", "world"]""",
-            CirceJson.Builder
+            CirceJson
           )
 
           val updatedArgJson = argJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
@@ -441,7 +441,7 @@ object ExampleTests extends TestSuite {
 
           items ==> Seq("HELLO", "WORLD")
 
-          val rewritten = upickle.default.transform(items).to(CirceJson.Builder)
+          val rewritten = upickle.default.transform(items).to(CirceJson)
 
           val stringified = CirceJson.transform(rewritten, StringRenderer()).toString
 

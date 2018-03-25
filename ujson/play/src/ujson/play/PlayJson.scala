@@ -13,21 +13,19 @@ object PlayJson extends ujson.AstTransformer[JsValue] {
     case JsObject(kvs) => transformObject(f, kvs)
     case JsString(s) => f.visitString(s)
   }
-  object Builder extends Builder{
-    def visitArray(index: Int) = new AstArrVisitor(JsArray(_))
+  def visitArray(index: Int) = new AstArrVisitor(JsArray(_))
 
-    def visitObject(index: Int) = new AstObjVisitor(JsObject(_))
+  def visitObject(index: Int) = new AstObjVisitor(JsObject(_))
 
-    def visitNull(index: Int) = JsNull
+  def visitNull(index: Int) = JsNull
 
-    def visitFalse(index: Int) = JsBoolean(false)
+  def visitFalse(index: Int) = JsBoolean(false)
 
-    def visitTrue(index: Int) = JsBoolean(true)
+  def visitTrue(index: Int) = JsBoolean(true)
 
-    def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      JsNumber(BigDecimal(s.toString))
-    }
-
-    def visitString(s: CharSequence, index: Int) = JsString(s.toString)
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    JsNumber(BigDecimal(s.toString))
   }
+
+  def visitString(s: CharSequence, index: Int) = JsString(s.toString)
 }

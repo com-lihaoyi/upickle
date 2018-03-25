@@ -18,22 +18,20 @@ object ArgonautJson extends ujson.AstTransformer[Json]{
     obj => transformObject(f, obj.toList)
   )
 
-  object Builder extends Builder{
-    def visitArray(index: Int) = new AstArrVisitor(xs => Json.jArray(xs.toList))
-    def visitObject(index: Int) = new AstObjVisitor(
-      vs => Json.jObject(JsonObject.fromTraversableOnce(vs))
-    )
+  def visitArray(index: Int) = new AstArrVisitor(xs => Json.jArray(xs.toList))
+  def visitObject(index: Int) = new AstObjVisitor(
+    vs => Json.jObject(JsonObject.fromTraversableOnce(vs))
+  )
 
-    def visitNull(index: Int) = Json.jNull
+  def visitNull(index: Int) = Json.jNull
 
-    def visitFalse(index: Int) = Json.jFalse
+  def visitFalse(index: Int) = Json.jFalse
 
-    def visitTrue(index: Int) = Json.jTrue
+  def visitTrue(index: Int) = Json.jTrue
 
-    def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Json.jNumber(JsonNumber.unsafeDecimal(s.toString))
-    }
-
-    def visitString(s: CharSequence, index: Int) = Json.jString(s.toString)
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    Json.jNumber(JsonNumber.unsafeDecimal(s.toString))
   }
+
+  def visitString(s: CharSequence, index: Int) = Json.jString(s.toString)
 }

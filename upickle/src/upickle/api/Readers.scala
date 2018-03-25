@@ -208,18 +208,18 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     EitherReader[T1, T2].narrow[Left[T1, T2]]
 
   implicit object JsValueR extends Reader[Js.Value]{
-    override def visitObject(index: Int) = Js.Builder.visitObject(index).narrow
-    override def visitArray(index: Int) = Js.Builder.visitArray(index).narrow
-    override def visitString(s: CharSequence, index: Int) = Js.Builder.visitString(s, index)
+    override def visitObject(index: Int) = Js.visitObject(index).narrow
+    override def visitArray(index: Int) = Js.visitArray(index).narrow
+    override def visitString(s: CharSequence, index: Int) = Js.visitString(s, index)
     override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Js.Builder.visitNum(s, decIndex, expIndex, index)
+      Js.visitNum(s, decIndex, expIndex, index)
     }
     override def visitNumRaw(d: Double, index: Int) = {
-      Js.Builder.visitNumRaw(d, index)
+      Js.visitNumRaw(d, index)
     }
-    override def visitTrue(index: Int) = Js.Builder.visitTrue(index)
-    override def visitFalse(index: Int) = Js.Builder.visitFalse(index)
-    override def visitNull(index: Int) = Js.Builder.visitNull(index)
+    override def visitTrue(index: Int) = Js.visitTrue(index)
+    override def visitFalse(index: Int) = Js.visitFalse(index)
+    override def visitNull(index: Int) = Js.visitNull(index)
   }
 
   implicit def JsObjR: Reader[Js.Obj] = JsValueR.narrow[Js.Obj]
