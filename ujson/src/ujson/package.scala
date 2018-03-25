@@ -13,11 +13,12 @@ package object ujson{
 
   def validate(s: Transformable): Unit = transform(s, NoOpVisitor)
 
-  def reformat(s: Transformable, indent: Int = -1) = {
+  def reformat(s: Transformable, indent: Int = -1): String = {
     transform(s, StringRenderer(indent)).toString
   }
 
-  def reformatTo(s: Transformable, out: java.io.Writer, indent: Int = -1) = {
+  def reformatTo(s: Transformable, out: java.io.Writer, indent: Int = -1): Unit = {
     transform(s, Renderer(out, indent)).toString
   }
+  // End ujson
 }

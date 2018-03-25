@@ -208,6 +208,7 @@
         @hl.scala{""} for Strings, or wrap it in an @hl.scala{Option[T]} and
         make the default @hl.scala{None}) and uPickle will happily read the
         old data, filling in the missing field using the default value.
+
     @sect{Supported Types}
       @p
         Out of the box, uPickle supports writing and reading the following types:
@@ -256,6 +257,12 @@
       @p
         That concludes the list of supported types. Anything else is not supported.
 
+    @sect{Common Operations}
+      @p
+        The following common operations are available on any uPickle module,
+        e.g. @code{upickle.default} or @code{upickle.legacy}:
+
+      @hl.ref(wd/'upickle/'src/'upickle/"Api.scala", Seq("trait Api", ""), "// End Api")
 
   @sect{Customization}
     @sect{Custom Picklers}
@@ -396,31 +403,6 @@
       uJson is uPickle's JSON library, which can be used to easily
       manipulate JSON source and data structures without converting them into
       Scala case-classes. This all lives in the @code{ujson} package.
-
-    @p
-      You can use @code{ujson} to conveniently construct JSON blobs, either
-      programmatically:
-    @hl.ref(exampleTests, Seq("'json", "'construction", ""), "}")
-
-    @p
-      Or parsing them from strings, byte arrays or files:
-
-    @hl.ref(exampleTests, Seq("'json", "'simple", ""), "}")
-
-    @p
-      @code{ujson.Js} ASTs are mutable, and can be modified before being re-serialized
-      to strings:
-
-    @hl.ref(exampleTests, Seq("'json", "'mutable", ""), "}")
-
-    @p
-      case classes or other Scala data structures can be converted to
-      @code{ujson.Js} ASTs using @code{upickle.default.writeJs}, and the
-      @code{ujson.Js} ASTs can be converted back using @code{upickle.default.readJs}
-      or plain @code{upickle.default.read}:
-
-    @hl.ref(exampleTests, Seq("'json", "'intermediate", ""), "}")
-
     @p
       If you just need to parse & manipulate some JSON, without converting it
       into Scala data-types first, uJson and @code{ujson.Js} will probably be
@@ -432,6 +414,37 @@
 
     @hl.scala
       libraryDependencies += "com.lihaoyi" %% "ujson" % "0.6.0"
+
+    @sect{Construction}
+      @p
+        You can use @code{ujson} to conveniently construct JSON blobs, either
+        programmatically:
+      @hl.ref(exampleTests, Seq("'json", "'construction", ""), "}")
+
+      @p
+        Or parsing them from strings, byte arrays or files:
+
+      @hl.ref(exampleTests, Seq("'json", "'simple", ""), "}")
+
+      @p
+        @code{ujson.Js} ASTs are mutable, and can be modified before being re-serialized
+        to strings:
+
+      @hl.ref(exampleTests, Seq("'json", "'mutable", ""), "}")
+
+      @p
+        case classes or other Scala data structures can be converted to
+        @code{ujson.Js} ASTs using @code{upickle.default.writeJs}, and the
+        @code{ujson.Js} ASTs can be converted back using @code{upickle.default.readJs}
+        or plain @code{upickle.default.read}:
+
+      @hl.ref(exampleTests, Seq("'json", "'intermediate", ""), "}")
+
+    @sect{JSON Utilities}
+      @p
+        uJson comes with some convenient utilities on the `ujson` package:
+
+      @hl.ref(wd/'ujson/'src/'ujson/"package.scala", Seq("package object ujson", ""), "// End ujson")
 
     @sect{Transformations}
       @p

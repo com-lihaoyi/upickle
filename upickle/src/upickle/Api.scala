@@ -16,18 +16,18 @@ import scala.reflect.ClassTag
  * its behavior. Override the `annotate` methods to control how a sealed
  * trait instance is tagged during reading and writing.
  */
-trait Api extends upickle.core.Types with api.Implicits with WebJson{
-  def read[T: Reader](s: Transformable) = s.transform(implicitly[Reader[T]])
+trait Api extends upickle.core.Types with api.Implicits with WebJson with Api.NoOpMappers{
+  def read[T: Reader](s: Transformable): T = s.transform(reader[T])
 
-  def readJs[T: Reader](s: Js.Value) = s.transform(implicitly[Reader[T]])
+  def readJs[T: Reader](s: Js.Value): T = s.transform(reader[T])
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
-  def write[T: Writer](t: T, indent: Int = -1) = {
+  def write[T: Writer](t: T, indent: Int = -1): String = {
     transform(t).to(StringRenderer(indent)).toString
   }
 
-  def writeJs[T: Writer](t: T) = transform(t).to[Js.Value]
+  def writeJs[T: Writer](t: T): Js.Value = transform(t).to[Js.Value]
 
   def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1): Unit = {
     transform(t).to(new Renderer(out, indent = indent))
@@ -35,23 +35,26 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson{
 
   def writer[T: Writer] = implicitly[Writer[T]]
 
-  def writable[T: Writer](t: T) = Transformable.fromTransformer(t, implicitly[Writer[T]])
+  def writable[T: Writer](t: T): Transformable = Transformable.fromTransformer(t, writer[T])
 
   def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
 
   case class transform[T: Writer](t: T) extends Transformable{
-    def transform[V](f: ujson.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
-    def to[V](f: ujson.Visitor[_, V]): V = implicitly[Writer[T]].transform(t, f)
-    def to[V](implicit f: Reader[V]): V = implicitly[Writer[T]].transform(t, f)
+    def transform[V](f: ujson.Visitor[_, V]): V = writer[T].transform(t, f)
+    def to[V](f: ujson.Visitor[_, V]): V = transform(f)
+    def to[V](implicit f: Reader[V]): V = transform(f)
   }
-
-  def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
-  def objectAttributeKeyWriteMap(s: CharSequence): CharSequence = s
-
-  def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
-  def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
+  // End Api
 }
 object Api{
+  trait NoOpMappers{
+
+    def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
+    def objectAttributeKeyWriteMap(s: CharSequence): CharSequence = s
+
+    def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
+    def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
+  }
   object StringVisitor extends CustomVisitor[Nothing, Any] {
     def expectedMsg = "expected string"
     override def visitString(s: CharSequence, index: Int) = s
