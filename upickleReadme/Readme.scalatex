@@ -1,3 +1,4 @@
+
 @import Main._
 
 
@@ -488,7 +489,13 @@
 
       @p
         As mentioned earlier, conversions are fast and direct, and happen
-        without creating intermediate JSON structures in the process.
+        without creating intermediate JSON structures in the process. The
+        following sections demonstrate how to use these conversions.
+
+      @sect{Argonaut}
+        @hl.ref(exampleTests, Seq("'argonaut", ""), "}")
+      @sect{Circe}
+        @hl.ref(exampleTests, Seq("'circe", ""), "}")
 
   @sect{Version History}
     @sect{0.5.1}

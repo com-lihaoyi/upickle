@@ -237,6 +237,62 @@ object ExampleTests extends TestSuite {
       read[Thing](f.toFile) ==> Thing(1, "gg")
       read[Thing](Files.newByteChannel(f)) ==> Thing(1, "gg")
     }
+    'mapped{
+      import upickle.default._
+      case class Wrap(i: Int)
+      implicit val fooReadWrite: ReadWriter[Wrap] = readwriter[Int].bimap[Wrap](_.i, Wrap(_))
+      write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==> "[1,10,100]"
+      read[Seq[Wrap]]("[1,10,100]")            ==> Seq(Wrap(1), Wrap(10), Wrap(100))
+    }
+    'keyed{
+      import upickle.default._
+      'attrs{
+        write(KeyBar(10))                     ==> """{"hehehe":10}"""
+        read[KeyBar]("""{"hehehe": 10}""")    ==> KeyBar(10)
+      }
+      'tag{
+        write(B(10))                          ==> """{"$type":"Bee","i":10}"""
+        read[B]("""{"$type":"Bee","i":10}""") ==> B(10)
+      }
+      'snakeCase{
+        object SnakePickle extends upickle.AttributeTagged{
+          def camelToSnake(s: String) = {
+            s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
+          }
+          def snakeToCamel(s: String) = {
+            val res = s.split("_", -1).map(x => x(0).toUpper + x.drop(1)).mkString
+            s(0).toLower + res.drop(1)
+          }
+
+          override def objectAttributeKeyReadMap(s: CharSequence) =
+            snakeToCamel(s.toString)
+          override def objectAttributeKeyWriteMap(s: CharSequence) =
+            camelToSnake(s.toString)
+
+          override def objectTypeKeyReadMap(s: CharSequence) =
+            snakeToCamel(s.toString)
+          override def objectTypeKeyWriteMap(s: CharSequence) =
+            camelToSnake(s.toString)
+        }
+
+        // Default read-writing
+        upickle.default.write(Thing(1, "gg")) ==>
+          """{"myFieldA":1,"myFieldB":"gg"}"""
+
+        upickle.default.read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==>
+          Thing(1, "gg")
+
+        implicit def thingRW: SnakePickle.ReadWriter[Thing] = SnakePickle.macroRW
+
+        // snake_case_keys read-writing
+        SnakePickle.write(Thing(1, "gg")) ==>
+          """{"my_field_a":1,"my_field_b":"gg"}"""
+
+        SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") ==>
+          Thing(1, "gg")
+      }
+    }
+
     'json{
       'simple{
         val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
@@ -346,62 +402,60 @@ object ExampleTests extends TestSuite {
         ujson.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
           "[1,2,3]"
       }
-    }
-    'mapped{
-      import upickle.default._
-      case class Wrap(i: Int)
-      implicit val fooReadWrite: ReadWriter[Wrap] = readwriter[Int].bimap[Wrap](_.i, Wrap(_))
-      write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==> "[1,10,100]"
-      read[Seq[Wrap]]("[1,10,100]")            ==> Seq(Wrap(1), Wrap(10), Wrap(100))
-    }
-    'keyed{
-      import upickle.default._
-      'attrs{
-        write(KeyBar(10))                     ==> """{"hehehe":10}"""
-        read[KeyBar]("""{"hehehe": 10}""")    ==> KeyBar(10)
-      }
-      'tag{
-        write(B(10))                          ==> """{"$type":"Bee","i":10}"""
-        read[B]("""{"$type":"Bee","i":10}""") ==> B(10)
-      }
-      'snakeCase{
-        object SnakePickle extends upickle.AttributeTagged{
-          def camelToSnake(s: String) = {
-            s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
-          }
-          def snakeToCamel(s: String) = {
-            val res = s.split("_", -1).map(x => x(0).toUpper + x.drop(1)).mkString
-            s(0).toLower + res.drop(1)
-          }
+      'other{
+        'argonaut{
+          import ujson.argonaut.ArgonautJson
+          val argJson: argonaut.Json = ujson.transform(
+            """["hello", "world"]""",
+            ArgonautJson.Builder
+          )
 
-          override def objectAttributeKeyReadMap(s: CharSequence) =
-            snakeToCamel(s.toString)
-          override def objectAttributeKeyWriteMap(s: CharSequence) =
-            camelToSnake(s.toString)
+          val updatedArgJson = argJson.withArray(_.map(_.withString(_.toUpperCase)))
 
-          override def objectTypeKeyReadMap(s: CharSequence) =
-            snakeToCamel(s.toString)
-          override def objectTypeKeyWriteMap(s: CharSequence) =
-            camelToSnake(s.toString)
+          val items: Seq[String] = ArgonautJson.transform(
+            updatedArgJson,
+            upickle.default.reader[Seq[String]]
+          )
+
+          items ==> Seq("HELLO", "WORLD")
+
+          val rewritten = upickle.default.transform(items).to(ArgonautJson.Builder)
+
+          val stringified = ArgonautJson.transform(rewritten, StringRenderer()).toString
+
+          stringified ==> """["HELLO","WORLD"]"""
         }
+        'circe{
+          import ujson.circe.CirceJson
+          val argJson: io.circe.Json = ujson.transform(
+            """["hello", "world"]""",
+            CirceJson.Builder
+          )
 
-        // Default read-writing
-        upickle.default.write(Thing(1, "gg")) ==>
-          """{"myFieldA":1,"myFieldB":"gg"}"""
+          val updatedArgJson = argJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
 
-        upickle.default.read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==>
-          Thing(1, "gg")
+          val items: Seq[String] = CirceJson.transform(
+            updatedArgJson,
+            upickle.default.reader[Seq[String]]
+          )
 
-        implicit def thingRW: SnakePickle.ReadWriter[Thing] = SnakePickle.macroRW
+          items ==> Seq("HELLO", "WORLD")
 
-        // snake_case_keys read-writing
-        SnakePickle.write(Thing(1, "gg")) ==>
-          """{"my_field_a":1,"my_field_b":"gg"}"""
+          val rewritten = upickle.default.transform(items).to(CirceJson.Builder)
 
-        SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") ==>
-          Thing(1, "gg")
+          val stringified = CirceJson.transform(rewritten, StringRenderer()).toString
+
+          stringified ==> """["HELLO","WORLD"]"""
+        }
+        'json4s{
+
+        }
+        'playJson{
+
+        }
       }
     }
+
   }
 }
 

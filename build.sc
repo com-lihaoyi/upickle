@@ -187,6 +187,12 @@ object upickle extends Module{
     def moduleDeps = Seq(ujson.jvm())
 
     object test extends UpickleTestModule{
+      def moduleDeps = super.moduleDeps ++ Seq(
+        ujson.argonaut(),
+        ujson.circe(),
+        ujson.json4s(),
+        ujson.play(),
+      )
       def ivyDeps = super.ivyDeps() ++ bench.jvm.ivyDeps()
     }
   }
