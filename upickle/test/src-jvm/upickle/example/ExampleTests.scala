@@ -296,6 +296,15 @@ object ExampleTests extends TestSuite {
     }
 
     'json{
+      'construction{
+        import ujson.Js
+        val json = Js.Arr(
+          Js.Obj("myFieldA" -> 1, "myFieldB" -> "g"),
+          Js.Obj("myFieldA" -> 2, "myFieldB" -> "k")
+        )
+
+        json.toString ==> """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
+      }
       'simple{
         val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
         val json = ujson.read(str)

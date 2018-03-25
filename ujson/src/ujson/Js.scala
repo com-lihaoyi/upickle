@@ -1,9 +1,10 @@
 package ujson
 
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-sealed trait Js extends Transformable{
+sealed trait Js extends Transformable {
   def value: Any
 
 
@@ -54,7 +55,8 @@ sealed trait Js extends Transformable{
   def update(s: String, v: Js.Value): Unit = this.obj(s) = v
 
   def transform[T](f: ujson.Visitor[_, T]) = Js.transform(this, f)
-  override def toString = this.transform(StringRenderer(4)).toString
+  override def toString = render()
+  def render(indent: Int = -1) = this.transform(StringRenderer(indent)).toString
 }
 
 /**
@@ -85,6 +87,17 @@ object Js extends AstTransformer[Js]{
     def value = null
   }
 
+
+  implicit def JsonableByte(i: Byte) = Num(i)
+  implicit def JsonableShort(i: Short) = Num(i)
+  implicit def JsonableInt(i: Int) = Num(i)
+  implicit def JsonableLong(i: Long) = Str(i.toString)
+  implicit def JsonableFloat(i: Float) = Num(i)
+  implicit def JsonableDouble(i: Double) = Num(i)
+  implicit def JsonableNull(i: Null) = Null
+  implicit def JsonableString(s: CharSequence) = Str(s.toString)
+  
+  
   type Value = Js
   def transform[T](j: Js.Value, f: ujson.Visitor[_, T]): T = {
     j match{
