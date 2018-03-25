@@ -259,7 +259,8 @@
           the correct class in the sealed hierarchy can be reconstituted later.
 
       @p
-        That concludes the list of supported types. Anything else is not supported.
+        That concludes the list of supported types. Anything else is not supported
+        by default, but you can add support using @sect.ref{Custom Picklers}
 
     @sect{Common Operations}
       @p
@@ -288,6 +289,13 @@
         Note that when writing custom picklers, it is entirely up to you to get
         it right, e.g. making sure that an object that gets round-trip
         pickled/unpickled comes out the same as when it started.
+
+      @p
+        Lastly, if you want more control over exactly how something is serialized,
+        you can use @code{readwriter[Js.Value].bimap} to give yourself access to
+        the raw JSON AST:
+
+      @hl.ref(exampleTests, Seq("'mapped", "'Js", ""))
 
     @sect{Custom Keys}
       @p

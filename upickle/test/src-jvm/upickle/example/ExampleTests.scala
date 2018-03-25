@@ -240,13 +240,27 @@ object ExampleTests extends TestSuite {
       read[Thing](Files.newByteChannel(f)) ==> Thing(1, "gg")
     }
     'mapped{
-      import upickle.default._
-      case class Wrap(i: Int)
-      implicit val fooReadWrite: ReadWriter[Wrap] =
-        readwriter[Int].bimap[Wrap](_.i, Wrap(_))
+      'simple {
+        import upickle.default._
+        case class Wrap(i: Int)
+        implicit val fooReadWrite: ReadWriter[Wrap] =
+          readwriter[Int].bimap[Wrap](_.i, Wrap(_))
 
-      write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==> "[1,10,100]"
-      read[Seq[Wrap]]("[1,10,100]")            ==> Seq(Wrap(1), Wrap(10), Wrap(100))
+        write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==> "[1,10,100]"
+        read[Seq[Wrap]]("[1,10,100]") ==> Seq(Wrap(1), Wrap(10), Wrap(100))
+      }
+      'Js {
+        import upickle.default._
+        case class Bar(i: Int, s: String)
+        implicit val fooReadWrite: ReadWriter[Bar] =
+          readwriter[Js.Value].bimap[Bar](
+            x => Js.Arr(x.s, x.i),
+            json => new Bar(json(1).num.toInt, json(0).str)
+          )
+
+        write(Bar(123, "abc")) ==> """["abc",123]"""
+        read[Bar]("""["abc",123]""") ==> Bar(123, "abc")
+      }
     }
     'keyed{
       import upickle.default._
