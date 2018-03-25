@@ -242,7 +242,9 @@ object ExampleTests extends TestSuite {
     'mapped{
       import upickle.default._
       case class Wrap(i: Int)
-      implicit val fooReadWrite: ReadWriter[Wrap] = readwriter[Int].bimap[Wrap](_.i, Wrap(_))
+      implicit val fooReadWrite: ReadWriter[Wrap] =
+        readwriter[Int].bimap[Wrap](_.i, Wrap(_))
+
       write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==> "[1,10,100]"
       read[Seq[Wrap]]("[1,10,100]")            ==> Seq(Wrap(1), Wrap(10), Wrap(100))
     }

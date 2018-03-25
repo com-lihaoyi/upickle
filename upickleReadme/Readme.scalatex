@@ -195,14 +195,14 @@
         If a field is missing upon deserialization, uPickle uses the default
         value if one exists
 
-      @hl.ref(exampleTests, Seq("'defaults", "'reading"), "  }")
+      @hl.ref(exampleTests, Seq("'defaults", "'reading", ""), "  }")
 
       @p
 
         If a field at serialization time has the same value as the default,
          uPickle leaves it out of the serialized blob
 
-      @hl.ref(exampleTests, Seq("'defaults", "'writing"), "  }")
+      @hl.ref(exampleTests, Seq("'defaults", "'writing", ""), "  }")
 
       @p
 
@@ -557,7 +557,219 @@
 
         @hl.ref(exampleTests, Seq("'crossAst", ""), "}")
 
+  @sect{Performance}
+    @p
+      The uPickle has a small set of benchmarks in @code{bench/} that tests
+      reading and writing performance of a few cinnib JSON libraries on a small,
+      somewhat arbitrary workload. The numbers below show how many times each
+      library could read/write a small data structure in 25 seconds (bigger
+      numbers better). In some libraries, caching the serializers rather than
+      re-generating them each read/write also improves performance: that effect
+      can be seen in the @code{(Cached)} columns.
+
+    @sect{JVM Case Class Serialization Performance}
+      @p
+        uPickle runs 30-50% faster than Circe for reads/writes, and ~200%
+        faster than play-json.
+
+      @table(cls := "pure-table", textAlign.right)
+        @thead
+          @tr
+            @th{Library}
+            @th{Reads}
+            @th{Writes}
+            @th{Reads (Cached)}
+            @th{Write (Cached)}
+        @tbody
+          @tr
+            @td{Jackson-Scala}
+            @td{2,038,770}
+            @td{11,324,495}
+            @td
+            @td
+          @tr
+            @td{Play Json}
+            @td{  987,940}
+            @td{1,357,490}
+            @td{1,122,132}
+            @td{1,574,340}
+          @tr
+            @td{Circe}
+            @td{2,360,411}
+            @td{2,139,692}
+            @td{2,732,585}
+            @td{2,172,389}
+          @tr
+            @td{upickle.default}
+            @td{3,135,576}
+            @td{3,496,939}
+            @td{3,706,736}
+            @td{4,392,758}
+          @tr
+            @td{upickle.legacy}
+            @td{2,315,402}
+            @td{2,526,501}
+            @td{3,889,198}
+            @td{4,285,537}
+
+      @p
+        As you can see, uPickle is pretty consistently ~30% faster than Circe
+        for reads and ~50% faster for writes. It is also faster than
+        Jackson-Scala on reads by a similar margin, although somehow Jackson-Scala
+        has write performance that far outstrips everyone else. uPickle is 100-200%
+        faster than Play-Json, depending on workload
+
+      @p
+        uPickle achieves this speed by avoiding the construction of an
+        intermediate JSON AST: while most libraries parse from
+        `String -> AST -> CaseClass`, uPickle parses input directly from
+        `String -> CaseClass`. uPickle also provides a @code{ujson.Js} AST that
+        you can use to manipulate arbitrary JSON, but @code{ujson.Js} plays no
+        part in parsing things to case-classes and is purely for users who want
+        to manipulate JSON.
+
+    @sect{JVM AST Serialization Performance}
+      @p
+        If you benchmark the various libraries parsing from `String -> AST`,
+        instead of `String -> CaseClass`, uPickle's numbers are in line with
+        everyone else's:
+
+      @table(cls := "pure-table", textAlign.right)
+        @thead
+          @tr
+            @th{Library}
+            @th{AST Reads}
+            @th{AST Writes}
+        @tbody
+          @tr
+            @td{uPickle}
+            @td{2,890,396}
+            @td{4,055,356}
+          @tr
+            @td{Play Json}
+            @td{2,946,590}
+            @td{3,224,360}
+          @tr
+            @td{Circe}
+            @td{5,910,122}
+            @td{6,186,478}
+          @tr
+            @td{Argonaut}
+            @td{2,882,782}
+            @td{3,271,907}
+          @tr
+            @td{Json4s Native}
+            @td{3,214,664}
+            @td{1,239,398}
+      @p
+        One thing to note is that uPickle's AST-serialization performance is
+        significantly worse than uPickle's CaseClass-serialization performance,
+        for both reads (2,890,396 vs 3,706,736) and writes
+        (4,392,758 vs 4,055,356) when the serializers are cached. This may seem
+        surprising, but it makes sense when you realize that constructing a tree
+        of dictionaries/arraybuffers (which is what an AST is) should be slower
+        than constructing a tree of plain-old-java-objects.
+
+    @sect{JS Case Class Serialization Performance}
+      @p
+        While all libraries are much slower on Scala.js/Node.js
+        than on the JVM, uPickle runs
+        4-5x as fast as Circe or Play-Json for reads and writes.
+      @table(cls := "pure-table", textAlign.right)
+        @thead
+          @tr
+            @th{Library}
+            @th{Reads}
+            @th{Writes}
+            @th{Reads (Cached)}
+            @th{Write (Cached)}
+        @tbody
+          @tr
+            @td{Play Json}
+            @td{117,181}
+            @td{194,582}
+            @td{138,665}
+            @td{253,164}
+          @tr
+            @td{Circe}
+            @td{132,519}
+            @td{441,906}
+            @td{151,030}
+            @td{644,901}
+          @tr
+            @td{upickle.default}
+            @td{613,727}
+            @td{1,041,798}
+            @td{862,280}
+            @td{1,548,753}
+          @tr
+            @td{upickle.legacy}
+            @td{541,242}
+            @td{913,455}
+            @td{874,563}
+            @td{1,469,347}
+          @tr
+            @td{upickle.default.web}
+            @td{518,840}
+            @td{952,393}
+            @td{912,521}
+            @td{1,731,286}
+          @tr
+            @td{upickle.legacy.web}
+            @td{500,202}
+            @td{872,095}
+            @td{782,801}
+            @td{1,568,826}
+
+    @p
+      Apart from the huge difference between uPickle and it's alternatives,
+      this Scala.js/Node.js benchmark also shows a much larger effect for caching
+      the picklers: 80-100% speedup. It seems likely that Scala.js/Node.js just 
+      isn't as good at optimizing away the overhead of temporary/throwaway
+      data-structures, whether they're intermediate-ASTs or temporary-pickler-instances.
+    @p
+      Another thing of note is the @code{.web} entries; these are benchmarking
+      uPickle using the Node.js @code{JSON.parse} and @code{JSON.stringify} 
+      builtin functions, rather than our own parser. It turns out that these builtins
+      appear to be @i{slower} than our parser for this benchmark, so they're not
+      the default, but they're available as the @code{upickle.default.web.read/write}
+      functions or the @code{upickle.WebJson} object if you for some reason want to
+      use them.
+
   @sect{Version History}
+    @sect{0.6.0}
+      @ul
+        @li
+          ~3x faster than 0.5.1; uPickle now has the best @sect.ref{Performance}
+          out of any of the commonly-used Scala JSON libraries
+
+        @li
+          The old @code{upickle.Js} JSON AST and @lnk("non/jawn", "https://github.com/non/jawn")
+          dependency have been combined into the @sect.ref{uJson} standalone library.
+          uJson provides high-performance streaming JSON processing that lets uPickle
+          parse input strings directly to case classes without an intermediate AST.
+        @li
+          @code{upickle.Js} objects are now mutable, and had some implicits added
+          to make @sect.ref{Construction} less awkward.
+        @li
+          The set of @sect.ref{Common Operations} and @sect.ref{JSON Utilities}
+          has been fleshed out: you now have convenient helpers for streaming
+          JSON re-formatting or validation, and can read from arbitrary inputs
+          (strings, byte-arrays, files, ...) using the same @code{upickle.default.read}
+          call
+        @li
+          The way you write @sect.ref{Custom Picklers} and @sect.ref{Custom Configuration}
+          has changed. The new ways are hopefully more intuitive,
+          allow much better back-end performance, and should be just as flexible
+          as the old way, but if you have custom picklers/configurations in your
+          code you'll have to go update them.
+        @li
+          uPickle now supports parsing to (and serializing) @sect.ref{Other ASTs},
+          from libraries such as Circe, Argonaut, Json4s or Play-Json. You can now
+          also do high-performance/streaming @sect.ref{Cross-Library Conversions}
+          to transform from one library's AST to another without any intermediate
+          structures.
+
     @sect{0.5.1}
       @ul
         @li
@@ -577,6 +789,7 @@
 
         @li
           Drop support fo Scala 2.10
+
     @sect{0.4.3}
       @ul
         @li
