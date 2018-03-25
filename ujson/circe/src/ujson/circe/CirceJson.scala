@@ -1,7 +1,6 @@
 package ujson.circe
 
-import ujson.Visitor
-
+import ujson.{Transformable, Visitor}
 import io.circe.{Json, JsonNumber}
 object CirceJson extends ujson.AstTransformer[Json]{
 

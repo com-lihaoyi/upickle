@@ -408,9 +408,8 @@ object ExampleTests extends TestSuite {
       'other{
         'argonaut{
           import ujson.argonaut.ArgonautJson
-          val argJson: argonaut.Json = ujson.transform(
-            """["hello", "world"]""",
-            ArgonautJson
+          val argJson: argonaut.Json = ArgonautJson(
+            """["hello", "world"]"""
           )
 
           val updatedArgJson = argJson.withArray(_.map(_.withString(_.toUpperCase)))
@@ -430,9 +429,8 @@ object ExampleTests extends TestSuite {
         }
         'circe{
           import ujson.circe.CirceJson
-          val circeJson: io.circe.Json = ujson.transform(
-            """["hello", "world"]""",
-            CirceJson
+          val circeJson: io.circe.Json = CirceJson(
+            """["hello", "world"]"""
           )
 
           val updatedCirceJson =
@@ -453,9 +451,8 @@ object ExampleTests extends TestSuite {
         }
         'json4s{
           import org.json4s.JsonAST
-          val json4sJson: JsonAST.JValue = ujson.transform(
-            """["hello", "world"]""",
-            Json4sJson
+          val json4sJson: JsonAST.JValue = Json4sJson(
+            """["hello", "world"]"""
           )
 
           val updatedJson4sJson = JsonAST.JArray(
@@ -479,9 +476,8 @@ object ExampleTests extends TestSuite {
         'playJson{
           import ujson.play.PlayJson
           import play.api.libs.json._
-          val playJson: play.api.libs.json.JsValue = ujson.transform(
-            """["hello", "world"]""",
-            PlayJson
+          val playJson: play.api.libs.json.JsValue = PlayJson(
+            """["hello", "world"]"""
           )
 
           val updatedPlayJson = JsArray(
@@ -504,9 +500,8 @@ object ExampleTests extends TestSuite {
         }
         'crossAst{
           import ujson.circe.CirceJson
-          val circeJson: io.circe.Json = ujson.transform(
-            """["hello", "world"]""",
-            CirceJson
+          val circeJson: io.circe.Json = CirceJson(
+            """["hello", "world"]"""
           )
 
           val updatedCirceJson =

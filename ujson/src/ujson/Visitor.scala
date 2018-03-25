@@ -8,6 +8,7 @@ package ujson
  * usually want to define both.
  */
 trait Visitor[-T, +J] {
+  def apply(t: Transformable) = t.transform(this)
   def visitArray(index: Int): ArrVisitor[T, J]
   def visitObject(index: Int): ObjVisitor[T, J]
 
