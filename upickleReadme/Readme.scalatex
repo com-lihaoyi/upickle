@@ -25,28 +25,28 @@
 @sect("µPickle 0.6.0")
 
   @p
-    uPickle (pronounced micro-pickle) is a lightweight serialization library
+    uPickle (pronounced micro-pickle) is a lightweight JSON serialization library
     for Scala. It's key features are:
   @ul
     @li
-      Less than 1000 lines of code
+      @sect.ref("Getting Started", "Simple to use"), with nice human-readable JSON output
     @li
-      Zero-reflection 100% static serialization and deserialization
+      Very high @sect.ref{Performance}; faster than
+      @lnk("Play-Json", "https://github.com/playframework/play-json"),
+      @lnk("Circe", "https://github.com/circe/circe"), or
+      @lnk("Argonaut", "https://github.com/argonaut-io/argonaut")
+      by a large margin
     @li
-      @sect.ref("Getting Started", "Human-readable JSON encoding"), with a
-      fast @sect.ref("uJson", "JSON API")
+      Simple & easy to understand @sect.ref("uJson", "JSON Processing API"),
+      that should be instantly familiar to anyone whose processed JSON in
+      Python, Ruby, or Javascript
     @li
-      @sect.ref("Supported Types", "A large, well-defined set of supported types, with well-defined semantics")
+      Flexible and easily @sect.ref("Customization", "customizable")
     @li
-      Handling of @sect.ref("Defaults", "default values") and
-      @sect.ref("Custom Keys", "custom keys"), for maintaining backwards
-      compatiblity while schemas change
+      Zero dependencies; can be included in any project without worrying about
+      conflicts
     @li
-      Minimal dependencies: Only depends on @lnk("Jawn",
-      "https://github.com/non/jawn") on the JVM, and on the Javascript
-      standard library in Scala.js
-    @li
-      Works in @sect.ref("ScalaJS"), allowing transfer of structured data
+      @sect.ref("ScalaJS") support, allowing transfer of structured data
       between the JVM and Javascript
 
   @sect{Getting Started}
@@ -74,7 +74,7 @@
     @sect{Scala 2.10}
       @p
 
-        uPickle 0.5.x does not support Scala 2.10; only 2.11 and 2.12 are supported
+        uPickle does not support Scala 2.10; only 2.11 and 2.12 are supported
 
   @sect{Basics}
     @sect{Builtins}
@@ -271,7 +271,8 @@
 
   @sect{Customization}
     @sect{Custom Picklers}
-      @hl.ref(exampleTests, Seq("'mapped", ""), "}")
+      @hl.ref(exampleTests, Seq("'mapped", "'simple", ""), "}")
+
       @p
         You can use the @code{readwriter[T].bimap[V]} function to create a pickler
         that reads/writes a type @code{V}, using the pickler for type @code{T},
@@ -397,8 +398,8 @@
     @p
       Most of these limitations are inherent in the fact that ScalaJS does not
       support reflection, and are unlikely to ever go away. In general, uPickle
-      is designed to serialize statically-typed, tree-shaped, immutable data
-      structures. Anything more complex is out of scope.
+      by default can serialize statically-typed, tree-shaped, immutable data
+      structures. Anything more complex requires @sect.ref{Custom Picklers}
 
     @sect{Manual Sealed Trait Picklers}
       @p
@@ -568,7 +569,7 @@
   @sect{Performance}
     @p
       The uPickle has a small set of benchmarks in @code{bench/} that tests
-      reading and writing performance of a few cinnib JSON libraries on a small,
+      reading and writing performance of a few common JSON libraries on a small,
       somewhat arbitrary workload. The numbers below show how many times each
       library could read/write a small data structure in 25 seconds (bigger
       numbers better). In some libraries, caching the serializers rather than
@@ -630,16 +631,16 @@
       @p
         uPickle achieves this speed by avoiding the construction of an
         intermediate JSON AST: while most libraries parse from
-        `String -> AST -> CaseClass`, uPickle parses input directly from
-        `String -> CaseClass`. uPickle also provides a @code{ujson.Js} AST that
+        @code{String -> AST -> CaseClass}, uPickle parses input directly from
+        @code{String -> CaseClass}. uPickle also provides a @code{ujson.Js} AST that
         you can use to manipulate arbitrary JSON, but @code{ujson.Js} plays no
         part in parsing things to case-classes and is purely for users who want
         to manipulate JSON.
 
     @sect{JVM AST Serialization Performance}
       @p
-        If you benchmark the various libraries parsing from `String -> AST`,
-        instead of `String -> CaseClass`, uPickle's numbers are in line with
+        If you benchmark the various libraries parsing from @code{String -> AST},
+        instead of @code{String -> CaseClass}, uPickle's numbers are in line with
         everyone else's:
 
       @table(cls := "pure-table", textAlign.right)
