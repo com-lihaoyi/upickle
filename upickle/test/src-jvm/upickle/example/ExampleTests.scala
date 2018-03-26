@@ -311,6 +311,11 @@ object ExampleTests extends TestSuite {
       }
     }
 
+    'transform{
+      upickle.default.transform(Foo(123)).to[Foo] ==> Foo(123)
+      val big = Big(1, true, "lol", 'Z', Thing(7, ""))
+      upickle.default.transform(big).to[Big] ==> big
+    }
     'json{
       'construction{
         import ujson.Js

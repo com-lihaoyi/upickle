@@ -242,13 +242,12 @@ trait Types{ types =>
   }
   trait CaseW[V] extends Writer[V]{
     def writeToObject[R](ctx: ObjVisitor[_, R],
-                         out: ujson.Visitor[_, R],
                          v: V): Unit
     def write0[R](out: ujson.Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
         val ctx = out.visitObject(-1)
-        writeToObject(ctx, ctx.subVisitor, v)
+        writeToObject(ctx, v)
         ctx.visitEnd(-1)
       }
     }
@@ -266,7 +265,7 @@ trait Types{ types =>
     }
   }
   class SingletonW[T](f: T) extends CaseW[T] {
-    def writeToObject[R](ctx: ObjVisitor[_, R], out: Visitor[_, R], v: T): Unit = () // do nothing
+    def writeToObject[R](ctx: ObjVisitor[_, R], v: T): Unit = () // do nothing
   }
 
 

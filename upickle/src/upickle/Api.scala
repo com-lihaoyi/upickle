@@ -203,7 +203,7 @@ trait AttributeTagged extends Api{
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(-1)
     ctx.visitKey(tagName, -1)
     ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
-    w.writeToObject(ctx, out, v)
+    w.writeToObject(ctx, v)
     ctx.visitEnd(-1)
   }
 }

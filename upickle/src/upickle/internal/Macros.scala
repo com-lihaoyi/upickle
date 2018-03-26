@@ -351,7 +351,7 @@ object Macros {
           val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
           ctx.visitValue(
             w.write(
-              out.asInstanceOf[ujson.Visitor[Any, Nothing]],
+              ctx.subVisitor.asInstanceOf[ujson.Visitor[Any, Nothing]],
               v.${TermName(rawArgs(i))}
             ),
             -1
@@ -363,7 +363,6 @@ object Macros {
       q"""
         new ${c.prefix}.CaseW[$targetType]{
           def writeToObject[R](ctx: ujson.ObjVisitor[_, R],
-                               out: ujson.Visitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}
 
