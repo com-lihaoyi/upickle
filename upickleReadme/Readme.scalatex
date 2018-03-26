@@ -23,6 +23,15 @@
 )
 
 @sect("µPickle 0.6.0")
+  @div(display.flex, alignItems.center, flexDirection.column)
+    @div
+      @a(href := "https://gitter.im/lihaoyi/upickle")(
+        img(src := "https://badges.gitter.im/Join%20Chat.svg")
+      )
+      @span(" ")
+      @a(href := "https://www.patreon.com/lihaoyi")(
+        img(src := "https://img.shields.io/badge/patreon-sponsor-ff69b4.svg")
+      )
 
   @p
     uPickle (pronounced micro-pickle) is a lightweight JSON serialization library
