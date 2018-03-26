@@ -755,6 +755,10 @@
       use them.
 
   @sect{Version History}
+    @sect{0.6.1}
+      @ul
+        @li
+          Fix conversion of case classes to other case classes via upickle.default.transform
     @sect{0.6.0}
       @ul
         @li
