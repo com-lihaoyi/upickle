@@ -123,9 +123,6 @@ trait UpickleModule extends CommonPublishModule{
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
-  def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.1.3"
-  )
   def scalacOptions = Seq(
     "-unchecked",
     "-deprecation",
