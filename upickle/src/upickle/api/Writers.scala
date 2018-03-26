@@ -143,6 +143,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def JsArrW: Writer[Js.Arr] = JsValueW.narrow[Js.Arr]
   implicit def JsStrW: Writer[Js.Str] = JsValueW.narrow[Js.Str]
   implicit def JsNumW: Writer[Js.Num] = JsValueW.narrow[Js.Num]
+  implicit def JsBoolW: Writer[Js.Bool] = JsValueW.narrow[Js.Bool]
   implicit def JsTrueW: Writer[Js.True.type] = JsValueW.narrow[Js.True.type]
   implicit def JsFalseW: Writer[Js.False.type] = JsValueW.narrow[Js.False.type]
   implicit def JsNullW: Writer[Js.Null.type] = JsValueW.narrow[Js.Null.type]

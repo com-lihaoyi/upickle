@@ -175,7 +175,9 @@ object StructTests extends TestSuite {
         'empty-rw(Js.Arr(), """[]""")
       }
       'true-rw(Js.True, """true""")
+      'true-rw(Js.Bool(true), """true""")
       'false-rw(Js.False, """false""")
+      'false-rw(Js.Bool(false), """false""")
       'null-rw(Js.Null, """null""")
     }
   }
