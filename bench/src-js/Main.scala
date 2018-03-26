@@ -22,6 +22,7 @@ object Main{
       Common.circeCached(duration)
       Common.upickleDefaultCached(duration)
       Common.upickleLegacyCached(duration)
+      Common.genCodecCached(duration)
       upickleWebDefaultCached(duration)
       upickleWebLegacyCached(duration)
       println()

@@ -206,6 +206,25 @@ object Common{
     )
   }
 
+  def genCodecCached(duration: Int) = {
+    import com.avsystem.commons.serialization._
+        
+    implicit lazy val gc2: GenCodec[A] = GenCodec.materialize
+    implicit lazy val gc3: GenCodec[B] = GenCodec.materialize
+    implicit lazy val gc4: GenCodec[C] = GenCodec.materialize
+    implicit lazy val gc5: GenCodec[LL] = GenCodec.materialize
+    implicit lazy val gc6: GenCodec[Node] = GenCodec.materialize
+    implicit lazy val gc7: GenCodec[End.type] = GenCodec.materialize
+    implicit lazy val gc8: GenCodec[ADTc] = GenCodec.materialize
+    implicit lazy val gc9: GenCodec[ADT0] = GenCodec.materialize
+    implicit lazy val gc1: GenCodec[ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]] = GenCodec.materialize
+
+    bench(duration)(
+      json.JsonStringInput.read[Data](_),
+      json.JsonStringOutput.write[Data](_)
+    )
+  }
+
   def bench(duration: Int)
            (f1: String => Data, f2: Data => String)
            (implicit name: sourcecode.Name) = {
