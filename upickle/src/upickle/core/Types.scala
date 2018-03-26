@@ -180,7 +180,7 @@ trait Types{ types =>
         while(i < writers.length){
           ctx.visitValue(
             writers(i).asInstanceOf[Writer[Any]].write(
-              out.asInstanceOf[Visitor[Any, Nothing]],
+              ctx.subVisitor.asInstanceOf[Visitor[Any, Nothing]],
               vs(i)
             ),
             -1
