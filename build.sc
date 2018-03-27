@@ -110,6 +110,12 @@ object ujson extends Module{
       ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4"
     )
   }
+
+  object avsCommons extends Cross[AvsCommons]("2.11.11", "2.12.4")
+  class AvsCommons(val crossScalaVersion: String) extends CrossScalaModule{
+    def moduleDeps = Seq(ujson.jvm())
+    def ivyDeps = Agg(ivy"com.avsystem.commons::commons-core:1.26.3")
+  }
 }
 
 trait UpickleModule extends CommonPublishModule{
@@ -195,6 +201,7 @@ object upickle extends Module{
         ujson.circe(),
         ujson.json4s(),
         ujson.play(),
+        ujson.avsCommons(),
       )
       def ivyDeps = super.ivyDeps() ++ bench.jvm.ivyDeps()
     }
@@ -230,7 +237,7 @@ trait BenchModule extends CommonModule{
     ivy"io.argonaut::argonaut:6.2",
     ivy"org.json4s::json4s-ast:3.5.2",
     ivy"com.lihaoyi::sourcecode:0.1.4",
-    ivy"com.avsystem.commons::commons-core:1.26.2",
+    ivy"com.avsystem.commons::commons-core:1.26.3",
   )
 }
 

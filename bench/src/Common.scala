@@ -114,7 +114,7 @@ object Common{
   def genCodec(duration: Int) = {
     import com.avsystem.commons.serialization._
 
-    implicit def gc1: GenCodec[ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]] = GenCodec.materialize
+    implicit def gc1: GenCodec[Data] = GenCodec.materialize
     implicit def gc2: GenCodec[A] = GenCodec.materialize
     implicit def gc3: GenCodec[B] = GenCodec.materialize
     implicit def gc4: GenCodec[C] = GenCodec.materialize
@@ -229,7 +229,7 @@ object Common{
   def genCodecCached(duration: Int) = {
     import com.avsystem.commons.serialization._
 
-    implicit lazy val gc1: GenCodec[ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]] = GenCodec.materialize
+    implicit lazy val gc1: GenCodec[Data] = GenCodec.materialize
     implicit lazy val gc2: GenCodec[A] = GenCodec.materialize
     implicit lazy val gc3: GenCodec[B] = GenCodec.materialize
     implicit lazy val gc4: GenCodec[C] = GenCodec.materialize
