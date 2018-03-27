@@ -16,6 +16,7 @@ object Main{
       Common.circe(duration)
       Common.upickleDefault(duration)
       Common.upickleLegacy(duration)
+      Common.genCodec(duration)
       upickleWebDefault(duration)
       upickleWebLegacy(duration)
       Common.playJsonCached(duration)

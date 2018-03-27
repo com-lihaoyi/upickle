@@ -37,6 +37,7 @@ object Main{
       Common.circe(duration)
       Common.upickleDefault(duration)
       Common.upickleLegacy(duration)
+      Common.genCodec(duration)
       Common.playJsonCached(duration)
       Common.circeCached(duration)
       Common.upickleDefaultCached(duration)
