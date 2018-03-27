@@ -79,10 +79,17 @@ object Js extends AstTransformer[Js]{
     def apply(items: Value*): Arr = Arr(items.to[mutable.ArrayBuffer])
   }
   case class Num(value: Double) extends Value
-  case object False extends Value{
+  sealed abstract class Bool extends Value{
+    def value: Boolean
+  }
+  object Bool{
+    def apply(value: Boolean): Bool = if (value) True else False
+    def unapply(bool: Bool): Option[Boolean] = Some(bool.value)
+  }
+  case object False extends Bool{
     def value = false
   }
-  case object True extends Value{
+  case object True extends Bool{
     def value = true
   }
   case object Null extends Value{

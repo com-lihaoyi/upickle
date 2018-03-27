@@ -194,6 +194,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def JsArrR: Reader[Js.Arr] = JsValueR.narrow[Js.Arr]
   implicit def JsStrR: Reader[Js.Str] = JsValueR.narrow[Js.Str]
   implicit def JsNumR: Reader[Js.Num] = JsValueR.narrow[Js.Num]
+  implicit def JsBoolR: Reader[Js.Bool] = JsValueR.narrow[Js.Bool]
   implicit def JsTrueR: Reader[Js.True.type] = JsValueR.narrow[Js.True.type]
   implicit def JsFalseR: Reader[Js.False.type] = JsValueR.narrow[Js.False.type]
   implicit def JsNullR: Reader[Js.Null.type] = JsValueR.narrow[Js.Null.type]
