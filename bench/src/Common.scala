@@ -110,6 +110,26 @@ object Common{
       upickle.default.write(_)
     )
   }
+
+  def genCodec(duration: Int) = {
+    import com.avsystem.commons.serialization._
+
+    implicit def gc1: GenCodec[Data] = GenCodec.materialize
+    implicit def gc2: GenCodec[A] = GenCodec.materialize
+    implicit def gc3: GenCodec[B] = GenCodec.materialize
+    implicit def gc4: GenCodec[C] = GenCodec.materialize
+    implicit def gc5: GenCodec[LL] = GenCodec.materialize
+    implicit def gc6: GenCodec[Node] = GenCodec.materialize
+    implicit def gc7: GenCodec[End.type] = GenCodec.materialize
+    implicit def gc8: GenCodec[ADTc] = GenCodec.materialize
+    implicit def gc9: GenCodec[ADT0] = GenCodec.materialize
+
+    bench(duration)(
+      json.JsonStringInput.read[Data](_),
+      json.JsonStringOutput.write[Data](_)
+    )
+  }
+
   def circeCached(duration: Int) = {
     import io.circe._
     import io.circe.generic.semiauto._
@@ -206,6 +226,25 @@ object Common{
     )
   }
 
+  def genCodecCached(duration: Int) = {
+    import com.avsystem.commons.serialization._
+
+    implicit lazy val gc1: GenCodec[Data] = GenCodec.materialize
+    implicit lazy val gc2: GenCodec[A] = GenCodec.materialize
+    implicit lazy val gc3: GenCodec[B] = GenCodec.materialize
+    implicit lazy val gc4: GenCodec[C] = GenCodec.materialize
+    implicit lazy val gc5: GenCodec[LL] = GenCodec.materialize
+    implicit lazy val gc6: GenCodec[Node] = GenCodec.materialize
+    implicit lazy val gc7: GenCodec[End.type] = GenCodec.materialize
+    implicit lazy val gc8: GenCodec[ADTc] = GenCodec.materialize
+    implicit lazy val gc9: GenCodec[ADT0] = GenCodec.materialize
+
+    bench(duration)(
+      json.JsonStringInput.read[Data](_),
+      json.JsonStringOutput.write[Data](_)
+    )
+  }
+
   def bench(duration: Int)
            (f1: String => Data, f2: Data => String)
            (implicit name: sourcecode.Name) = {
@@ -219,6 +258,7 @@ object Common{
     assert(stringified == rewritten)
     bench0[Data](duration, stringified)(f1, f2)
   }
+
   def bench0[T](duration: Int, stringified: String)
                (f1: String => T, f2: T => String)
                (implicit name: sourcecode.Name)= {
