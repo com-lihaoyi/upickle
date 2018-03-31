@@ -9,8 +9,8 @@ package object ujson{
     transform(t, StringRenderer(indent)).toString
   }
 
-  def writeTo(t: Js.Value, out: java.io.Writer, indent: Int = -1): String = {
-    transform(t, Renderer(out, indent)).toString
+  def writeTo(t: Js.Value, out: java.io.Writer, indent: Int = -1): Unit = {
+    transform(t, Renderer(out, indent))
   }
 
   def validate(s: Transformable): Unit = transform(s, NoOpVisitor)
