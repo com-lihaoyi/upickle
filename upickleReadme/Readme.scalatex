@@ -752,6 +752,9 @@
       appear to be @i{slower} than our parser for this benchmark, but they're
       available as the @code{upickle.default.web.read/write} functions or the
       @code{upickle.WebJson} object if you for some reason want to use them.
+    @p
+      uJson is a fork of Erik Osheim's excellent [Jawn](https://github.com/non/jawn)
+      JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
     @sect{0.6.2}

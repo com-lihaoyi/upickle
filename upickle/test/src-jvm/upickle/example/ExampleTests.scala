@@ -325,6 +325,13 @@ object ExampleTests extends TestSuite {
         )
 
         json.toString ==> """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
+
+        val json2 = Js.Obj(
+          "hello" -> (0 until 5),
+          "world" -> (0 until 5).map(i => (i.toString, i))
+        )
+
+        json2.toString ==> """{"hello":[0,1,2,3,4],"world":{"0":0,"1":1,"2":2,"3":3,"4":4}}"""
       }
       'simple{
         val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
@@ -354,6 +361,17 @@ object ExampleTests extends TestSuite {
 
         upickle.default.read[Seq[Thing]](json)   ==> Seq(Thing(1337, "g"))
         upickle.default.readJs[Seq[Thing]](json) ==> Seq(Thing(1337, "g"))
+      }
+      'copy{
+        val data = Js.Obj(
+          "hello" -> 1,
+          "world" -> 2
+        )
+
+        val data2 = ujson.copy(data)
+
+        data("hello") = 3
+        data2("hello").num ==> 1
       }
     }
     'transforms{

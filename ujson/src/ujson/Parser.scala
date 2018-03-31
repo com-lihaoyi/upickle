@@ -373,7 +373,7 @@ abstract class Parser[J] {
    * worse than manually constructed if/else statements or something
    * else. Also, it may be possible to reorder some cases for speed
    * improvements.
-   */
+   */1
   @tailrec
   protected[this] final def rparse(state: Int,
                                    j: Int,

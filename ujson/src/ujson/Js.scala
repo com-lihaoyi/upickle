@@ -70,12 +70,19 @@ sealed trait Js extends Transformable {
 object Js extends AstTransformer[Js]{
 
   case class Str(value: String) extends Value
-  case class Obj(value: mutable.Map[String, Value]) extends Value
+  case class Obj(value: mutable.LinkedHashMap[String, Value]) extends Value
   object Obj{
-    def apply(items: (String, Value)*): Obj = Obj(mutable.Map(items:_*))
+    implicit def from(items: TraversableOnce[(String, Value)]): Obj = {
+      Obj(mutable.LinkedHashMap(items.toSeq:_*))
+    }
+    def apply(items: (String, Value)*): Obj = Obj(mutable.LinkedHashMap(items:_*))
   }
   case class Arr(value: ArrayBuffer[Value]) extends Value
+
   object Arr{
+    implicit def from[T <% Js.Value](items: TraversableOnce[T]): Arr =
+      Arr(items.map(x => x: Js.Value).to[mutable.ArrayBuffer])
+
     def apply(items: Value*): Arr = Arr(items.to[mutable.ArrayBuffer])
   }
   case class Num(value: Double) extends Value
@@ -96,7 +103,11 @@ object Js extends AstTransformer[Js]{
     def value = null
   }
 
-
+  implicit def JsonableSeq[T](items: TraversableOnce[T])
+                             (implicit f: T => Js.Value) = Arr.from(items.map(f))
+  implicit def JsonableDict[T](items: TraversableOnce[(String, T)])
+                              (implicit f: T => Js.Value)= Obj.from(items.map(x => (x._1, f(x._2))))
+  implicit def JsonableBoolean(i: Boolean) = if (i) Js.True else Js.False
   implicit def JsonableByte(i: Byte) = Num(i)
   implicit def JsonableShort(i: Short) = Num(i)
   implicit def JsonableInt(i: Int) = Num(i)
@@ -122,7 +133,7 @@ object Js extends AstTransformer[Js]{
 
   def visitArray(index: Int) = new AstArrVisitor[ArrayBuffer](xs => Js.Arr(xs))
 
-  def visitObject(index: Int) = new AstObjVisitor[mutable.Map[String, Js]](xs => Js.Obj(xs))
+  def visitObject(index: Int) = new AstObjVisitor[mutable.LinkedHashMap[String, Js]](xs => Js.Obj(xs))
 
   def visitNull(index: Int) = Js.Null
 

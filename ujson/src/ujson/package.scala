@@ -3,6 +3,8 @@ package object ujson{
 
   def read(s: Transformable): Js.Value = transform(s, Js)
 
+  def copy(t: Js.Value): Js.Value = transform(t, Js)
+
   def write(t: Js.Value, indent: Int = -1): String = {
     transform(t, StringRenderer(indent)).toString
   }
