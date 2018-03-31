@@ -10,7 +10,7 @@ trait CommonModule extends ScalaModule {
   )
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def publishVersion = "0.6.3"
+  def publishVersion = "0.6.4"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -52,6 +52,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
 }
 
 trait JsonModule extends CommonPublishModule{
+  def artifactName = "ujson"
   def millSourcePath = build.millSourcePath / "ujson"
   trait JawnTestModule extends Tests with CommonModule{
     def platformSegment = JsonModule.this.platformSegment
@@ -83,12 +84,16 @@ object ujson extends Module{
   }
 
   object argonaut extends Cross[ArgonautModule]("2.11.11", "2.12.4")
-  class ArgonautModule(val crossScalaVersion: String) extends CrossScalaModule{
+  class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule{
+    def artifactName = "ujson-argonaut"
+    def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2")
   }
   object json4s extends Cross[Json4sModule]("2.11.11", "2.12.4")
-  class Json4sModule(val crossScalaVersion: String) extends CrossScalaModule{
+  class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
+    def artifactName = "ujson-json4s"
+    def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
       ivy"org.json4s::json4s-ast:3.5.2",
@@ -97,13 +102,17 @@ object ujson extends Module{
   }
 
   object circe extends Cross[CirceModule]("2.11.11", "2.12.4")
-  class CirceModule(val crossScalaVersion: String) extends CrossScalaModule{
+  class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
+    def artifactName = "ujson-circe"
+    def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.circe::circe-parser:0.9.1")
   }
 
   object play extends Cross[PlayModule]("2.11.11", "2.12.4")
-  class PlayModule(val crossScalaVersion: String) extends CrossScalaModule{
+  class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
+    def artifactName = "ujson-play"
+    def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
       ivy"com.typesafe.play::play-json:2.6.9",
