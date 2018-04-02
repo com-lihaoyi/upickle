@@ -42,6 +42,14 @@ sealed trait Js extends Transformable {
     case Js.Num(value) => value
     case _ => throw Js.InvalidData(this, "Expected Js.Num")
   }
+  /**
+    * Returns the `Boolean` value of this [[Js.Value]], fails if it is not
+    * a [[Js.Bool]]
+    */
+  def bool = this match{
+    case Js.Bool(value) => value
+    case _ => throw Js.InvalidData(this, "Expected Js.Bool")
+  }
 
   /**
     * Looks up the [[Js.Value]] as a [[Js.Arr]] using an index, throws
