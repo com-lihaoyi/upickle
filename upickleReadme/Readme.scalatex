@@ -155,7 +155,7 @@
         After that, you can begin serializing that case class.
 
       @hl.ref(exampleTests, Seq("object Simple", ""))
-      @hl.ref(exampleTests, Seq("'more", "'caseClass", ""), "  }")
+      @hl.ref(exampleTests, Seq("'more", "'caseClass", ""), "        }")
 
       @p
         Sealed hierarchies are serialized as tagged values, the serialized
@@ -186,11 +186,12 @@
     @sect{Read/Writing Other Things}
 
       @p
-        Apart from reading & writing `java.lang.String`s, allows you to easily
-        read from alternate sources such as `CharSequence`s, `Array[Byte]`s,
-        `java.io.File`s and `java.nio.file.Path`s:
+        Apart from reading & writing @code{java.lang.String}s, allows you to easily
+        read from alternate sources such as @code{CharSequence}s, @code{Array[Byte]}s,
+        @code{java.io.File}s and @code{java.nio.file.Path}s:
 
       @hl.ref(exampleTests, Seq("'sources", ""), "  }")
+      @hl.ref(jvmExampleTests, Seq("'sources", ""), "  }")
 
       @p
         Reading from large files is automatically streamed so you do not read the
@@ -353,33 +354,16 @@
         Often, there will be times that you want to customize something on a
         project-wide level. uPickle provides hooks in letting you subclass the
         @hl.scala{upickle.Api} trait to create your own bundles apart from the
-        in-built @hl.scala{upickle.default} and @hl.scala{upickle.legacy}. You
-        have multiple levels of possible customization:
-
-      @ul
-        @li
-          @hl.scala{upickle.Api}, which lets you customize the @hl.scala{annotate}
-          methods, which are used to tag sealed hierarchies with their class
-          names. This is used to e.g. distinguish @hl.scala{upickle.default}'s
-          @hl.scala{$type} attribute vs @hl.scala{upickle.legacy}'s array-wrapper
-        @li
-          @hl.scala{upickle.AttributeTagged}, which assumes you want the standard
-          @hl.scala{annotate} method using a type attribute, but letting you
-          customize the attribute.
-        @li
-          In both these cases, you are also free to override the
-          @hl.scala{CaseR} and @hl.scala{CaseW} implicits, which controls how case
-          classes are serialized. For example, you could make it serialize to a
-          JSON array rather than a dictionary. Or, for example, convert the
-          @code{camelCase} Scala identifiers to @code{snake_case} or some other
-          convention:
+        in-built @hl.scala{upickle.default} and @hl.scala{upickle.legacy}. The
+        following example demonstrates how to customize a bundle to
+        automatically @code{snake_case} all dictionary keys.
 
         @hl.ref(exampleTests, Seq("'snakeCase", ""))
 
       @p
         If you are using uPickle to convert JSON from another source into Scala
-        data structures, you may find the following encoding of
-        @hl.scala{Option[T]} more convenient than the defaults:
+        data structures, you can also configure it to map @hl.scala{Option[T]}s
+        to @code{null}s when the option is @code{None}:
 
       @hl.ref(optionsAsNullTests, "object OptionPickler", "// end_ex")
 
@@ -547,28 +531,28 @@
           libraryDependencies += "com.lihaoyi" %% "ujson-argonaut" % "0.6.4"
 
         @b{Usage}
-        @hl.ref(exampleTests, Seq("'argonaut", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("'argonaut", ""), "}")
 
       @sect{Circe}
         @b{Maven Coordinates}
         @hl.scala
           libraryDependencies += "com.lihaoyi" %% "ujson-circe" % "0.6.4"
         @b{Usage}
-        @hl.ref(exampleTests, Seq("'circe", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("'circe", ""), "}")
 
       @sect{Play-Json}
         @b{Maven Coordinates}
         @hl.scala
           libraryDependencies += "com.lihaoyi" %% "ujson-play" % "0.6.4"
         @b{Usage}
-        @hl.ref(exampleTests, Seq("'play", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("'play", ""), "}")
 
       @sect{Json4s}
         @b{Maven Coordinates}
         @hl.scala
           libraryDependencies += "com.lihaoyi" %% "ujson-json4s" % "0.6.4"
         @b{Usage}
-        @hl.ref(exampleTests, Seq("'json4s", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("'json4s", ""), "}")
 
       @sect{Cross-Library Conversions}
         @p
@@ -580,7 +564,7 @@
           perform more transformations, and finally serialize it back to a
           String and check that both transformations were applied:
 
-        @hl.ref(exampleTests, Seq("'crossAst", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("'crossAst", ""), "}")
 
   @sect{Performance}
     @p
@@ -764,6 +748,11 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{0.6.5}
+      @ul
+        @li
+          Add ability to update a JSON dictionary key or array item in place
+          via @hl.scala{json(0)("myFieldA") = _.num + 100}
     @sect{0.6.4}
       @ul
         @li

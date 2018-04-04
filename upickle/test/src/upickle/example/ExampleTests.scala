@@ -210,7 +210,6 @@ object ExampleTests extends TestSuite {
     'defaults{
       import upickle.default._
       'reading{
-
         read[FooDefault]("{}")                ==> FooDefault(10, "lol")
         read[FooDefault]("""{"i": 123}""")    ==> FooDefault(123,"lol")
       }
