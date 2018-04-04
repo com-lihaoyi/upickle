@@ -455,6 +455,12 @@
       @hl.ref(exampleTests, Seq("'json", "'mutable", ""), "}")
 
       @p
+        You can also use the `_` shorthand syntax to update a JSON value in
+        place, without having to duplicate the whole path:
+
+      @hl.ref(exampleTests, Seq("'json", "'update", ""), "}")
+
+      @p
         case classes or other Scala data structures can be converted to
         @code{ujson.Js} ASTs using @code{upickle.default.writeJs}, and the
         @code{ujson.Js} ASTs can be converted back using @code{upickle.default.readJs}

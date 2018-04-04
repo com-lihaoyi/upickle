@@ -49,12 +49,14 @@ sealed trait Js extends Transformable {
     */
   def apply(i: Int): Js.Value = this.arr(i)
   def update(i: Int, v: Js.Value): Unit = this.arr(i) = v
+  def update[T <% Js.Value](i: Int, f: Js.Value => T): Unit = this.arr(i) = f(this.arr(i))
   /**
     * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
     * otherwise if it's not a [[Js.Obj]]
     */
   def apply(s: java.lang.String): Js.Value = this.obj(s)
   def update(s: String, v: Js.Value): Unit = this.obj(s) = v
+  def update[T <% Js.Value](s: String, f: Js.Value => T): Unit = this.obj(s) = f(this.obj(s))
 
   def transform[T](f: ujson.Visitor[_, T]) = Js.transform(this, f)
   override def toString = render()

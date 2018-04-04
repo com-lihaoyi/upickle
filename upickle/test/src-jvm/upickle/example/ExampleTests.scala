@@ -348,16 +348,27 @@ object ExampleTests extends TestSuite {
         val json: ujson.Js = ujson.read(str)
 
         json.arr.remove(1)
-        json(0).obj("myFieldA") = Js.Num(1337)
+        json(0)("myFieldA") = 1337
+        json(0)("myFieldB") = json(0)("myFieldB").str + "lols"
 
-        ujson.write(json) ==> """[{"myFieldA":1337,"myFieldB":"g"}]"""
+        ujson.write(json) ==> """[{"myFieldA":1337,"myFieldB":"glols"}]"""
+      }
+      'update{
+        val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
+        val json: ujson.Js = ujson.read(str)
+
+        json(0)("myFieldA") = _.num + 100
+        json(1)("myFieldB") = _.str + "lol"
+
+        val expected = """[{"myFieldA":101,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"klol"}]"""
+        ujson.write(json) ==> expected
       }
       'intermediate{
         val data = Seq(Thing(1, "g"), Thing(2, "k"))
         val json = upickle.default.writeJs(data)
 
         json.arr.remove(1)
-        json(0).obj("myFieldA") = Js.Num(1337)
+        json(0)("myFieldA") = 1337
 
         upickle.default.read[Seq[Thing]](json)   ==> Seq(Thing(1337, "g"))
         upickle.default.readJs[Seq[Thing]](json) ==> Seq(Thing(1337, "g"))
