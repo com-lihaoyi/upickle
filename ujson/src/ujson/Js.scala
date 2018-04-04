@@ -43,20 +43,17 @@ sealed trait Js extends Transformable {
     case _ => throw Js.InvalidData(this, "Expected Js.Num")
   }
 
+  def apply(s: Js.Selector): Js.Value = s(this)
+  def update(s: Js.Selector, v: Js.Value): Unit = s(this) = v
+
   /**
-    * Looks up the [[Js.Value]] as a [[Js.Arr]] using an index, throws
-    * otherwise if it's not a [[Js.Arr]]
+    * Update a value in-place. Takes an `Int` or a `String`, through the
+    * implicitly-constructe [[Js.Selector]] type.
+    *
+    * We cannot just overload `update` on `s: Int` and `s: String` because
+    * of type inference problems in Scala 2.11.
     */
-  def apply(i: Int): Js.Value = this.arr(i)
-  def update(i: Int, v: Js.Value): Unit = this.arr(i) = v
-  def update[T <% Js.Value](i: Int, f: Js.Value => T): Unit = this.arr(i) = f(this.arr(i))
-  /**
-    * Looks up the [[Js.Value]] as a [[Js.Obj]] using an index, throws
-    * otherwise if it's not a [[Js.Obj]]
-    */
-  def apply(s: java.lang.String): Js.Value = this.obj(s)
-  def update(s: String, v: Js.Value): Unit = this.obj(s) = v
-  def update[T <% Js.Value](s: String, f: Js.Value => T): Unit = this.obj(s) = f(this.obj(s))
+  def update(s: Js.Selector, f: Js.Value => Js.Value): Unit = s(this) = f(s(this))
 
   def transform[T](f: ujson.Visitor[_, T]) = Js.transform(this, f)
   override def toString = render()
@@ -70,6 +67,20 @@ sealed trait Js extends Transformable {
 * JSON AST.
 */
 object Js extends AstTransformer[Js]{
+  sealed trait Selector{
+    def apply(x: Js.Value): Js.Value
+    def update(x: Js.Value, y: Js.Value): Unit
+  }
+  object Selector{
+    implicit class IntSelector(i: Int) extends Selector{
+      def apply(x: Js.Value): Js.Value = x.arr(i)
+      def update(x: Js.Value, y: Js.Value) = x.arr(i) = y
+    }
+    implicit class StringSelector(i: String) extends Selector{
+      def apply(x: Js.Value): Js.Value = x.obj(i)
+      def update(x: Js.Value, y: Js.Value) = x.obj(i) = y
+    }
+  }
 
   case class Str(value: String) extends Value
   case class Obj(value: mutable.LinkedHashMap[String, Value]) extends Value

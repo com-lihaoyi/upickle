@@ -3,10 +3,11 @@
 
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
-@val exampleTests = wd/'upickle/'test/"src-jvm"/'upickle/'example/"ExampleTests.scala"
+@val exampleTests = wd/'upickle/'test/"src"/'upickle/'example/"ExampleTests.scala"
+@val jvmExampleTests = wd/'upickle/'test/"src-jvm"/'upickle/'example/"JvmExampleTests.scala"
 @val macroTests = wd/'upickle/'test/'src/'upickle/"MacroTests.scala"
 
-@val optionsAsNullTests =  wd/'upickle/'test/"src-jvm"/'upickle/'example/"OptionsAsNullTests.scala"
+@val optionsAsNullTests =  wd/'upickle/'test/"src"/'upickle/'example/"OptionsAsNullTests.scala"
 
 
 @a(
