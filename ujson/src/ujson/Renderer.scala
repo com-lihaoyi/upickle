@@ -10,7 +10,7 @@ case class BytesRenderer(indent: Int = -1)
   extends BaseRenderer(new BytesRenderer.BytesWriter(), indent){
 }
 
-object BytesRenderer{
+object BytesRenderer {
   class BytesWriter(out: java.io.ByteArrayOutputStream = new ByteArrayOutputStream())
     extends java.io.OutputStreamWriter(out){
     def toBytes = {
@@ -28,7 +28,7 @@ case class Renderer(out: java.io.Writer,
 
 class BaseRenderer[T <: java.io.Writer]
                   (out: T,
-                   indent: Int = -1) extends ujson.Visitor[T, T]{
+                   indent: Int = -1) extends ujson.Visitor[T, T] {
   var depth: Int = 0
   val colonSnippet = if (indent == -1) ":" else ": "
 
@@ -122,7 +122,6 @@ class BaseRenderer[T <: java.io.Writer]
     flushBuffer()
     if (s == null) out.append("null")
     else Renderer.escape(out, s, true)
-
     out
   }
 

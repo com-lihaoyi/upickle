@@ -103,9 +103,8 @@ trait ByteBasedParser[J] extends Parser[J] {
     if (k != -1) {
       val s = at(i + 1, k - 1)
       (s, k)
-    }else{
+    } else {
       parseStringComplex(i)
-
     }
   }
 }

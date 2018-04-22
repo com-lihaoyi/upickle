@@ -69,13 +69,13 @@ sealed trait ObjArrVisitor[-J, +T] {
   def narrow = this.asInstanceOf[ObjArrVisitor[Any, T]]
 
 }
-trait ObjVisitor[-J, +T] extends ObjArrVisitor[J, T]{
+trait ObjVisitor[-J, +T] extends ObjArrVisitor[J, T] {
   def visitKey(s: CharSequence, index: Int): Unit
   def isObj = true
   override def narrow = this.asInstanceOf[ObjVisitor[Any, T]]
 }
 
-trait ArrVisitor[-J, +T] extends ObjArrVisitor[J, T]{
+trait ArrVisitor[-J, +T] extends ObjArrVisitor[J, T] {
   def isObj = false
   override def narrow = this.asInstanceOf[ArrVisitor[Any, T]]
 }

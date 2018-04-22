@@ -8,7 +8,7 @@ abstract class Transformable {
 }
 
 object Transformable {
-  case class fromTransformer[T](t: T, w: Transformer[T]) extends Transformable{
+  case class fromTransformer[T](t: T, w: Transformer[T]) extends Transformable {
     def transform[T](f: ujson.Visitor[_, T]): T = {
       w.transform(t, f)
     }

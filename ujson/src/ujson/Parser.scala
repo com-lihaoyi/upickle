@@ -228,7 +228,7 @@ abstract class Parser[J] {
         }
         c = at(j)
       }
-      if(j0 == j) die(i, "expected digit")
+      if (j0 == j) die(i, "expected digit")
     }
 
     if (c == 'e' || c == 'E') {
@@ -244,7 +244,6 @@ abstract class Parser[J] {
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-
           return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
