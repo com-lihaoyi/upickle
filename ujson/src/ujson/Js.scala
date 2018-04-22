@@ -14,7 +14,7 @@ sealed trait Js extends Transformable {
     * Returns the `String` value of this [[Js.Value]], fails if it is not
     * a [[Js.Str]]
     */
-  def str = this match{
+  def str = this match {
     case Js.Str(value) => value
     case _ => throw Js.InvalidData(this, "Expected Js.Str")
   }
@@ -22,7 +22,7 @@ sealed trait Js extends Transformable {
     * Returns the key/value map of this [[Js.Value]], fails if it is not
     * a [[Js.Obj]]
     */
-  def obj = this match{
+  def obj = this match {
     case Js.Obj(value) => value
     case _ => throw Js.InvalidData(this, "Expected Js.Obj")
   }
@@ -30,7 +30,7 @@ sealed trait Js extends Transformable {
     * Returns the elements of this [[Js.Value]], fails if it is not
     * a [[Js.Arr]]
     */
-  def arr = this match{
+  def arr = this match {
     case Js.Arr(value) => value
     case _ => throw Js.InvalidData(this, "Expected Js.Arr")
   }
@@ -38,7 +38,7 @@ sealed trait Js extends Transformable {
     * Returns the `Double` value of this [[Js.Value]], fails if it is not
     * a [[Js.Num]]
     */
-  def num = this match{
+  def num = this match {
     case Js.Num(value) => value
     case _ => throw Js.InvalidData(this, "Expected Js.Num")
   }
@@ -46,7 +46,7 @@ sealed trait Js extends Transformable {
     * Returns the `Boolean` value of this [[Js.Value]], fails if it is not
     * a [[Js.Bool]]
     */
-  def bool = this match{
+  def bool = this match {
     case Js.Bool(value) => value
     case _ => throw Js.InvalidData(this, "Expected Js.Bool")
   }
@@ -74,17 +74,17 @@ sealed trait Js extends Transformable {
 * we don't use so we don't pull in the bulk of Spire) and the Javascript
 * JSON AST.
 */
-object Js extends AstTransformer[Js]{
-  sealed trait Selector{
+object Js extends AstTransformer[Js] {
+  sealed trait Selector {
     def apply(x: Js.Value): Js.Value
     def update(x: Js.Value, y: Js.Value): Unit
   }
-  object Selector{
-    implicit class IntSelector(i: Int) extends Selector{
+  object Selector {
+    implicit class IntSelector(i: Int) extends Selector {
       def apply(x: Js.Value): Js.Value = x.arr(i)
       def update(x: Js.Value, y: Js.Value) = x.arr(i) = y
     }
-    implicit class StringSelector(i: String) extends Selector{
+    implicit class StringSelector(i: String) extends Selector {
       def apply(x: Js.Value): Js.Value = x.obj(i)
       def update(x: Js.Value, y: Js.Value) = x.obj(i) = y
     }
@@ -92,7 +92,7 @@ object Js extends AstTransformer[Js]{
 
   case class Str(value: String) extends Value
   case class Obj(value: mutable.LinkedHashMap[String, Value]) extends Value
-  object Obj{
+  object Obj {
     implicit def from(items: TraversableOnce[(String, Value)]): Obj = {
       Obj(mutable.LinkedHashMap(items.toSeq:_*))
     }
@@ -100,27 +100,27 @@ object Js extends AstTransformer[Js]{
   }
   case class Arr(value: ArrayBuffer[Value]) extends Value
 
-  object Arr{
+  object Arr {
     implicit def from[T <% Js.Value](items: TraversableOnce[T]): Arr =
       Arr(items.map(x => x: Js.Value).to[mutable.ArrayBuffer])
 
     def apply(items: Value*): Arr = Arr(items.to[mutable.ArrayBuffer])
   }
   case class Num(value: Double) extends Value
-  sealed abstract class Bool extends Value{
+  sealed abstract class Bool extends Value {
     def value: Boolean
   }
-  object Bool{
+  object Bool {
     def apply(value: Boolean): Bool = if (value) True else False
     def unapply(bool: Bool): Option[Boolean] = Some(bool.value)
   }
-  case object False extends Bool{
+  case object False extends Bool {
     def value = false
   }
-  case object True extends Bool{
+  case object True extends Bool {
     def value = true
   }
-  case object Null extends Value{
+  case object Null extends Value {
     def value = null
   }
 
@@ -141,7 +141,7 @@ object Js extends AstTransformer[Js]{
   
   type Value = Js
   def transform[T](j: Js.Value, f: ujson.Visitor[_, T]): T = {
-    j match{
+    j match {
       case Js.Null => f.visitNull(-1)
       case Js.True => f.visitTrue(-1)
       case Js.False => f.visitFalse(-1)
@@ -182,7 +182,6 @@ object Js extends AstTransformer[Js]{
     *             This could be the entire blob, or it could be some subtree.
     * @param msg Human-readable text saying what went wrong
     */
-  case class InvalidData(data: Js.Value, msg: String)
-    extends Exception(s"$msg (data: $data)")
+  case class InvalidData(data: Js.Value, msg: String) extends Exception(s"$msg (data: $data)")
 }
 

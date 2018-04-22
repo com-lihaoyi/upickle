@@ -96,7 +96,7 @@ final class AsyncParser[J] protected[ujson](
   final def finish(facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = true
     try churn(facade)
-    catch{case e: ParsingFailedException => Left(e)}
+    catch { case e: ParsingFailedException => Left(e) }
   }
 
   protected[this] final def resizeIfNecessary(need: Int): Unit = {

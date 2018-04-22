@@ -5,23 +5,23 @@ import java.lang.Integer.{bitCount, highestOneBit}
 import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
 
-object FileParser extends Transformer[java.io.File]{
+object FileParser extends Transformer[java.io.File] {
   def transform[T](j: java.io.File, f: Visitor[_, T]) = PathParser.transform(j.toPath, f)
 }
 
-object PathParser extends Transformer[java.nio.file.Path]{
+object PathParser extends Transformer[java.nio.file.Path] {
   def transform[T](j: java.nio.file.Path, f: Visitor[_, T]) = {
-    if (java.nio.file.Files.size(j) > ChannelParser.ParseAsStringThreshold){
+    if (java.nio.file.Files.size(j) > ChannelParser.ParseAsStringThreshold) {
       val channel = java.nio.file.Files.newByteChannel(j)
       try new ChannelParser(channel, ChannelParser.DefaultBufferSize).parse(f)
       finally channel.close()
-    }else{
+    } else {
       ByteArrayParser.transform(java.nio.file.Files.readAllBytes(j), f)
     }
   }
 }
 
-object ChannelParser extends Transformer[ReadableByteChannel]{
+object ChannelParser extends Transformer[ReadableByteChannel] {
   def transform[T](j: ReadableByteChannel, f: Visitor[_, T]) = {
     new ChannelParser(j, DefaultBufferSize).parse(f)
   }
