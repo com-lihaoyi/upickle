@@ -307,11 +307,18 @@ object ExampleTests extends TestSuite {
     'json{
       'construction{
         import ujson.Js
-        val json = Js.Arr(
+
+        val json0 = Js.Arr(
+          Js.Obj("myFieldA" -> Js.Num(1), "myFieldB" -> Js.Str("g")),
+          Js.Obj("myFieldA" -> Js.Num(2), "myFieldB" -> Js.Str("k"))
+        )
+
+        val json = Js.Arr( // The `Js.Num` and `Js.Str` calls are optional
           Js.Obj("myFieldA" -> 1, "myFieldB" -> "g"),
           Js.Obj("myFieldA" -> 2, "myFieldB" -> "k")
         )
 
+        json0 ==> json
         json.toString ==> """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
 
         val json2 = Js.Obj(
@@ -378,14 +385,14 @@ object ExampleTests extends TestSuite {
         import upickle.default._
         transform(1).to[Js.Value] ==> Js.Num(1)
         transform("hello").to[Js.Value] ==> Js.Str("hello")
-        transform(("hello", 9)).to[Js.Value] ==> Js.Arr(Js.Str("hello"), Js.Num(9))
+        transform(("hello", 9)).to[Js.Value] ==> Js.Arr("hello", 9)
         transform(Thing(3, "3")).to[Js.Value] ==>
-          Js.Obj("myFieldA" -> Js.Num(3), "myFieldB" -> Js.Str("3"))
+          Js.Obj("myFieldA" -> 3, "myFieldB" -> "3")
 
         transform(Js.Num(1)).to[Int] ==> 1
         transform(Js.Str("hello")).to[String] ==> "hello"
-        transform(Js.Arr(Js.Str("hello"), Js.Num(9))).to[(String, Int)] ==> ("hello", 9)
-        transform(Js.Obj("myFieldA" -> Js.Num(3), "myFieldB" -> Js.Str("3"))).to[Thing] ==>
+        transform(Js.Arr("hello", 9)).to[(String, Int)] ==> ("hello", 9)
+        transform(Js.Obj("myFieldA" -> 3, "myFieldB" -> "3")).to[Thing] ==>
           Thing(3, "3")
       }
 
@@ -398,18 +405,18 @@ object ExampleTests extends TestSuite {
         val bar = Bar("omg", Seq(Foo(1), Foo(2)))
 
         upickle.default.transform(bar).to[Map[String, Js.Value]] ==>
-          Map(
-            "name" -> Js.Str("omg"),
+          Map[String, Js.Value](
+            "name" -> "omg",
             "foos" -> Js.Arr(
-              Js.Obj("i" -> Js.Num(1)),
-              Js.Obj("i" -> Js.Num(2))
+              Js.Obj("i" -> 1),
+              Js.Obj("i" -> 2)
             )
           )
 
       }
       'misc {
         // It can be used for parsing JSON into an AST
-        val exampleAst = Js.Arr(Js.Num(1), Js.Num(2), Js.Num(3))
+        val exampleAst = Js.Arr(1, 2, 3)
 
         ujson.transform("[1, 2, 3]", Js) ==> exampleAst
 
