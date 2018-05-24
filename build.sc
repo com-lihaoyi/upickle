@@ -65,7 +65,7 @@ trait JsonModule extends CommonPublishModule{
 }
 
 object ujson extends Module{
-  object js extends Cross[JsonJsModule]("2.11.11", "2.12.4")
+  object js extends Cross[JsonJsModule]("2.11.11", "2.12.6")
   class JsonJsModule(val crossScalaVersion: String) extends JsonModule with ScalaJSModule {
 
     def scalaJSVersion = "0.6.22"
@@ -76,21 +76,21 @@ object ujson extends Module{
     }
   }
 
-  object jvm extends Cross[JsonJvmModule]("2.11.11", "2.12.4")
+  object jvm extends Cross[JsonJvmModule]("2.11.11", "2.12.6")
   class JsonJvmModule(val crossScalaVersion: String) extends JsonModule{
     def platformSegment = "jvm"
 
     object test extends JawnTestModule
   }
 
-  object argonaut extends Cross[ArgonautModule]("2.11.11", "2.12.4")
+  object argonaut extends Cross[ArgonautModule]("2.11.11", "2.12.6")
   class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2")
   }
-  object json4s extends Cross[Json4sModule]("2.11.11", "2.12.4")
+  object json4s extends Cross[Json4sModule]("2.11.11", "2.12.6")
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
@@ -101,7 +101,7 @@ object ujson extends Module{
     )
   }
 
-  object circe extends Cross[CirceModule]("2.11.11", "2.12.4")
+  object circe extends Cross[CirceModule]("2.11.11", "2.12.6")
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
@@ -109,7 +109,7 @@ object ujson extends Module{
     def ivyDeps = Agg(ivy"io.circe::circe-parser:0.9.1")
   }
 
-  object play extends Cross[PlayModule]("2.11.11", "2.12.4")
+  object play extends Cross[PlayModule]("2.11.11", "2.12.6")
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-play"
     def platformSegment = "jvm"
@@ -193,7 +193,7 @@ trait UpickleModule extends CommonPublishModule{
 
 
 object upickle extends Module{
-  object jvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.4")
+  object jvm extends Cross[UpickleJvmModule]("2.11.11", "2.12.6")
   class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
@@ -209,7 +209,7 @@ object upickle extends Module{
     }
   }
 
-  object js extends Cross[UpickleJsModule]("2.11.11", "2.12.4")
+  object js extends Cross[UpickleJsModule]("2.11.11", "2.12.6")
   class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
     def moduleDeps = Seq(ujson.js())
     def platformSegment = "js"
@@ -229,7 +229,7 @@ object upickle extends Module{
 }
 
 trait BenchModule extends CommonModule{
-  def scalaVersion = "2.12.4"
+  def scalaVersion = "2.12.6"
   def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
     ivy"io.circe::circe-core::0.9.1",
@@ -247,7 +247,7 @@ object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
     def scalaJSVersion = "0.6.22"
     def platformSegment = "js"
-    def moduleDeps = Seq(upickle.js("2.12.4").test)
+    def moduleDeps = Seq(upickle.js("2.12.6").test)
     def run(args: String*) = T.command {
       finalMainClassOpt() match{
         case Left(err) => mill.eval.Result.Failure(err)
@@ -265,7 +265,7 @@ object bench extends Module {
 
   object jvm extends BenchModule {
     def platformSegment = "jvm"
-    def moduleDeps = Seq(upickle.jvm("2.12.4").test)
+    def moduleDeps = Seq(upickle.jvm("2.12.6").test)
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
       ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
