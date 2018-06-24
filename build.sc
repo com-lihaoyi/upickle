@@ -226,6 +226,27 @@ object upickle extends Module{
       def scalaJSVersion = "0.6.22"
     }
   }
+
+  object refinedJvm extends Cross[RefinedJvmModule]("2.11.11", "2.12.4")
+  class RefinedJvmModule(val crossScalaVersion: String) extends CommonPublishModule {
+    def artifactName = "upickle-refined"
+    def platformSegment = "jvm"
+    def moduleDeps = Seq(upickle.jvm())
+    def ivyDeps = Agg(
+      ivy"eu.timepit::refined:0.9.0"
+    )
+  }
+
+  object refinedJs extends Cross[RefinedJsModule]("2.11.11", "2.12.4")
+  class RefinedJsModule(val crossScalaVersion: String) extends CommonPublishModule with ScalaJSModule {
+    def artifactName = "upickle-refined"
+    def platformSegment = "js"
+    def scalaJSVersion = "0.6.22"
+    def moduleDeps = Seq(upickle.js())
+    def ivyDeps = Agg(
+      ivy"eu.timepit::refined_sjs0.6:0.9.0"
+    )
+  }
 }
 
 trait BenchModule extends CommonModule{

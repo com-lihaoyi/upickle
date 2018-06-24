@@ -183,6 +183,20 @@
         properly defined, serializing a data structure to a @hl.scala{String}
         should never throw an exception.
 
+    @sect{Refined integration}
+
+      @p
+        To use upickle in combination with the refined library, add the following to your
+        SBT config:
+      @hl.scala
+        libraryDependencies += "com.lihaoyi" %% "upickle-refined" % "0.6.6"
+
+      @p
+        You can then add the following import and @code{macroRW} will be able to derive
+        @code{ReadWriter}s for case classes using refined types.
+      @hl.scala
+        import upickle.refined.RefinedRW._
+    
     @sect{Read/Writing Other Things}
 
       @p
