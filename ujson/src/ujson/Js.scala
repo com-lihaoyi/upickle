@@ -50,6 +50,13 @@ sealed trait Js extends Transformable {
     case Js.Bool(value) => value
     case _ => throw Js.InvalidData(this, "Expected Js.Bool")
   }
+  /**
+    * Returns true if the value of this [[Js.Value]] is Js.Null, false otherwise
+    */
+  def isNull = this match {
+    case Js.Null => true
+    case _ => false
+  }
 
   def apply(s: Js.Selector): Js.Value = s(this)
   def update(s: Js.Selector, v: Js.Value): Unit = s(this) = v
