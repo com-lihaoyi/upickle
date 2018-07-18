@@ -79,7 +79,7 @@ final class AsyncParser[J] protected[ujson](
 
   final def absorb(buf: ByteBuffer, facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = false
-    val buflen = buf.limit - buf.position
+    val buflen = buf.limit() - buf.position()
     val need = len + buflen
     resizeIfNecessary(need)
     buf.get(data, len, buflen)

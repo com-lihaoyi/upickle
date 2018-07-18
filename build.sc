@@ -1,4 +1,4 @@
-import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._
+import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill.scalanativelib._
 
 trait CommonModule extends ScalaModule {
 
@@ -81,6 +81,17 @@ object ujson extends Module{
     def platformSegment = "jvm"
 
     object test extends JawnTestModule
+  }
+
+  object native extends Cross[JsonNativeModule]("2.11.12")
+  class JsonNativeModule(val crossScalaVersion: String) extends JsonModule with ScalaNativeModule{
+    def scalaNativeVersion = "0.3.8"
+
+    def platformSegment = "native"
+
+    object test extends JawnTestModule with TestScalaNativeModule{
+      def scalaNativeVersion = "0.3.8"
+    }
   }
 
   object argonaut extends Cross[ArgonautModule]("2.11.11", "2.12.4")
@@ -206,6 +217,18 @@ object upickle extends Module{
         ujson.play(),
       )
       def ivyDeps = super.ivyDeps() ++ bench.jvm.ivyDeps()
+    }
+  }
+
+  object native extends Cross[UpickleNativeModule]("2.11.12")
+  class UpickleNativeModule(val crossScalaVersion: String) extends UpickleModule with ScalaNativeModule{
+    def platformSegment = "native"
+    def scalaNativeVersion = "0.3.8"
+    def moduleDeps = Seq(ujson.native())
+
+    object test extends UpickleTestModule with TestScalaNativeModule{
+      def scalaNativeVersion = "0.3.8"
+      def ivyDeps = super.ivyDeps()
     }
   }
 
