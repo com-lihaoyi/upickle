@@ -67,7 +67,7 @@ abstract class Parser[J] {
    * The checkpoint() method is used to allow some parsers to store
    * their progress.
    */
-  protected[this] def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]]): Unit
+  protected[this] def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]], path: List[Any]): Unit
 
   /**
    * Should be called when parsing is finished.
@@ -373,6 +373,9 @@ abstract class Parser[J] {
    * worse than manually constructed if/else statements or something
    * else. Also, it may be possible to reorder some cases for speed
    * improvements.
+   *
+   * @param j index/position in the source json
+   * @param path the json path in the tree
    */
   @tailrec
   protected[this] final def rparse(state: Int,
@@ -380,7 +383,7 @@ abstract class Parser[J] {
                                    stack: List[ObjArrVisitor[_, J]],
                                    path: List[Any]) : (J, Int) = {
     val i = reset(j)
-    checkpoint(state, i, stack)
+    checkpoint(state, i, stack, path)
     def facade: Visitor[_, J] = stack.head.subVisitor.asInstanceOf[Visitor[_, J]]
     val c = at(i)
 

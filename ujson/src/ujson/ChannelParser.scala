@@ -131,7 +131,7 @@ final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends S
       i
     }
 
-  protected[this] final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]]): Unit = ()
+  protected[this] final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]], path: List[Any]): Unit = ()
 
   /**
    * This is a specialized accessor for the case where our underlying

@@ -1,10 +1,11 @@
 package ujson
 
-import scala.annotation.{switch, tailrec}
-import scala.math.max
-import scala.collection.mutable
-import scala.util.control
 import java.nio.ByteBuffer
+
+import scala.annotation.switch
+import scala.collection.mutable
+import scala.math.max
+import scala.util.control
 
 object AsyncParser {
 
@@ -14,7 +15,7 @@ object AsyncParser {
   case object SingleValue extends Mode(-1, -1)
 
   def apply[J](mode: Mode = SingleValue): AsyncParser[J] =
-    new AsyncParser(state = mode.start, curr = 0, stack = Nil,
+    new AsyncParser(state = mode.start, curr = 0, stack = Nil, path = Nil,
       data = new Array[Byte](131072), len = 0, allocated = 131072,
       offset = 0, done = false, streamMode = mode.value)
 }
@@ -61,6 +62,7 @@ final class AsyncParser[J] protected[ujson](
                                             protected[ujson] var state: Int,
                                             protected[ujson] var curr: Int,
                                             protected[ujson] var stack: List[ObjArrVisitor[_, J]],
+                                            protected[ujson] var path: List[Any],
                                             protected[ujson] var data: Array[Byte],
                                             protected[ujson] var len: Int,
                                             protected[ujson] var allocated: Int,
@@ -75,7 +77,7 @@ final class AsyncParser[J] protected[ujson](
   protected[this] final def column(i: Int) = i - pos
 
   final def copy() =
-    new AsyncParser(state, curr, stack, data.clone, len, allocated, offset, done, streamMode)
+    new AsyncParser(state, curr, stack, path, data.clone, len, allocated, offset, done, streamMode)
 
   final def absorb(buf: ByteBuffer, facade: Visitor[_, J]): Either[ParsingFailedException, Seq[J]] = {
     done = false
@@ -211,7 +213,7 @@ final class AsyncParser[J] protected[ujson](
           val (value, j) = if (state <= 0) {
             parse(offset, facade)
           } else {
-            rparse(state, curr, stack, Nil)
+            rparse(state, curr, stack, path)
           }
           if (streamMode > 0) {
             state = ASYNC_POSTVAL
@@ -268,10 +270,16 @@ final class AsyncParser[J] protected[ujson](
    * arguments are the exact arguments we can pass to rparse to
    * continue where we left off.
    */
-  protected[this] final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]]) {
+  override protected[this] final def checkpoint(
+    state: Int,
+    i: Int,
+    stack: List[ObjArrVisitor[_, J]],
+    path: List[Any]
+  ): Unit = {
     this.state = state
     this.curr = i
     this.stack = stack
+    this.path = path
   }
 
   /**
