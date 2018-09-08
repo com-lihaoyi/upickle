@@ -11,57 +11,57 @@ import ujson.{BytesRenderer, Js, StringRenderer}
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{
-    implicit def rw: RW[Thing] = macroRW
+    implicit val rw: RW[Thing] = macroRW
   }
   case class Big(i: Int, b: Boolean, str: String, c: Char, t: Thing)
   object Big{
-    implicit def rw: RW[Big] = macroRW
+    implicit val rw: RW[Big] = macroRW
   }
 }
 object Sealed{
   sealed trait IntOrTuple
   object IntOrTuple{
-    implicit def rw: RW[IntOrTuple] = RW.merge(IntThing.rw, TupleThing.rw)
+    implicit val rw: RW[IntOrTuple] = RW.merge(IntThing.rw, TupleThing.rw)
   }
   case class IntThing(i: Int) extends IntOrTuple
   object IntThing{
-    implicit def rw: RW[IntThing] = macroRW
+    implicit val rw: RW[IntThing] = macroRW
   }
   case class TupleThing(name: String, t: (Int, Int)) extends IntOrTuple
   object TupleThing{
-    implicit def rw: RW[TupleThing] = macroRW
+    implicit val rw: RW[TupleThing] = macroRW
   }
 }
 object Recursive{
   case class Foo(i: Int)
   object Foo{
-    implicit def rw: RW[Foo] = macroRW
+    implicit val rw: RW[Foo] = macroRW
   }
   case class Bar(name: String, foos: Seq[Foo])
   object Bar{
-    implicit def rw: RW[Bar] = macroRW
+    implicit val rw: RW[Bar] = macroRW
   }
 }
 object Defaults{
   case class FooDefault(i: Int = 10, s: String = "lol")
   object FooDefault{
-    implicit def rw: RW[FooDefault] = macroRW
+    implicit val rw: RW[FooDefault] = macroRW
   }
 }
 object Keyed{
   case class KeyBar(@upickle.key("hehehe") kekeke: Int)
   object KeyBar{
-    implicit def rw: RW[KeyBar] = macroRW
+    implicit val rw: RW[KeyBar] = macroRW
   }
 }
 object KeyedTag{
   sealed trait A
   object A{
-    implicit def rw: RW[A] = RW.merge(B.rw, macroRW[C.type])
+    implicit val rw: RW[A] = RW.merge(B.rw, macroRW[C.type])
   }
   @upickle.key("Bee") case class B(i: Int) extends A
   object B{
-    implicit def rw: RW[B] = macroRW
+    implicit val rw: RW[B] = macroRW
   }
   case object C extends A
 }
