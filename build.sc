@@ -275,7 +275,7 @@ object bench extends Module {
       finalMainClassOpt() match{
         case Left(err) => mill.eval.Result.Failure(err)
         case Right(_) =>
-          ScalaJSBridge.scalaJSBridge().run(
+          ScalaJSWorkerApi.scalaJSWorker().run(
             toolsClasspath().map(_.path),
             nodeJSConfig(),
             fullOpt().path.toIO
