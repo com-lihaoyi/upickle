@@ -1,5 +1,7 @@
 package ujson
 
+import java.nio.charset.StandardCharsets
+
 import org.scalacheck.Gen._
 import org.scalacheck._
 import org.scalatest._
@@ -8,6 +10,9 @@ import org.scalatest.prop._
 import scala.util.Try
 
 class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
+
+  // failed to detect some failures in issue #243 at minSuccessful=10. Raised to minSuccessful=100.
+  override implicit val generatorDrivenConfig: PropertyCheckConfiguration = PropertyCheckConfiguration(minSuccessful = 100)
 
   sealed trait J {
     def build: String = this match {
@@ -67,9 +72,19 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
     if (r0 == r1) r1 else sys.error(s"CharSequence/String parsing disagree($r0, $r1): $s")
     if (r1 == r2) r1 else sys.error(s"String/ByteBuffer parsing disagree($r1, $r2): $s")
 
-    val async = AsyncParser[Unit](AsyncParser.SingleValue)
-    val r3 = async.absorb(s, NoOpVisitor).isRight && async.finish(NoOpVisitor).isRight
-    if (r1 == r3) r1 else sys.error(s"Sync/Async parsing disagree($r1, $r3): $s")
+    locally {
+      val async = AsyncParser[Unit](AsyncParser.SingleValue)
+      val r3 = async.absorb(s, NoOpVisitor).isRight && async.finish(NoOpVisitor).isRight
+      if (r1 == r3) r1 else sys.error(s"Sync/Async parsing disagree($r1, $r3): $s")
+    }
+
+    locally {
+      val async = AsyncParser[Unit](AsyncParser.SingleValue)
+      val r3 = s.getBytes(StandardCharsets.UTF_8).foldLeft(true) { (isValid, byte) =>
+        isValid && async.absorb(Array(byte), NoOpVisitor).isRight
+      } && async.finish(NoOpVisitor).isRight
+      if (r1 == r3) r1 else sys.error(s"Sync/Async parsing disagree($r1, $r3): $s")
+    }
   }
 
   property("syntax-checking") {

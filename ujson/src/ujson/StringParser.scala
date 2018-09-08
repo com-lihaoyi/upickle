@@ -17,7 +17,7 @@ private[ujson] final class StringParser[J](s: String) extends SyncParser[J] with
   final def column(i: Int) = i
   final def newline(i: Int) { line += 1 }
   final def reset(i: Int): Int = i
-  final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]]): Unit = ()
+  final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]], path: List[Any]): Unit = ()
   final def at(i: Int): Char = Platform.charAt(s, i)
   final def at(i: Int, j: Int): CharSequence = s.substring(i, j)
   final def atEof(i: Int) = i == s.length
