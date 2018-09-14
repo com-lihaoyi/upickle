@@ -153,11 +153,15 @@ object Renderer {
         case '\r' => sb.append("\\r")
         case '\t' => sb.append("\\t")
         case c =>
-          if (c < ' ' || (c > '~' && unicode)) sb.append("\\u%04x" format c.toInt)
-          else sb.append(c)
+          if (c < ' ' || (c > '~' && unicode)) {
+            sb.append("\\u").append(toHex((c >> 12) & 15)).append(toHex((c >> 8) & 15))
+              .append(toHex((c >> 4) & 15)).append(toHex(c & 15))
+          } else sb.append(c)
       }
       i += 1
     }
     sb.append('"')
   }
+
+  private def toHex(nibble: Int): Char = (nibble + (if (nibble >= 10) 87 else 48)).toChar
 }
