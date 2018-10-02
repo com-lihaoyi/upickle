@@ -23,13 +23,13 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson with Api.No
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
-  def write[T: Writer](t: T, indent: Int = -1, escapeUnicode: Boolean = true): String = {
+  def write[T: Writer](t: T, indent: Int = -1, escapeUnicode: Boolean = false): String = {
     transform(t).to(StringRenderer(indent, escapeUnicode)).toString
   }
 
   def writeJs[T: Writer](t: T): Js.Value = transform(t).to[Js.Value]
 
-  def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = true): Unit = {
+  def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
     transform(t).to(new Renderer(out, indent = indent, escapeUnicode))
   }
 

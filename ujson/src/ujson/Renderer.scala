@@ -20,17 +20,17 @@ object BytesRenderer{
 
   }
 }
-case class StringRenderer(indent: Int = -1, escapeUnicode: Boolean = true)
+case class StringRenderer(indent: Int = -1, escapeUnicode: Boolean = false)
   extends BaseRenderer(new java.io.StringWriter(), indent, escapeUnicode)
 
 case class Renderer(out: java.io.Writer,
                     indent: Int = -1,
-                    escapeUnicode: Boolean = true) extends BaseRenderer[java.io.Writer](out, indent, escapeUnicode)
+                    escapeUnicode: Boolean = false) extends BaseRenderer[java.io.Writer](out, indent, escapeUnicode)
 
 class BaseRenderer[T <: java.io.Writer]
                   (out: T,
                    indent: Int = -1,
-                   escapeUnicode: Boolean = true) extends ujson.Visitor[T, T]{
+                   escapeUnicode: Boolean = false) extends ujson.Visitor[T, T]{
   var depth: Int = 0
   val colonSnippet = if (indent == -1) ":" else ": "
 

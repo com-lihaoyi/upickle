@@ -17,7 +17,10 @@ object PrimitiveTests extends TestSuite {
     'String{
       'plain-rw("i am a cow", """ "i am a cow" """)
       'quotes-rw("i am a \"cow\"", """ "i am a \"cow\"" """)
-      'unicode-rw("叉烧包")
+      'unicode-{
+        rw("叉烧包")
+        rw("""\u53c9\u70e7\u5305""")
+      }
       'null-rw(null: String, "null")
     }
     'Symbol{

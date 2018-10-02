@@ -11,8 +11,11 @@ class TestUtil[Api <: upickle.Api](val api: Api){
   def rw[T: Reader: Writer](t: T, s: String*) = {
     rwk[T, T](t, s:_*)(x => x)
   }
-  def rwk[T: Reader: Writer, V](t: T, sIn: String*)(normalize: T => V) = {
-    val writtenT = write(t)
+  def rwEscape[T: Reader: Writer](t: T, s: String*) = {
+    rwk[T, T](t, s:_*)(x => x, escapeUnicode = true)
+  }
+  def rwk[T: Reader: Writer, V](t: T, sIn: String*)(normalize: T => V, escapeUnicode: Boolean = false) = {
+    val writtenT = write(t, escapeUnicode = true)
 
     val strings = sIn.map(_.trim)
 

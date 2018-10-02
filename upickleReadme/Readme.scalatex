@@ -751,7 +751,7 @@
     @sect{0.6.7}
       @ul
         @li
-          Added the @hl.scala{escapeUnicode: Boolean = true} flag to @code{ujson.Js#Render}
+          Added the @hl.scala{escapeUnicode: Boolean = false} flag to @code{ujson.Js#Render}
           and @code{ujson.Renderer}; pass in @hl.scala{false} to rrender unicode
           characters verbatim rather than escaping them via @code{\uXXXX}.
     @sect{0.6.6}

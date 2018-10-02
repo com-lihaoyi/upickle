@@ -72,7 +72,7 @@ sealed trait Js extends Transformable {
 
   def transform[T](f: ujson.Visitor[_, T]) = Js.transform(this, f)
   override def toString = render()
-  def render(indent: Int = -1, escapeUnicode: Boolean = true) = this.transform(StringRenderer(indent, escapeUnicode)).toString
+  def render(indent: Int = -1, escapeUnicode: Boolean = false) = this.transform(StringRenderer(indent, escapeUnicode)).toString
 }
 
 /**
