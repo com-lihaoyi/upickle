@@ -14,8 +14,8 @@ import java.nio.ByteBuffer
  * update its own mutable position fields.
  */
 final class ByteBufferParser[J](src: ByteBuffer) extends SyncParser[J] with ByteBasedParser[J] {
-  private[this] final val start = src.position
-  private[this] final val limit = src.limit - start
+  private[this] final val start = src.position()
+  private[this] final val limit = src.limit() - start
 
   private[this] var lineState = 0
   protected[this] def line(): Int = lineState
