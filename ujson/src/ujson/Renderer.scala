@@ -20,15 +20,17 @@ object BytesRenderer{
 
   }
 }
-case class StringRenderer(indent: Int = -1)
-  extends BaseRenderer(new java.io.StringWriter(), indent)
+case class StringRenderer(indent: Int = -1, escapeUnicode: Boolean = true)
+  extends BaseRenderer(new java.io.StringWriter(), indent, escapeUnicode)
 
 case class Renderer(out: java.io.Writer,
-                    indent: Int = -1) extends BaseRenderer[java.io.Writer](out, indent)
+                    indent: Int = -1,
+                    escapeUnicode: Boolean = true) extends BaseRenderer[java.io.Writer](out, indent, escapeUnicode)
 
 class BaseRenderer[T <: java.io.Writer]
                   (out: T,
-                   indent: Int = -1) extends ujson.Visitor[T, T]{
+                   indent: Int = -1,
+                   escapeUnicode: Boolean = true) extends ujson.Visitor[T, T]{
   var depth: Int = 0
   val colonSnippet = if (indent == -1) ":" else ": "
 
@@ -70,7 +72,7 @@ class BaseRenderer[T <: java.io.Writer]
     def visitKey(s: CharSequence, index: Int): Unit = {
       flushBuffer()
 
-      Renderer.escape(out, s, true)
+      Renderer.escape(out, s, escapeUnicode)
 
       out.append(colonSnippet)
     }
@@ -121,7 +123,7 @@ class BaseRenderer[T <: java.io.Writer]
   def visitString(s: CharSequence, index: Int) = {
     flushBuffer()
     if (s == null) out.append("null")
-    else Renderer.escape(out, s, true)
+    else Renderer.escape(out, s, escapeUnicode)
 
     out
   }

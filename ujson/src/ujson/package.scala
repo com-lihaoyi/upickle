@@ -5,22 +5,22 @@ package object ujson{
 
   def copy(t: Js.Value): Js.Value = transform(t, Js)
 
-  def write(t: Js.Value, indent: Int = -1): String = {
-    transform(t, StringRenderer(indent)).toString
+  def write(t: Js.Value, indent: Int = -1, escapeUnicode: Boolean = true): String = {
+    transform(t, StringRenderer(indent, escapeUnicode)).toString
   }
 
-  def writeTo(t: Js.Value, out: java.io.Writer, indent: Int = -1): Unit = {
-    transform(t, Renderer(out, indent))
+  def writeTo(t: Js.Value, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = true): Unit = {
+    transform(t, Renderer(out, indent, escapeUnicode))
   }
 
   def validate(s: Transformable): Unit = transform(s, NoOpVisitor)
 
-  def reformat(s: Transformable, indent: Int = -1): String = {
-    transform(s, StringRenderer(indent)).toString
+  def reformat(s: Transformable, indent: Int = -1, escapeUnicode: Boolean = true): String = {
+    transform(s, StringRenderer(indent, escapeUnicode)).toString
   }
 
-  def reformatTo(s: Transformable, out: java.io.Writer, indent: Int = -1): Unit = {
-    transform(s, Renderer(out, indent)).toString
+  def reformatTo(s: Transformable, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = true): Unit = {
+    transform(s, Renderer(out, indent, escapeUnicode)).toString
   }
   // End ujson
 }

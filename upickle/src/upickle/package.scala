@@ -5,8 +5,8 @@ package object upickle {
   object json {
     def read(s: Transformable): Js.Value = transform(s, Js)
 
-    def write(t: Js.Value, indent: Int = -1): String = {
-      transform(t, StringRenderer(indent)).toString
+    def write(t: Js.Value, indent: Int = -1, escapeUnicode: Boolean = true): String = {
+      transform(t, StringRenderer(indent, escapeUnicode)).toString
     }
   }
 }
