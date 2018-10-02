@@ -19,7 +19,10 @@ object PrimitiveTests extends TestSuite {
       'quotes-rw("i am a \"cow\"", """ "i am a \"cow\"" """)
       'unicode-{
         rw("叉烧包")
-        rw("""\u53c9\u70e7\u5305""")
+        upickle.default.write("叉烧包") ==> "\"叉烧包\""
+        upickle.default.write("叉烧包", escapeUnicode = true) ==> "\"\\u53c9\\u70e7\\u5305\""
+        upickle.default.read[String]("\"\\u53c9\\u70e7\\u5305\"") ==> "叉烧包"
+        upickle.default.read[String]("\"叉烧包\"") ==> "叉烧包"
       }
       'null-rw(null: String, "null")
     }
