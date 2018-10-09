@@ -1,8 +1,8 @@
 sudo: false
 language: scala
 scala:
-  - 2.11.11
-  - 2.12.4
+  - 2.11.12
+  - 2.12.6
 
 script:
 - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.2.7/0.2.7 && chmod +x ~/bin/mill
