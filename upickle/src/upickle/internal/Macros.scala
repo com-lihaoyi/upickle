@@ -348,14 +348,8 @@ object Macros {
       def write(i: Int) = {
         val snippet = q"""
           ctx.visitKey(${c.prefix}.objectAttributeKeyWriteMap(${mappedArgs(i)}), -1)
-          val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
-          ctx.visitValue(
-            w.write(
-              ctx.subVisitor.asInstanceOf[ujson.Visitor[Any, Nothing]],
-              v.${TermName(rawArgs(i))}
-            ),
-            -1
-          )
+          val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]]
+          ctx.narrow.visitValue(w.write(ctx.subVisitor, v.${TermName(rawArgs(i))}), -1)
         """
         if (!hasDefaults(i)) snippet
         else q"""if (v.${TermName(rawArgs(i))} != ${defaults(i)}) $snippet"""
