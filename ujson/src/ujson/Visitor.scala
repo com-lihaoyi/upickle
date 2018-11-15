@@ -18,13 +18,13 @@ trait Visitor[-T, +J] {
     * @param index json source position at the start of the `[` being visited
     * @return a [[Visitor]] used for visiting the elements of the array
     */
-  def visitArray(index: Int): ArrVisitor[T, J]
+  def visitArray(length: Int, index: Int): ArrVisitor[T, J]
 
   /**
     * @param index json source position at the start of the `{` being visited
     * @return a [[ObjVisitor]] used for visiting the keys/values of the object
     */
-  def visitObject(index: Int): ObjVisitor[T, J]
+  def visitObject(length: Int, index: Int): ObjVisitor[T, J]
 
   /**
     * @param index json source position at the start of the `null` being visited
@@ -71,6 +71,12 @@ trait Visitor[-T, +J] {
     else visitNumRawString(d.toString, index)
   }
 
+  def visitNum32(d: Float, index: Int): J = visitNumRaw(d, index)
+
+  def visitInt32(i: Int, index: Int): J = visitNumRaw(i, index)
+
+  def visitInt64(i: Long, index: Int): J = visitNumRaw(i, index)
+
   /**
     * Convenience methods to help you compute the decimal-point-index and
     * exponent-index of an arbitrary numeric string
@@ -88,19 +94,22 @@ trait Visitor[-T, +J] {
     */
   def visitString(s: CharSequence, index: Int): J
 
+  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J = {
+    ???
+  }
   /**
     * Version of [[visitArray()]] without source index information.
     *
     * @param index json source position at the start of the `[` being visited
     * @return a [[Visitor]] used for visiting the elements of the array
     */
-  def visitArray(): ArrVisitor[T, J] = visitArray(-1)
+  def visitArray(length: Int): ArrVisitor[T, J] = visitArray(length, -1)
 
   /**
     * @param index json source position at the start of the `{` being visited
     * @return a [[ObjVisitor]] used for visiting the keys/values of the object
     */
-  def visitObject(): ObjVisitor[T, J] = visitObject(-1)
+  def visitObject(length: Int): ObjVisitor[T, J] = visitObject(length, -1)
 
   def visitNull(): J = visitNull(-1)
 

@@ -93,8 +93,8 @@ trait Types{ types =>
       override def visitNumRaw(d: Double, index: Int) = {
         delegatedReader.visitNumRaw(d, index)
       }
-      override def visitObject(index: Int) = delegatedReader.visitObject(index)
-      override def visitArray(index: Int) = delegatedReader.visitArray(index)
+      override def visitObject(length: Int, index: Int) = delegatedReader.visitObject(index)
+      override def visitArray(length: Int, index: Int) = delegatedReader.visitArray(index)
     }
 
     trait MapReader[-T, V, Z] extends BaseReader[T, Z] {
@@ -117,10 +117,10 @@ trait Types{ types =>
       }
       override def visitTrue(index: Int) = mapFunction(delegatedReader.visitTrue(index))
 
-      override def visitObject(index: Int): ujson.ObjVisitor[T, Z] = {
+      override def visitObject(length: Int, index: Int): ujson.ObjVisitor[T, Z] = {
         new MapObjContext[T, V, Z](delegatedReader.visitObject(index), mapNonNullsFunction)
       }
-      override def visitArray(index: Int): ujson.ArrVisitor[T, Z] = {
+      override def visitArray(length: Int, index: Int): ujson.ArrVisitor[T, Z] = {
         new MapArrContext[T, V, Z](delegatedReader.visitArray(index), mapNonNullsFunction)
       }
     }
@@ -195,7 +195,7 @@ trait Types{ types =>
   class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends Reader[V]{
 
     override def expectedMsg = "expected sequence"
-    override def visitArray(index: Int) = new ujson.ArrVisitor[Any, V] {
+    override def visitArray(length: Int, index: Int) = new ujson.ArrVisitor[Any, V] {
       val b = new Array[Any](readers.length)
       var facadesIndex = 0
 
@@ -254,7 +254,7 @@ trait Types{ types =>
   }
   class SingletonR[T](t: T) extends CaseR[T](0){
     override def expectedMsg = "expected dictionary"
-    override def visitObject(index: Int) = new ObjVisitor[Any, T] {
+    override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
       def subVisitor = ujson.NoOpVisitor
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
@@ -287,8 +287,8 @@ trait Types{ types =>
     def findReader(s: String): Reader[T]
 
     override def expectedMsg = taggedExpectedMsg
-    override def visitArray(index: Int) = taggedArrayContext(this, index)
-    override def visitObject(index: Int) = taggedObjectContext(this, index)
+    override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
+    override def visitObject(length: Int, index: Int) = taggedObjectContext(this, index)
   }
   object TaggedReader{
     class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
@@ -321,8 +321,8 @@ trait Types{ types =>
 
   trait TaggedReadWriter[T] extends ReadWriter[T] with TaggedReader[T] with TaggedWriter[T]{
     override def narrow[K <: T] = this.asInstanceOf[ReadWriter[K]]
-    override def visitArray(index: Int) = taggedArrayContext(this, index)
-    override def visitObject(index: Int) = taggedObjectContext(this, index)
+    override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
+    override def visitObject(length: Int, index: Int) = taggedObjectContext(this, index)
 
   }
   object TaggedReadWriter{

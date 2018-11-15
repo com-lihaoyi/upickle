@@ -12,12 +12,12 @@ package ujson
  */
 object NoOpVisitor extends Visitor[Unit, Unit] {
 
-  def visitArray(index: Int) = new ArrVisitor[Unit, Unit] {
+  def visitArray(length: Int, index: Int) = new ArrVisitor[Unit, Unit] {
     def subVisitor = NoOpVisitor.this
     def visitValue(v: Unit, index: Int): Unit = ()
     def visitEnd(index: Int): Unit = ()
   }
-  def visitObject(index: Int) = new ObjVisitor[Unit, Unit] {
+  def visitObject(length: Int, index: Int) = new ObjVisitor[Unit, Unit] {
     def subVisitor = NoOpVisitor.this
     def visitKey(s: CharSequence, index: Int): Unit = ()
     def visitValue(v: Unit, index: Int): Unit = ()

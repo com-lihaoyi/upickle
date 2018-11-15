@@ -38,7 +38,7 @@ object WebJson extends ujson.Transformer[js.Any]{
   }
 
   object Builder extends ujson.Visitor[js.Any, js.Any]{
-    def visitArray(index: Int) = new ArrVisitor[js.Any, js.Any] {
+    def visitArray(length: Int, index: Int) = new ArrVisitor[js.Any, js.Any] {
       val out = new js.Array[js.Any]
       def subVisitor = Builder.this
       def visitValue(v: js.Any, index: Int): Unit = out.append(v)
@@ -46,7 +46,7 @@ object WebJson extends ujson.Transformer[js.Any]{
       def visitEnd(index: Int): js.Any = out
     }
 
-    def visitObject(index: Int) = new ObjVisitor[js.Any, js.Any] {
+    def visitObject(length: Int, index: Int) = new ObjVisitor[js.Any, js.Any] {
       val out = js.Dictionary[js.Any]()
       var currentKey: String = _
       def subVisitor = Builder.this

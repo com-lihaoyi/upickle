@@ -13,10 +13,10 @@ trait CustomVisitor[-T, +V] extends ujson.Visitor[T, V] {
     throw new AbortJsonProcessingException(expectedMsg + " got number")
   }
 
-  def visitObject(index: Int): ujson.ObjVisitor[T, V] = {
+  def visitObject(length: Int, index: Int): ujson.ObjVisitor[T, V] = {
     throw new AbortJsonProcessingException(expectedMsg + " got dictionary")
   }
-  def visitArray(index: Int): ujson.ArrVisitor[T, V] = {
+  def visitArray(length: Int, index: Int): ujson.ArrVisitor[T, V] = {
     throw new AbortJsonProcessingException(expectedMsg + " got sequence")
   }
 

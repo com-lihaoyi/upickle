@@ -43,7 +43,7 @@ class BaseRenderer[T <: java.io.Writer]
       renderIndent()
     }
   }
-  def visitArray(index: Int) = new ArrVisitor[T, T] {
+  def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
     flushBuffer()
     out.append('[')
 
@@ -63,7 +63,7 @@ class BaseRenderer[T <: java.io.Writer]
     }
   }
 
-  def visitObject(index: Int) = new ObjVisitor[T, T] {
+  def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
     flushBuffer()
     out.append('{')
     depth += 1

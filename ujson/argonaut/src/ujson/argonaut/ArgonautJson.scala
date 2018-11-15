@@ -19,8 +19,8 @@ object ArgonautJson extends ujson.AstTransformer[Json]{
     obj => transformObject(f, obj.toList)
   )
 
-  def visitArray(index: Int) = new AstArrVisitor[List](xs => Json.jArray(xs))
-  def visitObject(index: Int) = new AstObjVisitor[ArrayBuffer[(String, Json)]](
+  def visitArray(length: Int, index: Int) = new AstArrVisitor[List](xs => Json.jArray(xs))
+  def visitObject(length: Int, index: Int) = new AstObjVisitor[ArrayBuffer[(String, Json)]](
     vs => Json.jObject(JsonObject.fromTraversableOnce(vs))
   )
 

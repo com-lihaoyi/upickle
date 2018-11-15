@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
 object JNumIndexCheckFacade extends Visitor[Boolean, Boolean] {
-  def visitArray(index: Int)  = new ArrVisitor[Boolean, Boolean] {
+  def visitArray(length: Int, index: Int)  = new ArrVisitor[Boolean, Boolean] {
     var failed = false
     def subVisitor = JNumIndexCheckFacade
     def visitKey(s: CharSequence, index: Int): Unit = ()
@@ -14,7 +14,7 @@ object JNumIndexCheckFacade extends Visitor[Boolean, Boolean] {
     }
     def visitEnd(index: Int): Boolean = !failed
   }
-  def visitObject(index: Int) = new ObjVisitor[Boolean, Boolean] {
+  def visitObject(length: Int, index: Int) = new ObjVisitor[Boolean, Boolean] {
     var failed = false
     def subVisitor = JNumIndexCheckFacade
     def visitKey(s: CharSequence, index: Int): Unit = ()

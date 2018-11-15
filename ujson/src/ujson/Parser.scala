@@ -326,8 +326,8 @@ abstract class Parser[J] {
 
       // if we have a recursive top-level structure, we'll delegate the parsing
       // duties to our good friend rparse().
-      case '[' => rparse(ARRBEG, i + 1, facade.visitArray(i) :: Nil, null :: Nil)
-      case '{' => rparse(OBJBEG, i + 1, facade.visitObject(i) :: Nil, null :: Nil)
+      case '[' => rparse(ARRBEG, i + 1, facade.visitArray(-1, i) :: Nil, null :: Nil)
+      case '{' => rparse(OBJBEG, i + 1, facade.visitObject(-1, i) :: Nil, null :: Nil)
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
@@ -395,10 +395,10 @@ abstract class Parser[J] {
     } else if (state == DATA) {
       // we are inside an object or array expecting to see data
       if (c == '[') {
-        val ctx = try facade.visitArray(i) catch reject(j, path)
+        val ctx = try facade.visitArray(-1, i) catch reject(j, path)
         rparse(ARRBEG, i + 1, ctx :: stack, null :: path)
       } else if (c == '{') {
-        val ctx = try facade.visitObject(i) catch reject(j, path)
+        val ctx = try facade.visitObject(-1, i) catch reject(j, path)
         rparse(OBJBEG, i + 1, ctx :: stack, null :: path)
       } else {
         val ctxt = stack.head.narrow

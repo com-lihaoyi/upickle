@@ -4,12 +4,12 @@ import scala.collection.generic.CanBuildFrom
 
 trait AstTransformer[I] extends Transformer[I] with ujson.Visitor[I, I]{
   def transformArray[T](f: Visitor[_, T], items: TraversableOnce[I]) = {
-    val ctx = f.visitArray(-1).narrow
+    val ctx = f.visitArray(-1, -1).narrow
     for(item <- items) ctx.visitValue(transform(item, ctx.subVisitor), -1)
     ctx.visitEnd(-1)
   }
   def transformObject[T](f: Visitor[_, T], items: TraversableOnce[(String, I)]) = {
-    val ctx = f.visitObject(-1).narrow
+    val ctx = f.visitObject(-1, -1).narrow
     for(kv <- items) {
       ctx.visitKey(kv._1, -1)
       ctx.visitValue(transform(kv._2, ctx.subVisitor), -1)

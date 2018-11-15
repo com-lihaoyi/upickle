@@ -15,7 +15,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object UnitReader extends Reader[Unit] {
-    override def visitObject(index: Int) = new ObjVisitor[Any, Unit] {
+    override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
       def subVisitor = UnitReader
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
@@ -85,7 +85,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def MapReader[K, V](implicit k: Reader[K], v: Reader[V]): Reader[Map[K, V]] = {
     if (k ne StringReader) SeqLikeReader[Array, (K, V)].map(_.toMap)
     else new Reader[Map[K, V]]{
-      override def visitObject(index: Int) = new ObjVisitor[Any, Map[K, V]] {
+      override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Map[K, V]] {
         val strings = mutable.Buffer.empty[K]
         val values = mutable.Buffer.empty[V]
         def subVisitor = v
@@ -108,7 +108,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def expectedMsg = "expected sequence"
-    override def visitArray(index: Int) = new ujson.ArrVisitor[Any, C[T]] {
+    override def visitArray(length: Int, index: Int) = new ujson.ArrVisitor[Any, C[T]] {
       val b = cbf.apply()
 
       def visitValue(v: Any, index: Int): Unit = {
@@ -148,7 +148,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit def EitherReader[T1: Reader, T2: Reader] = new Reader[Either[T1, T2]]{
     override def expectedMsg = "expected sequence"
-    override def visitArray(index: Int) = new ujson.ArrVisitor[Any, Either[T1, T2]] {
+    override def visitArray(length: Int, index: Int) = new ujson.ArrVisitor[Any, Either[T1, T2]] {
       var right: java.lang.Boolean = null
       var value: Either[T1, T2] = _
       def visitValue(v: Any, index: Int): Unit = right match {
@@ -176,8 +176,8 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     EitherReader[T1, T2].narrow[Left[T1, T2]]
 
   implicit object JsValueR extends Reader[Js.Value]{
-    override def visitObject(index: Int) = Js.visitObject(index).narrow
-    override def visitArray(index: Int) = Js.visitArray(index).narrow
+    override def visitObject(length: Int, index: Int) = Js.visitObject(index).narrow
+    override def visitArray(length: Int, index: Int) = Js.visitArray(index).narrow
     override def visitString(s: CharSequence, index: Int) = Js.visitString(s, index)
     override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Js.visitNum(s, decIndex, expIndex, index)

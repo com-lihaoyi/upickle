@@ -171,9 +171,9 @@ object Js extends AstTransformer[Js]{
     }
   }
 
-  def visitArray(index: Int) = new AstArrVisitor[ArrayBuffer](xs => Js.Arr(xs))
+  def visitArray(length: Int, index: Int) = new AstArrVisitor[ArrayBuffer](xs => Js.Arr(xs))
 
-  def visitObject(index: Int) = new AstObjVisitor[mutable.LinkedHashMap[String, Js]](xs => Js.Obj(xs))
+  def visitObject(length: Int, index: Int) = new AstObjVisitor[mutable.LinkedHashMap[String, Js]](xs => Js.Obj(xs))
 
   def visitNull(index: Int) = Js.Null
 
