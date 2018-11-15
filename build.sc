@@ -25,30 +25,6 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     )
   )
 
-  def docJar = T {
-    import ammonite.ops._
-    val outDir = T.ctx().dest
-
-    val javadocDir = outDir / 'javadoc
-    mkdir(javadocDir)
-
-    val files = for{
-      ref <- allSources()
-      if exists(ref.path)
-      p <- ls.rec(ref.path)
-      if p.isFile
-    } yield p.toNIO.toString
-
-    val options = Seq("-d", javadocDir.toNIO.toString, "-usejavacp")
-
-    if (files.nonEmpty) mill.modules.Jvm.subprocess(
-      "scala.tools.nsc.ScalaDoc",
-      scalaCompilerClasspath().map(_.path) ++ compileClasspath().filter(_.path.ext != "pom").map(_.path),
-      mainArgs = (files ++ options).toSeq
-    )
-
-    mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
-  }
 }
 
 trait JsonModule extends CommonPublishModule{
