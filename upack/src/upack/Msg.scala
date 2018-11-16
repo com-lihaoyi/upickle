@@ -5,7 +5,9 @@ import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-sealed trait Msg
+sealed trait Msg extends Transformable{
+  def transform[T](f: Visitor[_, T]) = Msg.transform(this, f)
+}
 case object Null extends Msg
 case object True extends Msg
 case object False extends Msg
@@ -51,16 +53,19 @@ object Msg extends Visitor[Msg, Msg]{
 
       case Arr(items) =>
         val arr = f.visitArray(items.length, -1)
-        items.foreach(transform(_, arr.subVisitor))
+        for(i <- items){
+          arr.narrow.visitValue(transform(i, arr.subVisitor), -1)
+        }
         arr.visitEnd(-1)
 
       case Obj(items) =>
         val obj = f.visitObject(items.size, -1)
         for((k, v) <- items){
-          transform(k, obj.subVisitor)
-          transform(v, obj.subVisitor)
+          obj.visitKey(k.asInstanceOf[Str].value, -1)
+          obj.narrow.visitValue(transform(v, obj.subVisitor), -1)
         }
         obj.visitEnd(-1)
+
     }
   }
   def visitArray(length: Int, index: Int) = new ArrVisitor[Msg, Msg] {

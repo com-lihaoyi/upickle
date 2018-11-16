@@ -18,13 +18,12 @@ object MsgPackTests extends TestSuite{
         println(k + " " + tag + " " + expectedJson + " " + packedStr)
         val packed = Util.stringToBytes(packedStr)
 
-        val jsonified = new MsgPackReader(0, packed, ujson.Js).parse()
+        val jsonified = upack.transform(packed, ujson.Js)
         assert(jsonified == expectedJson)
 
-        val msg = new MsgPackReader(0, packed, upack.Msg).parse()
-        val boas = new ByteArrayOutputStream()
+        val msg = upack.read(packed)
 
-        val rewrittenBytes = Msg.transform(msg, new MsgPackWriter(boas)).toByteArray
+        val rewrittenBytes = upack.write(msg)
         val rewritten = Util.bytesToString(rewrittenBytes)
         val possibilities = testCase("msgpack").arr.map(_.str)
         //        println(msg)
@@ -33,6 +32,8 @@ object MsgPackTests extends TestSuite{
     }
   }
 
+  // Taken from:
+  // https://github.com/kawanet/msgpack-test-suite/tree/e04f6edeaae589c768d6b70fcce80aa786b7800e
   val unitCases = ujson.read("""
     {
       "10.nil.yaml": [

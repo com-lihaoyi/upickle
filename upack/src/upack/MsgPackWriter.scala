@@ -1,7 +1,9 @@
 package upack
+import java.io.ByteArrayOutputStream
+
 import upack.{MsgPackKeys => MPK}
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
-class MsgPackWriter[T <: java.io.OutputStream](out: T) extends Visitor[T, T] {
+class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStream()) extends Visitor[T, T] {
   override def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
     if (length <= 15){
       out.write(MPK.FixArrMask | length)
