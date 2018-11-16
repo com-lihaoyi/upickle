@@ -1,6 +1,7 @@
 package upickle
 
 import ujson._
+import upickle.core.{ArrVisitor, ObjVisitor}
 
 import scala.scalajs.js
 
@@ -16,7 +17,7 @@ trait WebJson extends upickle.core.Types {
   }
 }
 object WebJson extends ujson.Transformer[js.Any]{
-  def transform[T](j: js.Any, f: ujson.Visitor[_, T]): T = {
+  def transform[T](j: js.Any, f: upickle.core.Visitor[_, T]): T = {
     (j: Any) match{
       case s: String => f.visitString(s, -1)
       case n: Double => f.visitNumRaw(n, -1)
@@ -24,11 +25,11 @@ object WebJson extends ujson.Transformer[js.Any]{
       case false => f.visitFalse(-1)
       case null => f.visitNull(-1)
       case s: js.Array[js.Any] =>
-        val ctx = f.visitArray(-1).narrow
+        val ctx = f.visitArray(-1, -1).narrow
         for(i <- s) ctx.visitValue(transform(i, ctx.subVisitor), -1)
         ctx.visitEnd(-1)
       case s: js.Object =>
-        val ctx = f.visitObject(-1).narrow
+        val ctx = f.visitObject(-1, -1).narrow
         for(p <- s.asInstanceOf[js.Dictionary[js.Any]]) {
           ctx.visitKey(p._1, -1)
           ctx.visitValue(transform(p._2, ctx.subVisitor), -1)
@@ -37,7 +38,7 @@ object WebJson extends ujson.Transformer[js.Any]{
     }
   }
 
-  object Builder extends ujson.Visitor[js.Any, js.Any]{
+  object Builder extends upickle.core.Visitor[js.Any, js.Any]{
     def visitArray(length: Int, index: Int) = new ArrVisitor[js.Any, js.Any] {
       val out = new js.Array[js.Any]
       def subVisitor = Builder.this

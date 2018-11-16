@@ -4,7 +4,8 @@ import java.nio.ByteBuffer
 
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, PropSpec}
-object JNumIndexCheckFacade extends Visitor[Boolean, Boolean] {
+import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
+object JNumIndexCheckFacade extends JsVisitor[Boolean, Boolean] {
   def visitArray(length: Int, index: Int)  = new ArrVisitor[Boolean, Boolean] {
     var failed = false
     def subVisitor = JNumIndexCheckFacade

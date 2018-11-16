@@ -6,6 +6,7 @@ import org.scalacheck.Gen._
 import org.scalacheck._
 import org.scalatest._
 import org.scalatest.prop._
+import upickle.core.NoOpVisitor
 
 import scala.util.Try
 

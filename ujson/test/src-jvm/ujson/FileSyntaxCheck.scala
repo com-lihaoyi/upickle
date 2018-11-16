@@ -1,5 +1,7 @@
 package ujson
 
+import upickle.core.NoOpVisitor
+
 import scala.util.Try
 
 class FileSyntaxCheck extends SyntaxCheck {
