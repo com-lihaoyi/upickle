@@ -11,7 +11,7 @@ object PlayJson extends ujson.AstTransformer[JsValue] {
     case JsArray(xs) => transformArray(f, xs)
     case JsBoolean(b) => if (b) f.visitTrue(-1) else f.visitFalse(-1)
     case JsNull => f.visitNull(-1)
-    case JsNumber(d) => f.visitNumRawString(d.toString, -1)
+    case JsNumber(d) => f.visitFloat64String(d.toString, -1)
     case JsObject(kvs) => transformObject(f, kvs)
     case JsString(s) => f.visitString(s, -1)
   }
@@ -25,7 +25,7 @@ object PlayJson extends ujson.AstTransformer[JsValue] {
 
   def visitTrue(index: Int) = JsBoolean(true)
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     JsNumber(BigDecimal(s.toString))
   }
 

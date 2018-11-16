@@ -19,7 +19,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
   class IntegralNumWriter[T](f: T => Double) extends Writer[T] {
     def write0[R](out: Visitor[_, R], v: T): R = {
-      out.visitNumRaw(f(v), -1)
+      out.visitFloat64(f(v), -1)
     }
   }
   implicit object DoubleWriter extends Writer[Double] {
@@ -28,7 +28,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
         case Double.PositiveInfinity => out.visitString("Infinity", -1)
         case Double.NegativeInfinity => out.visitString("-Infinity", -1)
         case d if java.lang.Double.isNaN(d) => out.visitString("NaN", -1)
-        case d => out.visitNumRaw(v, -1)
+        case d => out.visitFloat64(v, -1)
       }
     }
   }
@@ -40,7 +40,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
         case Float.PositiveInfinity => out.visitString("Infinity", -1)
         case Float.NegativeInfinity => out.visitString("-Infinity", -1)
         case d if java.lang.Float.isNaN(d) => out.visitString("NaN", -1)
-        case d => out.visitNumRaw(v, -1)
+        case d => out.visitFloat64(v, -1)
       }
     }
   }
@@ -120,14 +120,14 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     def write0[R](out: Visitor[_, R], v: Either[T1, T2]): R = v match{
       case Left(t1) =>
         val ctx = out.visitArray(2, -1).narrow
-        ctx.visitValue(out.visitNum("0", -1, -1), -1)
+        ctx.visitValue(out.visitFloat64StringParts("0", -1, -1, -1), -1)
 
         ctx.visitValue(implicitly[Writer[T1]].write(ctx.subVisitor, t1), -1)
 
         ctx.visitEnd(-1)
       case Right(t2) =>
         val ctx = out.visitArray(2, -1).narrow
-        ctx.visitValue(out.visitNum("1", -1, -1), -1)
+        ctx.visitValue(out.visitFloat64StringParts("1", -1, -1, -1), -1)
 
         ctx.visitValue(implicitly[Writer[T2]].write(ctx.subVisitor, t2), -1)
 

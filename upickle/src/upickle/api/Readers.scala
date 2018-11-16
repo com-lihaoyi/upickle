@@ -33,15 +33,15 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   class FloatingNumReader[T](f1: Double => T, f2: String => T) extends Reader[T] {
     override def expectedMsg = "expected number or double string"
-    override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = f2(s.toString)
-    override def visitNumRaw(d: Double, index: Int) = f1(d)
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = f2(s.toString)
+    override def visitFloat64(d: Double, index: Int) = f1(d)
     override def visitString(s: CharSequence, index: Int) = f2(s.toString)
   }
 
   class IntegralNumReader[T](f1: Double => T, f2: Long => T) extends Reader[T] {
     override def expectedMsg = "expected number"
-    override def visitNumRaw(d: Double, index: Int) = f1(d)
-    override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    override def visitFloat64(d: Double, index: Int) = f1(d)
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       f2(Util.parseIntegralNum(s, decIndex, expIndex, index))
     }
   }
@@ -179,11 +179,11 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def visitObject(length: Int, index: Int) = Js.visitObject(-1, index).narrow
     override def visitArray(length: Int, index: Int) = Js.visitArray(-1, index).narrow
     override def visitString(s: CharSequence, index: Int) = Js.visitString(s, index)
-    override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Js.visitNum(s, decIndex, expIndex, index)
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      Js.visitFloat64StringParts(s, decIndex, expIndex, index)
     }
-    override def visitNumRaw(d: Double, index: Int) = {
-      Js.visitNumRaw(d, index)
+    override def visitFloat64(d: Double, index: Int) = {
+      Js.visitFloat64(d, index)
     }
     override def visitTrue(index: Int) = Js.visitTrue(index)
     override def visitFalse(index: Int) = Js.visitFalse(index)

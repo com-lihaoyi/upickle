@@ -106,16 +106,16 @@ class BaseRenderer[T <: java.io.Writer]
     out
   }
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     flushBuffer()
     out.append(s)
     out
   }
 
-  override def visitNumRaw(d: Double, index: Int) = {
+  override def visitFloat64(d: Double, index: Int) = {
     val i = d.toInt
-    if (d == i) visitNum(i.toString, -1, -1, index)
-    else super.visitNumRaw(d, index)
+    if (d == i) visitFloat64StringParts(i.toString, -1, -1, index)
+    else super.visitFloat64(d, index)
     flushBuffer()
     out
   }

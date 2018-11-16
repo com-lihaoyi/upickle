@@ -165,7 +165,7 @@ object Js extends AstTransformer[Js]{
       case Js.True => f.visitTrue(-1)
       case Js.False => f.visitFalse(-1)
       case Js.Str(s) => f.visitString(s, -1)
-      case Js.Num(d) => f.visitNumRaw(d, -1)
+      case Js.Num(d) => f.visitFloat64(d, -1)
       case Js.Arr(items) => transformArray(f, items)
       case Js.Obj(items) => transformObject(f, items)
     }
@@ -182,14 +182,14 @@ object Js extends AstTransformer[Js]{
   def visitTrue(index: Int) = Js.True
 
 
-  override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+  override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     Js.Num(
       if (decIndex != -1 || expIndex != -1) s.toString.toDouble
       else Util.parseIntegralNum(s, decIndex, expIndex, index)
     )
   }
 
-  override def visitNumRaw(d: Double, index: Int) = Js.Num(d)
+  override def visitFloat64(d: Double, index: Int) = Js.Num(d)
 
   def visitString(s: CharSequence, index: Int) = Js.Str(s.toString)
 

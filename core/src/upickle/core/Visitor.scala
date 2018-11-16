@@ -12,7 +12,7 @@ package upickle.core
   *
   * When expecting to deal with a subset of the methods; it is common to
   * forward the ones you don't care about to the ones you do; e.g. JSON visitors
-  * would forward all `visitNum32`/`visitInt`/etc. methods to `visitNumRaw`
+  * would forward all `visitFloat32`/`visitInt`/etc. methods to `visitFloat64`
   *
   * @see [[http://www.lihaoyi.com/post/ZeroOverheadTreeProcessingwiththeVisitorPattern.html]]
   * @tparam T ???
@@ -56,7 +56,7 @@ trait Visitor[-T, +J] {
     * @param expIndex index of `e` or `E` relative to the start of the CharSequence, or -1 if omitted
     * @param index    json source position at the start of the number being visited
     */
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): J
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): J
 
   /**
     * Optional handler for raw double values; can be overriden for performance
@@ -64,13 +64,13 @@ trait Visitor[-T, +J] {
     * overhead of stringifying and re-parsing your numbers (e.g. the WebJson
     * transformer gets raw doubles from the underlying Json.parse).
     *
-    * Delegates to `visitNum` if not overriden
+    * Delegates to `visitFloat64StringParts` if not overriden
     *
     * @param d     the input number
     * @param index json source position at the start of the number being visited
     */
-  def visitNumRaw(d: Double, index: Int): J
-  def visitNum32(d: Float, index: Int): J
+  def visitFloat64(d: Double, index: Int): J
+  def visitFloat32(d: Float, index: Int): J
 
   def visitInt8(i: Byte, index: Int): J
   def visitInt16(i: Short, index: Int): J
@@ -89,7 +89,7 @@ trait Visitor[-T, +J] {
     * @param s     the text string being visited
     * @param index json source position at the start of the string being visited
     */
-  def visitNumRawString(s: String, index: Int): J
+  def visitFloat64String(s: String, index: Int): J
 
   /**
     * @param s     the text string being visited
@@ -98,15 +98,6 @@ trait Visitor[-T, +J] {
   def visitString(s: CharSequence, index: Int): J
 
   def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J
-
-  /**
-    * Visit the number in its text representation, without source index information.
-    *
-    * @param s        unparsed text representation of the number.
-    * @param decIndex index of the `.`, relative to the start of the CharSequence, or -1 if omitted
-    * @param expIndex index of `e` or `E` relative to the start of the CharSequence, or -1 if omitted
-    */
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int): J
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int): J
 }

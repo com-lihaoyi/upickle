@@ -34,8 +34,8 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
       case MPK.Ext16 => parseExt(parseUInt16(index + 1))
       case MPK.Ext32 => parseExt(parseUInt32(index + 1))
 
-      case MPK.Float32 => visitor.visitNumRaw(java.lang.Float.intBitsToFloat(parseUInt32(index + 1)), -1)
-      case MPK.Float64 => visitor.visitNumRaw(java.lang.Double.longBitsToDouble(parseUInt64(index + 1)), -1)
+      case MPK.Float32 => visitor.visitFloat64(java.lang.Float.intBitsToFloat(parseUInt32(index + 1)), -1)
+      case MPK.Float64 => visitor.visitFloat64(java.lang.Double.longBitsToDouble(parseUInt64(index + 1)), -1)
 
       case MPK.UInt8 => visitor.visitUInt8(parseUInt8(index + 1).toByte, -1)
       case MPK.UInt16 => visitor.visitUInt16(parseUInt16(index + 1).toShort, -1)

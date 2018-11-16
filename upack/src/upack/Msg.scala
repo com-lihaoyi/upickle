@@ -43,8 +43,8 @@ object Msg extends Visitor[Msg, Msg]{
       case UInt32(value) => f.visitUInt32(value, -1)
       case UInt64(value) => f.visitUInt64(value, -1)
 
-      case Float32(value) => f.visitNum32(value, -1)
-      case Float64(value) => f.visitNumRaw(value, -1)
+      case Float32(value) => f.visitFloat32(value, -1)
+      case Float64(value) => f.visitFloat64(value, -1)
 
       case Str(value) => f.visitString(value, -1)
       case Binary(value) => f.visitBin(value, 0, value.length, -1)
@@ -85,11 +85,11 @@ object Msg extends Visitor[Msg, Msg]{
 
   def visitTrue(index: Int) = True
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = ???
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = ???
 
-  def visitNumRaw(d: Double, index: Int) = Float64(d)
+  def visitFloat64(d: Double, index: Int) = Float64(d)
 
-  def visitNum32(d: Float, index: Int) = Float32(d)
+  def visitFloat32(d: Float, index: Int) = Float32(d)
 
   def visitInt8(i: Byte, index: Int) = Int8(i)
   def visitInt16(i: Short, index: Int) = Int16(i)
@@ -103,14 +103,14 @@ object Msg extends Visitor[Msg, Msg]{
 
   def visitUInt64(i: Long, index: Int) = UInt64(i)
 
-  def visitNumRawString(s: Predef.String, index: Int) = ???
+  def visitFloat64String(s: Predef.String, index: Int) = ???
 
   def visitString(s: CharSequence, index: Int) = Str(s.toString)
 
   def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) =
     Binary(bytes.slice(offset, offset + len))
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int) = ???
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int) = ???
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) =
     Ext(tag, bytes.slice(offset, offset + len))

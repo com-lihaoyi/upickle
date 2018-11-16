@@ -11,8 +11,8 @@ object ArgonautJson extends ujson.AstTransformer[Json]{
     f.visitNull(-1),
     if (_) f.visitTrue(-1) else f.visitFalse(-1),
     n => n.toDouble match{
-      case Some(d) => f.visitNumRaw(d, -1)
-      case None => f.visitNumRawString(n.asJson.toString(), -1)
+      case Some(d) => f.visitFloat64(d, -1)
+      case None => f.visitFloat64String(n.asJson.toString(), -1)
     },
     f.visitString(_, -1),
     arr => transformArray(f, arr),
@@ -30,7 +30,7 @@ object ArgonautJson extends ujson.AstTransformer[Json]{
 
   def visitTrue(index: Int) = Json.jTrue
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     Json.jNumber(JsonNumber.unsafeDecimal(s.toString))
   }
 

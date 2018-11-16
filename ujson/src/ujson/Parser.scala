@@ -168,7 +168,7 @@ abstract class Parser[J] {
       if (j0 == j)  die(i, "expected digit")
     }
 
-    ctxt.visitValue(facade.visitNum(at(i, j), decIndex, expIndex, i), i)
+    ctxt.visitValue(facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), i)
     j
   }
 
@@ -200,7 +200,7 @@ abstract class Parser[J] {
     if (c == '0') {
       j += 1
       if (atEof(j)) {
-        return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
+        return (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
       }
       c = at(j)
     } else {
@@ -208,7 +208,7 @@ abstract class Parser[J] {
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
@@ -224,7 +224,7 @@ abstract class Parser[J] {
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
@@ -245,14 +245,14 @@ abstract class Parser[J] {
         j += 1
         if (atEof(j)) {
 
-          return (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
         }
         c = at(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
 
-    (facade.visitNum(at(i, j), decIndex, expIndex, i), j)
+    (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
   }
 
   /**

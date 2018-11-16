@@ -49,16 +49,16 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T) extends Visitor[T, T] {
     out
   }
 
-  override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-    visitNumRaw(s.toString.toDouble, index)
+  override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    visitFloat64(s.toString.toDouble, index)
   }
 
-  override def visitNumRaw(d: Double, index: Int) = {
+  override def visitFloat64(d: Double, index: Int) = {
     out.write(MPK.Float64)
     writeUInt64(java.lang.Double.doubleToLongBits(d))
     out
   }
-  override def visitNum32(d: Float, index: Int) = {
+  override def visitFloat32(d: Float, index: Int) = {
     out.write(MPK.Float32)
     writeUInt32(java.lang.Float.floatToIntBits(d))
     out
@@ -167,9 +167,9 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T) extends Visitor[T, T] {
     out.write(((i >> 0) & 0xff).toInt)
   }
 
-  def visitNumRawString(s: String, index: Int) = ???
+  def visitFloat64String(s: String, index: Int) = ???
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int) = ???
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int) = ???
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = ???
 }

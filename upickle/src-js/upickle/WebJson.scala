@@ -20,7 +20,7 @@ object WebJson extends ujson.Transformer[js.Any]{
   def transform[T](j: js.Any, f: upickle.core.Visitor[_, T]): T = {
     (j: Any) match{
       case s: String => f.visitString(s, -1)
-      case n: Double => f.visitNumRaw(n, -1)
+      case n: Double => f.visitFloat64(n, -1)
       case true => f.visitTrue(-1)
       case false => f.visitFalse(-1)
       case null => f.visitNull(-1)
@@ -64,11 +64,11 @@ object WebJson extends ujson.Transformer[js.Any]{
 
     def visitTrue(index: Int) = true.asInstanceOf[js.Any]
 
-    def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toDouble.asInstanceOf[js.Any]
     }
 
-    override def visitNumRaw(d: Double, index: Int) = {
+    override def visitFloat64(d: Double, index: Int) = {
       d.asInstanceOf[js.Any]
     }
 

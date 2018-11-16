@@ -26,12 +26,12 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
   def visitNull(index: Int): Unit = ()
   def visitFalse(index: Int): Unit = ()
   def visitTrue(index: Int): Unit = ()
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Unit = ()
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Unit = ()
   def visitString(s: CharSequence, index: Int): Unit = ()
 
-  def visitNumRaw(d: Double, index: Int) = ()
+  def visitFloat64(d: Double, index: Int) = ()
 
-  def visitNum32(d: Float, index: Int) = ()
+  def visitFloat32(d: Float, index: Int) = ()
 
   def visitInt8(i: Byte, index: Int) = ()
   def visitUInt8(i: Byte, index: Int) = ()
@@ -45,11 +45,11 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
   def visitInt64(i: Long, index: Int) = ()
   def visitUInt64(i: Long, index: Int) = ()
 
-  def visitNumRawString(s: String, index: Int) = ()
+  def visitFloat64String(s: String, index: Int) = ()
 
   def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = ()
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int) = ()
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int) = ()
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = ()
 

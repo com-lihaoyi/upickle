@@ -28,7 +28,7 @@ object JNumIndexCheckFacade extends JsVisitor[Boolean, Boolean] {
   def visitNull(index: Int): Boolean = true
   def visitFalse(index: Int): Boolean = true
   def visitTrue(index: Int): Boolean = true
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Boolean = {
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Boolean = {
     val input = s.toString
     val inputDecIndex = input.indexOf('.')
     val inputExpIndex = if (input.indexOf('e') == -1) input.indexOf("E") else input.indexOf('e')
@@ -41,14 +41,14 @@ object JNumIndexCheckFacade extends JsVisitor[Boolean, Boolean] {
 
 class JNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
 
-  property("visitNum provides the correct indices with parseFromString") {
+  property("visitFloat64StringParts provides the correct indices with parseFromString") {
     forAll { (value: BigDecimal) =>
       val json = s"""{ "num": ${value.toString} }"""
       StringParser.transform(json, JNumIndexCheckFacade) shouldBe true
     }
   }
 
-  property("visitNum provides the correct indices with parseFromByteBuffer") {
+  property("visitFloat64StringParts provides the correct indices with parseFromByteBuffer") {
     forAll { (value: BigDecimal) =>
       val json = s"""{ "num": ${value.toString} }"""
       val bb = ByteBuffer.wrap(json.getBytes("UTF-8"))
@@ -56,13 +56,13 @@ class JNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
     }
   }
 
-  property("visitNum provides the correct indices at the top level with parseFromString") {
+  property("visitFloat64StringParts provides the correct indices at the top level with parseFromString") {
     forAll { (value: BigDecimal) =>
       StringParser.transform(value.toString, JNumIndexCheckFacade) shouldBe true
     }
   }
 
-  property("visitNum provides the correct indices at the top level with parseFromByteBuffer") {
+  property("visitFloat64StringParts provides the correct indices at the top level with parseFromByteBuffer") {
     forAll { (value: BigDecimal) =>
       val bb = ByteBuffer.wrap(value.toString.getBytes("UTF-8"))
       ByteBufferParser.transform(bb, JNumIndexCheckFacade) shouldBe true

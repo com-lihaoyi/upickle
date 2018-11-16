@@ -86,12 +86,12 @@ trait Types{ types =>
       override def visitFalse(index: Int) = delegatedReader.visitFalse(index)
 
       override def visitString(s: CharSequence, index: Int) = delegatedReader.visitString(s, index)
-      override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-        delegatedReader.visitNum(s, decIndex, expIndex, index)
+      override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+        delegatedReader.visitFloat64StringParts(s, decIndex, expIndex, index)
       }
 
-      override def visitNumRaw(d: Double, index: Int) = {
-        delegatedReader.visitNumRaw(d, index)
+      override def visitFloat64(d: Double, index: Int) = {
+        delegatedReader.visitFloat64(d, index)
       }
       override def visitObject(length: Int, index: Int) = delegatedReader.visitObject(-1, index)
       override def visitArray(length: Int, index: Int) = delegatedReader.visitArray(-1, index)
@@ -106,11 +106,11 @@ trait Types{ types =>
 
       override def visitFalse(index: Int) = mapFunction(delegatedReader.visitFalse(index))
       override def visitNull(index: Int) = mapFunction(delegatedReader.visitNull(index))
-      override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-        mapFunction(delegatedReader.visitNum(s, decIndex, expIndex, index))
+      override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+        mapFunction(delegatedReader.visitFloat64StringParts(s, decIndex, expIndex, index))
       }
-      override def visitNumRaw(d: Double, index: Int) = {
-        mapFunction(delegatedReader.visitNumRaw(d, index))
+      override def visitFloat64(d: Double, index: Int) = {
+        mapFunction(delegatedReader.visitFloat64(d, index))
       }
       override def visitString(s: CharSequence, index: Int) = {
         mapFunction(delegatedReader.visitString(s, index))

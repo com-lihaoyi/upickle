@@ -10,10 +10,10 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
   def transform[T](j: JValue, f: Visitor[_, T]) = j match{
     case JArray(xs) => transformArray(f, xs)
     case JBool(b) => if (b) f.visitTrue(-1) else f.visitFalse(-1)
-    case JDecimal(d) => f.visitNumRawString(d.toString, -1)
-    case JDouble(d) => f.visitNumRaw(d, -1)
-    case JInt(i) => f.visitNum(i.toString, -1, -1, -1)
-    case JLong(l) => f.visitNum(l.toString, -1, -1, -1)
+    case JDecimal(d) => f.visitFloat64String(d.toString, -1)
+    case JDouble(d) => f.visitFloat64(d, -1)
+    case JInt(i) => f.visitFloat64StringParts(i.toString, -1, -1, -1)
+    case JLong(l) => f.visitFloat64StringParts(l.toString, -1, -1, -1)
     case JNothing => f.visitNull(-1)
     case JNull => f.visitNull(-1)
     case JObject(kvs) => transformObject(f, kvs)
@@ -31,9 +31,9 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
 
   def visitTrue(index: Int) = JBool(true)
 
-  override def visitNumRaw(d: Double, index: Int) = JDouble(d)
+  override def visitFloat64(d: Double, index: Int) = JDouble(d)
 
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     if (decIndex == -1 && expIndex == -1) {
       if (useBigIntForLong) JInt(BigInt(s.toString))
       else JLong(ujson.util.Util.parseLong(s, 0, s.length))

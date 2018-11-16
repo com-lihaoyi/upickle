@@ -9,7 +9,7 @@ trait CustomVisitor[-T, +V] extends JsVisitor[T, V] {
   def visitString(s: CharSequence, index: Int): V = {
     throw new AbortJsonProcessingException(expectedMsg + " got string")
   }
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): V = {
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): V = {
     throw new AbortJsonProcessingException(expectedMsg + " got number")
   }
 
