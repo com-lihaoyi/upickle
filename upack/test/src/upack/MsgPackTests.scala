@@ -1,6 +1,7 @@
 package upack
 import java.io.ByteArrayOutputStream
 
+import upickle.core.Util
 import utest._
 object MsgPackTests extends TestSuite{
   val unitCases = {
@@ -22,19 +23,28 @@ object MsgPackTests extends TestSuite{
     'hello - {
       for{
         (k, v) <- unitCases.obj
+//        if k != "12.binary.yaml"
+        if k != "50.timestamp.yaml"
+        if k != "60.ext.yaml"
         testCase <- v.arr
         packed0 <- testCase("msgpack").arr
-        if k != "12.binary.yaml"
       }{
-        val (tag, expectedValue) = testCase.obj.find{_._1 != "msgpack"}.get
+        val (tag, expectedJson) = testCase.obj.find{_._1 != "msgpack"}.get
         val packedStr = packed0.str
-        println(k + " " + tag + " " + expectedValue + " " + packedStr)
-        val packed = packedStr.split('-').map(Integer.parseInt(_, 16).toByte)
+        println(k + " " + tag + " " + expectedJson + " " + packedStr)
+        val packed = Util.stringToBytes(packedStr)
 
-        val parsedValue = new MsgPackReader(0, packed, ujson.Js).parse()
-        assert(parsedValue == expectedValue)
+        val jsonified = new MsgPackReader(0, packed, ujson.Js).parse()
+        assert(jsonified == expectedJson)
+
+        val msg = new MsgPackReader(0, packed, upack.Msg).parse()
         val boas = new ByteArrayOutputStream()
-        val out = new MsgPackWriter(boas)
+
+        val rewrittenBytes = Msg.transform(msg, new MsgPackWriter(boas)).toByteArray
+        val rewritten = Util.bytesToString(rewrittenBytes)
+        val possibilities = testCase("msgpack").arr.map(_.str)
+        //        println(msg)
+        assert(possibilities.contains(rewritten))
       }
     }
   }

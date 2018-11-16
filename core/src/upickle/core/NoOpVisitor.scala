@@ -33,6 +33,12 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
 
   def visitNum32(d: Float, index: Int) = ()
 
+  def visitInt8(i: Byte, index: Int) = ()
+  def visitUInt8(i: Byte, index: Int) = ()
+
+  def visitInt16(i: Short, index: Int) = ()
+  def visitUInt16(i: Short, index: Int) = ()
+
   def visitInt32(i: Int, index: Int) = ()
   def visitUInt32(i: Int, index: Int) = ()
 
@@ -44,4 +50,8 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
   def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = ()
 
   def visitNum(s: CharSequence, decIndex: Int, expIndex: Int) = ()
+
+  def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = ()
+
+
 }

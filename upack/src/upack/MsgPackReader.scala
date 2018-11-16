@@ -5,9 +5,9 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
   def parse(): T = {
     (input(index) & 0xFF) match{
       // positive fixint
-      case x if x <= MPK.PositiveFixInt => index += 1; visitor.visitInt32(x & 0x7f, -1)
+      case x if x <= MPK.PositiveFixInt => index += 1; visitor.visitInt8((x & 0x7f).toByte, -1)
 
-      case x if x <= MPK.FixMap=>
+      case x if x <= MPK.FixMap =>
         val n = x & 0x0f
         index += 1
         parseMap(n)
@@ -25,29 +25,34 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
       case MPK.Nil => index += 1; visitor.visitNull(-1)
       case MPK.False => index += 1; visitor.visitFalse(-1)
       case MPK.True => index += 1; visitor.visitTrue(-1)
+
       case MPK.Bin8 => parseBin(parseUInt8(index + 1))
       case MPK.Bin16 => parseBin(parseUInt16(index + 1))
       case MPK.Bin32 => parseBin(parseUInt32(index + 1))
 
-//      case 0xc7 => visitor.visitExt8()
-//      case 0xc8 => visitor.visitExt16()
-//      case 0xc9 => visitor.visitExt32()
+      case MPK.Ext8 => parseExt(parseUInt8(index + 1))
+      case MPK.Ext16 => parseExt(parseUInt16(index + 1))
+      case MPK.Ext32 => parseExt(parseUInt32(index + 1))
+
       case MPK.Float32 => visitor.visitNumRaw(java.lang.Float.intBitsToFloat(parseUInt32(index + 1)), -1)
       case MPK.Float64 => visitor.visitNumRaw(java.lang.Double.longBitsToDouble(parseUInt64(index + 1)), -1)
-      case MPK.UInt8 => visitor.visitInt32(parseUInt8(index + 1) & 0xff, -1)
-      case MPK.UInt16 => visitor.visitUInt32(parseUInt16(index + 1) & 0xffff, -1)
+
+      case MPK.UInt8 => visitor.visitUInt8(parseUInt8(index + 1).toByte, -1)
+      case MPK.UInt16 => visitor.visitUInt16(parseUInt16(index + 1).toShort, -1)
       case MPK.UInt32 => visitor.visitUInt32(parseUInt32(index + 1), -1)
       case MPK.UInt64 => visitor.visitUInt64(parseUInt64(index + 1), -1)
-      case MPK.Int8 => visitor.visitInt32(parseUInt8(index + 1).toByte, -1)
-      case MPK.Int16 => visitor.visitInt32(parseUInt16(index + 1).toShort, -1)
+
+      case MPK.Int8 => visitor.visitInt8(parseUInt8(index + 1).toByte, -1)
+      case MPK.Int16 => visitor.visitInt16(parseUInt16(index + 1).toShort, -1)
       case MPK.Int32 => visitor.visitInt32(parseUInt32(index + 1), -1)
       case MPK.Int64 => visitor.visitInt64(parseUInt64(index + 1), -1)
 
-//      case 0xd4 => visitor.visitFixExt1()
-//      case 0xd5 => visitor.visitFixExt2()
-//      case 0xd6 => visitor.visitFixExt4()
-//      case 0xd7 => visitor.visitFixExt8()
-//      case 0xd8 => visitor.visitFixExt16()
+      case MPK.FixExt1 => index += 1; parseExt(1)
+      case MPK.FixExt2 => index += 1; parseExt(2)
+      case MPK.FixExt4 => index += 1; parseExt(4)
+      case MPK.FixExt8 => index += 1; parseExt(8)
+      case MPK.FixExt16 => index += 1; parseExt(16)
+
       case MPK.Str8 => parseStr(parseUInt8(index + 1))
       case MPK.Str16 => parseStr(parseUInt16(index + 1))
       case MPK.Str32=> parseStr(parseUInt32(index + 1))
@@ -61,7 +66,16 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
       case x if x >= 0xe0 => index += 1; visitor.visitInt32(x | 0xffffffe0, -1)
     }
   }
+  def parseExt(n: Int) = {
+    visitor.visitExt(input(index), input, index + 1, n, -1)
+  }
   def parseKey(): String = (input(index) & 0xFF) match {
+    case x if x <= MPK.FixStr =>
+      val n = x & 0x1f
+      index += 1
+      val res = new String(input, index, n)
+      index += n
+      res
     case MPK.Str8 =>
       val n = parseUInt8(index + 1)
       val res = new String(input, index, n)
@@ -102,6 +116,7 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
   def parseArray(n: Int) = {
     val arr = visitor.visitArray(n, -1)
     var i = 0
+
     while(i < n){
       arr.visitValue(parse(), -1)
       i += 1

@@ -72,7 +72,11 @@ trait Visitor[-T, +J] {
   def visitNumRaw(d: Double, index: Int): J
   def visitNum32(d: Float, index: Int): J
 
+  def visitInt8(i: Byte, index: Int): J
+  def visitInt16(i: Short, index: Int): J
   def visitInt32(i: Int, index: Int): J
+  def visitUInt8(i: Byte, index: Int): J
+  def visitUInt16(i: Short, index: Int): J
   def visitUInt32(i: Int, index: Int): J
 
   def visitInt64(i: Long, index: Int): J
@@ -103,6 +107,8 @@ trait Visitor[-T, +J] {
     * @param expIndex index of `e` or `E` relative to the start of the CharSequence, or -1 if omitted
     */
   def visitNum(s: CharSequence, decIndex: Int, expIndex: Int): J
+
+  def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int): J
 }
 
 /**
