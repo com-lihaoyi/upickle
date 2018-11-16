@@ -34,8 +34,10 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
   def visitNum32(d: Float, index: Int) = ()
 
   def visitInt32(i: Int, index: Int) = ()
+  def visitUInt32(i: Int, index: Int) = ()
 
   def visitInt64(i: Long, index: Int) = ()
+  def visitUInt64(i: Long, index: Int) = ()
 
   def visitNumRawString(s: String, index: Int) = ()
 

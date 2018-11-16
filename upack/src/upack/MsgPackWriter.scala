@@ -65,8 +65,16 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T) extends Visitor[T, T] {
     writeUInt32(i)
     out
   }
+  override def visitUInt32(i: Int, index: Int) = {
+    writeUInt32(i)
+    out
+  }
 
   override def visitInt64(i: Long, index: Int) = {
+    writeUInt64(i)
+    out
+  }
+  override def visitUInt64(i: Long, index: Int) = {
     writeUInt64(i)
     out
   }

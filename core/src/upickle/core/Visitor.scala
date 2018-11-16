@@ -73,8 +73,10 @@ trait Visitor[-T, +J] {
   def visitNum32(d: Float, index: Int): J
 
   def visitInt32(i: Int, index: Int): J
+  def visitUInt32(i: Int, index: Int): J
 
   def visitInt64(i: Long, index: Int): J
+  def visitUInt64(i: Long, index: Int): J
 
   /**
     * Convenience methods to help you compute the decimal-point-index and

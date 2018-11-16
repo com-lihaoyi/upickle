@@ -47,23 +47,41 @@ object core extends Module {
 }
 object upack extends Module {
 
-  object js extends Cross[CoreJsModule]("2.11.12", "2.12.6")
+  trait PackTestModule extends TestModule{
+    def ivyDeps = Agg(
+      ivy"com.lihaoyi::utest::0.6.4",
+      ivy"com.lihaoyi::acyclic:0.1.5"
+    )
 
-  class CoreJsModule(val crossScalaVersion: String) extends CommonPublishModule with ScalaJSModule {
+    def testFrameworks = Seq("utest.runner.Framework")
+  }
+
+  object js extends Cross[PackJsModule]("2.11.12", "2.12.6")
+
+  class PackJsModule(val crossScalaVersion: String) extends CommonPublishModule with ScalaJSModule {
     def moduleDeps = Seq(core.js())
     def artifactName = "upack"
     def millSourcePath = build.millSourcePath / "upack"
     def scalaJSVersion = "0.6.22"
 
     def platformSegment = "js"
+    object test extends Tests with CommonModule with TestScalaJSModule with PackTestModule {
+      def moduleDeps = super.moduleDeps ++ Seq(ujson.js())
+      def scalaJSVersion = "0.6.22"
+      def platformSegment = "js"
+    }
   }
 
-  object jvm extends Cross[CoreJvmModule]("2.11.12", "2.12.6")
-  class CoreJvmModule(val crossScalaVersion: String) extends CommonPublishModule {
+  object jvm extends Cross[PackJvmModule]("2.11.12", "2.12.6")
+  class PackJvmModule(val crossScalaVersion: String) extends CommonPublishModule {
     def moduleDeps = Seq(core.js())
     def platformSegment = "jvm"
     def artifactName = "upack"
     def millSourcePath = build.millSourcePath / "upack"
+    object test extends Tests with CommonModule with PackTestModule {
+      def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm())
+      def platformSegment = "jvm"
+    }
   }
 }
 
@@ -76,7 +94,7 @@ trait JsonModule extends CommonPublishModule{
       ivy"org.scalatest::scalatest::3.0.3",
       ivy"org.scalacheck::scalacheck::1.13.5"
     )
-    def testFrameworks = Seq("org.scalatest.tools.Framework")
+    def testFrameworks = Seq("utest.runner.Framework")
   }
 }
 
