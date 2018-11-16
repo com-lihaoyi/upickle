@@ -1,7 +1,7 @@
 package ujson
 
 import scala.annotation.switch
-
+import upickle.core.Visitor
 /**
  * SyncParser extends Parser to do all parsing synchronously.
  *

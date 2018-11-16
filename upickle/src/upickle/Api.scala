@@ -10,6 +10,8 @@ import language.experimental.macros
 import language.higherKinds
 import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
+import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
+
 /**
  * An instance of the upickle API. There's a default instance at
  * `upickle.default`, but you can also implement it yourself to customize
@@ -40,8 +42,8 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson with Api.No
   def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
 
   case class transform[T: Writer](t: T) extends Transformable{
-    def transform[V](f: ujson.Visitor[_, V]): V = writer[T].transform(t, f)
-    def to[V](f: ujson.Visitor[_, V]): V = transform(f)
+    def transform[V](f: Visitor[_, V]): V = writer[T].transform(t, f)
+    def to[V](f: Visitor[_, V]): V = transform(f)
     def to[V](implicit f: Reader[V]): V = transform(f)
   }
   // End Api
@@ -141,7 +143,7 @@ trait AttributeTagged extends Api{
 
   def taggedExpectedMsg = "expected dictionary"
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
-    new ujson.ObjVisitor[Any, T]{
+    new ObjVisitor[Any, T]{
       private[this] var fastPath = false
       private[this] var context: ObjVisitor[Any, _] = null
       def subVisitor: Visitor[Nothing, Any] =

@@ -1,7 +1,7 @@
 package ujson.argonaut
 
 import argonaut.{Json, JsonNumber, JsonObject}
-import ujson.{ArrVisitor, ObjVisitor, Visitor}
+import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer

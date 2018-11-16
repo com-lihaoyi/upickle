@@ -1,4 +1,4 @@
-package ujson
+package upack
 
 object MsgPackKeys {
   val PositiveFixInt = 0x7f

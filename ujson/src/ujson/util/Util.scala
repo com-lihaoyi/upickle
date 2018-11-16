@@ -1,6 +1,6 @@
 package ujson.util
 
-import ujson.{AbortJsonProcessingException, JsonProcessingException}
+import upickle.core.{AbortJsonProcessingException, JsonProcessingException}
 
 object Util {
   def parseIntegralNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {

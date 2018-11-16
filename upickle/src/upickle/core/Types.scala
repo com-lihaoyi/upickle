@@ -6,7 +6,7 @@ import ujson._
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.ClassTag
-
+import upickle.core.{Visitor, AbortJsonProcessingException, JsonProcessingException}
 /**
 * Basic functionality to be able to read and write objects. Kept as a trait so
 * other internal files can use it, while also mixing it into the `upickle`
@@ -117,16 +117,16 @@ trait Types{ types =>
       }
       override def visitTrue(index: Int) = mapFunction(delegatedReader.visitTrue(index))
 
-      override def visitObject(length: Int, index: Int): ujson.ObjVisitor[T, Z] = {
+      override def visitObject(length: Int, index: Int): ObjVisitor[T, Z] = {
         new MapObjContext[T, V, Z](delegatedReader.visitObject(index), mapNonNullsFunction)
       }
-      override def visitArray(length: Int, index: Int): ujson.ArrVisitor[T, Z] = {
+      override def visitArray(length: Int, index: Int): ArrVisitor[T, Z] = {
         new MapArrContext[T, V, Z](delegatedReader.visitArray(index), mapNonNullsFunction)
       }
     }
 
-    class MapArrContext[T, V, Z](src: ujson.ArrVisitor[T, V],
-                                 f: V => Z) extends ujson.ArrVisitor[T, Z]{
+    class MapArrContext[T, V, Z](src: ArrVisitor[T, V],
+                                 f: V => Z) extends ArrVisitor[T, Z]{
       def subVisitor = src.subVisitor
 
       def visitValue(v: T, index: Int): Unit = src.visitValue(v, index)
@@ -134,8 +134,8 @@ trait Types{ types =>
       def visitEnd(index: Int) = f(src.visitEnd(index))
     }
 
-    class MapObjContext[T, V, Z](src: ujson.ObjVisitor[T, V],
-                                 f: V => Z) extends ujson.ObjVisitor[T, Z]{
+    class MapObjContext[T, V, Z](src: ObjVisitor[T, V],
+                                 f: V => Z) extends ObjVisitor[T, Z]{
       def subVisitor = src.subVisitor
 
       def visitKey(s: CharSequence, index: Int) = src.visitKey(s, index)
@@ -147,9 +147,9 @@ trait Types{ types =>
   }
   trait Writer[T] extends Transformer[T]{
     def narrow[K <: T] = this.asInstanceOf[Writer[K]]
-    def transform[V](v: T, out: ujson.Visitor[_, V]) = write(out, v)
-    def write0[V](out: ujson.Visitor[_, V], v: T): V
-    def write[V](out: ujson.Visitor[_, V], v: T): V = {
+    def transform[V](v: T, out: Visitor[_, V]) = write(out, v)
+    def write0[V](out: Visitor[_, V], v: T): V
+    def write[V](out: Visitor[_, V], v: T): V = {
       if (v == null) out.visitNull(-1)
       else write0(out, v)
     }
@@ -159,11 +159,11 @@ trait Types{ types =>
   object Writer {
 
     class MapWriterNulls[U, T](src: Writer[T], f: U => T) extends Writer[U] {
-      override def write[R](out: ujson.Visitor[_, R], v: U): R = src.write(out, f(v))
-      def write0[R](out: ujson.Visitor[_, R], v: U): R = src.write(out, f(v))
+      override def write[R](out: Visitor[_, R], v: U): R = src.write(out, f(v))
+      def write0[R](out: Visitor[_, R], v: U): R = src.write(out, f(v))
     }
     class MapWriter[U, T](src: Writer[T], f: U => T) extends Writer[U] {
-      def write0[R](out: ujson.Visitor[_, R], v: U): R = src.write(out, f(v))
+      def write0[R](out: Visitor[_, R], v: U): R = src.write(out, f(v))
     }
     def merge[T](writers: Writer[_ <: T]*) = {
       new TaggedWriter.Node(writers.asInstanceOf[Seq[TaggedWriter[T]]]:_*)
@@ -171,10 +171,10 @@ trait Types{ types =>
   }
 
   class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{
-    def write0[R](out: ujson.Visitor[_, R], v: V): R = {
+    def write0[R](out: Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
-        val ctx = out.visitArray()
+        val ctx = out.visitArray(writers.length, -1)
         val vs = f(v)
         var i = 0
         while(i < writers.length){
@@ -195,7 +195,7 @@ trait Types{ types =>
   class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends Reader[V]{
 
     override def expectedMsg = "expected sequence"
-    override def visitArray(length: Int, index: Int) = new ujson.ArrVisitor[Any, V] {
+    override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, V] {
       val b = new Array[Any](readers.length)
       var facadesIndex = 0
 
@@ -226,7 +226,7 @@ trait Types{ types =>
 
   abstract class CaseR[V](val argCount: Int) extends Reader[V]{
     override def expectedMsg = "expected dictionary"
-    trait CaseObjectContext extends ujson.ObjVisitor[Any, V]{
+    trait CaseObjectContext extends ObjVisitor[Any, V]{
       val aggregated = new Array[Any](argCount)
       val found = new Array[Boolean](argCount)
       var currentIndex = -1
@@ -243,7 +243,7 @@ trait Types{ types =>
   trait CaseW[V] extends Writer[V]{
     def writeToObject[R](ctx: ObjVisitor[_, R],
                          v: V): Unit
-    def write0[R](out: ujson.Visitor[_, R], v: V): R = {
+    def write0[R](out: Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
         val ctx = out.visitObject(-1)

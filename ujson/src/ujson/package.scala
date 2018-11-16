@@ -1,5 +1,5 @@
 package object ujson{
-  def transform[T](t: Transformable, v: Visitor[_, T]) = t.transform(v)
+  def transform[T](t: Transformable, v: upickle.core.Visitor[_, T]) = t.transform(v)
 
   def read(s: Transformable): Js.Value = transform(s, Js)
 

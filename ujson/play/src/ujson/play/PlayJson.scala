@@ -2,7 +2,7 @@ package ujson.play
 
 
 import play.api.libs.json._
-import ujson.Visitor
+import upickle.core.Visitor
 
 import scala.collection.mutable.ArrayBuffer
 

@@ -11,7 +11,7 @@ import ujson.util.Util
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
-
+import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
 
 trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object UnitReader extends Reader[Unit] {
@@ -108,7 +108,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def expectedMsg = "expected sequence"
-    override def visitArray(length: Int, index: Int) = new ujson.ArrVisitor[Any, C[T]] {
+    override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, C[T]] {
       val b = cbf.apply()
 
       def visitValue(v: Any, index: Int): Unit = {
@@ -148,7 +148,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit def EitherReader[T1: Reader, T2: Reader] = new Reader[Either[T1, T2]]{
     override def expectedMsg = "expected sequence"
-    override def visitArray(length: Int, index: Int) = new ujson.ArrVisitor[Any, Either[T1, T2]] {
+    override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, Either[T1, T2]] {
       var right: java.lang.Boolean = null
       var value: Either[T1, T2] = _
       def visitValue(v: Any, index: Int): Unit = right match {

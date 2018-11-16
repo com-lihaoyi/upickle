@@ -1,6 +1,6 @@
 package ujson
-
-trait CustomVisitor[-T, +V] extends ujson.Visitor[T, V] {
+import upickle.core.{Visitor, ArrVisitor, ObjVisitor, AbortJsonProcessingException}
+trait CustomVisitor[-T, +V] extends Visitor[T, V] {
   def expectedMsg: String
   def visitNull(index: Int): V = null.asInstanceOf[V]
   def visitTrue(index: Int): V =  throw new AbortJsonProcessingException(expectedMsg + " got boolean")
@@ -13,10 +13,10 @@ trait CustomVisitor[-T, +V] extends ujson.Visitor[T, V] {
     throw new AbortJsonProcessingException(expectedMsg + " got number")
   }
 
-  def visitObject(length: Int, index: Int): ujson.ObjVisitor[T, V] = {
+  def visitObject(length: Int, index: Int): ObjVisitor[T, V] = {
     throw new AbortJsonProcessingException(expectedMsg + " got dictionary")
   }
-  def visitArray(length: Int, index: Int): ujson.ArrVisitor[T, V] = {
+  def visitArray(length: Int, index: Int): ArrVisitor[T, V] = {
     throw new AbortJsonProcessingException(expectedMsg + " got sequence")
   }
 

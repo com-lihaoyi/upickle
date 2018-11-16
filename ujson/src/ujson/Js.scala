@@ -2,7 +2,7 @@ package ujson
 
 
 import ujson.util.Util
-
+import upickle.core.{Visitor, ObjArrVisitor}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -70,7 +70,7 @@ sealed trait Js extends Transformable {
     */
   def update(s: Js.Selector, f: Js.Value => Js.Value): Unit = s(this) = f(s(this))
 
-  def transform[T](f: ujson.Visitor[_, T]) = Js.transform(this, f)
+  def transform[T](f: Visitor[_, T]) = Js.transform(this, f)
   override def toString = render()
   def render(indent: Int = -1, escapeUnicode: Boolean = false) = this.transform(StringRenderer(indent, escapeUnicode)).toString
 }
@@ -159,7 +159,7 @@ object Js extends AstTransformer[Js]{
   
   
   type Value = Js
-  def transform[T](j: Js.Value, f: ujson.Visitor[_, T]): T = {
+  def transform[T](j: Js.Value, f: Visitor[_, T]): T = {
     j match{
       case Js.Null => f.visitNull(-1)
       case Js.True => f.visitTrue(-1)

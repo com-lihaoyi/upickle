@@ -3,7 +3,8 @@ package upickle
 import utest._
 import upickle.legacy.read
 import acyclic.file
-import ujson.{IncompleteParseException, JsonProcessingException, ParseException}
+import ujson.{IncompleteParseException, ParseException}
+import upickle.core.JsonProcessingException
 case class Fee(i: Int, s: String)
 object Fee{
   implicit def rw: upickle.legacy.ReadWriter[Fee] = upickle.legacy.macroRW

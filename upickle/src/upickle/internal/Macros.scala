@@ -292,7 +292,7 @@ object Macros {
                     yield cq"$i => ${mappedArgs(i)}"
                   }
                 }
-                throw new ujson.AbortJsonProcessingException(
+                throw new upickle.core.AbortJsonProcessingException(
                   "missing keys in dictionary: " + keys.mkString(", ")
                 )
               }
@@ -306,7 +306,7 @@ object Macros {
               )
             }
 
-            def subVisitor: ujson.Visitor[_, _] =
+            def subVisitor: upickle.core.Visitor[_, _] =
               if (currentIndex == -1) ujson.NoOpVisitor
               else localReaders(currentIndex)
           }
@@ -351,7 +351,7 @@ object Macros {
           val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
           ctx.visitValue(
             w.write(
-              ctx.subVisitor.asInstanceOf[ujson.Visitor[Any, Nothing]],
+              ctx.subVisitor.asInstanceOf[upickle.core.Visitor[Any, Nothing]],
               v.${TermName(rawArgs(i))}
             ),
             -1
@@ -362,7 +362,7 @@ object Macros {
       }
       q"""
         new ${c.prefix}.CaseW[$targetType]{
-          def writeToObject[R](ctx: ujson.ObjVisitor[_, R],
+          def writeToObject[R](ctx: upickle.core.ObjVisitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}
 

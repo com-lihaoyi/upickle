@@ -2,7 +2,7 @@ package ujson
 
 import scala.annotation.{switch, tailrec}
 import java.nio.ByteBuffer
-
+import upickle.core.{Visitor, ObjArrVisitor}
 /**
   * Basic ByteBuffer parser.
   *

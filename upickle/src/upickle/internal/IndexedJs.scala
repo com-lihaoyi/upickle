@@ -3,6 +3,7 @@ package upickle.internal
 import ujson._
 import ujson.util.Util.reject
 import scala.collection.mutable
+import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
 
 /**
   * A version of [[upickle.Js]] that keeps the index positions of the various AST
@@ -30,7 +31,7 @@ object IndexedJs extends Transformer[IndexedJs]{
     def value = null
   }
 
-  def transform[T](j: IndexedJs, f: ujson.Visitor[_, T]): T = try{
+  def transform[T](j: IndexedJs, f: Visitor[_, T]): T = try{
     j match{
       case IndexedJs.Null(i) => f.visitNull(i)
       case IndexedJs.True(i) => f.visitTrue(i)
@@ -53,8 +54,8 @@ object IndexedJs extends Transformer[IndexedJs]{
   } catch reject(j.index, Nil)
 
 
-  object Builder extends ujson.Visitor[IndexedJs, IndexedJs]{
-    def visitArray(i: Int) = new ArrVisitor[IndexedJs, IndexedJs.Arr] {
+  object Builder extends Visitor[IndexedJs, IndexedJs]{
+    def visitArray(length: Int, i: Int) = new ArrVisitor[IndexedJs, IndexedJs.Arr] {
       val out = mutable.Buffer.empty[IndexedJs]
       def subVisitor = Builder
       def visitValue(v: IndexedJs, index: Int): Unit = {
@@ -63,7 +64,7 @@ object IndexedJs extends Transformer[IndexedJs]{
       def visitEnd(index: Int): IndexedJs.Arr = IndexedJs.Arr(i, out:_*)
     }
 
-    def visitObject(i: Int) = new ObjVisitor[IndexedJs, IndexedJs.Obj] {
+    def visitObject(length: Int, i: Int) = new ObjVisitor[IndexedJs, IndexedJs.Obj] {
       val out = mutable.Buffer.empty[(String, IndexedJs)]
       var currentKey: String = _
       def subVisitor = Builder

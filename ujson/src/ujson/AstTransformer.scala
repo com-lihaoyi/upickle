@@ -1,8 +1,10 @@
 package ujson
-
+import upickle.core.{Visitor, ObjArrVisitor, ObjVisitor, ArrVisitor}
 import scala.collection.generic.CanBuildFrom
 
-trait AstTransformer[I] extends Transformer[I] with ujson.Visitor[I, I]{
+trait AstTransformer[I] extends Transformer[I] with Visitor[I, I]{
+  def apply(t: Transformable): I = t.transform(this)
+
   def transformArray[T](f: Visitor[_, T], items: TraversableOnce[I]) = {
     val ctx = f.visitArray(-1, -1).narrow
     for(item <- items) ctx.visitValue(transform(item, ctx.subVisitor), -1)

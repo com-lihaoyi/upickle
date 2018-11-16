@@ -1,5 +1,5 @@
 package ujson
-
+import upickle.core.{Visitor, ObjVisitor, ArrVisitor}
 /**
  * NullFacade discards all JSON AST information.
  *

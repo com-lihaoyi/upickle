@@ -1,5 +1,7 @@
 package ujson
 
+import upickle.core.{Visitor, ObjArrVisitor}
+
 /**
  * Basic in-memory string parsing.
  *

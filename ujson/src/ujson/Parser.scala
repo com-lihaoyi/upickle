@@ -1,5 +1,5 @@
 package ujson
-
+import upickle.core.{Visitor, ObjArrVisitor, AbortJsonProcessingException, JsonProcessingException, ObjVisitor}
 import java.nio.charset.Charset
 
 import scala.annotation.{switch, tailrec}

@@ -2,14 +2,14 @@ package ujson
 
 import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
-
+import upickle.core.{Visitor, ObjArrVisitor}
 abstract class Transformable {
-  def transform[T](f: ujson.Visitor[_, T]): T
+  def transform[T](f: Visitor[_, T]): T
 }
 
 object Transformable {
   case class fromTransformer[T](t: T, w: Transformer[T]) extends Transformable{
-    def transform[T](f: ujson.Visitor[_, T]): T = {
+    def transform[T](f: Visitor[_, T]): T = {
       w.transform(t, f)
     }
   }

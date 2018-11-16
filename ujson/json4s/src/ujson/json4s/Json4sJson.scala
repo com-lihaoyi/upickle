@@ -1,7 +1,7 @@
 package ujson.json4s
 
 import org.json4s.JsonAST._
-import ujson.{ArrVisitor, ObjVisitor, Visitor}
+import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 
 object Json4sJson extends Json4sJson(false, false)
 

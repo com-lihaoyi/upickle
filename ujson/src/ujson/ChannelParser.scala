@@ -1,5 +1,5 @@
 package ujson
-
+import upickle.core.{Visitor, ObjArrVisitor}
 import java.io.{File, FileInputStream}
 import java.lang.Integer.{bitCount, highestOneBit}
 import java.nio.ByteBuffer

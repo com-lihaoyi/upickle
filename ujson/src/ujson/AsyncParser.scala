@@ -1,5 +1,5 @@
 package ujson
-
+import upickle.core.{Visitor, ObjArrVisitor}
 import java.nio.ByteBuffer
 
 import scala.annotation.switch

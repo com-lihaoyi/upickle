@@ -1,6 +1,6 @@
 package ujson.circe
 
-import ujson.{Transformable, Visitor}
+import upickle.core.Visitor
 import io.circe.{Json, JsonNumber}
 
 import scala.collection.mutable.ArrayBuffer

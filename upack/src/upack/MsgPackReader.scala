@@ -1,5 +1,6 @@
-package ujson
-import ujson.{MsgPackKeys => MPK}
+package upack
+import upickle.core.Visitor
+import upack.{MsgPackKeys => MPK}
 class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[Any, T]) {
   def parse(): T = {
     input(index) match{

@@ -1,10 +1,18 @@
-package ujson
+package upickle.core
 
 /**
-  * Visitor is a type class that describes how ujson should visit json elements.
+  * Standard set of hooks uPickle uses to traverse over a structured data.
+  * A superset of the JSON, MessagePack, and Scala object  hierarchies, since
+  * it needs to support efficiently processing all of them.
   *
-  * Visitors return their results type as [[J]] which may be an AST, e.g. [[AstTransformer]],
-  * or a writer-like type that Visitors apply side-effects to, e.g. [[StringRenderer]], [[BytesRenderer]].
+  * Note that some parameters are un-set (-1) when not available; e.g.
+  * `visitArray`'s `length` is not set when parsing JSON input (since it cannot
+  * be known up front) and the various `index` parameters are not set when
+  * traversing Scala object hierarchies.
+  *
+  * When expecting to deal with a subset of the methods; it is common to
+  * forward the ones you don't care about to the ones you do; e.g. JSON visitors
+  * would forward all `visitNum32`/`visitInt`/etc. methods to `visitNumRaw`
   *
   * @see [[http://www.lihaoyi.com/post/ZeroOverheadTreeProcessingwiththeVisitorPattern.html]]
   * @tparam T ???
@@ -12,7 +20,6 @@ package ujson
   */
 trait Visitor[-T, +J] {
 
-  def apply(t: Transformable): J = t.transform(this)
 
   /**
     * @param index json source position at the start of the `[` being visited

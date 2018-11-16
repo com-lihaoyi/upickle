@@ -1,6 +1,6 @@
-package ujson
-import ujson.{MsgPackKeys => MPK}
-
+package upack
+import upack.{MsgPackKeys => MPK}
+import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 class MsgPackWriter[T <: java.io.OutputStream](out: T) extends Visitor[T, T] {
   override def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
     if (length <= 255){
@@ -16,6 +16,7 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T) extends Visitor[T, T] {
     def visitValue(v: T, index: Int): Unit = () // do nothing
     def visitEnd(index: Int) = out // do nothing
   }
+
   override def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
     if (length <= 255){
       out.write(MPK.FixMap | length)

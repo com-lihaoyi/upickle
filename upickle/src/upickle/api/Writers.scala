@@ -6,24 +6,24 @@ import java.util.UUID
 import ujson.Js
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
-
+import upickle.core.Visitor
 trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object StringWriter extends Writer[String] {
-    def write0[R](out: ujson.Visitor[_, R], v: String): R = out.visitString(v)
+    def write0[R](out: Visitor[_, R], v: String): R = out.visitString(v)
   }
   implicit object UnitWriter extends Writer[Unit] {
-    def write0[R](out: ujson.Visitor[_, R], v: Unit): R = {
+    def write0[R](out: Visitor[_, R], v: Unit): R = {
       out.visitObject(-1).visitEnd(-1)
     }
   }
 
   class IntegralNumWriter[T](f: T => Double) extends Writer[T] {
-    def write0[R](out: ujson.Visitor[_, R], v: T): R = {
+    def write0[R](out: Visitor[_, R], v: T): R = {
       out.visitNumRaw(f(v), -1)
     }
   }
   implicit object DoubleWriter extends Writer[Double] {
-    def write0[R](out: ujson.Visitor[_, R], v: Double): R = {
+    def write0[R](out: Visitor[_, R], v: Double): R = {
       v match{
         case Double.PositiveInfinity => out.visitString("Infinity")
         case Double.NegativeInfinity => out.visitString("-Infinity")
@@ -35,7 +35,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit val IntWriter: Writer[Int] = new IntegralNumWriter(_.toDouble)
 
   implicit object FloatWriter extends Writer[Float] {
-    def write0[R](out: ujson.Visitor[_, R], v: Float): R = {
+    def write0[R](out: Visitor[_, R], v: Float): R = {
       v match{
         case Float.PositiveInfinity => out.visitString("Infinity")
         case Float.NegativeInfinity => out.visitString("-Infinity")
@@ -48,7 +48,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit val ByteWriter: Writer[Byte] = new IntegralNumWriter(_.toDouble)
 
   implicit object BooleanWriter extends Writer[Boolean] {
-    def write0[R](out: ujson.Visitor[_, R], v: Boolean): R = {
+    def write0[R](out: Visitor[_, R], v: Boolean): R = {
       if(v) out.visitTrue() else out.visitFalse()
     }
   }
@@ -63,8 +63,8 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def SomeWriter[T: Writer]: Writer[Some[T]] = OptionWriter[T].narrow[Some[T]]
   implicit def NoneWriter: Writer[None.type] = OptionWriter[Unit].narrow[None.type]
   implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]) = new Writer[C[T]] {
-    def write0[R](out: ujson.Visitor[_, R], v: C[T]): R = {
-      val ctx = out.visitArray().narrow
+    def write0[R](out: Visitor[_, R], v: C[T]): R = {
+      val ctx = out.visitArray(v.size, -1).narrow
       val x = v.iterator
       while(x.nonEmpty){
         val next = x.next().asInstanceOf[T]
@@ -76,8 +76,8 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
   implicit def ArrayWriter[T](implicit r: Writer[T]) = new Writer[Array[T]] {
-    def write0[R](out: ujson.Visitor[_, R], v: Array[T]): R = {
-      val ctx = out.visitArray().narrow
+    def write0[R](out: Visitor[_, R], v: Array[T]): R = {
+      val ctx = out.visitArray(v.length, -1).narrow
       var i = 0
       while(i < v.length){
         ctx.visitValue(r.write(ctx.subVisitor, v(i)), -1)
@@ -90,8 +90,8 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit def MapWriter[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[Map[K, V]] = {
     if (kw eq StringWriter) new Writer[Map[String, V]]{
-      def write0[R](out: ujson.Visitor[_, R], v: Map[String, V]): R = {
-        val ctx = out.visitObject().narrow
+      def write0[R](out: Visitor[_, R], v: Map[String, V]): R = {
+        val ctx = out.visitObject(v.size, -1).narrow
         for(pair <- v){
           val (k1, v1) = pair
           ctx.visitKey(k1, -1)
@@ -105,7 +105,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   }
 
   implicit object DurationWriter extends Writer[Duration]{
-    def write0[R](out: ujson.Visitor[_, R], v: Duration): R = v match{
+    def write0[R](out: Visitor[_, R], v: Duration): R = v match{
       case Duration.Inf => out.visitString("inf", -1)
       case Duration.MinusInf => out.visitString("-inf", -1)
       case x if x eq Duration.Undefined => out.visitString("undef", -1)
@@ -117,16 +117,16 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit val FiniteDurationWriter = DurationWriter.narrow[FiniteDuration]
 
   implicit def EitherWriter[T1: Writer, T2: Writer] = new Writer[Either[T1, T2]]{
-    def write0[R](out: ujson.Visitor[_, R], v: Either[T1, T2]): R = v match{
+    def write0[R](out: Visitor[_, R], v: Either[T1, T2]): R = v match{
       case Left(t1) =>
-        val ctx = out.visitArray().narrow
+        val ctx = out.visitArray(2, -1).narrow
         ctx.visitValue(out.visitNum("0", -1, -1), -1)
 
         ctx.visitValue(implicitly[Writer[T1]].write(ctx.subVisitor, t1), -1)
 
         ctx.visitEnd(-1)
       case Right(t2) =>
-        val ctx = out.visitArray().narrow
+        val ctx = out.visitArray(2, -1).narrow
         ctx.visitValue(out.visitNum("1", -1, -1), -1)
 
         ctx.visitValue(implicitly[Writer[T2]].write(ctx.subVisitor, t2), -1)
@@ -148,7 +148,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def JsFalseW: Writer[Js.False.type] = JsValueW.narrow[Js.False.type]
   implicit def JsNullW: Writer[Js.Null.type] = JsValueW.narrow[Js.Null.type]
   implicit object JsValueW extends Writer[Js.Value] {
-    def write0[R](out: ujson.Visitor[_, R], v: Js.Value): R = {
+    def write0[R](out: Visitor[_, R], v: Js.Value): R = {
       Js.transform(v, out)
     }
   }

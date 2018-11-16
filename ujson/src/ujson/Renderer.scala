@@ -2,7 +2,7 @@ package ujson
 
 import java.io.ByteArrayOutputStream
 
-
+import upickle.core.{Visitor, ArrVisitor, ObjVisitor}
 
 import scala.annotation.switch
 
@@ -30,7 +30,7 @@ case class Renderer(out: java.io.Writer,
 class BaseRenderer[T <: java.io.Writer]
                   (out: T,
                    indent: Int = -1,
-                   escapeUnicode: Boolean = false) extends ujson.Visitor[T, T]{
+                   escapeUnicode: Boolean = false) extends Visitor[T, T]{
   var depth: Int = 0
   val colonSnippet = if (indent == -1) ":" else ": "
 
