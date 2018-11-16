@@ -30,7 +30,7 @@ case class Renderer(out: java.io.Writer,
 class BaseRenderer[T <: java.io.Writer]
                   (out: T,
                    indent: Int = -1,
-                   escapeUnicode: Boolean = false) extends Visitor[T, T]{
+                   escapeUnicode: Boolean = false) extends JsVisitor[T, T]{
   var depth: Int = 0
   val colonSnippet = if (indent == -1) ":" else ": "
 

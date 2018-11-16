@@ -9,11 +9,11 @@ import scala.collection.mutable.ArrayBuffer
 object PlayJson extends ujson.AstTransformer[JsValue] {
   def transform[T](j: JsValue, f: Visitor[_, T]): T = j match{
     case JsArray(xs) => transformArray(f, xs)
-    case JsBoolean(b) => if (b) f.visitTrue() else f.visitFalse()
-    case JsNull => f.visitNull()
+    case JsBoolean(b) => if (b) f.visitTrue(-1) else f.visitFalse(-1)
+    case JsNull => f.visitNull(-1)
     case JsNumber(d) => f.visitNumRawString(d.toString, -1)
     case JsObject(kvs) => transformObject(f, kvs)
-    case JsString(s) => f.visitString(s)
+    case JsString(s) => f.visitString(s, -1)
   }
   def visitArray(length: Int, index: Int) = new AstArrVisitor[Array](JsArray(_))
 

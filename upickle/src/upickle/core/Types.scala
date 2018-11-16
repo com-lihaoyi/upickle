@@ -93,8 +93,8 @@ trait Types{ types =>
       override def visitNumRaw(d: Double, index: Int) = {
         delegatedReader.visitNumRaw(d, index)
       }
-      override def visitObject(length: Int, index: Int) = delegatedReader.visitObject(index)
-      override def visitArray(length: Int, index: Int) = delegatedReader.visitArray(index)
+      override def visitObject(length: Int, index: Int) = delegatedReader.visitObject(-1, index)
+      override def visitArray(length: Int, index: Int) = delegatedReader.visitArray(-1, index)
     }
 
     trait MapReader[-T, V, Z] extends BaseReader[T, Z] {
@@ -118,10 +118,10 @@ trait Types{ types =>
       override def visitTrue(index: Int) = mapFunction(delegatedReader.visitTrue(index))
 
       override def visitObject(length: Int, index: Int): ObjVisitor[T, Z] = {
-        new MapObjContext[T, V, Z](delegatedReader.visitObject(index), mapNonNullsFunction)
+        new MapObjContext[T, V, Z](delegatedReader.visitObject(-1, index), mapNonNullsFunction)
       }
       override def visitArray(length: Int, index: Int): ArrVisitor[T, Z] = {
-        new MapArrContext[T, V, Z](delegatedReader.visitArray(index), mapNonNullsFunction)
+        new MapArrContext[T, V, Z](delegatedReader.visitArray(-1, index), mapNonNullsFunction)
       }
     }
 
@@ -246,7 +246,7 @@ trait Types{ types =>
     def write0[R](out: Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
-        val ctx = out.visitObject(-1)
+        val ctx = out.visitObject(-1, -1)
         writeToObject(ctx, v)
         ctx.visitEnd(-1)
       }
@@ -255,7 +255,7 @@ trait Types{ types =>
   class SingletonR[T](t: T) extends CaseR[T](0){
     override def expectedMsg = "expected dictionary"
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
-      def subVisitor = ujson.NoOpVisitor
+      def subVisitor = NoOpVisitor
 
       def visitKey(s: CharSequence, index: Int): Unit = ???
 

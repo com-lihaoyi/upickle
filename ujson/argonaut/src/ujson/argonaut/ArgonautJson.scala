@@ -8,13 +8,13 @@ import scala.collection.mutable.ArrayBuffer
 
 object ArgonautJson extends ujson.AstTransformer[Json]{
   override def transform[T](j: Json, f: Visitor[_, T]) = j.fold(
-    f.visitNull(),
-    if (_) f.visitTrue() else f.visitFalse(),
+    f.visitNull(-1),
+    if (_) f.visitTrue(-1) else f.visitFalse(-1),
     n => n.toDouble match{
       case Some(d) => f.visitNumRaw(d, -1)
       case None => f.visitNumRawString(n.asJson.toString(), -1)
     },
-    f.visitString(_),
+    f.visitString(_, -1),
     arr => transformArray(f, arr),
     obj => transformObject(f, obj.toList)
   )

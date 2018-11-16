@@ -1,5 +1,4 @@
-package ujson
-import upickle.core.{Visitor, ObjVisitor, ArrVisitor}
+package upickle.core
 /**
  * NullFacade discards all JSON AST information.
  *
@@ -29,4 +28,18 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
   def visitTrue(index: Int): Unit = ()
   def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): Unit = ()
   def visitString(s: CharSequence, index: Int): Unit = ()
+
+  def visitNumRaw(d: Double, index: Int) = ()
+
+  def visitNum32(d: Float, index: Int) = ()
+
+  def visitInt32(i: Int, index: Int) = ()
+
+  def visitInt64(i: Long, index: Int) = ()
+
+  def visitNumRawString(s: String, index: Int) = ()
+
+  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = ()
+
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int) = ()
 }

@@ -1,6 +1,6 @@
 package ujson
 import upickle.core.{Visitor, ArrVisitor, ObjVisitor, AbortJsonProcessingException}
-trait CustomVisitor[-T, +V] extends Visitor[T, V] {
+trait CustomVisitor[-T, +V] extends JsVisitor[T, V] {
   def expectedMsg: String
   def visitNull(index: Int): V = null.asInstanceOf[V]
   def visitTrue(index: Int): V =  throw new AbortJsonProcessingException(expectedMsg + " got boolean")

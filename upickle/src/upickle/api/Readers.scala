@@ -176,8 +176,8 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     EitherReader[T1, T2].narrow[Left[T1, T2]]
 
   implicit object JsValueR extends Reader[Js.Value]{
-    override def visitObject(length: Int, index: Int) = Js.visitObject(index).narrow
-    override def visitArray(length: Int, index: Int) = Js.visitArray(index).narrow
+    override def visitObject(length: Int, index: Int) = Js.visitObject(-1, index).narrow
+    override def visitArray(length: Int, index: Int) = Js.visitArray(-1, index).narrow
     override def visitString(s: CharSequence, index: Int) = Js.visitString(s, index)
     override def visitNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Js.visitNum(s, decIndex, expIndex, index)

@@ -6,8 +6,9 @@ import acyclic.file
 import upickle.{TestUtil, default}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
-import ujson.{IncompleteParseException, NoOpVisitor, ParseException, Transformable}
+import ujson.{IncompleteParseException, ParseException, Transformable}
 import ujson.{BytesRenderer, Js, StringRenderer}
+import upickle.core.NoOpVisitor
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{

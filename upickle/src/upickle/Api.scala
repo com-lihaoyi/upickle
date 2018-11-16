@@ -10,7 +10,7 @@ import language.experimental.macros
 import language.higherKinds
 import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
-import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
+import upickle.core._
 
 /**
  * An instance of the upickle API. There's a default instance at
@@ -117,7 +117,7 @@ trait LegacyApi extends Api{
 
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
-    val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(-1)
+    val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(-1, -1)
     ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
 
     ctx.visitValue(w.write(out, v), -1)
@@ -155,7 +155,7 @@ trait AttributeTagged extends Api{
         else {
           if (s.toString == tagName) () //do nothing
           else {
-            val slowCtx = IndexedJs.Builder.visitObject(index).narrow
+            val slowCtx = IndexedJs.Builder.visitObject(-1, index).narrow
             slowCtx.visitKey(s, index)
             context = slowCtx
           }
@@ -170,7 +170,7 @@ trait AttributeTagged extends Api{
           if (facade0 == null) {
             throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
           }
-          val fastCtx = facade0.visitObject(index)
+          val fastCtx = facade0.visitObject(-1, index)
           context = fastCtx
           fastPath = true
       }
@@ -186,7 +186,7 @@ trait AttributeTagged extends Api{
           if (delegate == null){
             throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil, null)
           }
-          val ctx2 = delegate.visitObject(-1)
+          val ctx2 = delegate.visitObject(-1, -1)
           for (p <- x.value0) {
             val (k0, v) = p
             val k = k0.toString
@@ -202,7 +202,7 @@ trait AttributeTagged extends Api{
     }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
-    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(-1)
+    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(-1, -1)
     ctx.visitKey(tagName, -1)
     ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
     w.writeToObject(ctx, v)

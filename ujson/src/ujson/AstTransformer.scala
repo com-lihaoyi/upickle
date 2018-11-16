@@ -2,7 +2,7 @@ package ujson
 import upickle.core.{Visitor, ObjArrVisitor, ObjVisitor, ArrVisitor}
 import scala.collection.generic.CanBuildFrom
 
-trait AstTransformer[I] extends Transformer[I] with Visitor[I, I]{
+trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
   def apply(t: Transformable): I = t.transform(this)
 
   def transformArray[T](f: Visitor[_, T], items: TraversableOnce[I]) = {

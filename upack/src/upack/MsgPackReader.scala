@@ -22,9 +22,9 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
         index += 1
         parseStr(n)
 
-      case MPK.Nil => index += 1; visitor.visitNull()
-      case MPK.False => index += 1; visitor.visitFalse()
-      case MPK.True => index += 1; visitor.visitTrue()
+      case MPK.Nil => index += 1; visitor.visitNull(-1)
+      case MPK.False => index += 1; visitor.visitFalse(-1)
+      case MPK.True => index += 1; visitor.visitTrue(-1)
       case MPK.Bin8 => parseBin(parseUInt8(index + 1))
       case MPK.Bin16 => parseBin(parseUInt16(index + 1))
       case MPK.Bin32 => parseBin(parseUInt32(index + 1))

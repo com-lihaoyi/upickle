@@ -1,3 +1,5 @@
+import upickle.core.NoOpVisitor
+
 package object ujson{
   def transform[T](t: Transformable, v: upickle.core.Visitor[_, T]) = t.transform(v)
 

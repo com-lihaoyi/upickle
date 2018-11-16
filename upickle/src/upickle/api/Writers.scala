@@ -9,11 +9,11 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import upickle.core.Visitor
 trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object StringWriter extends Writer[String] {
-    def write0[R](out: Visitor[_, R], v: String): R = out.visitString(v)
+    def write0[R](out: Visitor[_, R], v: String): R = out.visitString(v, -1)
   }
   implicit object UnitWriter extends Writer[Unit] {
     def write0[R](out: Visitor[_, R], v: Unit): R = {
-      out.visitObject(-1).visitEnd(-1)
+      out.visitObject(-1, -1).visitEnd(-1)
     }
   }
 
@@ -25,9 +25,9 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object DoubleWriter extends Writer[Double] {
     def write0[R](out: Visitor[_, R], v: Double): R = {
       v match{
-        case Double.PositiveInfinity => out.visitString("Infinity")
-        case Double.NegativeInfinity => out.visitString("-Infinity")
-        case d if java.lang.Double.isNaN(d) => out.visitString("NaN")
+        case Double.PositiveInfinity => out.visitString("Infinity", -1)
+        case Double.NegativeInfinity => out.visitString("-Infinity", -1)
+        case d if java.lang.Double.isNaN(d) => out.visitString("NaN", -1)
         case d => out.visitNumRaw(v, -1)
       }
     }
@@ -37,9 +37,9 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object FloatWriter extends Writer[Float] {
     def write0[R](out: Visitor[_, R], v: Float): R = {
       v match{
-        case Float.PositiveInfinity => out.visitString("Infinity")
-        case Float.NegativeInfinity => out.visitString("-Infinity")
-        case d if java.lang.Float.isNaN(d) => out.visitString("NaN")
+        case Float.PositiveInfinity => out.visitString("Infinity", -1)
+        case Float.NegativeInfinity => out.visitString("-Infinity", -1)
+        case d if java.lang.Float.isNaN(d) => out.visitString("NaN", -1)
         case d => out.visitNumRaw(v, -1)
       }
     }
@@ -49,7 +49,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit object BooleanWriter extends Writer[Boolean] {
     def write0[R](out: Visitor[_, R], v: Boolean): R = {
-      if(v) out.visitTrue() else out.visitFalse()
+      if(v) out.visitTrue(-1) else out.visitFalse(-1)
     }
   }
   implicit val CharWriter: Writer[Char] = StringWriter.comap[Char](_.toString)

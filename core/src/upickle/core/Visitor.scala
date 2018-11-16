@@ -51,7 +51,6 @@ trait Visitor[-T, +J] {
   /**
     * Visit the number in its text representation.
     *
-    * @see [[Js.visitNum()]] for an example of parsing into numeric types
     * @param s        unparsed text representation of the number.
     * @param decIndex index of the `.`, relative to the start of the CharSequence, or -1 if omitted
     * @param expIndex index of `e` or `E` relative to the start of the CharSequence, or -1 if omitted
@@ -67,22 +66,15 @@ trait Visitor[-T, +J] {
     *
     * Delegates to `visitNum` if not overriden
     *
-    * Unused by raw json parsers such as [[ByteBasedParser]] or [[CharBasedParser]].
-    *
     * @param d     the input number
     * @param index json source position at the start of the number being visited
     */
-  def visitNumRaw(d: Double, index: Int): J = {
-    val i = d.toInt
-    if(i == d) visitNum(i.toString, -1, -1, index)
-    else visitNumRawString(d.toString, index)
-  }
+  def visitNumRaw(d: Double, index: Int): J
+  def visitNum32(d: Float, index: Int): J
 
-  def visitNum32(d: Float, index: Int): J = visitNumRaw(d, index)
+  def visitInt32(i: Int, index: Int): J
 
-  def visitInt32(i: Int, index: Int): J = visitNumRaw(i, index)
-
-  def visitInt64(i: Long, index: Int): J = visitNumRaw(i, index)
+  def visitInt64(i: Long, index: Int): J
 
   /**
     * Convenience methods to help you compute the decimal-point-index and
@@ -91,9 +83,7 @@ trait Visitor[-T, +J] {
     * @param s     the text string being visited
     * @param index json source position at the start of the string being visited
     */
-  def visitNumRawString(s: String, index: Int): J = {
-    visitNum(s, s.indexOf('.'), s.indexOf('E') match{case -1 => s.indexOf('e') case n => n}, -1)
-  }
+  def visitNumRawString(s: String, index: Int): J
 
   /**
     * @param s     the text string being visited
@@ -101,44 +91,16 @@ trait Visitor[-T, +J] {
     */
   def visitString(s: CharSequence, index: Int): J
 
-  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J = {
-    ???
-  }
-  /**
-    * Version of [[visitArray()]] without source index information.
-    *
-    * @param index json source position at the start of the `[` being visited
-    * @return a [[Visitor]] used for visiting the elements of the array
-    */
-  def visitArray(length: Int): ArrVisitor[T, J] = visitArray(length, -1)
-
-  /**
-    * @param index json source position at the start of the `{` being visited
-    * @return a [[ObjVisitor]] used for visiting the keys/values of the object
-    */
-  def visitObject(length: Int): ObjVisitor[T, J] = visitObject(length, -1)
-
-  def visitNull(): J = visitNull(-1)
-
-  def visitFalse(): J = visitFalse(-1)
-
-  def visitTrue(): J = visitTrue(-1)
+  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J
 
   /**
     * Visit the number in its text representation, without source index information.
     *
-    * @see [[Js.visitNum()]] for an example of parsing into numeric types
     * @param s        unparsed text representation of the number.
     * @param decIndex index of the `.`, relative to the start of the CharSequence, or -1 if omitted
     * @param expIndex index of `e` or `E` relative to the start of the CharSequence, or -1 if omitted
     */
-  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int): J = visitNum(s, decIndex, expIndex, -1)
-
-  /**
-    * @param s     the text string being visited
-    * @param index json source position at the start of the string being visited
-    */
-  def visitString(s: CharSequence): J = visitString(s, -1)
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int): J
 }
 
 /**

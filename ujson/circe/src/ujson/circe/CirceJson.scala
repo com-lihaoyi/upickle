@@ -7,10 +7,10 @@ import scala.collection.mutable.ArrayBuffer
 object CirceJson extends ujson.AstTransformer[Json]{
 
   override def transform[T](j: Json, f: Visitor[_, T]) = j.fold(
-    f.visitNull(),
-    if (_) f.visitTrue() else f.visitFalse(),
+    f.visitNull(-1),
+    if (_) f.visitTrue(-1) else f.visitFalse(-1),
     n => f.visitNumRaw(n.toDouble, -1),
-    f.visitString(_),
+    f.visitString(_, -1),
     arr => transformArray(f, arr),
     obj => transformObject(f, obj.toList)
   )

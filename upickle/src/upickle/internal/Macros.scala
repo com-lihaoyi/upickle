@@ -307,7 +307,7 @@ object Macros {
             }
 
             def subVisitor: upickle.core.Visitor[_, _] =
-              if (currentIndex == -1) ujson.NoOpVisitor
+              if (currentIndex == -1) upickle.core.NoOpVisitor
               else localReaders(currentIndex)
           }
         }

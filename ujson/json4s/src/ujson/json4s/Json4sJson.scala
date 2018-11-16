@@ -9,16 +9,16 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
   extends ujson.AstTransformer[JValue] {
   def transform[T](j: JValue, f: Visitor[_, T]) = j match{
     case JArray(xs) => transformArray(f, xs)
-    case JBool(b) => if (b) f.visitTrue() else f.visitFalse()
+    case JBool(b) => if (b) f.visitTrue(-1) else f.visitFalse(-1)
     case JDecimal(d) => f.visitNumRawString(d.toString, -1)
     case JDouble(d) => f.visitNumRaw(d, -1)
     case JInt(i) => f.visitNum(i.toString, -1, -1, -1)
     case JLong(l) => f.visitNum(l.toString, -1, -1, -1)
-    case JNothing => f.visitNull()
-    case JNull => f.visitNull()
+    case JNothing => f.visitNull(-1)
+    case JNull => f.visitNull(-1)
     case JObject(kvs) => transformObject(f, kvs)
     case JSet(xs) => transformArray(f, xs)
-    case JString(s) => f.visitString(s)
+    case JString(s) => f.visitString(s, -1)
   }
 
 

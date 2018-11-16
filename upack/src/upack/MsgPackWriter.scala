@@ -111,4 +111,7 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T) extends Visitor[T, T] {
     out.write(((i >> 0) & 0xff).toInt)
   }
 
+  def visitNumRawString(s: String, index: Int) = ???
+
+  def visitNum(s: CharSequence, decIndex: Int, expIndex: Int) = ???
 }

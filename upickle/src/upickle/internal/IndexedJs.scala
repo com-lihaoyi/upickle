@@ -40,11 +40,11 @@ object IndexedJs extends Transformer[IndexedJs]{
       case IndexedJs.Num(i, s, d, e) => f.visitNum(s, d, e, i)
       case IndexedJs.NumRaw(i, d) => f.visitNumRaw(d, i)
       case IndexedJs.Arr(i, items @_*) =>
-        val ctx = f.visitArray(-1).narrow
+        val ctx = f.visitArray(-1, -1).narrow
         for(item <- items) try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
         ctx.visitEnd(i)
       case IndexedJs.Obj(i, items @_*) =>
-        val ctx = f.visitObject(-1).narrow
+        val ctx = f.visitObject(-1, -1).narrow
         for((k, item) <- items) {
           try ctx.visitKey(k, i) catch reject(i, Nil)
           try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
@@ -54,7 +54,7 @@ object IndexedJs extends Transformer[IndexedJs]{
   } catch reject(j.index, Nil)
 
 
-  object Builder extends Visitor[IndexedJs, IndexedJs]{
+  object Builder extends JsVisitor[IndexedJs, IndexedJs]{
     def visitArray(length: Int, i: Int) = new ArrVisitor[IndexedJs, IndexedJs.Arr] {
       val out = mutable.Buffer.empty[IndexedJs]
       def subVisitor = Builder
