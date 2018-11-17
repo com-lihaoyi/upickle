@@ -38,7 +38,7 @@ object WebJson extends ujson.Transformer[js.Any]{
     }
   }
 
-  object Builder extends upickle.core.Visitor[js.Any, js.Any]{
+  object Builder extends JsVisitor[js.Any, js.Any]{
     def visitArray(length: Int, index: Int) = new ArrVisitor[js.Any, js.Any] {
       val out = new js.Array[js.Any]
       def subVisitor = Builder.this

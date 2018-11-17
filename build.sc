@@ -94,7 +94,7 @@ trait JsonModule extends CommonPublishModule{
       ivy"org.scalatest::scalatest::3.0.3",
       ivy"org.scalacheck::scalacheck::1.13.5"
     )
-    def testFrameworks = Seq("utest.runner.Framework")
+    def testFrameworks = Seq("org.scalatest.tools.Framework")
   }
 }
 
