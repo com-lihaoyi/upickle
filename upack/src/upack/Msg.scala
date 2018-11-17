@@ -7,10 +7,84 @@ import scala.collection.mutable.ArrayBuffer
 
 sealed trait Msg extends Transformable{
   def transform[T](f: Visitor[_, T]) = Msg.transform(this, f)
+
+  /**
+    * Returns the `String` value of this [[Msg]], fails if it is not
+    * a [[upack.Str]]
+    */
+  def binary = this match{
+    case Binary(value) => value
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Str")
+  }
+  /**
+    * Returns the `String` value of this [[Msg]], fails if it is not
+    * a [[upack.Str]]
+    */
+  def str = this match{
+    case Str(value) => value
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Str")
+  }
+  /**
+    * Returns the key/value map of this [[Msg]], fails if it is not
+    * a [[upack.Obj]]
+    */
+  def obj = this match{
+    case Obj(value) => value
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Obj")
+  }
+  /**
+    * Returns the elements of this [[Msg]], fails if it is not
+    * a [[upack.Arr]]
+    */
+  def arr = this match{
+    case Arr(value) => value
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Arr")
+  }
+  /**
+    * Returns the `Double` value of this [[Msg]], fails if it is not
+    * a [[upack.Int32]], [[upack.Int64]] or [[upack.UInt64]]
+    */
+  def int32 = this match{
+    case Int32(value) => value
+    case Int64(value) => value.toInt
+    case UInt64(value) => value.toInt
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
+  }
+  /**
+    * Returns the `Double` value of this [[Msg]], fails if it is not
+    * a [[upack.Int32]], [[upack.Int64]] or [[upack.UInt64]]
+    */
+  def int64 = this match{
+    case Int32(value) => value.toLong
+    case Int64(value) => value
+    case UInt64(value) => value
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
+  }
+  /**
+    * Returns the `Boolean` value of this [[Msg]], fails if it is not
+    * a [[upack.Bool]]
+    */
+  def bool = this match{
+    case Bool(value) => value
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Bool")
+  }
+  /**
+    * Returns true if the value of this [[Msg]] is ujson.Null, false otherwise
+    */
+  def isNull = this match {
+    case Null => true
+    case _ => false
+  }
+
+
 }
 case object Null extends Msg
-case object True extends Msg
-case object False extends Msg
+case object True extends Bool{
+  def value = true
+}
+case object False extends Bool{
+  def value = false
+}
 case class Int32(value: Int) extends Msg
 case class Int64(value: Long) extends Msg
 case class UInt64(value: Long) extends Msg
@@ -22,8 +96,44 @@ case class Arr(value: mutable.ArrayBuffer[Msg]) extends Msg
 case class Obj(value: mutable.Map[Msg, Msg]) extends Msg
 case class Ext(tag: Byte, data: Array[Byte]) extends Msg
 
-object Msg extends Visitor[Msg, Msg]{
+sealed abstract class Bool extends Msg{
+  def value: Boolean
+}
+object Bool{
+  def apply(value: Boolean): Bool = if (value) True else False
+  def unapply(bool: Bool): Option[Boolean] = Some(bool.value)
+}
 
+object Msg extends Visitor[Msg, Msg]{
+  /**
+    * Thrown when uPickle tries to convert a JSON blob into a given data
+    * structure but fails because part the blob is invalid
+    *
+    * @param data The section of the JSON blob that uPickle tried to convert.
+    *             This could be the entire blob, or it could be some subtree.
+    * @param msg Human-readable text saying what went wrong
+    */
+  case class InvalidData(data: Msg, msg: String)
+    extends Exception(s"$msg (data: $data)")
+
+  sealed trait Selector{
+    def apply(x: Msg): Msg
+    def update(x: Msg, y: Msg): Unit
+  }
+  object Selector{
+    implicit class IntSelector(i: Int) extends Selector{
+      def apply(x: Msg): Msg = x.arr(i)
+      def update(x: Msg, y: Msg) = x.arr(i) = y
+    }
+    implicit class StringSelector(i: String) extends Selector{
+      def apply(x: Msg): Msg = x.obj(Str(i))
+      def update(x: Msg, y: Msg) = x.obj(Str(i)) = y
+    }
+    implicit class MsgSelector(i: Msg) extends Selector{
+      def apply(x: Msg): Msg = x.obj(i)
+      def update(x: Msg, y: Msg) = x.obj(i) = y
+    }
+  }
   def transform[T](j: Msg, f: Visitor[_, T]): T = {
     j match{
       case Null => f.visitNull(-1)
