@@ -28,6 +28,10 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
 
 object core extends Module {
 
+  trait CoreTests extends TestModule{
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.6.4", ivy"com.lihaoyi::acyclic:0.1.5")
+    def testFrameworks = Seq("upickle.core.UTestFramework")
+  }
   object js extends Cross[CoreJsModule]("2.11.12", "2.12.6")
 
   class CoreJsModule(val crossScalaVersion: String) extends CommonPublishModule with ScalaJSModule {
@@ -36,6 +40,7 @@ object core extends Module {
     def scalaJSVersion = "0.6.22"
 
     def platformSegment = "js"
+    object test extends Tests with CoreTests
   }
 
   object jvm extends Cross[CoreJvmModule]("2.11.12", "2.12.6")
@@ -43,18 +48,10 @@ object core extends Module {
     def platformSegment = "jvm"
     def artifactName = "upickle-core"
     def millSourcePath = build.millSourcePath / "core"
+    object test extends Tests with CoreTests
   }
 }
 object upack extends Module {
-
-  trait PackTestModule extends TestModule{
-    def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.6.4",
-      ivy"com.lihaoyi::acyclic:0.1.5"
-    )
-
-    def testFrameworks = Seq("utest.runner.Framework")
-  }
 
   object js extends Cross[PackJsModule]("2.11.12", "2.12.6")
 
@@ -65,10 +62,11 @@ object upack extends Module {
     def scalaJSVersion = "0.6.22"
 
     def platformSegment = "js"
-    object test extends Tests with CommonModule with TestScalaJSModule with PackTestModule {
-      def moduleDeps = super.moduleDeps ++ Seq(ujson.js())
+    object test extends Tests with CommonModule with TestScalaJSModule  {
+      def moduleDeps = super.moduleDeps ++ Seq(ujson.js().test)
       def scalaJSVersion = "0.6.22"
       def platformSegment = "js"
+      def testFrameworks = Seq("upickle.core.UTestFramework")
     }
   }
 
@@ -78,9 +76,10 @@ object upack extends Module {
     def platformSegment = "jvm"
     def artifactName = "upack"
     def millSourcePath = build.millSourcePath / "upack"
-    object test extends Tests with CommonModule with PackTestModule {
-      def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm())
+    object test extends Tests with CommonModule  {
+      def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test)
       def platformSegment = "jvm"
+      def testFrameworks = Seq("upickle.core.UTestFramework")
     }
   }
 }
@@ -213,15 +212,6 @@ trait UpickleModule extends CommonPublishModule{
     """)
     Seq(PathRef(dir))
   }
-  trait UpickleTestModule extends Tests with CommonModule{
-    def platformSegment = UpickleModule.this.platformSegment
-    def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.6.4",
-      ivy"com.lihaoyi::acyclic:0.1.5"
-    )
-
-    def testFrameworks = Seq("upickle.UTestFramework")
-  }
 }
 
 
@@ -232,14 +222,17 @@ object upickle extends Module{
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm(), upack.jvm())
 
-    object test extends UpickleTestModule{
+    object test extends Tests with CommonModule{
+      def platformSegment = "jvm"
       def moduleDeps = super.moduleDeps ++ Seq(
         ujson.argonaut(),
         ujson.circe(),
         ujson.json4s(),
         ujson.play(),
+        core.jvm().test
       )
       def ivyDeps = super.ivyDeps() ++ bench.jvm.ivyDeps()
+      def testFrameworks = Seq("upickle.core.UTestFramework")
     }
   }
 
@@ -256,8 +249,11 @@ object upickle extends Module{
         s"-P:scalajs:mapSourceURI:$a->$g/v${publishVersion()}/"
       })
     }
-    object test extends UpickleTestModule with TestScalaJSModule{
+    object test extends Tests with CommonModule{
+      def platformSegment = "js"
+      def moduleDeps = super.moduleDeps ++ Seq(core.js().test)
       def scalaJSVersion = "0.6.22"
+      def testFrameworks = Seq("upickle.core.UTestFramework")
     }
   }
 }
