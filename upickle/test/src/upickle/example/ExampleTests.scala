@@ -50,7 +50,7 @@ object Defaults{
   }
 }
 object Keyed{
-  case class KeyBar(@upickle.api.key("hehehe") kekeke: Int)
+  case class KeyBar(@upickle.implicits.key("hehehe") kekeke: Int)
   object KeyBar{
     implicit val rw: RW[KeyBar] = macroRW
   }
@@ -60,7 +60,7 @@ object KeyedTag{
   object A{
     implicit val rw: RW[A] = RW.merge(B.rw, macroRW[C.type])
   }
-  @upickle.api.key("Bee") case class B(i: Int) extends A
+  @upickle.implicits.key("Bee") case class B(i: Int) extends A
   object B{
     implicit val rw: RW[B] = macroRW
   }

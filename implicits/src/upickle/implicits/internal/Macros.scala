@@ -1,11 +1,10 @@
-package upickle
-package internal
+package upickle.implicits.internal
 
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 import compat._
 import acyclic.file
-import upickle.api.key
+import upickle.implicits.key
 
 import language.higherKinds
 import language.existentials

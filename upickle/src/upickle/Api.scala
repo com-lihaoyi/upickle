@@ -19,8 +19,8 @@ import upickle.core._
  */
 trait Api
     extends upickle.core.Types
-    with api.Readers
-    with api.Writers
+    with implicits.Readers
+    with implicits.Writers
     with WebJson
     with Api.NoOpMappers
     with JsReadWriters{

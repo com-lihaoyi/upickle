@@ -1,15 +1,13 @@
-package upickle
-package api
+package upickle.implicits
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import upickle.core.Util
+import upickle.core.{AbortJsonProcessingException, ArrVisitor, ObjVisitor, Util}
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
 
 trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object UnitReader extends Reader[Unit] {

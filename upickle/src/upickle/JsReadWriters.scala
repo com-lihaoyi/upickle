@@ -1,5 +1,5 @@
 package upickle
-import upickle.api.MacroImplicits
+import upickle.implicits.MacroImplicits
 import upickle.core.Visitor
 
 trait JsReadWriters extends upickle.core.Types with MacroImplicits{

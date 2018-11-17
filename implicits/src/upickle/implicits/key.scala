@@ -1,4 +1,4 @@
-package upickle.api
+package upickle.implicits
 
 import scala.annotation.StaticAnnotation
 
