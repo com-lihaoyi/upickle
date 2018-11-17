@@ -65,54 +65,61 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     writeUInt32(java.lang.Float.floatToIntBits(d))
     out
   }
-  override def visitInt8(i: Byte, index: Int) = {
-
-    if (i >= 0){
-      out.write(i)
-    }else if (i >= -32) {
-      out.write(i | 0xe0)
-    }else{
-      out.write(MPK.Int8)
-      out.write(i)
-    }
-    out
-  }
-  override def visitUInt8(i: Byte, index: Int) = {
-    out.write(MPK.UInt8)
-    writeUInt8(i)
-    out
-  }
-  override def visitInt16(i: Short, index: Int) = {
-    out.write(MPK.Int16)
-    writeUInt16(i)
-    out
-  }
-  override def visitUInt16(i: Short, index: Int) = {
-    out.write(MPK.UInt16)
-    writeUInt16(i)
-    out
-  }
   override def visitInt32(i: Int, index: Int) = {
-    out.write(MPK.Int32)
-    writeUInt32(i)
-    out
-  }
-  override def visitUInt32(i: Int, index: Int) = {
-    out.write(MPK.UInt32)
-    writeUInt32(i)
+    if (i >= 0){
+      if (i <= 127) out.write(i)
+      else if (i <= 255){
+        out.write(MPK.UInt8)
+        out.write(i)
+      } else if(i <= Short.MaxValue){
+        out.write(MPK.Int16)
+        writeUInt16(i)
+      } else if (i <= 0xffff){
+        out.write(MPK.UInt16)
+        writeUInt16(i)
+      } else{
+        out.write(MPK.Int32)
+        writeUInt32(i)
+      }
+    }else{
+      if (i >= -32) out.write(i | 0xe0)
+      else if(i >= -128){
+        out.write(MPK.Int8)
+        out.write(i)
+      }else if (i >= Short.MinValue) {
+        out.write(MPK.Int16)
+        writeUInt16(i)
+      } else{
+        out.write(MPK.Int32)
+        writeUInt32(i)
+      }
+    }
+
     out
   }
 
   override def visitInt64(i: Long, index: Int) = {
-    out.write(MPK.Int64)
-    writeUInt64(i)
+    if (i >= Int.MinValue && i <= Int.MaxValue){
+      visitInt32(i.toInt, index)
+    }else if (i >= 0 && i <= 0xffffffffL){
+      out.write(MPK.UInt32)
+      writeUInt32(i.toInt)
+    }else{
+      out.write(MPK.Int64)
+      writeUInt64(i)
+    }
     out
   }
+
   override def visitUInt64(i: Long, index: Int) = {
-    out.write(MPK.UInt64)
-    writeUInt64(i)
+    if (i >= 0) visitInt64(i, index)
+    else{
+      out.write(MPK.UInt64)
+      writeUInt64(i)
+    }
     out
   }
+
   override def visitString(s: CharSequence, index: Int) = {
     val bytes = s.toString.getBytes("UTF-8")
     val length = bytes.length

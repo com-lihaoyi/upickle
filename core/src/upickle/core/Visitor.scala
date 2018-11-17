@@ -72,13 +72,7 @@ trait Visitor[-T, +J] {
   def visitFloat64(d: Double, index: Int): J
   def visitFloat32(d: Float, index: Int): J
 
-  def visitInt8(i: Byte, index: Int): J
-  def visitInt16(i: Short, index: Int): J
   def visitInt32(i: Int, index: Int): J
-  def visitUInt8(i: Byte, index: Int): J
-  def visitUInt16(i: Short, index: Int): J
-  def visitUInt32(i: Int, index: Int): J
-
   def visitInt64(i: Long, index: Int): J
   def visitUInt64(i: Long, index: Int): J
 

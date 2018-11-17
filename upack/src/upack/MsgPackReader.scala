@@ -5,7 +5,7 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
   def parse(): T = {
     (input(index) & 0xFF) match{
       // positive fixint
-      case x if x <= MPK.PositiveFixInt => index += 1; visitor.visitInt8((x & 0x7f).toByte, -1)
+      case x if x <= MPK.PositiveFixInt => index += 1; visitor.visitInt32(x & 0x7f, -1)
 
       case x if x <= MPK.FixMap =>
         val n = x & 0x0f
@@ -37,13 +37,13 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
       case MPK.Float32 => visitor.visitFloat64(java.lang.Float.intBitsToFloat(parseUInt32(index + 1)), -1)
       case MPK.Float64 => visitor.visitFloat64(java.lang.Double.longBitsToDouble(parseUInt64(index + 1)), -1)
 
-      case MPK.UInt8 => visitor.visitUInt8(parseUInt8(index + 1).toByte, -1)
-      case MPK.UInt16 => visitor.visitUInt16(parseUInt16(index + 1).toShort, -1)
-      case MPK.UInt32 => visitor.visitUInt32(parseUInt32(index + 1), -1)
+      case MPK.UInt8 => visitor.visitInt32(parseUInt8(index + 1), -1)
+      case MPK.UInt16 => visitor.visitInt32(parseUInt16(index + 1), -1)
+      case MPK.UInt32 => visitor.visitInt64(parseUInt32(index + 1) & 0xffffffffL, -1)
       case MPK.UInt64 => visitor.visitUInt64(parseUInt64(index + 1), -1)
 
-      case MPK.Int8 => visitor.visitInt8(parseUInt8(index + 1).toByte, -1)
-      case MPK.Int16 => visitor.visitInt16(parseUInt16(index + 1).toShort, -1)
+      case MPK.Int8 => visitor.visitInt32(parseUInt8(index + 1).toByte, -1)
+      case MPK.Int16 => visitor.visitInt32(parseUInt16(index + 1).toShort, -1)
       case MPK.Int32 => visitor.visitInt32(parseUInt32(index + 1), -1)
       case MPK.Int64 => visitor.visitInt64(parseUInt64(index + 1), -1)
 

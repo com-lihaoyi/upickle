@@ -39,7 +39,7 @@ object MsgPackJvmTests extends TestSuite{
       )
       assert(
         expectedJson == jsonMsg,
-        expectedJson == jsonMsgCompact,
+        expectedJson == jsonMsgCompact
 //        Still doesn't pass:
 //
 //        writtenMsg == rewrittenMsg,

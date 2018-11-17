@@ -11,13 +11,8 @@ sealed trait Msg extends Transformable{
 case object Null extends Msg
 case object True extends Msg
 case object False extends Msg
-case class Int8(value: Byte) extends Msg
-case class Int16(value: Short) extends Msg
 case class Int32(value: Int) extends Msg
 case class Int64(value: Long) extends Msg
-case class UInt8(value: Byte) extends Msg
-case class UInt16(value: Short) extends Msg
-case class UInt32(value: Int) extends Msg
 case class UInt64(value: Long) extends Msg
 case class Float32(value: Float) extends Msg
 case class Float64(value: Double) extends Msg
@@ -35,14 +30,9 @@ object Msg extends Visitor[Msg, Msg]{
       case True => f.visitTrue(-1)
       case False => f.visitFalse(-1)
 
-      case Int8(value) => f.visitInt8(value, -1)
-      case Int16(value) => f.visitInt16(value, -1)
       case Int32(value) => f.visitInt32(value, -1)
       case Int64(value) => f.visitInt64(value, -1)
 
-      case UInt8(value) => f.visitUInt8(value, -1)
-      case UInt16(value) => f.visitUInt16(value, -1)
-      case UInt32(value) => f.visitUInt32(value, -1)
       case UInt64(value) => f.visitUInt64(value, -1)
 
       case Float32(value) => f.visitFloat32(value, -1)
@@ -96,13 +86,7 @@ object Msg extends Visitor[Msg, Msg]{
 
   def visitFloat32(d: Float, index: Int) = Float32(d)
 
-  def visitInt8(i: Byte, index: Int) = Int8(i)
-  def visitInt16(i: Short, index: Int) = Int16(i)
   def visitInt32(i: Int, index: Int) = Int32(i)
-
-  def visitUInt8(i: Byte, index: Int) = UInt8(i)
-  def visitUInt16(i: Short, index: Int) = UInt16(i)
-  def visitUInt32(i: Int, index: Int) = UInt32(i)
 
   def visitInt64(i: Long, index: Int) = Int64(i)
 

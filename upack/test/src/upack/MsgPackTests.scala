@@ -19,6 +19,7 @@ object MsgPackTests extends TestSuite{
         val packed = Util.stringToBytes(packedStr)
 
         val jsonified = upack.transform(packed, ujson.Js)
+
         assert(jsonified == expectedJson)
 
         val msg = upack.read(packed)
@@ -26,7 +27,7 @@ object MsgPackTests extends TestSuite{
         val rewrittenBytes = upack.write(msg)
         val rewritten = Util.bytesToString(rewrittenBytes)
         val possibilities = testCase("msgpack").arr.map(_.str)
-        //        println(msg)
+
         assert(possibilities.contains(rewritten))
       }
     }
