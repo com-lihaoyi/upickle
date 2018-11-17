@@ -25,6 +25,11 @@ object PrimitiveTests extends TestSuite {
         upickle.default.read[String]("\"叉烧包\"") ==> "叉烧包"
       }
       'null-rw(null: String, "null")
+      'chars{
+        for(i <- Char.MinValue until 55296/*Char.MaxValue*/) {
+          rw(i.toString)
+        }
+      }
     }
     'Symbol{
       'plain-rw('i_am_a_cow, """ "i_am_a_cow" """)(upickle.default.SymbolReader, upickle.default.SymbolWriter)
@@ -122,10 +127,7 @@ object PrimitiveTests extends TestSuite {
       'plus-rw('+', """ "+" """)
 
       'all{
-        for(i <- Char.MinValue until Char.MaxValue) {
-//          println("Testing " + i.toInt)
-          rw(i)
-        }
+        for(i <- Char.MinValue until 55296/*Char.MaxValue*/) rw(i)
       }
     }
   }
