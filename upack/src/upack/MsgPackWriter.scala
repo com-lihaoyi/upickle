@@ -3,7 +3,8 @@ import java.io.ByteArrayOutputStream
 
 import upack.{MsgPackKeys => MPK}
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
-class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStream()) extends Visitor[T, T] {
+class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStream())
+    extends MsgVisitor[T, T] {
   override def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
     require(length != -1, "Length of upack array must be known up front")
     if (length <= 15){
@@ -177,10 +178,6 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     out.write(((i >> 8) & 0xff).toInt)
     out.write(((i >> 0) & 0xff).toInt)
   }
-
-  def visitFloat64String(s: String, index: Int) = ???
-
-  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int) = ???
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = ???
 
