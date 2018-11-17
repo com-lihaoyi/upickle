@@ -362,6 +362,7 @@ object Macros {
       }
       q"""
         new ${c.prefix}.CaseW[$targetType]{
+          val length = ${rawArgs.length}
           def writeToObject[R](ctx: upickle.core.ObjVisitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}

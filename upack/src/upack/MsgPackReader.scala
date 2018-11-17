@@ -110,8 +110,8 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor0: Visitor
 
     var i = 0
     while(i < n){
-      visitor = obj.subVisitor.asInstanceOf[Visitor[_, T]]
       obj.visitKey(parseKey(), -1)
+      visitor = obj.subVisitor.asInstanceOf[Visitor[_, T]]
       obj.narrow.visitValue(parse(), -1)
       i += 1
     }

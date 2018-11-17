@@ -127,7 +127,7 @@ trait LegacyApi extends Api{
 
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
-    val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(-1, -1)
+    val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(2, -1)
     ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
 
     ctx.visitValue(w.write(out, v), -1)
@@ -212,7 +212,7 @@ trait AttributeTagged extends Api{
     }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
-    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(-1, -1)
+    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(2, -1)
     ctx.visitKey(tagName, -1)
     ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
     w.writeToObject(ctx, v)

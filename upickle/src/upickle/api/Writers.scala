@@ -13,7 +13,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   }
   implicit object UnitWriter extends Writer[Unit] {
     def write0[R](out: Visitor[_, R], v: Unit): R = {
-      out.visitObject(-1, -1).visitEnd(-1)
+      out.visitObject(0, -1).visitEnd(-1)
     }
   }
 

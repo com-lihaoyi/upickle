@@ -5,6 +5,7 @@ import upack.{MsgPackKeys => MPK}
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStream()) extends Visitor[T, T] {
   override def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
+    require(length != -1, "Length of upack array must be known up front")
     if (length <= 15){
       out.write(MPK.FixArrMask | length)
     }else if (length <= 65535){
@@ -20,6 +21,7 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
   }
 
   override def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
+    require(length != -1, "Length of upack object must be known up front")
     if (length <= 15){
       out.write(MPK.FixMapMask | length)
     }else if (length <= 65535){

@@ -7,35 +7,56 @@ import acyclic.file
 object TestUtil extends TestUtil[upickle.default.type](upickle.default)
 object LegacyTestUtil extends TestUtil[upickle.legacy.type](upickle.legacy)
 class TestUtil[Api <: upickle.Api](val api: Api){
-  import api._
-  def rw[T: Reader: Writer](t: T, s: String*) = {
+
+  def rw[T: api.Reader: api.Writer](t: T, s: String*) = {
     rwk[T, T](t, s:_*)(x => x)
   }
-  def rwEscape[T: Reader: Writer](t: T, s: String*) = {
+  def rwEscape[T: api.Reader: api.Writer](t: T, s: String*) = {
     rwk[T, T](t, s:_*)(x => x, escapeUnicode = true)
   }
-  def rwk[T: Reader: Writer, V](t: T, sIn: String*)(normalize: T => V, escapeUnicode: Boolean = false) = {
-    val writtenT = write(t, escapeUnicode = true)
-    val writtenBinary = writeBinary(t)
-    println(upickle.core.Util.bytesToString(writtenBinary))
-    val roundTrippedBinary = readBinary[T](writtenBinary)
+  def rwk[T: api.Reader: api.Writer, V](t: T, sIn: String*)(normalize: T => V, escapeUnicode: Boolean = false) = {
+    val writtenT = api.write(t)
 
+    // Test JSON round tripping
     val strings = sIn.map(_.trim)
 
-//    if (strings.length > 0) {
-//      val inputs = strings.map(api.read)
-//      val output = api.read(writtenT)
-//      assert(inputs.contains(output))
-//    }
     for (s <- strings) {
-      val readS = read[T](s)
+      val readS = api.read[T](s)
       val normalizedReadString = normalize(readS)
       val normalizedValue = normalize(t)
       assert(normalizedReadString == normalizedValue)
     }
 
-    val normalizedReadWrittenT = normalize(read[T](writtenT))
+    val normalizedReadWrittenT = normalize(api.read[T](writtenT))
     val normalizedT = normalize(t)
     assert(normalizedReadWrittenT == normalizedT)
+
+    // Test binary round tripping
+    val writtenBinary = api.writeBinary(t)
+    val roundTrippedBinary = api.readBinary[T](writtenBinary)
+    (roundTrippedBinary, t) match{
+      case (lhs: Array[_], rhs: Array[_]) => assert(lhs.toSeq == rhs.toSeq)
+      case _ => assert(roundTrippedBinary == t)
+    }
+
+
+    val rewrittenBinary = api.writeBinary(roundTrippedBinary)
+
+    val writtenBinaryStr = upickle.core.Util.bytesToString(writtenBinary)
+    val rewrittenBinaryStr = upickle.core.Util.bytesToString(rewrittenBinary)
+    assert(writtenBinaryStr == rewrittenBinaryStr)
+
+    val jsonifiedWrittenBinary = upack
+      .transform(rewrittenBinary, new ujson.StringRenderer())
+      .toString
+    val jsonifiedRewrittenBinary = upack
+      .transform(rewrittenBinary, new ujson.StringRenderer())
+      .toString
+
+    // Test binary conversion
+    assert(
+      jsonifiedWrittenBinary == jsonifiedRewrittenBinary,
+      jsonifiedWrittenBinary == writtenT
+    )
   }
 }

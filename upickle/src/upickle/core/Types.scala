@@ -241,12 +241,12 @@ trait Types{ types =>
     }
   }
   trait CaseW[V] extends Writer[V]{
-    def writeToObject[R](ctx: ObjVisitor[_, R],
-                         v: V): Unit
+    val length: Int
+    def writeToObject[R](ctx: ObjVisitor[_, R], v: V): Unit
     def write0[R](out: Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
-        val ctx = out.visitObject(-1, -1)
+        val ctx = out.visitObject(length, -1)
         writeToObject(ctx, v)
         ctx.visitEnd(-1)
       }
@@ -265,6 +265,7 @@ trait Types{ types =>
     }
   }
   class SingletonW[T](f: T) extends CaseW[T] {
+    val length = 0
     def writeToObject[R](ctx: ObjVisitor[_, R], v: T): Unit = () // do nothing
   }
 
