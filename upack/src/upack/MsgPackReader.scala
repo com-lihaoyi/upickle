@@ -1,7 +1,8 @@
 package upack
 import upickle.core.Visitor
 import upack.{MsgPackKeys => MPK}
-class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[_, T]) {
+class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor0: Visitor[_, T]) {
+  private[this] var visitor = visitor0
   def parse(): T = {
     (input(index) & 0xFF) match{
       // positive fixint
@@ -104,23 +105,32 @@ class MsgPackReader[T](var index: Int = 0, input: Array[Byte], visitor: Visitor[
     res
   }
   def parseMap(n: Int) = {
+    val current = visitor
     val obj = visitor.visitObject(n, -1)
+
     var i = 0
     while(i < n){
+      visitor = obj.subVisitor.asInstanceOf[Visitor[_, T]]
       obj.visitKey(parseKey(), -1)
       obj.narrow.visitValue(parse(), -1)
       i += 1
     }
+    visitor = current
     obj.visitEnd(-1)
   }
   def parseArray(n: Int) = {
+    val current = visitor
     val arr = visitor.visitArray(n, -1)
+
     var i = 0
 
     while(i < n){
-      arr.narrow.visitValue(parse(), -1)
+      visitor = arr.subVisitor.asInstanceOf[Visitor[_, T]]
+      val v = parse()
+      arr.narrow.visitValue(v, -1)
       i += 1
     }
+    visitor = current
     arr.visitEnd(-1)
   }
   def parseUInt8(i: Int) = {

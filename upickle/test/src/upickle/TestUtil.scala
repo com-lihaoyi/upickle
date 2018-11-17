@@ -16,6 +16,9 @@ class TestUtil[Api <: upickle.Api](val api: Api){
   }
   def rwk[T: Reader: Writer, V](t: T, sIn: String*)(normalize: T => V, escapeUnicode: Boolean = false) = {
     val writtenT = write(t, escapeUnicode = true)
+    val writtenBinary = writeBinary(t)
+    println(upickle.core.Util.bytesToString(writtenBinary))
+    val roundTrippedBinary = readBinary[T](writtenBinary)
 
     val strings = sIn.map(_.trim)
 

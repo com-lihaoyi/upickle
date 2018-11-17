@@ -2,6 +2,8 @@ package upickle
 
 
 
+import java.io.ByteArrayOutputStream
+
 import upickle.internal.IndexedJs
 import ujson._
 import ujson.StringRenderer
@@ -19,6 +21,8 @@ import upickle.core._
  * trait instance is tagged during reading and writing.
  */
 trait Api extends upickle.core.Types with api.Implicits with WebJson with Api.NoOpMappers{
+  def readBinary[T: Reader](s: upack.Transformable): T = s.transform(reader[T])
+
   def read[T: Reader](s: Transformable): T = s.transform(reader[T])
 
   def readJs[T: Reader](s: Js.Value): T = s.transform(reader[T])
@@ -28,11 +32,17 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson with Api.No
   def write[T: Writer](t: T, indent: Int = -1, escapeUnicode: Boolean = false): String = {
     transform(t).to(StringRenderer(indent, escapeUnicode)).toString
   }
+  def writeBinary[T: Writer](t: T, indent: Int = -1, escapeUnicode: Boolean = false): Array[Byte] = {
+    transform(t).to(new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
+  }
 
   def writeJs[T: Writer](t: T): Js.Value = transform(t).to[Js.Value]
 
   def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
     transform(t).to(new Renderer(out, indent = indent, escapeUnicode))
+  }
+  def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
+    transform(t).to(new upack.MsgPackWriter(out))
   }
 
   def writer[T: Writer] = implicitly[Writer[T]]
@@ -41,7 +51,7 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson with Api.No
 
   def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
 
-  case class transform[T: Writer](t: T) extends Transformable{
+  case class transform[T: Writer](t: T) {
     def transform[V](f: Visitor[_, V]): V = writer[T].transform(t, f)
     def to[V](f: Visitor[_, V]): V = transform(f)
     def to[V](implicit f: Reader[V]): V = transform(f)
