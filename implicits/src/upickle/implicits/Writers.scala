@@ -16,44 +16,35 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
 
-  class IntegralNumWriter[T](f: T => Double) extends Writer[T] {
-    def write0[R](out: Visitor[_, R], v: T): R = {
-      out.visitFloat64(f(v), -1)
-    }
-  }
   implicit object DoubleWriter extends Writer[Double] {
-    def write0[R](out: Visitor[_, R], v: Double): R = {
-      v match{
-        case Double.PositiveInfinity => out.visitString("Infinity", -1)
-        case Double.NegativeInfinity => out.visitString("-Infinity", -1)
-        case d if java.lang.Double.isNaN(d) => out.visitString("NaN", -1)
-        case d => out.visitFloat64(v, -1)
-      }
-    }
+    def write0[R](out: Visitor[_, R], v: Double): R = out.visitFloat64(v, -1)
   }
-  implicit val IntWriter: Writer[Int] = new IntegralNumWriter(_.toDouble)
+  implicit object IntWriter extends Writer[Int] {
+    def write0[V](out: Visitor[_, V], v: Int) = out.visitInt32(v, -1)
+  }
 
   implicit object FloatWriter extends Writer[Float] {
-    def write0[R](out: Visitor[_, R], v: Float): R = {
-      v match{
-        case Float.PositiveInfinity => out.visitString("Infinity", -1)
-        case Float.NegativeInfinity => out.visitString("-Infinity", -1)
-        case d if java.lang.Float.isNaN(d) => out.visitString("NaN", -1)
-        case d => out.visitFloat64(v, -1)
-      }
-    }
+    def write0[R](out: Visitor[_, R], v: Float): R = out.visitFloat32(v, -1)
   }
-  implicit val ShortWriter: Writer[Short] = new IntegralNumWriter(_.toDouble)
-  implicit val ByteWriter: Writer[Byte] = new IntegralNumWriter(_.toDouble)
+  implicit object ShortWriter extends Writer[Short] {
+    def write0[V](out: Visitor[_, V], v: Short) = out.visitInt32(v, -1)
+  }
+  implicit object ByteWriter extends Writer[Byte] {
+    def write0[V](out: Visitor[_, V], v: Byte) = out.visitInt32(v, -1)
+  }
 
   implicit object BooleanWriter extends Writer[Boolean] {
     def write0[R](out: Visitor[_, R], v: Boolean): R = {
       if(v) out.visitTrue(-1) else out.visitFalse(-1)
     }
   }
-  implicit val CharWriter: Writer[Char] = StringWriter.comap[Char](_.toString)
+  implicit object CharWriter extends Writer[Char] {
+    def write0[V](out: Visitor[_, V], v: Char) = out.visitChar(v, -1)
+  }
   implicit val UUIDWriter: Writer[UUID] = StringWriter.comap[UUID](_.toString)
-  implicit val LongWriter: Writer[Long] = StringWriter.comap[Long](_.toString)
+  implicit object LongWriter extends Writer[Long] {
+    def write0[V](out: Visitor[_, V], v: Long) = out.visitInt64(v, -1)
+  }
   implicit val BigIntWriter: Writer[BigInt] = StringWriter.comap[BigInt](_.toString)
   implicit val BigDecimalWriter: Writer[BigDecimal] = StringWriter.comap[BigDecimal](_.toString)
   implicit val SymbolWriter: Writer[Symbol] = StringWriter.comap[Symbol](_.name)

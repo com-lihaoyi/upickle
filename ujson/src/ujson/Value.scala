@@ -11,7 +11,6 @@ import scala.collection.mutable.ArrayBuffer
 sealed trait Value extends Transformable {
   def value: Any
 
-
   /**
     * Returns the `String` value of this [[Value]], fails if it is not
     * a [[Value.Str]]

@@ -7,7 +7,6 @@ import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
   * not-JSON-related methods to their JSON equivalents.
   */
 trait JsVisitor[-T, +J] extends Visitor[T, J]{
-
   def visitFloat64(d: Double, index: Int): J = {
     val i = d.toLong
     if(i == d) visitFloat64StringParts(i.toString, -1, -1, index)
@@ -16,14 +15,7 @@ trait JsVisitor[-T, +J] extends Visitor[T, J]{
   }
 
   def visitFloat32(d: Float, index: Int): J = visitFloat64(d, index)
-
-  def visitInt8(i: Byte, index: Int): J = visitFloat64(i, index)
-  def visitInt16(i: Short, index: Int): J = visitFloat64(i, index)
   def visitInt32(i: Int, index: Int): J = visitFloat64(i, index)
-  def visitUInt8(i: Byte, index: Int): J = visitFloat64(i & 0xff, index)
-  def visitUInt16(i: Short, index: Int): J = visitFloat64(i & 0xffff, index)
-  def visitUInt32(i: Int, index: Int): J = visitFloat64String(java.lang.Integer.toUnsignedString(i), index)
-
   def visitInt64(i: Long, index: Int): J = {
     if (math.abs(i) > math.pow(2, 53) || i == -9223372036854775808L) visitString(i.toString, index)
     else visitFloat64(i, index)
@@ -34,7 +26,15 @@ trait JsVisitor[-T, +J] extends Visitor[T, J]{
   }
 
   def visitFloat64String(s: String, index: Int): J = {
-    visitFloat64StringParts(s, s.indexOf('.'), s.indexOf('E') match{case -1 => s.indexOf('e') case n => n}, -1)
+    visitFloat64StringParts(
+      s,
+      s.indexOf('.'),
+      s.indexOf('E') match{
+        case -1 => s.indexOf('e')
+        case n => n
+      },
+      -1
+    )
   }
 
   def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J = {

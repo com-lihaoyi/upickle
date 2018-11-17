@@ -18,7 +18,7 @@ object MsgPackTests extends TestSuite{
         println(k + " " + tag + " " + expectedJson + " " + packedStr)
         val packed = Util.stringToBytes(packedStr)
 
-        val jsonified = upack.transform(packed, ujson.Js)
+        val jsonified = upack.transform(packed, ujson.Value)
 
         assert(jsonified == expectedJson)
 

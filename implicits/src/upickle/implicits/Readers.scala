@@ -27,40 +27,61 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def visitFalse(index: Int) = false
   }
 
-  class FloatingNumReader[T](f1: Double => T, f2: String => T) extends Reader[T] {
-    override def expectedMsg = "expected number or double string"
-    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = f2(s.toString)
-    override def visitFloat64(d: Double, index: Int) = f1(d)
-    override def visitString(s: CharSequence, index: Int) = f2(s.toString)
-  }
 
-  class IntegralNumReader[T](f1: Double => T, f2: Long => T) extends Reader[T] {
+  implicit object DoubleReader extends Reader[Double] {
     override def expectedMsg = "expected number"
-    override def visitFloat64(d: Double, index: Int) = f1(d)
+    override def visitString(s: CharSequence, index: Int) = s.toString.toDouble
+    override def visitInt32(d: Int, index: Int) = d
+    override def visitInt64(d: Long, index: Int) = d
+    override def visitUInt64(d: Long, index: Int) = d
+    override def visitFloat64(d: Double, index: Int) = d
+
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      f2(Util.parseIntegralNum(s, decIndex, expIndex, index))
+      s.toString.toDouble
     }
   }
-  implicit val DoubleReader: Reader[Double] = new FloatingNumReader(identity, _.toDouble)
-  implicit val IntReader: Reader[Int] = new IntegralNumReader(
-    _.toInt,
-    l =>
-      if (l > Int.MaxValue || l < Int.MinValue) throw new AbortJsonProcessingException("expected integer")
-      else l.toInt
-  )
-  implicit val FloatReader: Reader[Float] = new FloatingNumReader(_.toFloat, _.toFloat)
-  implicit val ShortReader: Reader[Short] = new IntegralNumReader(
-    _.toShort,
-    l =>
-      if (l > Short.MaxValue || l < Short.MinValue) throw new AbortJsonProcessingException("expected short")
-      else l.toShort
-  )
-  implicit val ByteReader: Reader[Byte] = new IntegralNumReader(
-    _.toByte,
-    l =>
-      if (l > Byte.MaxValue || l < Byte.MinValue) throw new AbortJsonProcessingException("expected byte")
-      else l.toByte
-  )
+  implicit object IntReader extends Reader[Int] {
+    override def expectedMsg = "expected number"
+    override def visitInt32(d: Int, index: Int) = d
+    override def visitInt64(d: Long, index: Int) = d.toInt
+    override def visitUInt64(d: Long, index: Int) = d.toInt
+    override def visitFloat64(d: Double, index: Int) = d.toInt
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      Util.parseIntegralNum(s, decIndex, expIndex, index).toInt
+    }
+  }
+  implicit object FloatReader extends Reader[Float] {
+    override def expectedMsg = "expected number"
+
+    override def visitString(s: CharSequence, index: Int) = s.toString.toFloat
+    override def visitInt32(d: Int, index: Int) = d.toFloat
+    override def visitInt64(d: Long, index: Int) = d.toFloat
+    override def visitUInt64(d: Long, index: Int) = d.toFloat
+    override def visitFloat64(d: Double, index: Int) = d.toFloat
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      s.toString.toFloat
+    }
+  }
+  implicit object ShortReader extends Reader[Short] {
+    override def expectedMsg = "expected number"
+    override def visitInt32(d: Int, index: Int) = d.toShort
+    override def visitInt64(d: Long, index: Int) = d.toShort
+    override def visitUInt64(d: Long, index: Int) = d.toShort
+    override def visitFloat64(d: Double, index: Int) = d.toShort
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      Util.parseIntegralNum(s, decIndex, expIndex, index).toShort
+    }
+  }
+  implicit object ByteReader extends Reader[Byte] {
+    override def expectedMsg = "expected number"
+    override def visitInt32(d: Int, index: Int) = d.toByte
+    override def visitInt64(d: Long, index: Int) = d.toByte
+    override def visitUInt64(d: Long, index: Int) = d.toByte
+    override def visitFloat64(d: Double, index: Int) = d.toByte
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      Util.parseIntegralNum(s, decIndex, expIndex, index).toByte
+    }
+  }
 
   implicit object StringReader extends Reader[String] {
     override def expectedMsg = "expected string"
@@ -71,9 +92,30 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def visitString(s: CharSequence, index: Int) = f(s)
   }
 
-  implicit val CharReader: Reader[Char] = new MapStringReader(_.charAt(0))
+  implicit object CharReader extends Reader[Char] {
+    override def expectedMsg = "expected char"
+    override def visitString(d: CharSequence, index: Int) = d.charAt(0)
+    override def visitChar(d: Char, index: Int) = d
+    override def visitInt32(d: Int, index: Int) = d.toChar
+    override def visitInt64(d: Long, index: Int) = d.toChar
+    override def visitUInt64(d: Long, index: Int) = d.toChar
+    override def visitFloat64(d: Double, index: Int) = d.toChar
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      Util.parseIntegralNum(s, decIndex, expIndex, index).toChar
+    }
+  }
   implicit val UUIDReader: Reader[UUID] = new MapStringReader(s => UUID.fromString(s.toString))
-  implicit val LongReader: Reader[Long] = new MapStringReader(s => upickle.core.Util.parseLong(s, 0, s.length()))
+  implicit object LongReader extends Reader[Long] {
+    override def expectedMsg = "expected number"
+    override def visitString(d: CharSequence, index: Int) = upickle.core.Util.parseLong(d, 0, d.length())
+    override def visitInt32(d: Int, index: Int) = d.toLong
+    override def visitInt64(d: Long, index: Int) = d.toLong
+    override def visitUInt64(d: Long, index: Int) = d.toLong
+    override def visitFloat64(d: Double, index: Int) = d.toLong
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      Util.parseIntegralNum(s, decIndex, expIndex, index).toLong
+    }
+  }
   implicit val BigIntReader: Reader[BigInt] = new MapStringReader(s => BigInt(s.toString))
   implicit val BigDecimalReader: Reader[BigDecimal] = new MapStringReader(s => BigDecimal(s.toString))
   implicit val SymbolReader: Reader[Symbol] = new MapStringReader(s => Symbol(s.toString))

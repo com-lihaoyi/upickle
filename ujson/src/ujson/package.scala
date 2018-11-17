@@ -7,11 +7,16 @@ package object ujson{
 
   def copy(t: Value.Value): Value.Value = transform(t, Value)
 
-  def write(t: Value.Value, indent: Int = -1, escapeUnicode: Boolean = false): String = {
+  def write(t: Value.Value,
+            indent: Int = -1,
+            escapeUnicode: Boolean = false): String = {
     transform(t, StringRenderer(indent, escapeUnicode)).toString
   }
 
-  def writeTo(t: Value.Value, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
+  def writeTo(t: Value.Value,
+              out: java.io.Writer,
+              indent: Int = -1,
+              escapeUnicode: Boolean = false): Unit = {
     transform(t, Renderer(out, indent, escapeUnicode))
   }
 

@@ -20,12 +20,14 @@ object BytesRenderer{
 
   }
 }
-case class StringRenderer(indent: Int = -1, escapeUnicode: Boolean = false)
+case class StringRenderer(indent: Int = -1,
+                          escapeUnicode: Boolean = false)
   extends BaseRenderer(new java.io.StringWriter(), indent, escapeUnicode)
 
 case class Renderer(out: java.io.Writer,
                     indent: Int = -1,
-                    escapeUnicode: Boolean = false) extends BaseRenderer[java.io.Writer](out, indent, escapeUnicode)
+                    escapeUnicode: Boolean = false)
+  extends BaseRenderer[java.io.Writer](out, indent, escapeUnicode)
 
 class BaseRenderer[T <: java.io.Writer]
                   (out: T,
@@ -113,10 +115,17 @@ class BaseRenderer[T <: java.io.Writer]
   }
 
   override def visitFloat64(d: Double, index: Int) = {
-    val i = d.toInt
-    if (d == i) visitFloat64StringParts(i.toString, -1, -1, index)
-    else super.visitFloat64(d, index)
-    flushBuffer()
+    d match{
+      case Double.PositiveInfinity => visitString("Infinity", -1)
+      case Double.NegativeInfinity => visitString("-Infinity", -1)
+      case d if java.lang.Double.isNaN(d) => visitString("NaN", -1)
+      case d =>
+        val i = d.toInt
+        if (d == i) visitFloat64StringParts(i.toString, -1, -1, index)
+        else super.visitFloat64(d, index)
+        flushBuffer()
+    }
+
     out
   }
 

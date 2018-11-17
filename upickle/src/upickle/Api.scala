@@ -32,16 +32,21 @@ trait Api
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
-  def write[T: Writer](t: T, indent: Int = -1, escapeUnicode: Boolean = false): String = {
+  def write[T: Writer](t: T,
+                       indent: Int = -1,
+                       escapeUnicode: Boolean = false): String = {
     transform(t).to(StringRenderer(indent, escapeUnicode)).toString
   }
-  def writeBinary[T: Writer](t: T, indent: Int = -1, escapeUnicode: Boolean = false): Array[Byte] = {
+  def writeBinary[T: Writer](t: T): Array[Byte] = {
     transform(t).to(new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
   }
 
   def writeJs[T: Writer](t: T): ujson.Value = transform(t).to[ujson.Value]
 
-  def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
+  def writeTo[T: Writer](t: T,
+                         out: java.io.Writer,
+                         indent: Int = -1,
+                         escapeUnicode: Boolean = false): Unit = {
     transform(t).to(new Renderer(out, indent = indent, escapeUnicode))
   }
   def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {

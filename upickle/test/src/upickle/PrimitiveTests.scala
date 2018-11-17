@@ -123,11 +123,11 @@ object PrimitiveTests extends TestSuite {
     }
 
     'Char{
-      'f-rw('f', """ "f" """)
-      'plus-rw('+', """ "+" """)
+      'f-rwNoBinaryJson('f', """ "f" """)
+      'plus-rwNoBinaryJson('+', """ "+" """)
 
       'all{
-        for(i <- Char.MinValue until 55296/*Char.MaxValue*/) rw(i)
+        for(i <- Char.MinValue until 55296/*Char.MaxValue*/) rwNoBinaryJson(i)
       }
     }
   }

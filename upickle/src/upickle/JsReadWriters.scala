@@ -5,6 +5,7 @@ import upickle.core.Visitor
 trait JsReadWriters extends upickle.core.Types with MacroImplicits{
 
   implicit object JsValueR extends Reader[ujson.Value]{
+    override def expectedMsg = "JSON value"
     override def visitObject(length: Int, index: Int) = ujson.Value.visitObject(-1, index).narrow
     override def visitArray(length: Int, index: Int) = ujson.Value.visitArray(-1, index).narrow
     override def visitString(s: CharSequence, index: Int) = ujson.Value.visitString(s, index)
@@ -17,6 +18,12 @@ trait JsReadWriters extends upickle.core.Types with MacroImplicits{
     override def visitTrue(index: Int) = ujson.Value.visitTrue(index)
     override def visitFalse(index: Int) = ujson.Value.visitFalse(index)
     override def visitNull(index: Int) = ujson.Value.visitNull(index)
+
+    override def visitInt32(i: Int, index: Int) = visitFloat64(i, index)
+    override def visitInt64(i: Long, index: Int) = visitString(i.toString, index)
+
+    override def visitUInt64(i: Long, index: Int) = visitString(java.lang.Long.toUnsignedString(i), index)
+    override def visitChar(i: Char, index: Int) = visitString(i.toString, index)
   }
 
   implicit def JsObjR: Reader[ujson.Obj] = JsValueR.narrow[ujson.Obj]

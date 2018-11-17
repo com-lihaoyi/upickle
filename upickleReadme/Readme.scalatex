@@ -748,6 +748,17 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{0.7.0}
+      @ul
+        @li
+          Introduced new MessagePack backend for binary serialization! Can be used
+          via @code{upickle.default.writeBinary}/@code{upickle.default.readBinary},
+          or via the standalone @code{upack.read}/@code{upack.write} package.
+
+        @li
+          @code{ujson.Js.Value}, @code{ujson.Js.Obj}, etc. are now just
+          @code{ujson.Value}, @code{ujson.Obj}
+
     @sect{0.6.7}
       @ul
         @li
