@@ -1,12 +1,9 @@
-package upickle
-package core
-
-import ujson._
+package upickle.core
 
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.ClassTag
-import upickle.core.{Visitor, AbortJsonProcessingException, JsonProcessingException}
+
 /**
 * Basic functionality to be able to read and write objects. Kept as a trait so
 * other internal files can use it, while also mixing it into the `upickle`
@@ -62,7 +59,7 @@ trait Types{ types =>
     }
   }
   type Reader[T] = BaseReader[Any, T]
-  trait BaseReader[-T, V] extends ujson.CustomVisitor[T, V] {
+  trait BaseReader[-T, V] extends upickle.core.CustomVisitor[T, V] {
     def expectedMsg = ""
     def narrow[K <: V] = this.asInstanceOf[BaseReader[T, K]]
 
@@ -145,7 +142,8 @@ trait Types{ types =>
       def visitEnd(index: Int) = f(src.visitEnd(index))
     }
   }
-  trait Writer[T] extends Transformer[T]{
+
+  trait Writer[T] {
     def narrow[K <: T] = this.asInstanceOf[Writer[K]]
     def transform[V](v: T, out: Visitor[_, V]) = write(out, v)
     def write0[V](out: Visitor[_, V], v: T): V

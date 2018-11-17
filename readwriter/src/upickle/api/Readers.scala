@@ -4,16 +4,14 @@ package api
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import upickle.internal.IndexedJs
-import ujson._
-import ujson.util.Util
+import upickle.core.Util
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
 
-trait Readers extends upickle.core.Types with Generated with MacroImplicits{
+trait Readers extends upickle.core.Types with Generated {
   implicit object UnitReader extends Reader[Unit] {
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
       def subVisitor = UnitReader
@@ -77,7 +75,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit val CharReader: Reader[Char] = new MapStringReader(_.charAt(0))
   implicit val UUIDReader: Reader[UUID] = new MapStringReader(s => UUID.fromString(s.toString))
-  implicit val LongReader: Reader[Long] = new MapStringReader(s => ujson.util.Util.parseLong(s, 0, s.length()))
+  implicit val LongReader: Reader[Long] = new MapStringReader(s => upickle.core.Util.parseLong(s, 0, s.length()))
   implicit val BigIntReader: Reader[BigInt] = new MapStringReader(s => BigInt(s.toString))
   implicit val BigDecimalReader: Reader[BigDecimal] = new MapStringReader(s => BigDecimal(s.toString))
   implicit val SymbolReader: Reader[Symbol] = new MapStringReader(s => Symbol(s.toString))
@@ -140,7 +138,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
                s.charAt(4) == 'f' &&
                s.length() == 5){
       Duration.Undefined
-    }else Duration(ujson.util.Util.parseLong(s, 0, s.length()), TimeUnit.NANOSECONDS)
+    }else Duration(upickle.core.Util.parseLong(s, 0, s.length()), TimeUnit.NANOSECONDS)
   )
 
   implicit val InfiniteDurationReader = DurationReader.narrow[Duration.Infinite]
@@ -174,28 +172,4 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     EitherReader[T1, T2].narrow[Right[T1, T2]]
   implicit def LeftReader[T1: Reader, T2: Reader] =
     EitherReader[T1, T2].narrow[Left[T1, T2]]
-
-  implicit object JsValueR extends Reader[Js.Value]{
-    override def visitObject(length: Int, index: Int) = Js.visitObject(-1, index).narrow
-    override def visitArray(length: Int, index: Int) = Js.visitArray(-1, index).narrow
-    override def visitString(s: CharSequence, index: Int) = Js.visitString(s, index)
-    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Js.visitFloat64StringParts(s, decIndex, expIndex, index)
-    }
-    override def visitFloat64(d: Double, index: Int) = {
-      Js.visitFloat64(d, index)
-    }
-    override def visitTrue(index: Int) = Js.visitTrue(index)
-    override def visitFalse(index: Int) = Js.visitFalse(index)
-    override def visitNull(index: Int) = Js.visitNull(index)
-  }
-
-  implicit def JsObjR: Reader[Js.Obj] = JsValueR.narrow[Js.Obj]
-  implicit def JsArrR: Reader[Js.Arr] = JsValueR.narrow[Js.Arr]
-  implicit def JsStrR: Reader[Js.Str] = JsValueR.narrow[Js.Str]
-  implicit def JsNumR: Reader[Js.Num] = JsValueR.narrow[Js.Num]
-  implicit def JsBoolR: Reader[Js.Bool] = JsValueR.narrow[Js.Bool]
-  implicit def JsTrueR: Reader[Js.True.type] = JsValueR.narrow[Js.True.type]
-  implicit def JsFalseR: Reader[Js.False.type] = JsValueR.narrow[Js.False.type]
-  implicit def JsNullR: Reader[Js.Null.type] = JsValueR.narrow[Js.Null.type]
 }

@@ -90,6 +90,7 @@ trait Visitor[-T, +J] {
     * @param index json source position at the start of the string being visited
     */
   def visitString(s: CharSequence, index: Int): J
+  def visitChar(s: Char, index: Int): J
 
   def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J
 

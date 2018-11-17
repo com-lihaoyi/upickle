@@ -51,11 +51,93 @@ object core extends Module {
     object test extends Tests with CoreTests
   }
 }
+
+
+object readwriter extends Module {
+
+  trait ReadWriterModule extends CommonPublishModule{
+    def ivyDeps = Agg(
+      ivy"com.lihaoyi::utest::0.6.4",
+      ivy"com.lihaoyi::acyclic:0.1.5",
+      ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
+    )
+    def generatedSources = T{
+      val dir = T.ctx().dest
+      val file = dir / "upickle" / "Generated.scala"
+      ammonite.ops.mkdir(dir / "upickle")
+      val tuples = (1 to 22).map{ i =>
+        def commaSeparated(s: Int => String) = (1 to i).map(s).mkString(", ")
+        val writerTypes = commaSeparated(j => s"T$j: Writer")
+        val readerTypes = commaSeparated(j => s"T$j: Reader")
+        val typeTuple = commaSeparated(j => s"T$j")
+        val implicitWriterTuple = commaSeparated(j => s"implicitly[Writer[T$j]]")
+        val implicitReaderTuple = commaSeparated(j => s"implicitly[Reader[T$j]]")
+        val lookupTuple = commaSeparated(j => s"x(${j-1})")
+        val fieldTuple = commaSeparated(j => s"x._$j")
+        val caseReader =
+          if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
+          else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
+        s"""
+        implicit def Tuple${i}Writer[$writerTypes]: TupleNWriter[Tuple$i[$typeTuple]] =
+          new TupleNWriter[Tuple$i[$typeTuple]](Array($implicitWriterTuple), x => if (x == null) null else Array($fieldTuple))
+        implicit def Tuple${i}Reader[$readerTypes]: TupleNReader[Tuple$i[$typeTuple]] =
+          new TupleNReader(Array($implicitReaderTuple), x => Tuple$i($lookupTuple).asInstanceOf[Tuple$i[$typeTuple]])
+        """
+      }
+
+      ammonite.ops.write(file, s"""
+      package upickle
+      package api
+      import acyclic.file
+      import language.experimental.macros
+      /**
+       * Auto-generated picklers and unpicklers, used for creating the 22
+       * versions of tuple-picklers and case-class picklers
+       */
+      trait Generated extends upickle.core.Types{
+        ${tuples.mkString("\n")}
+      }
+    """)
+      Seq(PathRef(dir))
+    }
+
+  }
+  object js extends Cross[JsModule]("2.11.12", "2.12.6")
+
+  class JsModule(val crossScalaVersion: String) extends ReadWriterModule with ScalaJSModule {
+    def moduleDeps = Seq(core.js())
+    def artifactName = "upickle-readwriter"
+    def millSourcePath = build.millSourcePath / "readwriter"
+    def scalaJSVersion = "0.6.22"
+
+    def platformSegment = "js"
+    object test extends Tests with CommonModule with TestScalaJSModule  {
+      def moduleDeps = super.moduleDeps ++ Seq(ujson.js().test)
+      def scalaJSVersion = "0.6.22"
+      def platformSegment = "js"
+      def testFrameworks = Seq("upickle.core.UTestFramework")
+    }
+  }
+
+  object jvm extends Cross[JvmModule]("2.11.12", "2.12.6")
+  class JvmModule(val crossScalaVersion: String) extends ReadWriterModule {
+    def moduleDeps = Seq(core.js())
+    def platformSegment = "jvm"
+    def artifactName = "upickle-readwriter"
+    def millSourcePath = build.millSourcePath / "readwriter"
+    object test extends Tests with CommonModule  {
+      def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test)
+      def platformSegment = "jvm"
+      def testFrameworks = Seq("upickle.core.UTestFramework")
+    }
+  }
+}
+
 object upack extends Module {
 
-  object js extends Cross[PackJsModule]("2.11.12", "2.12.6")
+  object js extends Cross[JsModule]("2.11.12", "2.12.6")
 
-  class PackJsModule(val crossScalaVersion: String) extends CommonPublishModule with ScalaJSModule {
+  class JsModule(val crossScalaVersion: String) extends CommonPublishModule with ScalaJSModule {
     def moduleDeps = Seq(core.js())
     def artifactName = "upack"
     def millSourcePath = build.millSourcePath / "upack"
@@ -70,9 +152,9 @@ object upack extends Module {
     }
   }
 
-  object jvm extends Cross[PackJvmModule]("2.11.12", "2.12.6")
-  class PackJvmModule(val crossScalaVersion: String) extends CommonPublishModule {
-    def moduleDeps = Seq(core.js())
+  object jvm extends Cross[JvmModule]("2.11.12", "2.12.6")
+  class JvmModule(val crossScalaVersion: String) extends CommonPublishModule {
+    def moduleDeps = Seq(core.jvm())
     def platformSegment = "jvm"
     def artifactName = "upack"
     def millSourcePath = build.millSourcePath / "upack"
@@ -98,8 +180,8 @@ trait JsonModule extends CommonPublishModule{
 }
 
 object ujson extends Module{
-  object js extends Cross[JsonJsModule]("2.11.12", "2.12.6")
-  class JsonJsModule(val crossScalaVersion: String) extends JsonModule with ScalaJSModule {
+  object js extends Cross[JsModule]("2.11.12", "2.12.6")
+  class JsModule(val crossScalaVersion: String) extends JsonModule with ScalaJSModule {
     def moduleDeps = Seq(core.js())
     def scalaJSVersion = "0.6.22"
     def platformSegment = "js"
@@ -109,8 +191,8 @@ object ujson extends Module{
     }
   }
 
-  object jvm extends Cross[JsonJvmModule]("2.11.12", "2.12.6")
-  class JsonJvmModule(val crossScalaVersion: String) extends JsonModule{
+  object jvm extends Cross[JvmModule]("2.11.12", "2.12.6")
+  class JvmModule(val crossScalaVersion: String) extends JsonModule{
     def moduleDeps = Seq(core.jvm())
     def platformSegment = "jvm"
     object test extends JawnTestModule
@@ -172,55 +254,15 @@ trait UpickleModule extends CommonPublishModule{
     "-feature"
   )
 
-
-  def generatedSources = T{
-    val dir = T.ctx().dest
-    val file = dir / "upickle" / "Generated.scala"
-    ammonite.ops.mkdir(dir / "upickle")
-    val tuples = (1 to 22).map{ i =>
-      def commaSeparated(s: Int => String) = (1 to i).map(s).mkString(", ")
-      val writerTypes = commaSeparated(j => s"T$j: Writer")
-      val readerTypes = commaSeparated(j => s"T$j: Reader")
-      val typeTuple = commaSeparated(j => s"T$j")
-      val implicitWriterTuple = commaSeparated(j => s"implicitly[Writer[T$j]]")
-      val implicitReaderTuple = commaSeparated(j => s"implicitly[Reader[T$j]]")
-      val lookupTuple = commaSeparated(j => s"x(${j-1})")
-      val fieldTuple = commaSeparated(j => s"x._$j")
-      val caseReader =
-        if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
-        else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
-        s"""
-        implicit def Tuple${i}Writer[$writerTypes]: TupleNWriter[Tuple$i[$typeTuple]] =
-          new TupleNWriter[Tuple$i[$typeTuple]](Array($implicitWriterTuple), x => if (x == null) null else Array($fieldTuple))
-        implicit def Tuple${i}Reader[$readerTypes]: TupleNReader[Tuple$i[$typeTuple]] =
-          new TupleNReader(Array($implicitReaderTuple), x => Tuple$i($lookupTuple).asInstanceOf[Tuple$i[$typeTuple]])
-        """
-    }
-
-    ammonite.ops.write(file, s"""
-      package upickle
-      package api
-      import acyclic.file
-      import language.experimental.macros
-      /**
-       * Auto-generated picklers and unpicklers, used for creating the 22
-       * versions of tuple-picklers and case-class picklers
-       */
-      trait Generated extends upickle.core.Types{
-        ${tuples.mkString("\n")}
-      }
-    """)
-    Seq(PathRef(dir))
-  }
 }
 
 
 
 object upickle extends Module{
-  object jvm extends Cross[UpickleJvmModule]("2.11.12", "2.12.6")
-  class UpickleJvmModule(val crossScalaVersion: String) extends UpickleModule{
+  object jvm extends Cross[JvmModule]("2.11.12", "2.12.6")
+  class JvmModule(val crossScalaVersion: String) extends UpickleModule{
     def platformSegment = "jvm"
-    def moduleDeps = Seq(ujson.jvm(), upack.jvm())
+    def moduleDeps = Seq(ujson.jvm(), upack.jvm(), readwriter.jvm())
 
     object test extends Tests with CommonModule{
       def platformSegment = "jvm"
@@ -236,9 +278,9 @@ object upickle extends Module{
     }
   }
 
-  object js extends Cross[UpickleJsModule]("2.11.12", "2.12.6")
-  class UpickleJsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
-    def moduleDeps = Seq(ujson.js(), upack.jvm())
+  object js extends Cross[JsModule]("2.11.12", "2.12.6")
+  class JsModule(val crossScalaVersion: String) extends UpickleModule with ScalaJSModule {
+    def moduleDeps = Seq(ujson.js(), upack.jvm(), readwriter.js())
     def platformSegment = "js"
 
     def scalaJSVersion = "0.6.22"

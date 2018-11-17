@@ -53,5 +53,5 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = ()
 
-
+  def visitChar(s: Char, index: Int) = ()
 }

@@ -4,13 +4,10 @@ package upickle
 
 import java.io.ByteArrayOutputStream
 
-import upickle.internal.IndexedJs
-import ujson._
-import ujson.StringRenderer
+import ujson.{IndexedJs, StringRenderer, _}
 
 import language.experimental.macros
 import language.higherKinds
-import scala.annotation.StaticAnnotation
 import scala.reflect.ClassTag
 import upickle.core._
 
@@ -20,7 +17,13 @@ import upickle.core._
  * its behavior. Override the `annotate` methods to control how a sealed
  * trait instance is tagged during reading and writing.
  */
-trait Api extends upickle.core.Types with api.Implicits with WebJson with Api.NoOpMappers{
+trait Api
+    extends upickle.core.Types
+    with api.Readers
+    with api.Writers
+    with WebJson
+    with Api.NoOpMappers
+    with JsReadWriters{
   def readBinary[T: Reader](s: upack.Transformable): T = s.transform(reader[T])
 
   def read[T: Reader](s: Transformable): T = s.transform(reader[T])
@@ -47,7 +50,9 @@ trait Api extends upickle.core.Types with api.Implicits with WebJson with Api.No
 
   def writer[T: Writer] = implicitly[Writer[T]]
 
-  def writable[T: Writer](t: T): Transformable = Transformable.fromTransformer(t, writer[T])
+  def writable[T: Writer](t: T): Transformable = new Transformable {
+    def transform[V](f: Visitor[_, V]) = implicitly[Writer[T]].write(f, t)
+  }
 
   def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
 
@@ -219,6 +224,3 @@ trait AttributeTagged extends Api{
     ctx.visitEnd(-1)
   }
 }
-
-
-case class key(s: String) extends StaticAnnotation

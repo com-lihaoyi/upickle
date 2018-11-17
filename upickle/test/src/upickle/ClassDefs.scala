@@ -2,6 +2,7 @@ package upickle
 
 //import upickle.ADTs.ADT0
 import default.{ReadWriter => RW, Reader => R, Writer => W}
+import upickle.api.key
 /*
  * A whole bunch of test data that can be used by client libraries to try out
  * their typeclass derivation to make sure it's doing the right thing. Contains

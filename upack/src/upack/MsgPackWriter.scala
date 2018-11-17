@@ -183,4 +183,9 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
   def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int) = ???
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = ???
+
+  def visitChar(s: Char, index: Int) = {
+    writeUInt16(s)
+    out
+  }
 }

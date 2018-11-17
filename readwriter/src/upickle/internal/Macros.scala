@@ -5,6 +5,8 @@ import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 import compat._
 import acyclic.file
+import upickle.api.key
+
 import language.higherKinds
 import language.existentials
 

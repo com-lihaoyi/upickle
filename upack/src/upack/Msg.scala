@@ -103,4 +103,6 @@ object Msg extends Visitor[Msg, Msg]{
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) =
     Ext(tag, bytes.slice(offset, offset + len))
+
+  def visitChar(s: Char, index: Int) = Int32(s)
 }

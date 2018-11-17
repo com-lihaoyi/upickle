@@ -36,7 +36,7 @@ class Json4sJson(useBigDecimalForDouble: Boolean, useBigIntForLong: Boolean)
   def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     if (decIndex == -1 && expIndex == -1) {
       if (useBigIntForLong) JInt(BigInt(s.toString))
-      else JLong(ujson.util.Util.parseLong(s, 0, s.length))
+      else JLong(upickle.core.Util.parseLong(s, 0, s.length))
     } else {
       if (useBigDecimalForDouble) JDecimal(BigDecimal(s.toString))
       else JDouble(s.toString.toDouble)

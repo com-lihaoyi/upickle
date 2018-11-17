@@ -49,4 +49,6 @@ trait JsVisitor[-T, +J] extends Visitor[T, J]{
     arr.visitValue(visitBin(bytes, offset, len, index).asInstanceOf[T], -1)
     arr.visitEnd(-1)
   }
+
+  def visitChar(s: Char, index: Int) = visitString(s.toString, index)
 }

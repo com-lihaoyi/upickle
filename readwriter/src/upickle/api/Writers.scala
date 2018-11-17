@@ -3,11 +3,9 @@ package api
 
 import java.util.UUID
 
-import ujson.Js
-
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import upickle.core.Visitor
-trait Writers extends upickle.core.Types with Generated with MacroImplicits{
+trait Writers extends upickle.core.Types with Generated {
   implicit object StringWriter extends Writer[String] {
     def write0[R](out: Visitor[_, R], v: String): R = out.visitString(v, -1)
   }
@@ -138,18 +136,4 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     EitherWriter[T1, T2].narrow[Right[T1, T2]]
   implicit def LeftWriter[T1: Writer, T2: Writer] =
     EitherWriter[T1, T2].narrow[Left[T1, T2]]
-
-  implicit def JsObjW: Writer[Js.Obj] = JsValueW.narrow[Js.Obj]
-  implicit def JsArrW: Writer[Js.Arr] = JsValueW.narrow[Js.Arr]
-  implicit def JsStrW: Writer[Js.Str] = JsValueW.narrow[Js.Str]
-  implicit def JsNumW: Writer[Js.Num] = JsValueW.narrow[Js.Num]
-  implicit def JsBoolW: Writer[Js.Bool] = JsValueW.narrow[Js.Bool]
-  implicit def JsTrueW: Writer[Js.True.type] = JsValueW.narrow[Js.True.type]
-  implicit def JsFalseW: Writer[Js.False.type] = JsValueW.narrow[Js.False.type]
-  implicit def JsNullW: Writer[Js.Null.type] = JsValueW.narrow[Js.Null.type]
-  implicit object JsValueW extends Writer[Js.Value] {
-    def write0[R](out: Visitor[_, R], v: Js.Value): R = {
-      Js.transform(v, out)
-    }
-  }
 }

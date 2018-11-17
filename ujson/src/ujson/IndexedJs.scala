@@ -1,7 +1,7 @@
-package upickle.internal
+package ujson
 
 import ujson._
-import ujson.util.Util.reject
+import upickle.core.Util.reject
 import scala.collection.mutable
 import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
 
