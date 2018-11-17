@@ -179,7 +179,34 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     out.write(((i >> 0) & 0xff).toInt)
   }
 
-  def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = ???
+  def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
+    len match{
+      case 1 =>
+        out.write(MPK.FixExt1)
+      case 2 =>
+        out.write(MPK.FixExt2)
+      case 4 =>
+        out.write(MPK.FixExt4)
+      case 8 =>
+        out.write(MPK.FixExt8)
+      case 16 =>
+        out.write(MPK.FixExt16)
+      case _ =>
+        if (len <= 255){
+          out.write(MPK.Ext8)
+          writeUInt8(len)
+        }else if (len <= 65535){
+          out.write(MPK.Ext16)
+          writeUInt16(len)
+        }else{
+          writeUInt32(len)
+          out.write(MPK.Ext32)
+        }
+    }
+    out.write(tag)
+    out.write(bytes, offset, len)
+    out
+  }
 
   def visitChar(s: Char, index: Int) = {
     out.write(MPK.UInt16)

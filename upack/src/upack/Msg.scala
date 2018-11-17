@@ -165,6 +165,7 @@ object Msg extends Visitor[Msg, Msg]{
           obj.narrow.visitValue(transform(v, obj.subVisitor), -1)
         }
         obj.visitEnd(-1)
+      case Ext(tag, data) => f.visitExt(tag, data, 0, data.length, -1)
 
     }
   }

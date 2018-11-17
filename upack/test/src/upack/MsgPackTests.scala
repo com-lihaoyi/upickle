@@ -9,7 +9,7 @@ object MsgPackTests extends TestSuite{
       for{
         (k, v) <- unitCases.obj
         if k != "50.timestamp.yaml"
-        if k != "60.ext.yaml"
+
         testCase <- v.arr
         packed0 <- testCase("msgpack").arr
       }{
