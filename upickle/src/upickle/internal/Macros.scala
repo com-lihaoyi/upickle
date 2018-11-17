@@ -362,7 +362,17 @@ object Macros {
       }
       q"""
         new ${c.prefix}.CaseW[$targetType]{
-          val length = ${rawArgs.length}
+          def length(v: $targetType) = {
+            var n = 0
+            ..${
+              for(i <- 0 until rawArgs.length)
+              yield {
+                if (!hasDefaults(i)) q"n += 1"
+                else q"""if (v.${TermName(rawArgs(i))} != ${defaults(i)}) n += 1"""
+              }
+            }
+            n
+          }
           def writeToObject[R](ctx: upickle.core.ObjVisitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}

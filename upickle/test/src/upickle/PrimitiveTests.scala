@@ -88,9 +88,9 @@ object PrimitiveTests extends TestSuite {
       'min-rw(Short.MinValue, "-32768")
       'max-rw(Short.MaxValue, "32767")
       'null-assert(read[Short]("null") == 0)
-//      'all{
-//        for (i <- Short.MinValue to Short.MaxValue by 100) rw(i)
-//      }
+      'all{
+        for (i <- Short.MinValue to Short.MaxValue) rw(i)
+      }
     }
 
     'Byte{
@@ -99,7 +99,7 @@ object PrimitiveTests extends TestSuite {
       'max-rw(Byte.MaxValue, "127")
       'null-assert(read[Byte]("null") == 0)
       'all{
-        for (i <- Byte.MinValue to Byte.MaxValue by 10) rw(i)
+        for (i <- Byte.MinValue to Byte.MaxValue) rw(i)
       }
     }
 
@@ -122,7 +122,8 @@ object PrimitiveTests extends TestSuite {
       'plus-rw('+', """ "+" """)
 
       'all{
-        for(i <- Char.MinValue until Char.MaxValue by 100) {
+        for(i <- Char.MinValue until Char.MaxValue) {
+//          println("Testing " + i.toInt)
           rw(i)
         }
       }
