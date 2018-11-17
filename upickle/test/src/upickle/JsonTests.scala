@@ -83,15 +83,15 @@ object JsonTests extends TestSuite {
     }
     'shortcuts{
       'positive{
-        ujson.read("[1]").arr        ==> Seq(Js.Num(1))
+        ujson.read("[1]").arr        ==> Seq(ujson.Num(1))
         ujson.read("1").num          ==> 1
         ujson.read("\"1\"").str      ==> "1"
-        ujson.read("{\"1\": 1}").obj ==> Map("1" -> Js.Num(1))
+        ujson.read("{\"1\": 1}").obj ==> Map("1" -> ujson.Num(1))
       }
       'negative{
-        intercept[Js.InvalidData]{ujson.read("[1]").obj}
-        intercept[Js.InvalidData]{ujson.read("1").obj}
-        intercept[Js.InvalidData]{ujson.read("\"1\"").obj}
+        intercept[ujson.Value.InvalidData]{ujson.read("[1]").obj}
+        intercept[ujson.Value.InvalidData]{ujson.read("1").obj}
+        intercept[ujson.Value.InvalidData]{ujson.read("\"1\"").obj}
 
       }
     }

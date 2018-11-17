@@ -5,7 +5,7 @@ import java.util.UUID
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import upickle.core.Visitor
-trait Writers extends upickle.core.Types with Generated {
+trait Writers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object StringWriter extends Writer[String] {
     def write0[R](out: Visitor[_, R], v: String): R = out.visitString(v, -1)
   }

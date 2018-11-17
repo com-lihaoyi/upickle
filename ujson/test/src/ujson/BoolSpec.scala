@@ -5,22 +5,22 @@ import org.scalatest.prop._
 
 class BoolSpec extends PropSpec with Matchers with PropertyChecks with Inside {
 
-  property("Js.Bool apply") {
-    Js.Bool(true) shouldBe Js.True
-    Js.Bool(false) shouldBe Js.False
+  property("ujson.Bool apply") {
+    ujson.Bool(true) shouldBe ujson.True
+    ujson.Bool(false) shouldBe ujson.False
   }
 
-  property("Js.Bool.value") {
+  property("ujson.Bool.value") {
     forAll { bool: Boolean =>
-      Js.Bool(bool).value shouldBe bool
+      ujson.Bool(bool).value shouldBe bool
     }
   }
 
-  property("Js.Bool unapply") {
+  property("ujson.Bool unapply") {
     forAll { bool: Boolean =>
-      val jsb = Js.Bool(bool)
+      val jsb = ujson.Bool(bool)
       inside(jsb) {
-        case Js.Bool(value) =>
+        case ujson.Bool(value) =>
           value shouldBe bool
           jsb.value shouldBe value
       }

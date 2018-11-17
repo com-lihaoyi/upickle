@@ -11,7 +11,7 @@ import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
 
-trait Readers extends upickle.core.Types with Generated {
+trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit object UnitReader extends Reader[Unit] {
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
       def subVisitor = UnitReader

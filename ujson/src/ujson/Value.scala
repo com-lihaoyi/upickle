@@ -18,7 +18,7 @@ sealed trait Value extends Transformable {
     */
   def str = this match{
     case Value.Str(value) => value
-    case _ => throw Value.InvalidData(this, "Expected Js.Str")
+    case _ => throw Value.InvalidData(this, "Expected ujson.Str")
   }
   /**
     * Returns the key/value map of this [[Value]], fails if it is not
@@ -26,7 +26,7 @@ sealed trait Value extends Transformable {
     */
   def obj = this match{
     case Value.Obj(value) => value
-    case _ => throw Value.InvalidData(this, "Expected Js.Obj")
+    case _ => throw Value.InvalidData(this, "Expected ujson.Obj")
   }
   /**
     * Returns the elements of this [[Value]], fails if it is not
@@ -34,7 +34,7 @@ sealed trait Value extends Transformable {
     */
   def arr = this match{
     case Value.Arr(value) => value
-    case _ => throw Value.InvalidData(this, "Expected Js.Arr")
+    case _ => throw Value.InvalidData(this, "Expected ujson.Arr")
   }
   /**
     * Returns the `Double` value of this [[Value]], fails if it is not
@@ -42,7 +42,7 @@ sealed trait Value extends Transformable {
     */
   def num = this match{
     case Value.Num(value) => value
-    case _ => throw Value.InvalidData(this, "Expected Js.Num")
+    case _ => throw Value.InvalidData(this, "Expected ujson.Num")
   }
   /**
     * Returns the `Boolean` value of this [[Value]], fails if it is not
@@ -50,10 +50,10 @@ sealed trait Value extends Transformable {
     */
   def bool = this match{
     case Value.Bool(value) => value
-    case _ => throw Value.InvalidData(this, "Expected Js.Bool")
+    case _ => throw Value.InvalidData(this, "Expected ujson.Bool")
   }
   /**
-    * Returns true if the value of this [[Value]] is Js.Null, false otherwise
+    * Returns true if the value of this [[Value]] is ujson.Null, false otherwise
     */
   def isNull = this match {
     case Value.Null => true

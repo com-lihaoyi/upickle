@@ -33,7 +33,7 @@ object FailureTests extends TestSuite {
 
   def tests = Tests {
 //    'test - {
-//      read[Js.Value](""" {unquoted_key: "keys must be quoted"} """)
+//      read[ujson.Value](""" {unquoted_key: "keys must be quoted"} """)
 //    }
 
     'jsonFailures - {
@@ -80,7 +80,7 @@ object FailureTests extends TestSuite {
       val res =
         for(failureCase <- failureCases)
         yield try {
-          intercept[ParseException] { read[Js.Value](failureCase) }
+          intercept[ParseException] { read[ujson.Value](failureCase) }
           None
         }catch{
           case _:Throwable =>
@@ -89,8 +89,8 @@ object FailureTests extends TestSuite {
 
       val nonFailures = res.flatten
       assert(nonFailures.isEmpty)
-      intercept[IncompleteParseException]{read[Js.Value](""" {"Comma instead if closing brace": true, """)}
-      intercept[IncompleteParseException]{read[Js.Value](""" ["Unclosed array" """)}
+      intercept[IncompleteParseException]{read[ujson.Value](""" {"Comma instead if closing brace": true, """)}
+      intercept[IncompleteParseException]{read[ujson.Value](""" ["Unclosed array" """)}
     }
 
     'facadeFailures - {

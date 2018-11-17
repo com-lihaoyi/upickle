@@ -161,24 +161,24 @@ object StructTests extends TestSuite {
 
     'jsValue{
       'value{
-        val value:Js.Value = Js.Str("test")
+        val value:ujson.Value = ujson.Str("test")
         rw(value, """ "test" """.trim)
       }
-      'str-rw(Js.Str("test"), """"test"""")
-      'num-rw(Js.Num(7), """7""")
+      'str-rw(ujson.Str("test"), """"test"""")
+      'num-rw(ujson.Num(7), """7""")
       'obj{
-        'nested-rw(Js.Obj("foo" -> Js.Null, "bar" -> Js.Obj("baz" -> Js.Str("str"))), """{"foo":null,"bar":{"baz":"str"}}""")
-        'empty-rw(Js.Obj(), """{}""")
+        'nested-rw(ujson.Obj("foo" -> ujson.Null, "bar" -> ujson.Obj("baz" -> ujson.Str("str"))), """{"foo":null,"bar":{"baz":"str"}}""")
+        'empty-rw(ujson.Obj(), """{}""")
       }
       'arr{
-        'nonEmpty-rw(Js.Arr(Js.Num(5), Js.Num(6)), """[5,6]""")
-        'empty-rw(Js.Arr(), """[]""")
+        'nonEmpty-rw(ujson.Arr(ujson.Num(5), ujson.Num(6)), """[5,6]""")
+        'empty-rw(ujson.Arr(), """[]""")
       }
-      'true-rw(Js.True, """true""")
-      'true-rw(Js.Bool(true), """true""")
-      'false-rw(Js.False, """false""")
-      'false-rw(Js.Bool(false), """false""")
-      'null-rw(Js.Null, """null""")
+      'true-rw(ujson.True, """true""")
+      'true-rw(ujson.Bool(true), """true""")
+      'false-rw(ujson.False, """false""")
+      'false-rw(ujson.Bool(false), """false""")
+      'null-rw(ujson.Null, """null""")
     }
   }
 }

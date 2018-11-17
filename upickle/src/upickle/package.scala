@@ -5,10 +5,10 @@ package object upickle {
   val Js = ujson.Js
   object json {
     @deprecated("use ujson.read")
-    def read(s: Transformable): Js.Value = transform(s, Js)
+    def read(s: Transformable): ujson.Value = transform(s, Js)
 
     @deprecated("use ujson.write")
-    def write(t: Js.Value, indent: Int = -1, escapeUnicode: Boolean = false): String = {
+    def write(t: ujson.Value, indent: Int = -1, escapeUnicode: Boolean = false): String = {
       transform(t, StringRenderer(indent, escapeUnicode)).toString
     }
   }

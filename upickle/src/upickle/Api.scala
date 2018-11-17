@@ -4,7 +4,7 @@ package upickle
 
 import java.io.ByteArrayOutputStream
 
-import ujson.{IndexedJs, StringRenderer, _}
+import ujson.{IndexedValue, StringRenderer, _}
 
 import language.experimental.macros
 import language.higherKinds
@@ -28,7 +28,7 @@ trait Api
 
   def read[T: Reader](s: Transformable): T = s.transform(reader[T])
 
-  def readJs[T: Reader](s: Js.Value): T = s.transform(reader[T])
+  def readJs[T: Reader](s: ujson.Value): T = s.transform(reader[T])
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
@@ -39,7 +39,7 @@ trait Api
     transform(t).to(new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
   }
 
-  def writeJs[T: Writer](t: T): Js.Value = transform(t).to[Js.Value]
+  def writeJs[T: Writer](t: T): ujson.Value = transform(t).to[ujson.Value]
 
   def writeTo[T: Writer](t: T, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
     transform(t).to(new Renderer(out, indent = indent, escapeUnicode))
@@ -170,7 +170,7 @@ trait AttributeTagged extends Api{
         else {
           if (s.toString == tagName) () //do nothing
           else {
-            val slowCtx = IndexedJs.Builder.visitObject(-1, index).narrow
+            val slowCtx = IndexedValue.Builder.visitObject(-1, index).narrow
             slowCtx.visitKey(s, index)
             context = slowCtx
           }
@@ -194,9 +194,9 @@ trait AttributeTagged extends Api{
         if (context == null) throw new AbortJsonProcessingException("expected tagged dictionary")
         else if (fastPath) context.visitEnd(index).asInstanceOf[T]
         else{
-          val x = context.visitEnd(index).asInstanceOf[IndexedJs.Obj]
+          val x = context.visitEnd(index).asInstanceOf[IndexedValue.Obj]
           val keyAttr = x.value0.find(_._1.toString == tagName).get._2
-          val key = keyAttr.asInstanceOf[IndexedJs.Str].value0.toString
+          val key = keyAttr.asInstanceOf[IndexedValue.Str].value0.toString
           val delegate = taggedReader.findReader(key)
           if (delegate == null){
             throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil, null)
@@ -207,7 +207,7 @@ trait AttributeTagged extends Api{
             val k = k0.toString
             if (k != tagName){
               ctx2.visitKey(k, -1)
-              ctx2.visitValue(IndexedJs.transform(v, ctx2.subVisitor), -1)
+              ctx2.visitValue(IndexedValue.transform(v, ctx2.subVisitor), -1)
             }
           }
           ctx2.visitEnd(index)

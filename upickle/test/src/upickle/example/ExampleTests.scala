@@ -242,8 +242,8 @@ object ExampleTests extends TestSuite {
         import upickle.default._
         case class Bar(i: Int, s: String)
         implicit val fooReadWrite: ReadWriter[Bar] =
-          readwriter[Js.Value].bimap[Bar](
-            x => Js.Arr(x.s, x.i),
+          readwriter[ujson.Value].bimap[Bar](
+            x => ujson.Arr(x.s, x.i),
             json => new Bar(json(1).num.toInt, json(0).str)
           )
 
@@ -309,20 +309,20 @@ object ExampleTests extends TestSuite {
       'construction{
         import ujson.Js
 
-        val json0 = Js.Arr(
-          Js.Obj("myFieldA" -> Js.Num(1), "myFieldB" -> Js.Str("g")),
-          Js.Obj("myFieldA" -> Js.Num(2), "myFieldB" -> Js.Str("k"))
+        val json0 = ujson.Arr(
+          ujson.Obj("myFieldA" -> ujson.Num(1), "myFieldB" -> ujson.Str("g")),
+          ujson.Obj("myFieldA" -> ujson.Num(2), "myFieldB" -> ujson.Str("k"))
         )
 
-        val json = Js.Arr( // The `Js.Num` and `Js.Str` calls are optional
-          Js.Obj("myFieldA" -> 1, "myFieldB" -> "g"),
-          Js.Obj("myFieldA" -> 2, "myFieldB" -> "k")
+        val json = ujson.Arr( // The `ujson.Num` and `ujson.Str` calls are optional
+          ujson.Obj("myFieldA" -> 1, "myFieldB" -> "g"),
+          ujson.Obj("myFieldA" -> 2, "myFieldB" -> "k")
         )
 
         json0 ==> json
         json.toString ==> """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
 
-        val json2 = Js.Obj(
+        val json2 = ujson.Obj(
           "hello" -> (0 until 5),
           "world" -> (0 until 5).map(i => (i.toString, i))
         )
@@ -370,7 +370,7 @@ object ExampleTests extends TestSuite {
         upickle.default.readJs[Seq[Thing]](json) ==> Seq(Thing(1337, "g"))
       }
       'copy{
-        val data = Js.Obj(
+        val data = ujson.Obj(
           "hello" -> 1,
           "world" -> 2
         )
@@ -384,16 +384,16 @@ object ExampleTests extends TestSuite {
     'transforms{
       'json{
         import upickle.default._
-        transform(1).to[Js.Value] ==> Js.Num(1)
-        transform("hello").to[Js.Value] ==> Js.Str("hello")
-        transform(("hello", 9)).to[Js.Value] ==> Js.Arr("hello", 9)
-        transform(Thing(3, "3")).to[Js.Value] ==>
-          Js.Obj("myFieldA" -> 3, "myFieldB" -> "3")
+        transform(1).to[ujson.Value] ==> ujson.Num(1)
+        transform("hello").to[ujson.Value] ==> ujson.Str("hello")
+        transform(("hello", 9)).to[ujson.Value] ==> ujson.Arr("hello", 9)
+        transform(Thing(3, "3")).to[ujson.Value] ==>
+          ujson.Obj("myFieldA" -> 3, "myFieldB" -> "3")
 
-        transform(Js.Num(1)).to[Int] ==> 1
-        transform(Js.Str("hello")).to[String] ==> "hello"
-        transform(Js.Arr("hello", 9)).to[(String, Int)] ==> ("hello", 9)
-        transform(Js.Obj("myFieldA" -> 3, "myFieldB" -> "3")).to[Thing] ==>
+        transform(ujson.Num(1)).to[Int] ==> 1
+        transform(ujson.Str("hello")).to[String] ==> "hello"
+        transform(ujson.Arr("hello", 9)).to[(String, Int)] ==> ("hello", 9)
+        transform(ujson.Obj("myFieldA" -> 3, "myFieldB" -> "3")).to[Thing] ==>
           Thing(3, "3")
       }
 
@@ -405,19 +405,19 @@ object ExampleTests extends TestSuite {
 
         val bar = Bar("omg", Seq(Foo(1), Foo(2)))
 
-        upickle.default.transform(bar).to[Map[String, Js.Value]] ==>
-          Map[String, Js.Value](
+        upickle.default.transform(bar).to[Map[String, ujson.Value]] ==>
+          Map[String, ujson.Value](
             "name" -> "omg",
-            "foos" -> Js.Arr(
-              Js.Obj("i" -> 1),
-              Js.Obj("i" -> 2)
+            "foos" -> ujson.Arr(
+              ujson.Obj("i" -> 1),
+              ujson.Obj("i" -> 2)
             )
           )
 
       }
       'misc {
         // It can be used for parsing JSON into an AST
-        val exampleAst = Js.Arr(1, 2, 3)
+        val exampleAst = ujson.Arr(1, 2, 3)
 
         ujson.transform("[1, 2, 3]", Js) ==> exampleAst
 
