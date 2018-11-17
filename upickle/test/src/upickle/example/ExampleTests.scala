@@ -8,7 +8,7 @@ import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
 import ujson.{IncompleteParseException, ParseException, Transformable}
 import ujson.{BytesRenderer, Js, StringRenderer}
-import upickle.core.NoOpVisitor
+import upickle.core.{NoOpVisitor, Visitor}
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{
@@ -122,8 +122,10 @@ object ExampleTests extends TestSuite {
         write(12.5: Double)               ==> "12.5"
       }
       'longs{
-        write(12: Long)                   ==> "\"12\""
-        write(4000000000000L: Long)       ==> "\"4000000000000\""
+        write(12: Long)                   ==> "12"
+        write(4000000000000L: Long)       ==> "4000000000000"
+        // large longs are written as strings, to avoid floating point rounding
+        write(9223372036854775807L: Long) ==> "\"9223372036854775807\""
       }
       'specialNumbers{
         write(1.0/0: Double)              ==> "\"Infinity\""
@@ -297,6 +299,30 @@ object ExampleTests extends TestSuite {
 
         SnakePickle.read[Thing]("""{"my_field_a":1,"my_field_b":"gg"}""") ==>
           Thing(1, "gg")
+      }
+
+      'stringLongs{
+        upickle.default.write(123: Long) ==> "123"
+        upickle.default.write(Long.MaxValue) ==> "\"9223372036854775807\""
+
+        object StringLongs extends upickle.AttributeTagged{
+          override implicit val LongWriter = new Writer[Long] {
+            def write0[V](out: Visitor[_, V], v: Long) = out.visitString(v.toString, -1)
+          }
+        }
+
+        StringLongs.write(123: Long) ==> "\"123\""
+        StringLongs.write(Long.MaxValue) ==> "\"9223372036854775807\""
+
+        object NumLongs extends upickle.AttributeTagged{
+          override implicit val LongWriter = new Writer[Long] {
+            def write0[V](out: Visitor[_, V], v: Long) = out.visitFloat64String(v.toString, -1)
+          }
+        }
+
+        NumLongs.write(123: Long) ==> "123"
+        NumLongs.write(Long.MaxValue) ==> "9223372036854775807"
+
       }
     }
 

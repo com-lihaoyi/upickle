@@ -7,42 +7,42 @@ import upickle.core.Visitor
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Writers extends upickle.core.Types with Generated with MacroImplicits{
-  implicit object StringWriter extends Writer[String] {
+  implicit val StringWriter = new Writer[String] {
     def write0[R](out: Visitor[_, R], v: String): R = out.visitString(v, -1)
   }
-  implicit object UnitWriter extends Writer[Unit] {
+  implicit val UnitWriter = new Writer[Unit] {
     def write0[R](out: Visitor[_, R], v: Unit): R = {
       out.visitObject(0, -1).visitEnd(-1)
     }
   }
 
-  implicit object DoubleWriter extends Writer[Double] {
+  implicit val DoubleWriter = new Writer[Double] {
     def write0[R](out: Visitor[_, R], v: Double): R = out.visitFloat64(v, -1)
   }
-  implicit object IntWriter extends Writer[Int] {
+  implicit val IntWriter = new Writer[Int] {
     def write0[V](out: Visitor[_, V], v: Int) = out.visitInt32(v, -1)
   }
 
-  implicit object FloatWriter extends Writer[Float] {
+  implicit val FloatWriter = new Writer[Float] {
     def write0[R](out: Visitor[_, R], v: Float): R = out.visitFloat32(v, -1)
   }
-  implicit object ShortWriter extends Writer[Short] {
+  implicit val ShortWriter = new Writer[Short] {
     def write0[V](out: Visitor[_, V], v: Short) = out.visitInt32(v, -1)
   }
-  implicit object ByteWriter extends Writer[Byte] {
+  implicit val ByteWriter = new Writer[Byte] {
     def write0[V](out: Visitor[_, V], v: Byte) = out.visitInt32(v, -1)
   }
 
-  implicit object BooleanWriter extends Writer[Boolean] {
+  implicit val BooleanWriter = new Writer[Boolean] {
     def write0[R](out: Visitor[_, R], v: Boolean): R = {
       if(v) out.visitTrue(-1) else out.visitFalse(-1)
     }
   }
-  implicit object CharWriter extends Writer[Char] {
+  implicit val CharWriter = new Writer[Char] {
     def write0[V](out: Visitor[_, V], v: Char) = out.visitChar(v, -1)
   }
   implicit val UUIDWriter: Writer[UUID] = StringWriter.comap[UUID](_.toString)
-  implicit object LongWriter extends Writer[Long] {
+  implicit val LongWriter = new Writer[Long] {
     def write0[V](out: Visitor[_, V], v: Long) = out.visitInt64(v, -1)
   }
   implicit val BigIntWriter: Writer[BigInt] = StringWriter.comap[BigInt](_.toString)
@@ -94,7 +94,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     else SeqLikeWriter[Seq, (K, V)].comap[Map[K, V]](_.toSeq)
   }
 
-  implicit object DurationWriter extends Writer[Duration]{
+  implicit val DurationWriter = new Writer[Duration]{
     def write0[R](out: Visitor[_, R], v: Duration): R = v match{
       case Duration.Inf => out.visitString("inf", -1)
       case Duration.MinusInf => out.visitString("-inf", -1)

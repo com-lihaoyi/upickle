@@ -14,6 +14,7 @@ import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingExcepti
 sealed trait IndexedValue {
   def index: Int
 }
+
 object IndexedValue extends Transformer[IndexedValue]{
   
   case class Str(index: Int, value0: java.lang.CharSequence) extends IndexedValue

@@ -374,6 +374,19 @@
         throughout your project and you'll have the customized reading/writing
         available to you.
 
+      @p
+        You can also use a custom configuration to change how 64-bit @code{Long}s are
+        handled. By default, small longs that can be represented exactly in 64-bit
+        @code{Double}s are written as raw numbers, while larger values (n > 2^53)
+        are written as strings. This is to ensure the values are not truncated when
+        the serialized JSON is then manipulated, e.g. by Javascript which truncates
+        all large numbers to Doubles. If you wish to always write Longs as Strings,
+        or always write them as numbers (at risk of truncation), you can do so as
+        follows:
+
+      @hl.ref(optionsAsNullTests, Seq("stringLongs", ""))
+
+
   @sect{Limitations}
 
     @p
@@ -758,6 +771,17 @@
         @li
           @code{ujson.Js.Value}, @code{ujson.Js.Obj}, etc. are now just
           @code{ujson.Value}, @code{ujson.Obj}
+
+        @li
+          Small @code{Long} 64-bit integers are now read/written as JSON numbers
+          by default; only large values which cannot be precisely stored in
+          @code{Double}-precision floating point (n > 2^53) are written as strings.
+          You can revert to the old behavior via a @sect.ref{Custom Configuration}
+          with:
+          @hl.scala
+            override implicit val LongWriter = new Writer[Long] {
+              def write0[V](out: Visitor[_, V], v: Long) = out.visitInt64(v, -1)
+            }
 
     @sect{0.6.7}
       @ul

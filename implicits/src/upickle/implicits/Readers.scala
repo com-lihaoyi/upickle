@@ -3,32 +3,32 @@ package upickle.implicits
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import upickle.core.{AbortJsonProcessingException, ArrVisitor, ObjVisitor, Util}
+import upickle.core._
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Readers extends upickle.core.Types with Generated with MacroImplicits{
-  implicit object UnitReader extends Reader[Unit] {
+  implicit val UnitReader = new Reader[Unit] {
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
-      def subVisitor = UnitReader
+      def subVisitor = NoOpVisitor
 
-      def visitKey(s: CharSequence, index: Int): Unit = ???
+      def visitKey(s: CharSequence, index: Int): Unit = ()
 
-      def visitValue(v: Any, index: Int): Unit = ???
+      def visitValue(v: Any, index: Int): Unit = ()
 
       def visitEnd(index: Int) = ()
     }
   }
-  implicit object BooleanReader extends Reader[Boolean] {
+  implicit val BooleanReader = new Reader[Boolean] {
     override def expectedMsg = "expected boolean"
     override def visitTrue(index: Int) = true
     override def visitFalse(index: Int) = false
   }
 
 
-  implicit object DoubleReader extends Reader[Double] {
+  implicit val DoubleReader = new Reader[Double] {
     override def expectedMsg = "expected number"
     override def visitString(s: CharSequence, index: Int) = s.toString.toDouble
     override def visitInt32(d: Int, index: Int) = d
@@ -40,7 +40,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       s.toString.toDouble
     }
   }
-  implicit object IntReader extends Reader[Int] {
+  implicit val IntReader = new Reader[Int] {
     override def expectedMsg = "expected number"
     override def visitInt32(d: Int, index: Int) = d
     override def visitInt64(d: Long, index: Int) = d.toInt
@@ -50,7 +50,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       Util.parseIntegralNum(s, decIndex, expIndex, index).toInt
     }
   }
-  implicit object FloatReader extends Reader[Float] {
+  implicit val FloatReader = new Reader[Float] {
     override def expectedMsg = "expected number"
 
     override def visitString(s: CharSequence, index: Int) = s.toString.toFloat
@@ -62,7 +62,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       s.toString.toFloat
     }
   }
-  implicit object ShortReader extends Reader[Short] {
+  implicit val ShortReader = new Reader[Short] {
     override def expectedMsg = "expected number"
     override def visitInt32(d: Int, index: Int) = d.toShort
     override def visitInt64(d: Long, index: Int) = d.toShort
@@ -72,7 +72,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       Util.parseIntegralNum(s, decIndex, expIndex, index).toShort
     }
   }
-  implicit object ByteReader extends Reader[Byte] {
+  implicit val ByteReader = new Reader[Byte] {
     override def expectedMsg = "expected number"
     override def visitInt32(d: Int, index: Int) = d.toByte
     override def visitInt64(d: Long, index: Int) = d.toByte
@@ -83,7 +83,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
 
-  implicit object StringReader extends Reader[String] {
+  implicit val StringReader = new Reader[String] {
     override def expectedMsg = "expected string"
     override def visitString(s: CharSequence, index: Int) = s.toString
   }
@@ -92,7 +92,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def visitString(s: CharSequence, index: Int) = f(s)
   }
 
-  implicit object CharReader extends Reader[Char] {
+  implicit val CharReader = new Reader[Char] {
     override def expectedMsg = "expected char"
     override def visitString(d: CharSequence, index: Int) = d.charAt(0)
     override def visitChar(d: Char, index: Int) = d
@@ -105,7 +105,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
   implicit val UUIDReader: Reader[UUID] = new MapStringReader(s => UUID.fromString(s.toString))
-  implicit object LongReader extends Reader[Long] {
+  implicit val LongReader = new Reader[Long] {
     override def expectedMsg = "expected number"
     override def visitString(d: CharSequence, index: Int) = upickle.core.Util.parseLong(d, 0, d.length())
     override def visitInt32(d: Int, index: Int) = d.toLong
