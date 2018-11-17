@@ -84,7 +84,8 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
         val ctx = out.visitObject(v.size, -1).narrow
         for(pair <- v){
           val (k1, v1) = pair
-          ctx.visitKey(k1, -1)
+          val keyVisitor = ctx.visitKey(-1)
+          ctx.visitKeyValue(keyVisitor.visitString(k1, -1))
           ctx.visitValue(vw.write(ctx.subVisitor, v1), -1)
 
         }

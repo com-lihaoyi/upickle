@@ -18,7 +18,8 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
   }
   def visitObject(length: Int, index: Int) = new ObjVisitor[Unit, Unit] {
     def subVisitor = NoOpVisitor.this
-    def visitKey(s: CharSequence, index: Int): Unit = ()
+    def visitKey(index: Int) = NoOpVisitor
+    def visitKeyValue(s: Any): Unit = ()
     def visitValue(v: Unit, index: Int): Unit = ()
     def visitEnd(index: Int): Unit = ()
   }

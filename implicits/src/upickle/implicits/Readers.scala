@@ -14,11 +14,13 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
       def subVisitor = NoOpVisitor
 
-      def visitKey(s: CharSequence, index: Int): Unit = ()
-
       def visitValue(v: Any, index: Int): Unit = ()
 
       def visitEnd(index: Int) = ()
+
+      def visitKey(index: Int) = NoOpVisitor
+
+      def visitKeyValue(v: Any): Unit = ()
     }
   }
   implicit val BooleanReader = new Reader[Boolean] {
@@ -128,7 +130,9 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
         val values = mutable.Buffer.empty[V]
         def subVisitor = v
 
-        def visitKey(s: CharSequence, index: Int): Unit = {
+        def visitKey(index: Int) = StringReader
+
+        def visitKeyValue(s: Any): Unit = {
           strings.append(s.toString.asInstanceOf[K])
         }
 

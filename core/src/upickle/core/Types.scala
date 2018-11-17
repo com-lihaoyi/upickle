@@ -135,7 +135,8 @@ trait Types{ types =>
                                  f: V => Z) extends ObjVisitor[T, Z]{
       def subVisitor = src.subVisitor
 
-      def visitKey(s: CharSequence, index: Int) = src.visitKey(s, index)
+      def visitKey(index: Int): Visitor[_, _] = src.visitKey(index)
+      def visitKeyValue(s: Any) = src.visitKeyValue(s)
 
       def visitValue(v: T, index: Int): Unit = src.visitValue(v, index)
 
@@ -206,7 +207,7 @@ trait Types{ types =>
       def visitEnd(index: Int) = {
         val lengthSoFar = facadesIndex - start
         if (lengthSoFar != readers.length) {
-          throw new AbortJsonProcessingException(
+          throw new Abort(
             "expected " + readers.length + " items in sequence, found " + lengthSoFar
           )
         }
@@ -255,9 +256,10 @@ trait Types{ types =>
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
       def subVisitor = NoOpVisitor
 
-      def visitKey(s: CharSequence, index: Int): Unit = ???
+      def visitKey(index: Int) = NoOpVisitor
+      def visitKeyValue(s: Any) = ()
 
-      def visitValue(v: Any, index: Int): Unit = ???
+      def visitValue(v: Any, index: Int): Unit = ()
 
       def visitEnd(index: Int) = t
     }
@@ -269,8 +271,8 @@ trait Types{ types =>
 
 
   def taggedExpectedMsg: String
-  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): ArrVisitor[Any, T] = throw new AbortJsonProcessingException(taggedExpectedMsg)
-  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): ObjVisitor[Any, T] = throw new AbortJsonProcessingException(taggedExpectedMsg)
+  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): ArrVisitor[Any, T] = throw new Abort(taggedExpectedMsg)
+  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): ObjVisitor[Any, T] = throw new Abort(taggedExpectedMsg)
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_, R], v: T): R
 
   private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {

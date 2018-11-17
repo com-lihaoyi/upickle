@@ -363,8 +363,18 @@ object ExampleTests extends TestSuite {
 
       val binary: Array[Byte] = upack.write(msg)
 
-      upack.transform(binary, ujson.Value).toString ==>
+      // Can pretty-print starting from either the upack.Msg structs,
+      // or the raw binary data
+      upack.transform(msg, new ujson.StringRenderer()).toString ==>
         """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
+
+      upack.transform(binary, new ujson.StringRenderer()).toString ==>
+        """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
+
+      // Some messagepack structs cannot be converted to valid JSON, e.g.
+      // they may have maps with non-string keys. These can still be pretty-printed:
+      val msg2 = upack.Obj(upack.Arr(upack.Int32(1), upack.Int32(2)) -> upack.Int32(1))
+      upack.transform(msg2, new ujson.StringRenderer()).toString ==> """{[1,2]:1}"""
     }
     'json{
       'construction{

@@ -32,7 +32,7 @@ object Util {
         val e = parseLong(s, expIndex + 1, s.length())
         var i = 0
         while(i < e){
-          if (mult >= Long.MaxValue / 10) throw new AbortJsonProcessingException("expected integer")
+          if (mult >= Long.MaxValue / 10) throw new Abort("expected integer")
           mult = mult * 10
           i += 1
         }
@@ -93,7 +93,7 @@ object Util {
   }
 
   def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
-    case e: AbortJsonProcessingException =>
-      throw new JsonProcessingException(e.msg, j, -1, -1, path, e)
+    case e: Abort =>
+      throw new AbortException(e.msg, j, -1, -1, path, e)
   }
 }

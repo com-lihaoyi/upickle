@@ -266,8 +266,9 @@ object Macros {
 
         new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
           override def visitObject(length: Int, index: Int) = new CaseObjectContext{
-            def visitKey(s: CharSequence, index: Int): Unit = {
-              currentIndex = ${c.prefix}.objectAttributeKeyReadMap(s).toString match {
+            def visitKey(index: Int) = upickle.core.StringVisitor
+            def visitKeyValue(s: Any) = {
+              currentIndex = ${c.prefix}.objectAttributeKeyReadMap(s.toString).toString match {
                 case ..${
                   for(i <- mappedArgs.indices)
                   yield cq"${mappedArgs(i)} => $i"
@@ -275,7 +276,6 @@ object Macros {
                 case _ => -1
               }
             }
-
 
             def visitEnd(index: Int) = {
               ..${
@@ -293,7 +293,7 @@ object Macros {
                     yield cq"$i => ${mappedArgs(i)}"
                   }
                 }
-                throw new upickle.core.AbortJsonProcessingException(
+                throw new upickle.core.Abort(
                   "missing keys in dictionary: " + keys.mkString(", ")
                 )
               }
@@ -348,7 +348,14 @@ object Macros {
 
       def write(i: Int) = {
         val snippet = q"""
-          ctx.visitKey(${c.prefix}.objectAttributeKeyWriteMap(${mappedArgs(i)}), -1)
+
+          val keyVisitor = ctx.visitKey(-1)
+          ctx.visitKeyValue(
+            keyVisitor.visitString(
+              ${c.prefix}.objectAttributeKeyWriteMap(${mappedArgs(i)}),
+              -1
+            )
+          )
           val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]].asInstanceOf[${c.prefix}.Writer[Any]]
           ctx.visitValue(
             w.write(

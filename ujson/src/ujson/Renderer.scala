@@ -17,9 +17,9 @@ object BytesRenderer{
       this.flush()
       out.toByteArray
     }
-
   }
 }
+
 case class StringRenderer(indent: Int = -1,
                           escapeUnicode: Boolean = false)
   extends BaseRenderer(new java.io.StringWriter(), indent, escapeUnicode)
@@ -71,13 +71,8 @@ class BaseRenderer[T <: java.io.Writer]
     depth += 1
     renderIndent()
     def subVisitor = BaseRenderer.this
-    def visitKey(s: CharSequence, index: Int): Unit = {
-      flushBuffer()
-
-      Renderer.escape(out, s, escapeUnicode)
-
-      out.append(colonSnippet)
-    }
+    def visitKey(index: Int) = BaseRenderer.this
+    def visitKeyValue(s: Any): Unit = out.append(colonSnippet)
     def visitValue(v: T, index: Int): Unit = {
       commaBuffered = true
     }

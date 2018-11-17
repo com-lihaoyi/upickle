@@ -33,7 +33,8 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
       writeUInt32(length)
     }
     def subVisitor = MsgPackWriter.this
-    def visitKey(s: CharSequence, index: Int): Unit = visitString(s, index)
+    def visitKey(index: Int)= MsgPackWriter.this
+    def visitKeyValue(s: Any): Unit = () // do nothing
     def visitValue(v: T, index: Int): Unit = () // do nothing
     def visitEnd(index: Int) = out // do nothing
   }

@@ -3,7 +3,7 @@ package ujson
 import ujson._
 import upickle.core.Util.reject
 import scala.collection.mutable
-import upickle.core.{Visitor, ObjVisitor, ArrVisitor, AbortJsonProcessingException, JsonProcessingException}
+import upickle.core.{Visitor, ObjVisitor, ArrVisitor, Abort, AbortException}
 
 /**
   * A version of [[ujson.Value]] that keeps the index positions of the various AST
@@ -47,7 +47,9 @@ object IndexedValue extends Transformer[IndexedValue]{
       case IndexedValue.Obj(i, items @_*) =>
         val ctx = f.visitObject(-1, -1).narrow
         for((k, item) <- items) {
-          try ctx.visitKey(k, i) catch reject(i, Nil)
+          val keyVisitor = try ctx.visitKey(i) catch reject(i, Nil)
+
+          ctx.visitKeyValue(keyVisitor.visitString(k, i))
           try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
         }
         ctx.visitEnd(i)
@@ -69,7 +71,8 @@ object IndexedValue extends Transformer[IndexedValue]{
       val out = mutable.Buffer.empty[(String, IndexedValue)]
       var currentKey: String = _
       def subVisitor = Builder
-      def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
+      def visitKey(index: Int) = IndexedValue.Builder
+      def visitKeyValue(s: Any): Unit = currentKey = s.asInstanceOf[IndexedValue.Str].value0.toString
       def visitValue(v: IndexedValue, index: Int): Unit = {
         out.append((currentKey, v))
       }

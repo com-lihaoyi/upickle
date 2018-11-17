@@ -1,5 +1,6 @@
 package ujson
-import upickle.core.{Visitor, ObjArrVisitor, ObjVisitor, ArrVisitor}
+import upickle.core._
+
 import scala.collection.generic.CanBuildFrom
 
 trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
@@ -13,7 +14,8 @@ trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
   def transformObject[T](f: Visitor[_, T], items: Iterable[(String, I)]) = {
     val ctx = f.visitObject(items.size, -1).narrow
     for(kv <- items) {
-      ctx.visitKey(kv._1, -1)
+      val keyVisitor = ctx.visitKey(-1)
+      ctx.visitKeyValue(keyVisitor.visitString(kv._1, -1))
       ctx.visitValue(transform(kv._2, ctx.subVisitor), -1)
     }
     ctx.visitEnd(-1)
@@ -25,7 +27,8 @@ trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
     private[this] var key: String = null
     private[this] val vs = cbf.apply()
     def subVisitor = AstTransformer.this
-    def visitKey(s: CharSequence, index: Int): Unit = key = s.toString
+    def visitKey(index: Int) = upickle.core.StringVisitor
+    def visitKeyValue(s: Any): Unit = key = s.toString
 
     def visitValue(v: I, index: Int): Unit = vs += (key -> v)
 

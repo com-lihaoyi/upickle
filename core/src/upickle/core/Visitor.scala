@@ -150,7 +150,8 @@ trait ObjVisitor[-T, +J] extends ObjArrVisitor[T, J] {
     * @param s     the value of the key
     * @param index json source position at the start of the key being visited
     */
-  def visitKey(s: CharSequence, index: Int): Unit
+  def visitKey(index: Int): Visitor[_, _]
+  def visitKeyValue(v: Any): Unit
   def isObj = true
   override def narrow = this.asInstanceOf[ObjVisitor[Any, J]]
 }
@@ -167,17 +168,17 @@ trait ArrVisitor[-T, +J] extends ObjArrVisitor[T, J]{
 /**
   * Signals failure processsing JSON after parsing.
   */
-case class JsonProcessingException(clue: String,
-                                   index: Int,
-                                   line: Int,
-                                   col: Int,
-                                   path: List[Any],
-                                   cause: Throwable) extends Exception(clue + " at index " + index, cause)
+case class AbortException(clue: String,
+                          index: Int,
+                          line: Int,
+                          col: Int,
+                          path: List[Any],
+                          cause: Throwable) extends Exception(clue + " at index " + index, cause)
 
 /**
   * Throw this inside a [[Visitor]]'s handler functions to fail the processing
   * of JSON. The Facade just needs to provide the error message, and it is up
-  * to the driver to ensure it is properly wrapped in a [[JsonProcessingException]]
+  * to the driver to ensure it is properly wrapped in a [[AbortException]]
   * with the relevant source information.
   */
-case class AbortJsonProcessingException(msg: String) extends Exception(msg)
+case class Abort(msg: String) extends Exception(msg)

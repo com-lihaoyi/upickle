@@ -4,7 +4,7 @@ import utest._
 import upickle.legacy.read
 import acyclic.file
 import ujson.{IncompleteParseException, ParseException}
-import upickle.core.JsonProcessingException
+import upickle.core.AbortException
 case class Fee(i: Int, s: String)
 object Fee{
   implicit def rw: upickle.legacy.ReadWriter[Fee] = upickle.legacy.macroRW
@@ -95,13 +95,13 @@ object FailureTests extends TestSuite {
 
     'facadeFailures - {
       def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
-        val err = intercept[JsonProcessingException] { upickle.legacy.read[T](s) }
+        val err = intercept[AbortException] { upickle.legacy.read[T](s) }
         for (msg <- msgs) assert(err.getMessage.contains(msg))
 
         err
       }
       def assertErrorMsgDefault[T: upickle.default.Reader](s: String, msgs: String*) = {
-        val err = intercept[JsonProcessingException] { upickle.default.read[T](s) }
+        val err = intercept[AbortException] { upickle.default.read[T](s) }
         for (msg <- msgs) assert(err.getMessage.contains(msg))
         err
       }

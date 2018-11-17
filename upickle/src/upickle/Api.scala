@@ -77,10 +77,7 @@ object Api{
     def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
     def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
   }
-  object StringVisitor extends CustomVisitor[Nothing, Any] {
-    def expectedMsg = "expected string"
-    override def visitString(s: CharSequence, index: Int) = s
-  }
+
 }
 /**
  * The default way of accessing upickle
@@ -121,18 +118,18 @@ trait LegacyApi extends Api{
         val typeName = objectTypeKeyReadMap(v.toString).toString
         val delegate = taggedReader.findReader(typeName)
         if (delegate == null) {
-          throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
+          throw new Abort("invalid tag for tagged object: " + typeName)
         }
         state = TaggedReaderState.Parsing(delegate)
       case TaggedReaderState.Parsing(f) =>
         state = TaggedReaderState.Parsed(v)
       case TaggedReaderState.Parsed(res) => res.asInstanceOf[T]
-        throw new AbortJsonProcessingException("expected tagged dictionary")
+        throw new Abort("expected tagged dictionary")
     }
 
     def visitEnd(index: Int) = state match{
       case TaggedReaderState.Parsed(res) => res.asInstanceOf[T]
-      case _ => throw new AbortJsonProcessingException("expected tagged dictionary")
+      case _ => throw new Abort("expected tagged dictionary")
     }
 
   }
@@ -167,36 +164,43 @@ trait AttributeTagged extends Api{
       private[this] var fastPath = false
       private[this] var context: ObjVisitor[Any, _] = null
       def subVisitor: Visitor[Nothing, Any] =
-        if (context == null) Api.StringVisitor
+        if (context == null) upickle.core.StringVisitor
         else context.subVisitor
 
-      def visitKey(s: CharSequence, index: Int): Unit = {
-        if (context != null) context.visitKey(s, index)
+      def visitKey(index: Int) = {
+        if (context != null) context.visitKey(index)
+        else upickle.core.StringVisitor
+      }
+      def visitKeyValue(s: Any) = {
+        if (context != null) context.visitKeyValue(s)
         else {
           if (s.toString == tagName) () //do nothing
           else {
+            // otherwise, go slow path
             val slowCtx = IndexedValue.Builder.visitObject(-1, index).narrow
-            slowCtx.visitKey(s, index)
+            val keyVisitor = slowCtx.visitKey(index)
+            val xxx = keyVisitor.visitString(s.toString, index)
+            slowCtx.visitKeyValue(xxx)
             context = slowCtx
           }
         }
       }
 
-      def visitValue(v: Any, index: Int): Unit =
+      def visitValue(v: Any, index: Int): Unit = {
         if (context != null) context.visitValue(v, index)
         else {
           val typeName = objectTypeKeyReadMap(v.toString).toString
           val facade0 = taggedReader.findReader(typeName)
           if (facade0 == null) {
-            throw new AbortJsonProcessingException("invalid tag for tagged object: " + typeName)
+            throw new Abort("invalid tag for tagged object: " + typeName)
           }
           val fastCtx = facade0.visitObject(-1, index)
           context = fastCtx
           fastPath = true
+        }
       }
-
       def visitEnd(index: Int) = {
-        if (context == null) throw new AbortJsonProcessingException("expected tagged dictionary")
+        if (context == null) throw new Abort("expected tagged dictionary")
         else if (fastPath) context.visitEnd(index).asInstanceOf[T]
         else{
           val x = context.visitEnd(index).asInstanceOf[IndexedValue.Obj]
@@ -204,14 +208,16 @@ trait AttributeTagged extends Api{
           val key = keyAttr.asInstanceOf[IndexedValue.Str].value0.toString
           val delegate = taggedReader.findReader(key)
           if (delegate == null){
-            throw new JsonProcessingException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil, null)
+            throw new AbortException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil, null)
           }
           val ctx2 = delegate.visitObject(-1, -1)
           for (p <- x.value0) {
             val (k0, v) = p
             val k = k0.toString
             if (k != tagName){
-              ctx2.visitKey(k, -1)
+              val keyVisitor = ctx2.visitKey(-1)
+
+              ctx2.visitKeyValue(keyVisitor.visitString(k, -1))
               ctx2.visitValue(IndexedValue.transform(v, ctx2.subVisitor), -1)
             }
           }
@@ -223,9 +229,12 @@ trait AttributeTagged extends Api{
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, -1)
-    ctx.visitKey(tagName, -1)
+    val keyVisitor = ctx.visitKey(-1)
+
+    ctx.visitKeyValue(keyVisitor.visitString(tagName, -1))
     ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
     w.writeToObject(ctx, v)
-    ctx.visitEnd(-1)
+    val res = ctx.visitEnd(-1)
+    res
   }
 }

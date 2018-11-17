@@ -18,11 +18,14 @@ object JNumIndexCheckFacade extends JsVisitor[Boolean, Boolean] {
   def visitObject(length: Int, index: Int) = new ObjVisitor[Boolean, Boolean] {
     var failed = false
     def subVisitor = JNumIndexCheckFacade
-    def visitKey(s: CharSequence, index: Int): Unit = ()
     def visitValue(v: Boolean, index: Int): Unit = {
       if (!v) failed = true
     }
     def visitEnd(index: Int): Boolean = !failed
+
+    def visitKey(index: Int) = JNumIndexCheckFacade
+
+    def visitKeyValue(v: Any): Unit = ()
   }
 
   def visitNull(index: Int): Boolean = true

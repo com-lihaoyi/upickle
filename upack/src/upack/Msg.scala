@@ -175,7 +175,8 @@ object Msg extends MsgVisitor[Msg, Msg]{
       case Obj(items) =>
         val obj = f.visitObject(items.size, -1)
         for((k, v) <- items){
-          obj.visitKey(k.asInstanceOf[Str].value, -1)
+          val keyVisitor = obj.visitKey(-1)
+          obj.visitKeyValue(k.transform(keyVisitor))
           obj.narrow.visitValue(transform(v, obj.subVisitor), -1)
         }
         obj.visitEnd(-1)
@@ -192,11 +193,12 @@ object Msg extends MsgVisitor[Msg, Msg]{
 
   def visitObject(length: Int, index: Int) = new ObjVisitor[Msg, Msg] {
     val map = mutable.LinkedHashMap[Msg, Msg]()
-    var lastKey = ""
+    var lastKey: Msg = null
     def subVisitor = Msg
-    def visitValue(v: Msg, index: Int): Unit = map(Str(lastKey)) = v
+    def visitValue(v: Msg, index: Int): Unit = map(lastKey) = v
     def visitEnd(index: Int) = Obj(map)
-    def visitKey(s: CharSequence, index: Int): Unit = lastKey = s.toString
+    def visitKey(index: Int) = Msg
+    def visitKeyValue(s: Any): Unit = lastKey = s.asInstanceOf[Msg]
   }
 
   def visitNull(index: Int) = Null

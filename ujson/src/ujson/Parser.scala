@@ -1,5 +1,5 @@
 package ujson
-import upickle.core.{Visitor, ObjArrVisitor, AbortJsonProcessingException, JsonProcessingException, ObjVisitor}
+import upickle.core.{Visitor, ObjArrVisitor, Abort, AbortException, ObjVisitor}
 import java.nio.charset.Charset
 
 import scala.annotation.{switch, tailrec}
@@ -84,6 +84,7 @@ abstract class Parser[J] {
   @inline protected[this] final val SEP = 3
   @inline protected[this] final val ARREND = 4
   @inline protected[this] final val OBJEND = 5
+  @inline protected[this] final val KEYVALUE = 2
 
   protected[this] def newline(i: Int): Unit
   protected[this] def line(): Int
@@ -355,10 +356,10 @@ abstract class Parser[J] {
   }
 
   def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
-    case e: AbortJsonProcessingException =>
+    case e: Abort =>
       val y = line() + 1
       val x = column(j) + 1
-      throw new JsonProcessingException(e.msg, j, y, x, path, e)
+      throw new AbortException(e.msg, j, y, x, path, e)
   }
   /**
    * Tail-recursive parsing method to do the bulk of JSON parsing.
@@ -449,9 +450,12 @@ abstract class Parser[J] {
     } else if (state == KEY) {
       // we are in an object expecting to see a key.
       if (c == '"') {
-        val (s, j) = parseString(i, true)
-        stack.head.asInstanceOf[ObjVisitor[Any, _]].visitKey(s, j)
-        rparse(SEP, j, stack, s :: path.tail)
+
+        val obj = stack.head.asInstanceOf[ObjVisitor[Any, _]]
+        val keyVisitor = obj.visitKey(j)
+        val (s, nextJ) = parseString(i, true)
+        obj.visitKeyValue(keyVisitor.visitString(s, j))
+        rparse(SEP, nextJ, stack, s :: path.tail)
       } else die(i, "expected \"")
     } else if (state == SEP) {
       // we are in an object just after a key, expecting to see a colon.
