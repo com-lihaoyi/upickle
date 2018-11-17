@@ -181,16 +181,11 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
     len match{
-      case 1 =>
-        out.write(MPK.FixExt1)
-      case 2 =>
-        out.write(MPK.FixExt2)
-      case 4 =>
-        out.write(MPK.FixExt4)
-      case 8 =>
-        out.write(MPK.FixExt8)
-      case 16 =>
-        out.write(MPK.FixExt16)
+      case 1 => out.write(MPK.FixExt1)
+      case 2 => out.write(MPK.FixExt2)
+      case 4 => out.write(MPK.FixExt4)
+      case 8 => out.write(MPK.FixExt8)
+      case 16 => out.write(MPK.FixExt16)
       case _ =>
         if (len <= 255){
           out.write(MPK.Ext8)

@@ -23,6 +23,7 @@ object Main{
       println()
 
       Main.ujsonAst(duration)
+      Main.upackAst(duration)
       Main.playJsonAst(duration)
       Main.uJsonPlayJsonAst(duration)
       Main.circeJsonAst(duration)
@@ -54,6 +55,12 @@ object Main{
     Common.bench0[String, ujson.Value](duration, Common.benchmarkSampleJson)(
       ujson.read(_),
       _.render()
+    )
+  }
+  def upackAst(duration: Int) = {
+    Common.bench0[Array[Byte], upack.Msg](duration, Common.benchmarkSampleMsgPack)(
+      upack.read(_),
+      upack.write(_)
     )
   }
   def playJsonAst(duration: Int) = {

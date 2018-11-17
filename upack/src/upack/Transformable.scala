@@ -8,6 +8,6 @@ abstract class Transformable {
 
 object Transformable {
   implicit def fromByteArray(s: Array[Byte]) = new Transformable{
-    def transform[T](f: Visitor[_, T]): T = new MsgPackReader(0, s, f).parse()
+    def transform[T](f: Visitor[_, T]): T = new MsgPackReader(0, s).parse(f)
   }
 }
