@@ -93,7 +93,21 @@ case class Float64(value: Double) extends Msg
 case class Str(value: String) extends Msg
 case class Binary(value: Array[Byte]) extends Msg
 case class Arr(value: mutable.ArrayBuffer[Msg]) extends Msg
-case class Obj(value: mutable.Map[Msg, Msg]) extends Msg
+object Arr{
+  def apply(items: Msg*): Arr = Arr(items.to[mutable.ArrayBuffer])
+}
+case class Obj(value: mutable.LinkedHashMap[Msg, Msg]) extends Msg
+object Obj{
+  def apply(item: (Msg, Msg),
+            items: (Msg, Msg)*): Obj = {
+    val map = new mutable.LinkedHashMap[Msg, Msg]()
+    map.put(item._1, item._2)
+    for (i <- items) map.put(i._1, i._2)
+    Obj(map)
+  }
+
+  def apply(): Obj = Obj(new mutable.LinkedHashMap[Msg, Msg]())
+}
 case class Ext(tag: Byte, data: Array[Byte]) extends Msg
 
 sealed abstract class Bool extends Msg{
@@ -104,7 +118,7 @@ object Bool{
   def unapply(bool: Bool): Option[Boolean] = Some(bool.value)
 }
 
-object Msg extends Visitor[Msg, Msg]{
+object Msg extends MsgVisitor[Msg, Msg]{
   /**
     * Thrown when uPickle tries to convert a JSON blob into a given data
     * structure but fails because part the blob is invalid
@@ -177,7 +191,7 @@ object Msg extends Visitor[Msg, Msg]{
   }
 
   def visitObject(length: Int, index: Int) = new ObjVisitor[Msg, Msg] {
-    val map = mutable.Map[Msg, Msg]()
+    val map = mutable.LinkedHashMap[Msg, Msg]()
     var lastKey = ""
     def subVisitor = Msg
     def visitValue(v: Msg, index: Int): Unit = map(Str(lastKey)) = v
@@ -191,8 +205,6 @@ object Msg extends Visitor[Msg, Msg]{
 
   def visitTrue(index: Int) = True
 
-  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = ???
-
   def visitFloat64(d: Double, index: Int) = Float64(d)
 
   def visitFloat32(d: Float, index: Int) = Float32(d)
@@ -203,17 +215,14 @@ object Msg extends Visitor[Msg, Msg]{
 
   def visitUInt64(i: Long, index: Int) = UInt64(i)
 
-  def visitFloat64String(s: Predef.String, index: Int) = ???
-
   def visitString(s: CharSequence, index: Int) = Str(s.toString)
 
   def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) =
     Binary(bytes.slice(offset, offset + len))
 
-  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int) = ???
-
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) =
     Ext(tag, bytes.slice(offset, offset + len))
 
   def visitChar(s: Char, index: Int) = Int32(s)
+
 }

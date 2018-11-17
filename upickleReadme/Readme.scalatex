@@ -72,6 +72,12 @@
 
     @hl.ref(exampleTests, Seq("'simple", ""))
 
+    @p
+      Or to compact byte arrays, using the @lnk("MessagePack", "https://msgpack.org/index.html")
+      format:
+
+    @hl.ref(exampleTests, Seq("'binary", ""))
+
     @sect{ScalaJS}
       @p
         For ScalaJS applications, use this dependencies instead:
@@ -182,6 +188,13 @@
         uPickle only throws exceptions on unpickling; if a pickler is
         properly defined, serializing a data structure to a @hl.scala{String}
         should never throw an exception.
+
+      @p
+        All these examples can be similarly serialized to MessagePack-formatted
+        binaries, in the same way: JSON booleans become MessagePack booleans,
+        lists become MessagePack lists, and so on. Reading and writing
+        MessagePack binary data is typically significantly faster than reading
+        and writing JSON, and the serialized data is also significantly smaller.
 
     @sect{Read/Writing Other Things}
 
@@ -578,6 +591,56 @@
           String and check that both transformations were applied:
 
         @hl.ref(jvmExampleTests, Seq("'crossAst", ""), "}")
+
+  @sect{uPack}
+
+    @p
+      uPack is uPickle's MessagePack library, which can be used to easily
+      manipulate MessagePack source and data structures without converting them into
+      Scala case-classes. This all lives in the @code{upack} package.
+    @p
+      uJson comes bundled with uPickle, or can be used stand-alone via the
+      following package coordinates:
+
+    @hl.scala
+      libraryDependencies += "com.lihaoyi" %% "upack" % "0.6.7"
+
+    @p
+      The following basic functions are provided in the @code{upack} package
+      to let you read and write MessagePack structs:
+
+    @hl.ref(wd/'upack/'src/'upack/"package.scala", Seq("package object upack", ""))
+
+    @p
+      MessagePack structs are represented using the @code{upack.Msg} type.
+      You can construct ad-hoc MessagePack structs using @code{upack.Msg}, and
+      can similarly parse binary data into @code{upack.Msg} for ad-hoc querying
+      and manipulation, without needing to bind it to Scala case classes or data
+      types:
+
+    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgConstruction", ""))
+
+    @p
+      You can also convert the uPack messages or binaries to @code{ujson.Value}s via
+      @code{upack.transform}. This can be handy to help debug what's going on in your
+      binary message data:
+
+    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgToJson", ""))
+
+    @p
+      Note that such a conversion between MessagePack structs and JSON data is
+      lossy: some MessagePack constructs, such as binary data, cannot be exactly
+      represented in JSON and have to be converted to strings. Thus you should
+      not rely on being able to round-trip data between JSON <-> MessagePack and
+      getting the same thing back, although round tripping data between
+      Scala-data-types <-> JSON and Scala-data-types <-> MessagePack should
+      always work.
+
+    @p
+      If you need to construct Scala case classes or other data types from your
+      MessagePack binary data, you should directly use @code{upickle.default.readBinary}
+      and @code{upickle.default.writeBinary}: these bypass the @code{upack.Msg}
+      struct entirely for the optimal performance.
 
   @sect{Performance}
     @p

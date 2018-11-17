@@ -98,13 +98,26 @@ object ExampleTests extends TestSuite {
 
       write(Seq(1, 2, 3))               ==> "[1,2,3]"
 
-      read[Seq[Int]]("[1,2,3]")       ==> List(1, 2, 3)
+      read[Seq[Int]]("[1,2,3]")         ==> List(1, 2, 3)
 
       write((1, "omg", true))           ==> """[1,"omg",true]"""
 
-      type Tup = (Int, String, Boolean)
+      read[(Int, String, Boolean)]("""[1,"omg",true]""") ==> (1, "omg", true)
+    }
+    'binary{
+      import upickle.default._
 
-      read[Tup]("""[1,"omg",true]""") ==> (1, "omg", true)
+      writeBinary(1)                          ==> Array(1)
+
+      writeBinary(Seq(1, 2, 3))               ==> Array(0x93.toByte, 1, 2, 3)
+
+      readBinary[Seq[Int]](Array[Byte](0x93.toByte, 1, 2, 3))  ==> List(1, 2, 3)
+
+      val serializedTuple = Array[Byte](0x93.toByte, 1, 0xa3.toByte, 111, 109, 103, 0xc3.toByte)
+
+      writeBinary((1, "omg", true))           ==> serializedTuple
+
+      readBinary[(Int, String, Boolean)](serializedTuple) ==> (1, "omg", true)
     }
     'more{
       import upickle.default._
@@ -330,6 +343,28 @@ object ExampleTests extends TestSuite {
       upickle.default.transform(Foo(123)).to[Foo] ==> Foo(123)
       val big = Big(1, true, "lol", 'Z', Thing(7, ""))
       upickle.default.transform(big).to[Big] ==> big
+    }
+    'msgConstruction{
+      val msg = upack.Arr(
+        upack.Obj(upack.Str("myFieldA") -> upack.Int32(1), upack.Str("myFieldB") -> upack.Str("g")),
+        upack.Obj(upack.Str("myFieldA") -> upack.Int32(2), upack.Str("myFieldB") -> upack.Str("k"))
+      )
+
+      val binary: Array[Byte] = upack.write(msg)
+
+      val read = upack.read(binary)
+      assert(msg == read)
+    }
+    'msgToJson{
+      val msg = upack.Arr(
+        upack.Obj(upack.Str("myFieldA") -> upack.Int32(1), upack.Str("myFieldB") -> upack.Str("g")),
+        upack.Obj(upack.Str("myFieldA") -> upack.Int32(2), upack.Str("myFieldB") -> upack.Str("k"))
+      )
+
+      val binary: Array[Byte] = upack.write(msg)
+
+      upack.transform(binary, ujson.Value).toString ==>
+        """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
     }
     'json{
       'construction{
