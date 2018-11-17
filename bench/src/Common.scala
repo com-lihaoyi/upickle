@@ -48,7 +48,7 @@ object Common{
     implicit def _w8: Encoder[ADTc] = deriveEncoder
     implicit def _w9: Encoder[ADT0] = deriveEncoder
 
-    bench(duration)(
+    bench[String](duration)(
       decode[Data](_).right.get,
       implicitly[Encoder[Data]].apply(_).toString()
     )
@@ -76,7 +76,7 @@ object Common{
     }
 
 
-    bench(duration)(
+    bench[String](duration)(
       s => Json.fromJson[Data](Json.parse(s)).get,
       d => Json.stringify(Json.toJson(d))
     )
@@ -96,7 +96,7 @@ object Common{
     implicit def rw9: RW[ADT0] = upickle.legacy.macroRW
 
 
-    bench(duration)(
+    bench[String](duration)(
       upickle.legacy.read[Data](_),
       upickle.legacy.write(_)
     )
@@ -105,9 +105,38 @@ object Common{
   }
   def upickleDefault(duration: Int) = {
 
-    bench(duration)(
+    bench[String](duration)(
       upickle.default.read[Data](_),
       upickle.default.write(_)
+    )
+  }
+
+  def upickleBinaryLegacy(duration: Int) = {
+    import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
+
+    implicit def rw1: RW[Data] = upickle.legacy.macroRW
+    implicit def rw2: RW[A] = upickle.legacy.macroRW
+    implicit def rw3: RW[B] = upickle.legacy.macroRW
+    implicit def rw4: RW[C] = upickle.legacy.macroRW
+    implicit def rw5: RW[LL] = upickle.legacy.macroRW
+    implicit def rw6: RW[Node] = upickle.legacy.macroRW
+    implicit def rw7: RW[End.type] = upickle.legacy.macroRW
+    implicit def rw8: RW[ADTc] = upickle.legacy.macroRW
+    implicit def rw9: RW[ADT0] = upickle.legacy.macroRW
+
+
+    bench[Array[Byte]](duration)(
+      upickle.legacy.readBinary[Data](_),
+      upickle.legacy.writeBinary(_)
+    )
+
+
+  }
+  def upickleBinaryDefault(duration: Int) = {
+
+    bench[Array[Byte]](duration)(
+      upickle.default.readBinary[Data](_),
+      upickle.default.writeBinary(_)
     )
   }
 
@@ -124,7 +153,7 @@ object Common{
     implicit def gc8: GenCodec[ADTc] = GenCodec.materialize
     implicit def gc9: GenCodec[ADT0] = GenCodec.materialize
 
-    bench(duration)(
+    bench[String](duration)(
       json.JsonStringInput.read[Data](_),
       json.JsonStringOutput.write[Data](_)
     )
@@ -155,7 +184,7 @@ object Common{
     implicit lazy val _w8: Encoder[ADTc] = deriveEncoder
     implicit lazy val _w9: Encoder[ADT0] = deriveEncoder
 
-    bench(duration)(
+    bench[String](duration)(
       decode[Data](_).right.get,
       implicitly[Encoder[Data]].apply(_).toString()
     )
@@ -183,7 +212,7 @@ object Common{
 
 
 
-    bench(duration)(
+    bench[String](duration)(
       s => Json.fromJson[Data](Json.parse(s)).get,
       d => Json.stringify(Json.toJson(d))
     )
@@ -203,7 +232,7 @@ object Common{
     implicit lazy val rw8: RW[ADTc] = upickle.legacy.macroRW
     implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
 
-    bench(duration)(
+    bench[String](duration)(
       upickle.legacy.read[Data](_),
       upickle.legacy.write(_)
     )
@@ -220,9 +249,45 @@ object Common{
     implicit lazy val rw8: upickle.default.ReadWriter[ADTc] = upickle.default.macroRW
     implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
 
-    bench(duration)(
+    bench[String](duration)(
       upickle.default.read[Data](_),
       upickle.default.write(_)
+    )
+  }
+
+  def upickleLegacyBinaryCached(duration: Int) = {
+    import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
+
+    implicit lazy val rw1: RW[Data] = upickle.legacy.macroRW
+    implicit lazy val rw2: RW[A] = upickle.legacy.macroRW
+    implicit lazy val rw3: RW[B] = upickle.legacy.macroRW
+    implicit lazy val rw4: RW[C] = upickle.legacy.macroRW
+    implicit lazy val rw5: RW[LL] = upickle.legacy.macroRW
+    implicit lazy val rw6: RW[Node] = upickle.legacy.macroRW
+    implicit lazy val rw7: RW[End.type] = upickle.legacy.macroRW
+    implicit lazy val rw8: RW[ADTc] = upickle.legacy.macroRW
+    implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
+
+    bench[Array[Byte]](duration)(
+      upickle.legacy.readBinary[Data](_),
+      upickle.legacy.writeBinary(_)
+    )
+  }
+
+  def upickleDefaultBinaryCached(duration: Int) = {
+    implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
+    implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
+    implicit lazy val rw3: upickle.default.ReadWriter[B] = upickle.default.macroRW
+    implicit lazy val rw4: upickle.default.ReadWriter[C] = upickle.default.macroRW
+    implicit lazy val rw5: upickle.default.ReadWriter[LL] = upickle.default.macroRW
+    implicit lazy val rw6: upickle.default.ReadWriter[Node] = upickle.default.macroRW
+    implicit lazy val rw7: upickle.default.ReadWriter[End.type] = upickle.default.macroRW
+    implicit lazy val rw8: upickle.default.ReadWriter[ADTc] = upickle.default.macroRW
+    implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
+
+    bench[Array[Byte]](duration)(
+      upickle.default.readBinary[Data](_),
+      upickle.default.writeBinary(_)
     )
   }
 
@@ -239,29 +304,31 @@ object Common{
     implicit lazy val gc8: GenCodec[ADTc] = GenCodec.materialize
     implicit lazy val gc9: GenCodec[ADT0] = GenCodec.materialize
 
-    bench(duration)(
+    bench[String](duration)(
       json.JsonStringInput.read[Data](_),
       json.JsonStringOutput.write[Data](_)
     )
   }
 
-  def bench(duration: Int)
-           (f1: String => Data, f2: Data => String)
-           (implicit name: sourcecode.Name) = {
+  def bench[T](duration: Int)
+              (f1: T => Data, f2: Data => T)
+              (implicit name: sourcecode.Name) = {
     val stringified = f2(benchmarkSampleData)
     val r1 = f1(stringified)
     val equal = benchmarkSampleData == r1
 
     assert(equal)
     val rewritten = f2(f1(stringified))
-
-    assert(stringified == rewritten)
-    bench0[Data](duration, stringified)(f1, f2)
+    (stringified, rewritten) match{
+      case (lhs: Array[_], rhs: Array[_]) => assert(lhs.toSeq == rhs.toSeq)
+      case _ => assert(stringified == rewritten)
+    }
+    bench0[T, Data](duration, stringified)(f1, f2)
   }
 
-  def bench0[T](duration: Int, stringified: String)
-               (f1: String => T, f2: T => String)
-               (implicit name: sourcecode.Name)= {
+  def bench0[T, V](duration: Int, stringified: T)
+                  (f1: T => V, f2: V => T)
+                  (implicit name: sourcecode.Name)= {
     {
       var n = 0
       val start = System.currentTimeMillis()

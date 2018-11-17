@@ -16,6 +16,8 @@ object Main{
       Common.circe(duration)
       Common.upickleDefault(duration)
       Common.upickleLegacy(duration)
+      Common.upickleBinaryDefault(duration)
+      Common.upickleBinaryLegacy(duration)
       Common.genCodec(duration)
       upickleWebDefault(duration)
       upickleWebLegacy(duration)
@@ -23,6 +25,8 @@ object Main{
       Common.circeCached(duration)
       Common.upickleDefaultCached(duration)
       Common.upickleLegacyCached(duration)
+      Common.upickleDefaultBinaryCached(duration)
+      Common.upickleLegacyBinaryCached(duration)
       Common.genCodecCached(duration)
       upickleWebDefaultCached(duration)
       upickleWebLegacyCached(duration)
@@ -32,7 +36,7 @@ object Main{
 
   def rawJsonParseSerialize(duration: Int) = {
 
-    Common.bench0[js.Any](duration, Common.benchmarkSampleJson)(
+    Common.bench0[String, js.Any](duration, Common.benchmarkSampleJson)(
       js.JSON.parse(_),
       js.JSON.stringify(_)
     )
@@ -48,7 +52,7 @@ object Main{
     implicit def rw7: RW[End.type] = upickle.default.macroRW
     implicit def rw8: RW[ADTc] = upickle.default.macroRW
     implicit def rw9: RW[ADT0] = upickle.default.macroRW
-    bench(duration)(
+    bench[String](duration)(
       upickle.default.web.read[Data],
       upickle.default.web.write(_)
     )
@@ -64,7 +68,7 @@ object Main{
     implicit lazy val rw7: RW[End.type] = upickle.default.macroRW
     implicit lazy val rw8: RW[ADTc] = upickle.default.macroRW
     implicit lazy val rw9: RW[ADT0] = upickle.default.macroRW
-    bench(duration)(
+    bench[String](duration)(
       upickle.default.web.read[Data],
       upickle.default.web.write(_)
     )
@@ -80,7 +84,7 @@ object Main{
     implicit def rw7: RW[End.type] = upickle.legacy.macroRW
     implicit def rw8: RW[ADTc] = upickle.legacy.macroRW
     implicit def rw9: RW[ADT0] = upickle.legacy.macroRW
-    bench(duration)(
+    bench[String](duration)(
       upickle.legacy.web.read[Data],
       upickle.legacy.web.write(_)
     )
@@ -96,7 +100,7 @@ object Main{
     implicit lazy val rw7: RW[End.type] = upickle.legacy.macroRW
     implicit lazy val rw8: RW[ADTc] = upickle.legacy.macroRW
     implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
-    bench(duration)(
+    bench[String](duration)(
       upickle.legacy.web.read[Data],
       upickle.legacy.web.write(_)
     )
