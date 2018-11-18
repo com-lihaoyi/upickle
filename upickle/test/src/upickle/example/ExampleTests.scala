@@ -355,6 +355,24 @@ object ExampleTests extends TestSuite {
       val read = upack.read(binary)
       assert(msg == read)
     }
+
+    'msgReadWrite{
+      val big = Big(1, true, "lol", 'Z', Thing(7, ""))
+      val msg: upack.Msg = upickle.default.writeMsg(big)
+      upickle.default.readMsg[Big](msg) ==> big
+    }
+
+    'msgInsideValue{
+      val msgSeq = Seq[upack.Msg](
+        upack.Str("hello world"),
+        upack.Arr(upack.Int32(1), upack.Int32(2))
+      )
+
+      val binary: Array[Byte] = upickle.default.writeBinary(msgSeq)
+
+      upickle.default.readBinary[Seq[upack.Msg]](binary) ==> msgSeq
+    }
+
     'msgToJson{
       val msg = upack.Arr(
         upack.Obj(upack.Str("myFieldA") -> upack.Int32(1), upack.Str("myFieldB") -> upack.Str("g")),

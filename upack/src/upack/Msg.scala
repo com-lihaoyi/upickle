@@ -5,6 +5,18 @@ import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
+/**
+  * In-memory representation of the MessagePack data model
+  *
+  * - https://msgpack.org/index.html
+  *
+  * Note that we do not model all the fine details of the MessagePack format
+  * in this type; fixed and variable length strings/maps/arrays are all
+  * modelled using the same [[Str]]/[[Obj]]/[[Arr]] types, and the various
+  * sized integers are all collapsed into [[Int32]]/[[Int64]]/[[UInt64]]. The
+  * appropriately sized versions are written out when the message is serialized
+  * to bytes.
+  */
 sealed trait Msg extends Transformable{
   def transform[T](f: Visitor[_, T]) = Msg.transform(this, f)
 

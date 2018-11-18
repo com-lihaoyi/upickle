@@ -23,12 +23,15 @@ trait Api
     with implicits.Writers
     with WebJson
     with Api.NoOpMappers
-    with JsReadWriters{
+    with JsReadWriters
+    with MsgReadWriters{
   def readBinary[T: Reader](s: upack.Transformable): T = s.transform(reader[T])
 
   def read[T: Reader](s: Transformable): T = s.transform(reader[T])
 
   def readJs[T: Reader](s: ujson.Value): T = s.transform(reader[T])
+
+  def readMsg[T: Reader](s: upack.Msg): T = s.transform(reader[T])
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
@@ -42,6 +45,8 @@ trait Api
   }
 
   def writeJs[T: Writer](t: T): ujson.Value = transform(t).to[ujson.Value]
+
+  def writeMsg[T: Writer](t: T): upack.Msg = transform(t).to[upack.Msg]
 
   def writeTo[T: Writer](t: T,
                          out: java.io.Writer,

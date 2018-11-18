@@ -621,6 +621,17 @@
     @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgConstruction", ""))
 
     @p
+      You can read/write Scala values to @code{upack.Msg}s using @code{readMsg}/@code{writeMsg}:
+
+    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgReadWrite", ""))
+
+    @p
+      Or include @code{upack.Msg}s inside @code{Seq}s, case-classes and other
+      data structures when you read/write them:
+
+    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgInsideValue", ""))
+
+    @p
       You can also convert the uPack messages or binaries to @code{ujson.Value}s via
       @code{upack.transform}. This can be handy to help debug what's going on in your
       binary message data:
