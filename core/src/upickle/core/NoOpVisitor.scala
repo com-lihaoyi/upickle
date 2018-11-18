@@ -48,7 +48,7 @@ object NoOpVisitor extends Visitor[Unit, Unit] {
 
   def visitFloat64String(s: String, index: Int) = ()
 
-  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = ()
+  def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int) = ()
 
   def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int) = ()
 

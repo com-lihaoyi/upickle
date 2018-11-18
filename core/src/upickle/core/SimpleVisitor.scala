@@ -38,7 +38,7 @@ trait SimpleVisitor[-T, +V] extends Visitor[T, V] {
 
   def visitChar(s: Char, index: Int): V = throw new Abort(expectedMsg + " got char")
 
-  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): V = throw new Abort(expectedMsg + " got binary")
+  def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int): V = throw new Abort(expectedMsg + " got binary")
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int): V = throw new Abort(expectedMsg + " got ext")
 }

@@ -18,8 +18,13 @@ object MsgPackTests extends TestSuite{
         println(k + " " + tag + " " + expectedJson + " " + packedStr)
         val packed = Util.stringToBytes(packedStr)
 
-        val jsonified = upack.transform(packed, ujson.Value)
+        val jsonified0 = upack.transform(packed, ujson.Value)
 
+        val jsonified = tag match{
+          case "binary" => ujson.Str(Util.bytesToString(jsonified0.arr.map(_.num.toByte).toArray))
+          case "ext" => ujson.Arr(jsonified0(0), ujson.Str(Util.bytesToString(jsonified0(1).arr.map(_.num.toByte).toArray)))
+          case _ => jsonified0
+        }
         assert(jsonified == expectedJson)
 
         val msg = upack.read(packed)

@@ -547,6 +547,14 @@ object ExampleTests extends TestSuite {
           "[1,2,3]"
       }
     }
+    'byteArrays{
+      import upickle.default._
+      write(Array[Byte](1, 2, 3, 4)) ==> "[1,2,3,4]"
+      read[Array[Byte]]("[1,2,3,4]") ==> Array(1, 2, 3, 4)
+
+      writeBinary(Array[Byte](1, 2, 3, 4)) ==> Array(0xc4.toByte, 4, 1, 2, 3, 4)
+      readBinary[Array[Byte]](Array[Byte](0xc4.toByte, 4, 1, 2, 3, 4)) ==> Array(1, 2, 3, 4)
+    }
   }
 }
 

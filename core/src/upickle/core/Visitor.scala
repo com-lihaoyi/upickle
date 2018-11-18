@@ -90,7 +90,7 @@ trait Visitor[-T, +J] {
   def visitString(s: CharSequence, index: Int): J
   def visitChar(s: Char, index: Int): J
 
-  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J
+  def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int): J
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int): J
 
@@ -170,7 +170,7 @@ object Visitor{
     override def visitUInt64(i: Long, index: Int) = delegatedReader.visitUInt64(i, index)
     override def visitFloat64String(s: String, index: Int) = delegatedReader.visitFloat64String(s, index)
     override def visitChar(s: Char, index: Int) = delegatedReader.visitChar(s, index)
-    override def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = delegatedReader.visitBin(bytes, offset, len, index)
+    override def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int) = delegatedReader.visitBinary(bytes, offset, len, index)
     override def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = delegatedReader.visitExt(tag, bytes, offset, len, index)
   }
 
@@ -207,7 +207,7 @@ object Visitor{
     override def visitUInt64(i: Long, index: Int) = mapFunction(delegatedReader.visitUInt64(i, index))
     override def visitFloat64String(s: String, index: Int) = mapFunction(delegatedReader.visitFloat64String(s, index))
     override def visitChar(s: Char, index: Int) = mapFunction(delegatedReader.visitChar(s, index))
-    override def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = mapFunction(delegatedReader.visitBin(bytes, offset, len, index))
+    override def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int) = mapFunction(delegatedReader.visitBinary(bytes, offset, len, index))
     override def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = mapFunction(delegatedReader.visitExt(tag, bytes, offset, len, index))
   }
 

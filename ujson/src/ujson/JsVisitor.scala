@@ -37,8 +37,14 @@ trait JsVisitor[-T, +J] extends Visitor[T, J]{
     )
   }
 
-  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J = {
-    visitString(upickle.core.Util.bytesToString(bytes.slice(offset, offset + len)), index)
+  def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int): J = {
+    val arr = visitArray(len, index)
+    var i = 0
+    while (i < len){
+      arr.visitValue(arr.subVisitor.visitInt32(bytes(offset + i), index).asInstanceOf[T], index)
+      i += 1
+    }
+    arr.visitEnd(index)
   }
 
   def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int): J = visitFloat64StringParts(s, decIndex, expIndex, -1)
@@ -46,7 +52,7 @@ trait JsVisitor[-T, +J] extends Visitor[T, J]{
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int): J = {
     val arr = visitArray(-1, index)
     arr.visitValue(visitFloat64(tag, index).asInstanceOf[T], -1)
-    arr.visitValue(visitBin(bytes, offset, len, index).asInstanceOf[T], -1)
+    arr.visitValue(visitBinary(bytes, offset, len, index).asInstanceOf[T], -1)
     arr.visitEnd(-1)
   }
 

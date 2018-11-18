@@ -175,7 +175,7 @@ object Msg extends MsgVisitor[Msg, Msg]{
       case Float64(value) => f.visitFloat64(value, -1)
 
       case Str(value) => f.visitString(value, -1)
-      case Binary(value) => f.visitBin(value, 0, value.length, -1)
+      case Binary(value) => f.visitBinary(value, 0, value.length, -1)
 
       case Arr(items) =>
         val arr = f.visitArray(items.length, -1)
@@ -231,7 +231,7 @@ object Msg extends MsgVisitor[Msg, Msg]{
 
   def visitString(s: CharSequence, index: Int) = Str(s.toString)
 
-  def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) =
+  def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int) =
     Binary(bytes.slice(offset, offset + len))
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) =

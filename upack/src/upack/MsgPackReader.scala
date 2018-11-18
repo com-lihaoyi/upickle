@@ -108,7 +108,7 @@ class MsgPackReader(index0: Int = 0, input: Array[Byte]) {
     res
   }
   def parseBin[T](n: Int, visitor: Visitor[_, T]) = {
-    val res = visitor.visitBin(input, index, n, index)
+    val res = visitor.visitBinary(input, index, n, index)
     index += n
     res
   }

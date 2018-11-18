@@ -79,19 +79,25 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
       ctx.visitEnd(-1)
     }
   }
-  implicit def ArrayWriter[T](implicit r: Writer[T]) = new Writer[Array[T]] {
-    def write0[R](out: Visitor[_, R], v: Array[T]): R = {
-      val ctx = out.visitArray(v.length, -1).narrow
-      var i = 0
-      while(i < v.length){
-        ctx.visitValue(r.write(ctx.subVisitor, v(i)), -1)
-        i += 1
+  implicit def ArrayWriter[T](implicit r: Writer[T]) = {
+    if (r == ByteWriter) new Writer[Array[T]] {
+      def write0[R](out: Visitor[_, R], v: Array[T]): R = {
+        out.visitBinary(v.asInstanceOf[Array[Byte]], 0, v.length, -1)
       }
+    }
+    else new Writer[Array[T]] {
+      def write0[R](out: Visitor[_, R], v: Array[T]): R = {
+        val ctx = out.visitArray(v.length, -1).narrow
+        var i = 0
+        while (i < v.length) {
+          ctx.visitValue(r.write(ctx.subVisitor, v(i)), -1)
+          i += 1
+        }
 
-      ctx.visitEnd(-1)
+        ctx.visitEnd(-1)
+      }
     }
   }
-
   implicit def MapWriter[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[Map[K, V]] = {
     if (kw eq StringWriter) new Writer[Map[String, V]]{
       def write0[R](out: Visitor[_, R], v: Map[String, V]): R = {

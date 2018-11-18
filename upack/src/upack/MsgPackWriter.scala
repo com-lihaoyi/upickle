@@ -143,7 +143,7 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     out.write(bytes, 0, length)
     out
   }
-  override def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
+  override def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
     if (len <= 255) {
       out.write(MPK.Bin8)
       writeUInt8(len)

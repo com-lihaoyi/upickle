@@ -8,6 +8,7 @@ import upickle.core._
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.reflect.ClassTag
 
 trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit val UnitReader: Reader[Unit] = new SimpleReader[Unit] {
@@ -163,6 +164,40 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   }
   implicit def SomeReader[T: Reader]: Reader[Some[T]] = OptionReader[T].narrow[Some[T]]
   implicit def NoneReader: Reader[None.type] = OptionReader[Unit].narrow[None.type]
+
+  implicit def ArrayReader[T: Reader: ClassTag]: Reader[Array[T]] =
+    if (implicitly[Reader[T]] == ByteReader) new SimpleReader[Array[T]] {
+      override def expectedMsg = "expected sequence"
+
+      override def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
+        bytes.slice(offset, offset + len).asInstanceOf[Array[T]]
+      }
+      override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, Array[T]] {
+        val b = mutable.ArrayBuilder.make[T]
+
+        def visitValue(v: Any, index: Int): Unit = {
+          b += v.asInstanceOf[T]
+        }
+
+        def visitEnd(index: Int) = b.result()
+
+        def subVisitor = implicitly[Reader[T]]
+      }
+    }
+    else new SimpleReader[Array[T]] {
+      override def expectedMsg = "expected sequence"
+      override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, Array[T]] {
+        val b = mutable.ArrayBuilder.make[T]
+
+        def visitValue(v: Any, index: Int): Unit = {
+          b += v.asInstanceOf[T]
+        }
+
+        def visitEnd(index: Int) = b.result()
+
+        def subVisitor = implicitly[Reader[T]]
+      }
+    }
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
                                       cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new SimpleReader[C[T]] {
     override def expectedMsg = "expected sequence"
