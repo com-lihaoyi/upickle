@@ -20,8 +20,9 @@ object WebJson extends ujson.Transformer[js.Any]{
       case s: js.Object =>
         val ctx = f.visitObject(-1, -1).narrow
         for(p <- s.asInstanceOf[js.Dictionary[js.Any]]) {
-          ctx.visitKey(p._1, -1)
-          ctx.visitValue(transform(p._2, ctx.subVisitor), -1)
+          val keyVisitor = ctx.visitKey(-1)
+          ctx.visitKeyValue(transform(p._1, keyVisitor))
+          ctx.visitValue(p._2, -1)
         }
         ctx.visitEnd(-1)
     }
@@ -40,7 +41,8 @@ object WebJson extends ujson.Transformer[js.Any]{
       val out = js.Dictionary[js.Any]()
       var currentKey: String = _
       def subVisitor = Builder.this
-      def visitKey(s: CharSequence, index: Int): Unit = currentKey = s.toString
+      def visitKey(index: Int) = upickle.core.StringVisitor
+      def visitKeyValue(s: Any): Unit = currentKey = s.toString
       def visitValue(v: js.Any, index: Int): Unit = {
         out(currentKey) = v
       }

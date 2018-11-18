@@ -223,6 +223,7 @@ object Macros {
         q"${c.prefix}.annotate($derived, $index)"
       }
     }
+
     def customKey(sym: c.Symbol): Option[String] = {
         sym.annotations
           .find(_.tpe == typeOf[key])
