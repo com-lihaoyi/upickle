@@ -1,27 +1,12 @@
 package upack
 import upickle.core.Visitor
 import upack.{MsgPackKeys => MPK}
-class MsgPackReader(var index: Int = 0, input: Array[Byte]) {
+
+import scala.annotation.switch
+class MsgPackReader(index0: Int = 0, input: Array[Byte]) {
+  private[this] var index = index0
   def parse[T](visitor: Visitor[_, T]): T = {
-    (input(index) & 0xFF) match{
-      // positive fixint
-      case x if x <= MPK.PositiveFixInt => index += 1; visitor.visitInt32(x & 0x7f, index)
-
-      case x if x <= MPK.FixMap =>
-        val n = x & 0x0f
-        index += 1
-        parseMap(n, visitor)
-
-      case x if x <= MPK.FixArray =>
-        val n = x & 0x0f
-        index += 1
-        parseArray(n, visitor)
-
-      case x if x <= MPK.FixStr =>
-        val n = x & 0x1f
-        index += 1
-        parseStr(n, visitor)
-
+    (input(index) & 0xFF: @switch) match{
       case MPK.Nil => index += 1; visitor.visitNull(index)
       case MPK.False => index += 1; visitor.visitFalse(index)
       case MPK.True => index += 1; visitor.visitTrue(index)
@@ -62,35 +47,58 @@ class MsgPackReader(var index: Int = 0, input: Array[Byte]) {
 
       case MPK.Map16 => parseMap(parseUInt16(index + 1), visitor)
       case MPK.Map32 => parseMap(parseUInt32(index + 1), visitor)
-      // negative fixint
-      case x if x >= 0xe0 => index += 1; visitor.visitInt32(x | 0xffffffe0, index)
+      case x =>
+        if (x <= MPK.PositiveFixInt) {
+          // positive fixint
+          index += 1
+          visitor.visitInt32(x & 0x7f, index)
+        } else if (x <= MPK.FixMap) {
+          val n = x & 0x0f
+          index += 1
+          parseMap (n, visitor)
+        } else if (x <= MPK.FixArray) {
+          val n = x & 0x0f
+          index += 1
+          parseArray (n, visitor)
+        }
+          else if (x <= MPK.FixStr ) {
+          val n = x & 0x1f
+          index += 1
+          parseStr (n, visitor)
+        } else if (x >= 0xe0) { // negative fixint
+          index += 1
+          visitor.visitInt32 (x | 0xffffffe0, index)
+        } else ???
     }
   }
   def parseExt[T](n: Int, visitor: Visitor[_, T]) = {
     visitor.visitExt(input(index), input, index + 1, n, index)
   }
-  def parseKey(): String = (input(index) & 0xFF) match {
-    case x if x <= MPK.FixStr =>
+  def parseKey(): String = {
+    val x = input(index) & 0xFF
+    if (x <= MPK.FixStr) {
       val n = x & 0x1f
       index += 1
       val res = new String(input, index, n)
       index += n
       res
-    case MPK.Str8 =>
-      val n = parseUInt8(index + 1)
-      val res = new String(input, index, n)
-      index += n
-      res
-    case MPK.Str16 =>
-      val n = parseUInt16(index + 1)
-      val res = new String(input, index, n)
-      index += n
-      res
-    case MPK.Str32=>
-      val n = parseUInt32(index + 1)
-      val res = new String(input, index, n)
-      index += n
-      res
+    }else (x: @switch) match {
+      case MPK.Str8 =>
+        val n = parseUInt8(index + 1)
+        val res = new String(input, index, n)
+        index += n
+        res
+      case MPK.Str16 =>
+        val n = parseUInt16(index + 1)
+        val res = new String(input, index, n)
+        index += n
+        res
+      case MPK.Str32=>
+        val n = parseUInt32(index + 1)
+        val res = new String(input, index, n)
+        index += n
+        res
+    }
   }
 
   def parseStr[T](n: Int, visitor: Visitor[_, T]) = {
