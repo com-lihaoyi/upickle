@@ -10,6 +10,10 @@ import scala.reflect.ClassTag
 * package to form the public API1
 */
 trait Types{ types =>
+
+  /**
+    * A combined [[Reader]] and [[Writer]], along with some utility methods.
+    */
   trait ReadWriter[T] extends Reader[T] with Writer[T]{
     override def narrow[K] = this.asInstanceOf[ReadWriter[K]]
     def bimap[V](f: V => T, g: T => V): ReadWriter[V] = {
@@ -49,7 +53,19 @@ trait Types{ types =>
         }
     }
   }
-  trait SimpleReader[T] extends Reader[T] with upickle.core.CustomVisitor[Any, T]
+
+  /**
+    * A Reader that throws an error for all the visit methods which it does not define,
+    * letting you only define the handlers you care about.
+    */
+  trait SimpleReader[T] extends Reader[T] with upickle.core.SimpleVisitor[Any, T]
+
+  /**
+    * Represents the ability to read a value of type [[T]].
+    *
+    * A thin wrapper around [[Visitor]], but needs to be it's own class in order
+    * to make type inference automatically pick up it's implicit values.
+    */
   trait Reader[T] extends upickle.core.Visitor[Any, T]{
 
     override def map[Z](f: T => Z): Reader[Z] = new Reader.MapReader[T, T, Z](Reader.this){
@@ -60,7 +76,7 @@ trait Types{ types =>
       def mapNonNullsFunction(v: T): Z = f(v)
     }
 
-    override def narrow[K <: T] = this.asInstanceOf[Reader[K]]
+    def narrow[K <: T] = this.asInstanceOf[Reader[K]]
   }
 
   object Reader{
@@ -83,6 +99,12 @@ trait Types{ types =>
     }
   }
 
+  /**
+    * Represents the ability to write a value of type [[T]].
+    *
+    * Generally nothing more than a way of applying the [[T]] to
+    * a [[Visitor]], along with some utility methods
+    */
   trait Writer[T] {
     def narrow[K] = this.asInstanceOf[Writer[K]]
     def transform[V](v: T, out: Visitor[_, V]) = write(out, v)

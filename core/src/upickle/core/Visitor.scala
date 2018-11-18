@@ -101,8 +101,6 @@ trait Visitor[-T, +J] {
     override def mapFunction(v: J): Z = f(v)
     def mapNonNullsFunction(v: J): Z = f(v)
   }
-
-  def narrow[K <: J] = this.asInstanceOf[Visitor[T, K]]
 }
 
 /**
@@ -214,18 +212,16 @@ object Visitor{
   }
 
 
-  class MapArrContext[T, V, Z](src: ArrVisitor[T, V],
-                               f: V => Z) extends ArrVisitor[T, Z]{
-    def subVisitor = src.subVisitor
+  class MapArrContext[T, V, Z](src: ArrVisitor[T, V], f: V => Z) extends ArrVisitor[T, Z]{
+    def subVisitor: Visitor[_, _] = src.subVisitor
 
     def visitValue(v: T, index: Int): Unit = src.visitValue(v, index)
 
     def visitEnd(index: Int) = f(src.visitEnd(index))
   }
 
-  class MapObjContext[T, V, Z](src: ObjVisitor[T, V],
-                               f: V => Z) extends ObjVisitor[T, Z]{
-    def subVisitor = src.subVisitor
+  class MapObjContext[T, V, Z](src: ObjVisitor[T, V], f: V => Z) extends ObjVisitor[T, Z]{
+    def subVisitor: Visitor[_, _] = src.subVisitor
 
     def visitKey(index: Int): Visitor[_, _] = src.visitKey(index)
     def visitKeyValue(s: Any) = src.visitKeyValue(s)

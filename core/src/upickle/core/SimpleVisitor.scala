@@ -1,6 +1,10 @@
 package upickle.core
 
-trait CustomVisitor[-T, +V] extends Visitor[T, V] {
+/**
+  * A visitor that throws an error for all the visit methods which it does not define,
+  * letting you only define the handlers you care about.
+  */
+trait SimpleVisitor[-T, +V] extends Visitor[T, V] {
   def expectedMsg: String
   def visitNull(index: Int): V = null.asInstanceOf[V]
   def visitTrue(index: Int): V =  throw new Abort(expectedMsg + " got boolean")
