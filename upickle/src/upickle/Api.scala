@@ -111,7 +111,8 @@ object default extends AttributeTagged{
 }
 /**
  * An instance of the upickle API that follows the old serialization for
- * tagged instances of sealed traits.
+ * tagged instances of sealed traits: as a list with two items, the first
+ * being the type-tag and the second being the serialized object
  */
 object legacy extends LegacyApi
 trait LegacyApi extends Api{

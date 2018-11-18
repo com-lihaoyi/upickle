@@ -21,8 +21,9 @@ object WebJson extends ujson.Transformer[js.Any]{
         val ctx = f.visitObject(-1, -1).narrow
         for(p <- s.asInstanceOf[js.Dictionary[js.Any]]) {
           val keyVisitor = ctx.visitKey(-1)
-          ctx.visitKeyValue(transform(p._1, keyVisitor))
-          ctx.visitValue(p._2, -1)
+          val keyValue = transform(p._1, keyVisitor)
+          ctx.visitKeyValue(keyValue)
+          ctx.visitValue(transform(p._2, ctx.subVisitor), -1)
         }
         ctx.visitEnd(-1)
     }
