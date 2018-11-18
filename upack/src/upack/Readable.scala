@@ -2,7 +2,7 @@ package upack
 
 import upickle.core.Visitor
 
-abstract class Readable {
+trait Readable {
   def transform[T](f: Visitor[_, T]): T
 }
 

@@ -76,16 +76,9 @@ trait Api
 
   def writer[T: Writer] = implicitly[Writer[T]]
 
-  def readable[T: Writer](t: T): ujson.Readable = new ujson.Readable {
-    def transform[V](f: Visitor[_, V]) = implicitly[Writer[T]].write(f, t)
-  }
-  def readableBinary[T: Writer](t: T): upack.Readable = new upack.Readable {
-    def transform[V](f: Visitor[_, V]) = implicitly[Writer[T]].write(f, t)
-  }
-
   def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
 
-  case class transform[T: Writer](t: T) {
+  case class transform[T: Writer](t: T) extends upack.Readable with ujson.Readable {
     def transform[V](f: Visitor[_, V]): V = writer[T].transform(t, f)
     def to[V](f: Visitor[_, V]): V = transform(f)
     def to[V](implicit f: Reader[V]): V = transform(f)

@@ -35,8 +35,8 @@
       )
 
   @p
-    uPickle (pronounced micro-pickle) is a lightweight JSON serialization library
-    for Scala. It's key features are:
+    uPickle (pronounced micro-pickle) is a lightweight JSON and binary (MessagePack)
+    serialization library for Scala. It's key features are:
   @ul
     @li
       @sect.ref("Getting Started", "Simple to use"), with nice human-readable JSON output
@@ -522,7 +522,7 @@
       @p
         The normal @code{upickle.default.read/write} methods to serialize Scala
         data-types is just shorthand for ujson.transform,
-        using a @code{upickle.default.writable(foo)} as the source or a
+        using a @code{upickle.default.transform(foo)} as the source or a
         @code{upickle.default.reader[Foo]} as the destination:
 
       @hl.ref(exampleTests, Seq("'json", "'upickleDefault", ""), "}")

@@ -4,6 +4,7 @@ import upack.{MsgPackKeys => MPK}
 
 import scala.annotation.switch
 class MsgPackReader(index0: Int = 0, input: Array[Byte]) {
+  def currentIndex = index
   private[this] var index = index0
   def parse[T](visitor: Visitor[_, T]): T = {
     (input(index) & 0xFF: @switch) match{

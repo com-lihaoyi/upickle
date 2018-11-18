@@ -543,7 +543,7 @@ object ExampleTests extends TestSuite {
         ujson.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
           Seq(1, 2, 3)
 
-        ujson.transform(upickle.default.readable(Seq(1, 2, 3)), StringRenderer()).toString ==>
+        ujson.transform(upickle.default.transform(Seq(1, 2, 3)), StringRenderer()).toString ==>
           "[1,2,3]"
       }
     }
