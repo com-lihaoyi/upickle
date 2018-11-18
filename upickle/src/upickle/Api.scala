@@ -187,7 +187,7 @@ trait AttributeTagged extends Api{
     new ObjVisitor[Any, T]{
       private[this] var fastPath = false
       private[this] var context: ObjVisitor[Any, _] = null
-      def subVisitor: Visitor[Nothing, Any] =
+      def subVisitor: Visitor[_, _] =
         if (context == null) upickle.core.StringVisitor
         else context.subVisitor
 

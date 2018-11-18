@@ -4,26 +4,7 @@ import upickle.core.Visitor
 
 trait JsReadWriters extends upickle.core.Types with MacroImplicits{
 
-  implicit val JsValueR: Reader[ujson.Value] = new Reader[ujson.Value]{
-    override def expectedMsg = "JSON value"
-    override def visitObject(length: Int, index: Int) = ujson.Value.visitObject(-1, index).narrow
-    override def visitArray(length: Int, index: Int) = ujson.Value.visitArray(-1, index).narrow
-    override def visitString(s: CharSequence, index: Int) = ujson.Value.visitString(s, index)
-    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      ujson.Value.visitFloat64StringParts(s, decIndex, expIndex, index)
-    }
-    override def visitFloat64(d: Double, index: Int) = ujson.Value.visitFloat64(d, index)
-
-    override def visitTrue(index: Int) = ujson.Value.visitTrue(index)
-    override def visitFalse(index: Int) = ujson.Value.visitFalse(index)
-    override def visitNull(index: Int) = ujson.Value.visitNull(index)
-
-    override def visitInt32(i: Int, index: Int) = visitFloat64(i, index)
-    override def visitInt64(i: Long, index: Int) = visitString(i.toString, index)
-
-    override def visitUInt64(i: Long, index: Int) = visitString(java.lang.Long.toUnsignedString(i), index)
-    override def visitChar(i: Char, index: Int) = visitString(i.toString, index)
-  }
+  implicit val JsValueR: Reader[ujson.Value] = new Reader.Delegate(ujson.Value)
 
   implicit def JsObjR: Reader[ujson.Obj] = JsValueR.narrow[ujson.Obj]
   implicit def JsArrR: Reader[ujson.Arr] = JsValueR.narrow[ujson.Arr]

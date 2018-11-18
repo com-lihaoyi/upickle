@@ -19,8 +19,6 @@ package upickle.core
   * @tparam J the result of visiting elements (e.g. a json AST or side-effecting writer)
   */
 trait Visitor[-T, +J] {
-
-
   /**
     * @param index json source position at the start of the `[` being visited
     * @return a [[Visitor]] used for visiting the elements of the array
@@ -95,6 +93,16 @@ trait Visitor[-T, +J] {
   def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int): J
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int): J
+
+  def map[Z](f: J => Z): Visitor[T, Z] = new Visitor.MapReader[T, J, Z](Visitor.this){
+    def mapNonNullsFunction(v: J): Z = f(v)
+  }
+  def mapNulls[Z](f: J => Z): Visitor[T, Z] = new Visitor.MapReader[T, J, Z](Visitor.this){
+    override def mapFunction(v: J): Z = f(v)
+    def mapNonNullsFunction(v: J): Z = f(v)
+  }
+
+  def narrow[K <: J] = this.asInstanceOf[Visitor[T, K]]
 }
 
 /**
@@ -110,7 +118,7 @@ sealed trait ObjArrVisitor[-T, +J] {
     *
     * The returned [[Visitor]] will be used to visit this branch of the json.
     */
-  def subVisitor: Visitor[Nothing, Any]
+  def subVisitor: Visitor[_, _]
 
   /**
     * Called on completion of visiting an array element or object field value, with the produced result, [[T]].
@@ -140,7 +148,93 @@ sealed trait ObjArrVisitor[-T, +J] {
     */
   def narrow = this.asInstanceOf[ObjArrVisitor[Any, J]]
 }
+object Visitor{
+  class Delegate[T, V](delegatedReader: Visitor[T, V]) extends Visitor[T, V]{
 
+    override def visitNull(index: Int) = delegatedReader.visitNull(index)
+    override def visitTrue(index: Int) = delegatedReader.visitTrue(index)
+    override def visitFalse(index: Int) = delegatedReader.visitFalse(index)
+
+    override def visitString(s: CharSequence, index: Int) = delegatedReader.visitString(s, index)
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      delegatedReader.visitFloat64StringParts(s, decIndex, expIndex, index)
+    }
+
+    override def visitFloat64(d: Double, index: Int) = {
+      delegatedReader.visitFloat64(d, index)
+    }
+    override def visitObject(length: Int, index: Int) = delegatedReader.visitObject(-1, index)
+    override def visitArray(length: Int, index: Int) = delegatedReader.visitArray(-1, index)
+
+    override def visitFloat32(d: Float, index: Int) = delegatedReader.visitFloat32(d, index)
+    override def visitInt32(i: Int, index: Int) = delegatedReader.visitInt32(i, index)
+    override def visitInt64(i: Long, index: Int) = delegatedReader.visitInt64(i, index)
+    override def visitUInt64(i: Long, index: Int) = delegatedReader.visitUInt64(i, index)
+    override def visitFloat64String(s: String, index: Int) = delegatedReader.visitFloat64String(s, index)
+    override def visitChar(s: Char, index: Int) = delegatedReader.visitChar(s, index)
+    override def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = delegatedReader.visitBin(bytes, offset, len, index)
+    override def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = delegatedReader.visitExt(tag, bytes, offset, len, index)
+  }
+
+  abstract class MapReader[-T, V, Z](delegatedReader: Visitor[T, V]) extends Visitor[T, Z] {
+
+    def mapNonNullsFunction(t: V) : Z
+    def mapFunction(v: V): Z =
+      if(v == null) null.asInstanceOf[Z]
+      else mapNonNullsFunction(v)
+
+    override def visitFalse(index: Int) = mapFunction(delegatedReader.visitFalse(index))
+    override def visitNull(index: Int) = mapFunction(delegatedReader.visitNull(index))
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+      mapFunction(delegatedReader.visitFloat64StringParts(s, decIndex, expIndex, index))
+    }
+    override def visitFloat64(d: Double, index: Int) = {
+      mapFunction(delegatedReader.visitFloat64(d, index))
+    }
+    override def visitString(s: CharSequence, index: Int) = {
+      mapFunction(delegatedReader.visitString(s, index))
+    }
+    override def visitTrue(index: Int) = mapFunction(delegatedReader.visitTrue(index))
+
+    override def visitObject(length: Int, index: Int): ObjVisitor[T, Z] = {
+      new MapObjContext[T, V, Z](delegatedReader.visitObject(-1, index), mapNonNullsFunction)
+    }
+    override def visitArray(length: Int, index: Int): ArrVisitor[T, Z] = {
+      new MapArrContext[T, V, Z](delegatedReader.visitArray(-1, index), mapNonNullsFunction)
+    }
+
+    override def visitFloat32(d: Float, index: Int) = mapFunction(delegatedReader.visitFloat32(d, index))
+    override def visitInt32(i: Int, index: Int) = mapFunction(delegatedReader.visitInt32(i, index))
+    override def visitInt64(i: Long, index: Int) = mapFunction(delegatedReader.visitInt64(i, index))
+    override def visitUInt64(i: Long, index: Int) = mapFunction(delegatedReader.visitUInt64(i, index))
+    override def visitFloat64String(s: String, index: Int) = mapFunction(delegatedReader.visitFloat64String(s, index))
+    override def visitChar(s: Char, index: Int) = mapFunction(delegatedReader.visitChar(s, index))
+    override def visitBin(bytes: Array[Byte], offset: Int, len: Int, index: Int) = mapFunction(delegatedReader.visitBin(bytes, offset, len, index))
+    override def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = mapFunction(delegatedReader.visitExt(tag, bytes, offset, len, index))
+  }
+
+
+  class MapArrContext[T, V, Z](src: ArrVisitor[T, V],
+                               f: V => Z) extends ArrVisitor[T, Z]{
+    def subVisitor = src.subVisitor
+
+    def visitValue(v: T, index: Int): Unit = src.visitValue(v, index)
+
+    def visitEnd(index: Int) = f(src.visitEnd(index))
+  }
+
+  class MapObjContext[T, V, Z](src: ObjVisitor[T, V],
+                               f: V => Z) extends ObjVisitor[T, Z]{
+    def subVisitor = src.subVisitor
+
+    def visitKey(index: Int): Visitor[_, _] = src.visitKey(index)
+    def visitKeyValue(s: Any) = src.visitKeyValue(s)
+
+    def visitValue(v: T, index: Int): Unit = src.visitValue(v, index)
+
+    def visitEnd(index: Int) = f(src.visitEnd(index))
+  }
+}
 /**
   * Visits the elements of a json object.
   */

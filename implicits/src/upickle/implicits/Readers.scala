@@ -10,7 +10,8 @@ import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Readers extends upickle.core.Types with Generated with MacroImplicits{
-  implicit val UnitReader = new Reader[Unit] {
+  implicit val UnitReader: Reader[Unit] = new SimpleReader[Unit] {
+    override def expectedMsg = "expected unit"
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
       def subVisitor = NoOpVisitor
 
@@ -23,14 +24,14 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       def visitKeyValue(v: Any): Unit = ()
     }
   }
-  implicit val BooleanReader = new Reader[Boolean] {
+  implicit val BooleanReader: Reader[Boolean] = new SimpleReader[Boolean] {
     override def expectedMsg = "expected boolean"
     override def visitTrue(index: Int) = true
     override def visitFalse(index: Int) = false
   }
 
 
-  implicit val DoubleReader = new Reader[Double] {
+  implicit val DoubleReader: Reader[Double] = new SimpleReader[Double] {
     override def expectedMsg = "expected number"
     override def visitString(s: CharSequence, index: Int) = s.toString.toDouble
     override def visitInt32(d: Int, index: Int) = d
@@ -42,7 +43,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       s.toString.toDouble
     }
   }
-  implicit val IntReader = new Reader[Int] {
+  implicit val IntReader: Reader[Int] = new SimpleReader[Int] {
     override def expectedMsg = "expected number"
     override def visitInt32(d: Int, index: Int) = d
     override def visitInt64(d: Long, index: Int) = d.toInt
@@ -52,7 +53,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       Util.parseIntegralNum(s, decIndex, expIndex, index).toInt
     }
   }
-  implicit val FloatReader = new Reader[Float] {
+  implicit val FloatReader: Reader[Float] = new SimpleReader[Float] {
     override def expectedMsg = "expected number"
 
     override def visitString(s: CharSequence, index: Int) = s.toString.toFloat
@@ -64,7 +65,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       s.toString.toFloat
     }
   }
-  implicit val ShortReader = new Reader[Short] {
+  implicit val ShortReader: Reader[Short] = new SimpleReader[Short] {
     override def expectedMsg = "expected number"
     override def visitInt32(d: Int, index: Int) = d.toShort
     override def visitInt64(d: Long, index: Int) = d.toShort
@@ -74,7 +75,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       Util.parseIntegralNum(s, decIndex, expIndex, index).toShort
     }
   }
-  implicit val ByteReader = new Reader[Byte] {
+  implicit val ByteReader: Reader[Byte] = new SimpleReader[Byte] {
     override def expectedMsg = "expected number"
     override def visitInt32(d: Int, index: Int) = d.toByte
     override def visitInt64(d: Long, index: Int) = d.toByte
@@ -85,16 +86,16 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
 
-  implicit val StringReader = new Reader[String] {
+  implicit val StringReader: Reader[String] = new SimpleReader[String] {
     override def expectedMsg = "expected string"
     override def visitString(s: CharSequence, index: Int) = s.toString
   }
-  class MapStringReader[T](f: CharSequence => T) extends Reader[T] {
+  class MapStringReader[T](f: CharSequence => T) extends SimpleReader[T] {
     override def expectedMsg = "expected string"
     override def visitString(s: CharSequence, index: Int) = f(s)
   }
 
-  implicit val CharReader = new Reader[Char] {
+  implicit val CharReader: Reader[Char] = new SimpleReader[Char] {
     override def expectedMsg = "expected char"
     override def visitString(d: CharSequence, index: Int) = d.charAt(0)
     override def visitChar(d: Char, index: Int) = d
@@ -107,7 +108,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
   implicit val UUIDReader: Reader[UUID] = new MapStringReader(s => UUID.fromString(s.toString))
-  implicit val LongReader = new Reader[Long] {
+  implicit val LongReader: Reader[Long] = new SimpleReader[Long] {
     override def expectedMsg = "expected number"
     override def visitString(d: CharSequence, index: Int) = upickle.core.Util.parseLong(d, 0, d.length())
     override def visitInt32(d: Int, index: Int) = d.toLong
@@ -124,7 +125,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit def MapReader[K, V](implicit k: Reader[K], v: Reader[V]): Reader[Map[K, V]] = {
     if (k ne StringReader) SeqLikeReader[Array, (K, V)].map(_.toMap)
-    else new Reader[Map[K, V]]{
+    else new SimpleReader[Map[K, V]]{
       override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Map[K, V]] {
         val strings = mutable.Buffer.empty[K]
         val values = mutable.Buffer.empty[V]
@@ -141,6 +142,8 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
         def visitEnd(index: Int) = strings.zip(values).toMap
 
       }
+
+      def expectedMsg = "expected map"
     }
   }
 
@@ -148,7 +151,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit def SomeReader[T: Reader]: Reader[Some[T]] = OptionReader[T].narrow[Some[T]]
   implicit def NoneReader: Reader[None.type] = OptionReader[Unit].narrow[None.type]
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
-                                      cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
+                                      cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new SimpleReader[C[T]] {
     override def expectedMsg = "expected sequence"
     override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, C[T]] {
       val b = cbf.apply()
@@ -188,7 +191,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit val InfiniteDurationReader = DurationReader.narrow[Duration.Infinite]
   implicit val FiniteDurationReader = DurationReader.narrow[FiniteDuration]
 
-  implicit def EitherReader[T1: Reader, T2: Reader] = new Reader[Either[T1, T2]]{
+  implicit def EitherReader[T1: Reader, T2: Reader] = new SimpleReader[Either[T1, T2]]{
     override def expectedMsg = "expected sequence"
     override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, Either[T1, T2]] {
       var right: java.lang.Boolean = null
@@ -205,7 +208,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
       def visitEnd(index: Int) = value
 
-      def subVisitor = right match{
+      def subVisitor: Visitor[_, _] = right match{
         case null => IntReader
         case java.lang.Boolean.TRUE => implicitly[Reader[T2]]
         case java.lang.Boolean.FALSE => implicitly[Reader[T1]]
