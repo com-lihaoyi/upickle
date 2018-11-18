@@ -25,35 +25,55 @@ trait Api
     with Api.NoOpMappers
     with JsReadWriters
     with MsgReadWriters{
+  /**
+    * Reads the given MessagePack input into a Scala value
+    */
   def readBinary[T: Reader](s: upack.Transformable): T = s.transform(reader[T])
 
+  /**
+    * Reads the given JSON input into a Scala value
+    */
   def read[T: Reader](s: Transformable): T = s.transform(reader[T])
-
-  def readJs[T: Reader](s: ujson.Value): T = s.transform(reader[T])
-
-  def readMsg[T: Reader](s: upack.Msg): T = s.transform(reader[T])
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
+  /**
+    * Write the given Scala value as a JSON string
+    */
   def write[T: Writer](t: T,
                        indent: Int = -1,
                        escapeUnicode: Boolean = false): String = {
     transform(t).to(StringRenderer(indent, escapeUnicode)).toString
   }
+  /**
+    * Write the given Scala value as a MessagePack binary
+    */
   def writeBinary[T: Writer](t: T): Array[Byte] = {
     transform(t).to(new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
   }
 
+  /**
+    * Write the given Scala value as a JSON struct
+    */
   def writeJs[T: Writer](t: T): ujson.Value = transform(t).to[ujson.Value]
 
+  /**
+    * Write the given Scala value as a MessagePack struct
+    */
   def writeMsg[T: Writer](t: T): upack.Msg = transform(t).to[upack.Msg]
 
+  /**
+    * Write the given Scala value as a JSON string to the given Writer
+    */
   def writeTo[T: Writer](t: T,
                          out: java.io.Writer,
                          indent: Int = -1,
                          escapeUnicode: Boolean = false): Unit = {
     transform(t).to(new Renderer(out, indent = indent, escapeUnicode))
   }
+  /**
+    * Write the given Scala value as a MessagePack binary to the given OutputStream
+    */
   def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
     transform(t).to(new upack.MsgPackWriter(out))
   }

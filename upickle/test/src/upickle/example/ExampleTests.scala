@@ -67,7 +67,6 @@ object KeyedTag{
   case object C extends A
 }
 object Custom2{
-  import upickle.Js
   class CustomThing2(val i: Int, val s: String)
   object CustomThing2 {
     implicit val rw = upickle.default.readwriter[String].bimap[CustomThing2](
@@ -359,7 +358,7 @@ object ExampleTests extends TestSuite {
     'msgReadWrite{
       val big = Big(1, true, "lol", 'Z', Thing(7, ""))
       val msg: upack.Msg = upickle.default.writeMsg(big)
-      upickle.default.readMsg[Big](msg) ==> big
+      upickle.default.readBinary[Big](msg) ==> big
     }
 
     'msgInsideValue{
@@ -456,7 +455,6 @@ object ExampleTests extends TestSuite {
         json(0)("myFieldA") = 1337
 
         upickle.default.read[Seq[Thing]](json)   ==> Seq(Thing(1337, "g"))
-        upickle.default.readJs[Seq[Thing]](json) ==> Seq(Thing(1337, "g"))
       }
       'copy{
         val data = ujson.Obj(

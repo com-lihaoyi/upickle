@@ -87,9 +87,6 @@ object implicits extends Module {
         val implicitReaderTuple = commaSeparated(j => s"implicitly[Reader[T$j]]")
         val lookupTuple = commaSeparated(j => s"x(${j-1})")
         val fieldTuple = commaSeparated(j => s"x._$j")
-        val caseReader =
-          if(i == 1) s"f(readJs[Tuple1[T1]](x)._1)"
-          else s"f.tupled(readJs[Tuple$i[$typeTuple]](x))"
         s"""
         implicit def Tuple${i}Writer[$writerTypes]: TupleNWriter[Tuple$i[$typeTuple]] =
           new TupleNWriter[Tuple$i[$typeTuple]](Array($implicitWriterTuple), x => if (x == null) null else Array($fieldTuple))

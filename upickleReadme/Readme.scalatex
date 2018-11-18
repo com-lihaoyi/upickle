@@ -621,7 +621,7 @@
     @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgConstruction", ""))
 
     @p
-      You can read/write Scala values to @code{upack.Msg}s using @code{readMsg}/@code{writeMsg}:
+      You can read/write Scala values to @code{upack.Msg}s using @code{readBinary}/@code{writeMsg}:
 
     @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgReadWrite", ""))
 
@@ -856,6 +856,10 @@
             override implicit val LongWriter = new Writer[Long] {
               def write0[V](out: Visitor[_, V], v: Long) = out.visitInt64(v, -1)
             }
+
+        @li
+          @code{upickle.json.*} and @code{upickle.Js.*} have been removed (use
+          @code{ujson.*}.
 
     @sect{0.6.7}
       @ul
