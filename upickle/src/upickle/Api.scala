@@ -1,16 +1,12 @@
 package upickle
 
-
-
 import java.io.ByteArrayOutputStream
-
-import ujson.{IndexedValue, StringRenderer, _}
 
 import language.experimental.macros
 import language.higherKinds
-import scala.reflect.ClassTag
 import upickle.core._
-
+import scala.reflect.ClassTag
+import ujson.IndexedValue
 /**
  * An instance of the upickle API. There's a default instance at
  * `upickle.default`, but you can also implement it yourself to customize
@@ -28,12 +24,12 @@ trait Api
   /**
     * Reads the given MessagePack input into a Scala value
     */
-  def readBinary[T: Reader](s: upack.Transformable): T = s.transform(reader[T])
+  def readBinary[T: Reader](s: upack.Readable): T = s.transform(reader[T])
 
   /**
     * Reads the given JSON input into a Scala value
     */
-  def read[T: Reader](s: Transformable): T = s.transform(reader[T])
+  def read[T: Reader](s: ujson.Readable): T = s.transform(reader[T])
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
@@ -43,7 +39,7 @@ trait Api
   def write[T: Writer](t: T,
                        indent: Int = -1,
                        escapeUnicode: Boolean = false): String = {
-    transform(t).to(StringRenderer(indent, escapeUnicode)).toString
+    transform(t).to(ujson.StringRenderer(indent, escapeUnicode)).toString
   }
   /**
     * Write the given Scala value as a MessagePack binary
@@ -69,7 +65,7 @@ trait Api
                          out: java.io.Writer,
                          indent: Int = -1,
                          escapeUnicode: Boolean = false): Unit = {
-    transform(t).to(new Renderer(out, indent = indent, escapeUnicode))
+    transform(t).to(new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
   /**
     * Write the given Scala value as a MessagePack binary to the given OutputStream
@@ -80,7 +76,10 @@ trait Api
 
   def writer[T: Writer] = implicitly[Writer[T]]
 
-  def writable[T: Writer](t: T): Transformable = new Transformable {
+  def readable[T: Writer](t: T): ujson.Readable = new ujson.Readable {
+    def transform[V](f: Visitor[_, V]) = implicitly[Writer[T]].write(f, t)
+  }
+  def readableBinary[T: Writer](t: T): upack.Readable = new upack.Readable {
     def transform[V](f: Visitor[_, V]) = implicitly[Writer[T]].write(f, t)
   }
 
@@ -196,7 +195,7 @@ trait AttributeTagged extends Api{
         if (context != null) context.visitKey(index)
         else upickle.core.StringVisitor
       }
-      def visitKeyValue(s: Any) = {
+      def visitKeyValue(s: Any): Unit = {
         if (context != null) context.visitKeyValue(s)
         else {
           if (s.toString == tagName) () //do nothing

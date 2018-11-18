@@ -8,7 +8,7 @@ import upickle.core.{ObjArrVisitor, Visitor}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-sealed trait Value extends Transformable {
+sealed trait Value extends Readable {
   def value: Any
 
   /**

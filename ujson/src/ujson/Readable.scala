@@ -3,12 +3,12 @@ package ujson
 import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
 import upickle.core.{Visitor, ObjArrVisitor}
-abstract class Transformable {
+abstract class Readable {
   def transform[T](f: Visitor[_, T]): T
 }
 
-object Transformable {
-  case class fromTransformer[T](t: T, w: Transformer[T]) extends Transformable{
+object Readable {
+  case class fromTransformer[T](t: T, w: Transformer[T]) extends Readable{
     def transform[T](f: Visitor[_, T]): T = {
       w.transform(t, f)
     }

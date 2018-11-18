@@ -4,7 +4,7 @@ import upickle.core._
 import scala.collection.generic.CanBuildFrom
 
 trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
-  def apply(t: Transformable): I = t.transform(this)
+  def apply(t: Readable): I = t.transform(this)
 
   def transformArray[T](f: Visitor[_, T], items: Iterable[I]) = {
     val ctx = f.visitArray(items.size, -1).narrow

@@ -9,7 +9,7 @@ class FileJNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
     forAll { (value: BigDecimal) =>
       val json = s"""{ "num": ${value.toString} }"""
       TestUtil.withTemp(json) { t =>
-        Transformable.fromFile(t).transform(JNumIndexCheckFacade) shouldBe true
+        Readable.fromFile(t).transform(JNumIndexCheckFacade) shouldBe true
       }
     }
   }
@@ -17,7 +17,7 @@ class FileJNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
   property("visitFloat64StringParts provides the correct indices at the top level with parseFromFile") {
     forAll { (value: BigDecimal) =>
       TestUtil.withTemp(value.toString) { t =>
-        Transformable.fromFile(t).transform(JNumIndexCheckFacade) shouldBe true
+        Readable.fromFile(t).transform(JNumIndexCheckFacade) shouldBe true
       }
     }
   }

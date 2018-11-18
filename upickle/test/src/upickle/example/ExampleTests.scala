@@ -6,7 +6,7 @@ import acyclic.file
 import upickle.{TestUtil, default}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
-import ujson.{IncompleteParseException, ParseException, Transformable}
+import ujson.{IncompleteParseException, ParseException, Readable}
 import ujson.{BytesRenderer, Js, StringRenderer}
 import upickle.core.{NoOpVisitor, Visitor}
 object Simple {
@@ -543,7 +543,7 @@ object ExampleTests extends TestSuite {
         ujson.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
           Seq(1, 2, 3)
 
-        ujson.transform(upickle.default.writable(Seq(1, 2, 3)), StringRenderer()).toString ==>
+        ujson.transform(upickle.default.readable(Seq(1, 2, 3)), StringRenderer()).toString ==>
           "[1,2,3]"
       }
     }

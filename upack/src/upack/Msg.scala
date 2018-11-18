@@ -17,7 +17,7 @@ import scala.collection.mutable.ArrayBuffer
   * appropriately sized versions are written out when the message is serialized
   * to bytes.
   */
-sealed trait Msg extends Transformable{
+sealed trait Msg extends Readable{
   def transform[T](f: Visitor[_, T]) = Msg.transform(this, f)
 
   /**
