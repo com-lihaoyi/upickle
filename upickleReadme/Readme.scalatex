@@ -58,6 +58,9 @@
     @li
       @sect.ref("ScalaJS") support, allowing transfer of structured data
       between the JVM and Javascript
+    @li
+      Supports binary serialization via the MessagePack format, for even faster
+      serialization/de-serialization and smaller payloads.
 
   @sect{Getting Started}
     @p
@@ -397,7 +400,7 @@
         or always write them as numbers (at risk of truncation), you can do so as
         follows:
 
-      @hl.ref(optionsAsNullTests, Seq("stringLongs", ""))
+      @hl.ref(exampleTests, Seq("stringLongs", ""))
 
 
   @sect{Limitations}
@@ -872,7 +875,7 @@
         @li
           Added the @hl.scala{escapeUnicode: Boolean = false} flag to @code{ujson.Js#Render}
           and @code{ujson.Renderer}; pass in @hl.scala{false} to rrender unicode
-          characters verbatim rather than escaping them via @code{\uXXXX}.
+          characters verbatim rather than escaping them.
     @sect{0.6.6}
       @ul
         @li
