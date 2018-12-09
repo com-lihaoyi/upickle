@@ -1,4 +1,4 @@
-uPickle: a simple Scala JSON serialization library
+uPickle: a simple Scala JSON and Binary (MessagePack) serialization library
 
 - [Documentation](https://lihaoyi.github.io/upickle)
 
