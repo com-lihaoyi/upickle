@@ -69,8 +69,7 @@ object core extends Module {
 object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
-    def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.6.4",
+    def compileIvyDeps = Agg(
       ivy"com.lihaoyi::acyclic:0.1.5",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
