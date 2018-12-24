@@ -169,15 +169,6 @@ object Macros {
             customKey(p).getOrElse(p.name.toString)
           }
 
-          val typeArgs = tpe match {
-            case TypeRef(_, _, args) => args
-            case _ => c.abort(
-              c.enclosingPosition,
-              s"Don't know how to derive type $tpe"
-            )
-          }
-
-
           def func(t: Type) = {
 
             if (argSyms.length == 0) t
@@ -203,7 +194,6 @@ object Macros {
                 companion,
                 rawArgs,
                 mappedArgs,
-                typeArgs,
                 argSyms.map(_.typeSignature).map(func),
                 hasDefaults,
                 tpe,
@@ -236,7 +226,6 @@ object Macros {
     def wrapCaseN(companion: Tree,
                   rawArgs: Seq[String],
                   mappedArgs: Seq[String],
-                  typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type,
@@ -251,7 +240,6 @@ object Macros {
     def wrapCaseN(companion: c.Tree,
                   rawArgs: Seq[String],
                   mappedArgs: Seq[String],
-                  typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type,
@@ -340,7 +328,6 @@ object Macros {
     def wrapCaseN(companion: c.Tree,
                   rawArgs: Seq[String],
                   mappedArgs: Seq[String],
-                  typeArgs: Seq[c.Type],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type,
