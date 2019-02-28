@@ -1,0 +1,7 @@
+feb 28, 2019 5:39:22 PM org.xnio.Xnio <clinit>
+INFO: XNIO version 3.6.5.Final
+feb 28, 2019 5:39:22 PM org.xnio.nio.NioXnio <clinit>
+INFO: XNIO NIO Implementation Version 3.6.5.Final
+feb 28, 2019 5:39:22 PM org.jboss.threads.Version <clinit>
+INFO: JBoss Threads version 2.3.0.Beta2
+INFO  Started Metals http server at http://127.0.0.1:5032

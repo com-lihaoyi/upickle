@@ -12,7 +12,6 @@ import scala.reflect.ClassTag
 import language.postfixOps
 
 object StructTests extends TestSuite {
-  Seq(1).to[Vector]
   val tests = Tests {
     'arrays{
       'empty-rwk(Array[Int](), "[]")(_.toSeq)
@@ -103,7 +102,7 @@ object StructTests extends TestSuite {
     'durations{
       'inf-rw(Duration.Inf, """ "inf" """)
       "-inf" - rw(Duration.MinusInf, """ "-inf" """)
-      'undef-rw(Duration.Undefined, """ "undef" """)
+      'undef - rw(Duration.Undefined, """ "undef" """)
       "1-second" - rw(1.second, """ "1000000000" """)
       "2-hour" - rw(2.hours, """ "7200000000000" """)
     }

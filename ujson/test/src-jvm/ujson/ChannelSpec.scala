@@ -1,7 +1,9 @@
 package ujson
 
 import org.scalatest._
+import org.scalatest.prop.Generator._
 import upickle.core.NoOpVisitor
+
 
 class ChannelSpec extends PropSpec with Matchers {
 
