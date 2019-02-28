@@ -3,6 +3,7 @@ package ujson
 import java.nio.ByteBuffer
 
 import org.scalatest.prop.PropertyChecks
+import CustomGenerators._
 import org.scalatest.{Matchers, PropSpec}
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 object JNumIndexCheckFacade extends JsVisitor[Boolean, Boolean] {
@@ -43,7 +44,6 @@ object JNumIndexCheckFacade extends JsVisitor[Boolean, Boolean] {
 
 
 class JNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
-
   property("visitFloat64StringParts provides the correct indices with parseFromString") {
     forAll { (value: BigDecimal) =>
       val json = s"""{ "num": ${value.toString} }"""

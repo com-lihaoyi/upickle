@@ -2,10 +2,9 @@ package ujson
 
 import java.nio.charset.StandardCharsets
 
-import org.scalacheck.Gen._
-import org.scalacheck._
 import org.scalatest._
 import org.scalatest.prop._
+import org.scalatest.prop.CommonGenerators._
 import upickle.core.NoOpVisitor
 
 import scala.util.Try
@@ -31,36 +30,30 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
   case class JArray(js: List[J]) extends J
   case class JObject(js: Map[String, J]) extends J
 
-  val jatom: Gen[JAtom] =
-    Gen.oneOf(
+  val jatom: Generator[JAtom] =
+    specificValues(
       "null", "true", "false", "1234", "-99", "16.0", "2e9",
       "-4.44E-10", "11e+14", "\"foo\"", "\"\"", "\"bar\"",
       "\"qux\"", "\"duh\"", "\"abc\"", "\"xyz\"", "\"zzzzzz\"",
       "\"\\u1234\"").map(JAtom(_))
 
-  def jarray(lvl: Int): Gen[JArray] =
-    Gen.containerOf[List, J](jvalue(lvl + 1)).map(JArray(_))
+  def jarray(lvl: Int): Generator[JArray] =
+    lists[J](jvalue(lvl + 1)).map(JArray(_))
 
-  val keys = Gen.oneOf("foo", "bar", "qux", "abc", "def", "xyz")
-  def jitem(lvl: Int): Gen[(String, J)] =
+  val keys = specificValues("foo", "bar", "qux", "abc", "def", "xyz")
+  def jitem(lvl: Int): Generator[(String, J)] =
     for { s <- keys; j <- jvalue(lvl) } yield (s, j)
 
-  def jobject(lvl: Int): Gen[JObject] =
-    Gen.containerOf[List, (String, J)](jitem(lvl + 1)).map(ts => JObject(ts.toMap))
+  def jobject(lvl: Int): Generator[JObject] =
+    lists[(String, J)](jitem(lvl + 1)).map(ts => JObject(ts.toMap))
 
-  def jvalue(lvl: Int): Gen[J] =
-    if (lvl < 3) {
-      Gen.frequency((16, 'ato), (1, 'arr), (2, 'obj)).flatMap {
-        case 'ato => jatom
-        case 'arr => jarray(lvl)
-        case 'obj => jobject(lvl)
-      }
-    } else {
+  def jvalue(lvl: Int): Generator[J] =
+    if (lvl < 3)
+      frequency((16, jatom), (1, jarray(lvl)), (2, jobject(lvl)))
+    else
       jatom
-    }
 
-  implicit lazy val arbJValue: Arbitrary[J] =
-    Arbitrary(jvalue(0))
+  implicit lazy val arbJValue: Generator[J] = jvalue(0)
 
   import java.nio.ByteBuffer
 

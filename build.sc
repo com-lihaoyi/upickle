@@ -211,8 +211,7 @@ object ujson extends Module {
     trait JawnTestModule extends CommonTestModule {
       def testFrameworks = Seq("org.scalatest.tools.Framework")
       def ivyDeps = Agg(
-        ivy"org.scalatest::scalatest::3.0.5",
-        ivy"org.scalacheck::scalacheck::1.14.0"
+        ivy"org.scalatest::scalatest::3.1.0-SNAP7"
       )
     }
 
@@ -235,12 +234,7 @@ object ujson extends Module {
   class NativeModule(val crossScalaVersion: String) extends JsonModule with CommonNativeModule{
     def moduleDeps = Seq(core.native())
 
-    object test extends Tests with JawnTestModule {
-      def ivyDeps = Agg(
-        ivy"org.scalatest::scalatest::3.2.0-SNAP10",
-        ivy"com.github.lolgab::scalacheck::1.14.1"
-      )
-    }
+    object test extends Tests with JawnTestModule
   }
 
   object argonaut extends Cross[ArgonautModule]("2.11.12", "2.12.8")
