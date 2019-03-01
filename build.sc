@@ -168,6 +168,8 @@ object implicits extends Module {
 
     object test extends Tests {
       def moduleDeps = super.moduleDeps ++ Seq(ujson.native().test, core.native().test)
+
+
     }
   }
 }
