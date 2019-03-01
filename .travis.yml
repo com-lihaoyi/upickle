@@ -3,7 +3,8 @@ language: scala
 scala:
   - 2.11.12
   - 2.12.7
-
+before_script:
+  - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
 script:
 - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6 && chmod +x ~/bin/mill
 - mill __[$TRAVIS_SCALA_VERSION].test

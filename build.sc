@@ -3,11 +3,14 @@ import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill
 trait CommonModule extends ScalaModule {
   def scalacOptions = T{ if (scalaVersion() == "2.12.8") Seq("-opt:l:method") else Nil }
   def platformSegment: String
-
+  def mixedPlatformsSources: define.Sources
+  def platformSources = T.sources(
+      millSourcePath / "src",
+      millSourcePath / s"src-$platformSegment")
   def sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
+    platformSources() ++ mixedPlatformsSources()
   )
+  
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule {
   def publishVersion = "0.7.1"
@@ -33,13 +36,16 @@ trait CommonTestModule extends CommonModule with TestModule {
 trait CommonJvmModule extends CommonPublishModule {
   def platformSegment = "jvm"
   def millSourcePath = super.millSourcePath / os.up
-  private def mixedPlatformSources = T.sources(
+  def mixedPlatformsSources = T.sources(
     millSourcePath / "src-jvm-native",
     millSourcePath / "src-jvm-js"
   )
-  def sources = T.sources { super.sources() ++ mixedPlatformSources() }
   trait Tests extends super.Tests with CommonTestModule {
     def platformSegment = "jvm"
+    def mixedPlatformsSources = T.sources(
+      millSourcePath / "src-jvm-native",
+      millSourcePath / "src-jvm-js"
+    )
   }
 
 }
@@ -47,28 +53,34 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule {
   def platformSegment = "js"
   def scalaJSVersion = "0.6.25"
   def millSourcePath = super.millSourcePath / os.up
-  private def mixedPlatformSources = T.sources(
+  def mixedPlatformsSources = T.sources(
     millSourcePath / "src-js-native",
     millSourcePath / "src-jvm-js"
   )
-  def sources = T.sources { super.sources() ++ mixedPlatformSources() }
   trait Tests extends super.Tests with CommonTestModule {
     def platformSegment = "js"
     def scalaJSVersion = "0.6.25"
+    def mixedPlatformsSources = T.sources(
+      millSourcePath / "src-js-native",
+      millSourcePath / "src-jvm-js"
+    )
   }
 }
 trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule {
   def platformSegment = "native"
   def scalaNativeVersion = "0.3.8"
   def millSourcePath = super.millSourcePath / os.up
-  private def mixedPlatformSources = T.sources(
+  def mixedPlatformsSources = T.sources(
     millSourcePath / "src-jvm-native",
     millSourcePath / "src-js-native"
   )
-  def sources = T.sources { super.sources() ++ mixedPlatformSources() }
   trait Tests extends super.Tests with CommonTestModule {
     def platformSegment = "native"
     def scalaNativeVersion = "0.3.8"
+    def mixedPlatformsSources = T.sources(
+      millSourcePath / "src-jvm-native",
+      millSourcePath / "src-js-native"
+    )
   }
 }
 
@@ -243,6 +255,7 @@ object ujson extends Module {
   class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule {
     def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
+    def mixedPlatformsSources = T.sources()
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2")
   }
@@ -250,6 +263,7 @@ object ujson extends Module {
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule {
     def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
+    def mixedPlatformsSources = T.sources()
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
       ivy"org.json4s::json4s-ast:3.5.2",
@@ -260,6 +274,7 @@ object ujson extends Module {
   object circe extends Cross[CirceModule]("2.11.12", "2.12.8")
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule {
     def artifactName = "ujson-circe"
+    def mixedPlatformsSources = T.sources()
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.circe::circe-parser:0.9.1")
@@ -269,6 +284,7 @@ object ujson extends Module {
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule {
     def artifactName = "ujson-play"
     def platformSegment = "jvm"
+    def mixedPlatformsSources = T.sources()
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
       ivy"com.typesafe.play::play-json:2.6.9",
@@ -359,6 +375,7 @@ object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
     def scalaJSVersion = "0.6.25"
     def platformSegment = "js"
+    def mixedPlatformsSources = T.sources()
     def moduleDeps = Seq(upickle.js("2.12.8").test)
     def run(args: String*) = T.command {
       finalMainClassOpt() match{
@@ -376,6 +393,7 @@ object bench extends Module {
 
   object jvm extends BenchModule {
     def platformSegment = "jvm"
+    def mixedPlatformsSources = T.sources()
     def moduleDeps = Seq(upickle.jvm("2.12.8").test)
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
@@ -385,6 +403,7 @@ object bench extends Module {
 
   object native extends BenchModule {
     def platformSegment = "native"
+    def mixedPlatformsSources = T.sources()
     def moduleDeps = Seq(upickle.native("2.11.12").test)
   }
 }
