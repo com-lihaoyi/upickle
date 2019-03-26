@@ -53,6 +53,9 @@ object core extends Module {
 
   class CoreJsModule(val crossScalaVersion: String) extends CommonJsModule {
     def artifactName = "upickle-core"
+    def ivyDeps = Agg(
+      ivy"org.scala-lang.modules::scala-collection-compat::0.3.0"
+    )
 
     object test extends Tests
   }
@@ -60,6 +63,9 @@ object core extends Module {
   object jvm extends Cross[CoreJvmModule]("2.11.12", "2.12.7")
   class CoreJvmModule(val crossScalaVersion: String) extends CommonJvmModule {
     def artifactName = "upickle-core"
+    def ivyDeps = Agg(
+      ivy"org.scala-lang.modules::scala-collection-compat:0.3.0"
+    )
 
     object test extends Tests
   }

@@ -1,7 +1,7 @@
 package ujson
 import upickle.core._
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 
 trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
   def apply(t: Readable): I = t.transform(this)
@@ -22,10 +22,10 @@ trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
   }
 
   class AstObjVisitor[T](build: T => I)
-                        (implicit cbf: CanBuildFrom[Nothing, (String, I), T])extends ObjVisitor[I, I] {
+                        (implicit factory: Factory[(String, I), T])extends ObjVisitor[I, I] {
 
     private[this] var key: String = null
-    private[this] val vs = cbf.apply()
+    private[this] val vs = factory.newBuilder
     def subVisitor = AstTransformer.this
     def visitKey(index: Int) = upickle.core.StringVisitor
     def visitKeyValue(s: Any): Unit = key = s.toString
@@ -35,9 +35,9 @@ trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
     def visitEnd(index: Int) = build(vs.result)
   }
   class AstArrVisitor[T[_]](build: T[I] => I)
-                           (implicit cbf: CanBuildFrom[Nothing, I, T[I]]) extends ArrVisitor[I, I]{
+                           (implicit factory: Factory[I, T[I]]) extends ArrVisitor[I, I]{
     def subVisitor = AstTransformer.this
-    private[this] val vs = cbf.apply()
+    private[this] val vs = factory.newBuilder
     def visitValue(v: I, index: Int): Unit = vs += v
 
     def visitEnd(index: Int) = build(vs.result())

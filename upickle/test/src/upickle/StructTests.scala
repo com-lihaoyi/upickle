@@ -2,6 +2,7 @@ package upickle
 import utest._
 import upickle.legacy.{read, write}
 
+import scala.collection.compat._
 import scala.concurrent.duration._
 import TestUtil._
 import java.util.UUID
@@ -12,7 +13,7 @@ import scala.reflect.ClassTag
 import language.postfixOps
 
 object StructTests extends TestSuite {
-  Seq(1).to[Vector]
+  Seq(1).to(Vector)
   val tests = Tests {
     'arrays{
       'empty-rwk(Array[Int](), "[]")(_.toSeq)
