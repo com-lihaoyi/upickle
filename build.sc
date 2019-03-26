@@ -289,7 +289,6 @@ trait BenchModule extends CommonModule{
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.5",
     ivy"com.lihaoyi::sourcecode::0.1.5",
-    ivy"com.avsystem.commons::commons-core::1.26.3",
   )
 }
 
