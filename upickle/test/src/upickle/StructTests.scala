@@ -135,9 +135,9 @@ object StructTests extends TestSuite {
 
     'transmutation{
       'vectorToList{
-        val vectorToList = read[Seq[Double]](write(Vector(1.1, 2.2, 3.3)))
+        val vectorToList = read[List[Double]](write(Vector(1.1, 2.2, 3.3)))
         assert(
-          vectorToList.isInstanceOf[Vector[Double]],
+          vectorToList.isInstanceOf[List[Double]],
           vectorToList == List(1.1, 2.2, 3.3)
         )
 
