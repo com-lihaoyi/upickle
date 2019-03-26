@@ -61,7 +61,6 @@ object StructTests extends TestSuite {
         'Seq - rw(collection.mutable.Seq("omg", "i am", "cow"), """["omg","i am","cow"]""")
         'Buffer - rw(collection.mutable.Buffer("omg", "i am", "cow"), """["omg","i am","cow"]""")
         'SortedSet - rw(collection.mutable.SortedSet("omg", "i am", "cow"), """["cow","i am","omg"]""")
-        'LinkedList - rw(collection.mutable.LinkedList("omg", "i am", "cow"), """["omg","i am","cow"]""")
       }
       'Map {
         'Structured-rw(
