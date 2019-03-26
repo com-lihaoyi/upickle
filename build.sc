@@ -27,7 +27,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
 }
 
 trait CommonTestModule extends CommonModule with TestModule{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.6.4", ivy"com.lihaoyi::acyclic:0.1.5")
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.6.6", ivy"com.lihaoyi::acyclic:0.1.8")
   def testFrameworks = Seq("upickle.core.UTestFramework")
 }
 trait CommonJvmModule extends CommonPublishModule{
@@ -70,7 +70,7 @@ object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
     def compileIvyDeps = Agg(
-      ivy"com.lihaoyi::acyclic:0.1.5",
+      ivy"com.lihaoyi::acyclic:0.1.8",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
     def generatedSources = T{
@@ -160,8 +160,8 @@ object ujson extends Module{
     def artifactName = "ujson"
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = Agg(
-        ivy"org.scalatest::scalatest::3.0.3",
-        ivy"org.scalacheck::scalacheck::1.13.5"
+        ivy"org.scalatest::scalatest::3.0.7",
+        ivy"org.scalacheck::scalacheck::1.14.0"
       )
       def testFrameworks = Seq("org.scalatest.tools.Framework")
     }
@@ -185,7 +185,7 @@ object ujson extends Module{
     def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2")
+    def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.3")
   }
   object json4s extends Cross[Json4sModule]("2.11.12", "2.12.7")
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
@@ -193,8 +193,8 @@ object ujson extends Module{
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
-      ivy"org.json4s::json4s-ast:3.5.2",
-      ivy"org.json4s::json4s-native:3.5.2"
+      ivy"org.json4s::json4s-ast:3.6.5",
+      ivy"org.json4s::json4s-native:3.6.5"
     )
   }
 
@@ -203,7 +203,7 @@ object ujson extends Module{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.9.1")
+    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.11.1")
   }
 
   object play extends Cross[PlayModule]("2.11.12", "2.12.7")
@@ -212,7 +212,7 @@ object ujson extends Module{
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
-      ivy"com.typesafe.play::play-json:2.6.9",
+      ivy"com.typesafe.play::play-json:2.7.2",
       ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4"
     )
   }
@@ -221,10 +221,10 @@ object ujson extends Module{
 trait UpickleModule extends CommonPublishModule{
   def artifactName = "upickle"
   def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"com.lihaoyi::acyclic:0.1.5"
+    ivy"com.lihaoyi::acyclic:0.1.8"
   )
   def compileIvyDeps = Agg(
-    ivy"com.lihaoyi::acyclic:0.1.5",
+    ivy"com.lihaoyi::acyclic:0.1.8",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
@@ -276,13 +276,13 @@ trait BenchModule extends CommonModule{
   def scalaVersion = "2.12.7"
   def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.9.1",
-    ivy"io.circe::circe-generic::0.9.1",
-    ivy"io.circe::circe-parser::0.9.1",
-    ivy"com.typesafe.play::play-json::2.6.7",
-    ivy"io.argonaut::argonaut:6.2",
-    ivy"org.json4s::json4s-ast:3.5.2",
-    ivy"com.lihaoyi::sourcecode::0.1.4",
+    ivy"io.circe::circe-core::0.11.1",
+    ivy"io.circe::circe-generic::0.11.1",
+    ivy"io.circe::circe-parser::0.11.1",
+    ivy"com.typesafe.play::play-json::2.7.2",
+    ivy"io.argonaut::argonaut:6.2.3",
+    ivy"org.json4s::json4s-ast:3.6.5",
+    ivy"com.lihaoyi::sourcecode::0.1.5",
     ivy"com.avsystem.commons::commons-core::1.26.3",
   )
 }
@@ -310,7 +310,7 @@ object bench extends Module {
     def platformSegment = "jvm"
     def moduleDeps = Seq(upickle.jvm("2.12.7").test)
     def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.4",
+      ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.8",
       ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
     )
   }
