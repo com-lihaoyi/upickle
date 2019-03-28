@@ -2,6 +2,7 @@ package upickle
 import utest._
 import upickle.legacy.{read, write}
 
+import scala.collection.compat._
 import scala.concurrent.duration._
 import TestUtil._
 import java.util.UUID
@@ -12,7 +13,7 @@ import scala.reflect.ClassTag
 import language.postfixOps
 
 object StructTests extends TestSuite {
-  Seq(1).to[Vector]
+  Seq(1).to(Vector)
   val tests = Tests {
     'arrays{
       'empty-rwk(Array[Int](), "[]")(_.toSeq)
@@ -60,7 +61,6 @@ object StructTests extends TestSuite {
         'Seq - rw(collection.mutable.Seq("omg", "i am", "cow"), """["omg","i am","cow"]""")
         'Buffer - rw(collection.mutable.Buffer("omg", "i am", "cow"), """["omg","i am","cow"]""")
         'SortedSet - rw(collection.mutable.SortedSet("omg", "i am", "cow"), """["cow","i am","omg"]""")
-        'LinkedList - rw(collection.mutable.LinkedList("omg", "i am", "cow"), """["omg","i am","cow"]""")
       }
       'Map {
         'Structured-rw(
@@ -135,9 +135,9 @@ object StructTests extends TestSuite {
 
     'transmutation{
       'vectorToList{
-        val vectorToList = read[Seq[Double]](write(Vector(1.1, 2.2, 3.3)))
+        val vectorToList = read[List[Double]](write(Vector(1.1, 2.2, 3.3)))
         assert(
-          vectorToList.isInstanceOf[Vector[Double]],
+          vectorToList.isInstanceOf[List[Double]],
           vectorToList == List(1.1, 2.2, 3.3)
         )
 

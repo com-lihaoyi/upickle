@@ -64,7 +64,7 @@ object IndexedValue extends Transformer[IndexedValue]{
       def visitValue(v: IndexedValue, index: Int): Unit = {
         out.append(v)
       }
-      def visitEnd(index: Int): IndexedValue.Arr = IndexedValue.Arr(i, out:_*)
+      def visitEnd(index: Int): IndexedValue.Arr = IndexedValue.Arr(i, out.toSeq:_*)
     }
 
     def visitObject(length: Int, i: Int) = new ObjVisitor[IndexedValue, IndexedValue.Obj] {
@@ -76,7 +76,7 @@ object IndexedValue extends Transformer[IndexedValue]{
       def visitValue(v: IndexedValue, index: Int): Unit = {
         out.append((currentKey, v))
       }
-      def visitEnd(index: Int): IndexedValue.Obj = IndexedValue.Obj(i, out:_*)
+      def visitEnd(index: Int): IndexedValue.Obj = IndexedValue.Obj(i, out.toSeq:_*)
     }
 
     def visitNull(i: Int) = IndexedValue.Null(i)
