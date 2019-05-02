@@ -1,6 +1,34 @@
 import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._
 
+// Remove once mill has proper support for 2.13.0-RC1
+object CustomZincWorker extends mill.scalalib.ZincWorkerModule {
+  def scalaCompilerBridgeSourceJar(scalaVersion: String, scalaOrganization: String) = {
+    val (scalaVersion0, scalaBinaryVersion0, bridgeVersion) = scalaVersion match {
+      case s if s.startsWith("2.13.") => ("2.13.0-M2", "2.13.0-M2", "1.2.5")
+      case _ => (scalaVersion, mill.scalalib.api.Util.scalaBinaryVersion(scalaVersion), Versions.zinc)
+    }
+
+    val (bridgeDep, bridgeName) = {
+      val org = "org.scala-sbt"
+      val name = "compiler-bridge"
+      (ivy"$org::$name:$bridgeVersion", s"${name}_$scalaBinaryVersion0")
+    }
+
+    mill.scalalib.Lib.resolveDependencies(
+      repositories,
+      Lib.depToDependency(_, scalaVersion0, ""),
+      Seq(bridgeDep),
+      sources = true
+    ).map(deps =>
+      mill.scalalib.api.Util.grepJar(deps.map(_.path), bridgeName, bridgeVersion, sources = true)
+    )
+  }
+}
+
 trait CommonModule extends ScalaModule {
+  def zincWorker: ZincWorkerModule =
+    CustomZincWorker
+
   def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
   def platformSegment: String
 
@@ -27,7 +55,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
 }
 
 trait CommonTestModule extends CommonModule with TestModule{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.6.6", ivy"com.lihaoyi::acyclic:0.1.8")
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.6.7", ivy"com.lihaoyi::acyclic:0.1.9")
   def testFrameworks = Seq("upickle.core.UTestFramework")
 }
 trait CommonJvmModule extends CommonPublishModule{
@@ -40,31 +68,31 @@ trait CommonJvmModule extends CommonPublishModule{
 }
 trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
-  def scalaJSVersion = "0.6.25"
+  def scalaJSVersion = "0.6.27"
   def millSourcePath = super.millSourcePath / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "js"
-    def scalaJSVersion = "0.6.25"
+    def scalaJSVersion = "0.6.27"
   }
 }
 
 object core extends Module {
-  object js extends Cross[CoreJsModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object js extends Cross[CoreJsModule]("2.11.12", "2.12.7", "2.13.0-RC1")
 
   class CoreJsModule(val crossScalaVersion: String) extends CommonJsModule {
     def artifactName = "upickle-core"
     def ivyDeps = Agg(
-      ivy"org.scala-lang.modules::scala-collection-compat::0.3.0"
+      ivy"org.scala-lang.modules::scala-collection-compat::1.0.0"
     )
 
     object test extends Tests
   }
 
-  object jvm extends Cross[CoreJvmModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object jvm extends Cross[CoreJvmModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class CoreJvmModule(val crossScalaVersion: String) extends CommonJvmModule {
     def artifactName = "upickle-core"
     def ivyDeps = Agg(
-      ivy"org.scala-lang.modules::scala-collection-compat:0.3.0"
+      ivy"org.scala-lang.modules::scala-collection-compat:1.0.0"
     )
 
     object test extends Tests
@@ -76,7 +104,7 @@ object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
     def compileIvyDeps = Agg(
-      ivy"com.lihaoyi::acyclic:0.1.8",
+      ivy"com.lihaoyi::acyclic:0.1.9",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
     def generatedSources = T{
@@ -116,7 +144,7 @@ object implicits extends Module {
     }
 
   }
-  object js extends Cross[JsModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object js extends Cross[JsModule]("2.11.12", "2.12.7", "2.13.0-RC1")
 
   class JsModule(val crossScalaVersion: String) extends ImplicitsModule with CommonJsModule{
     def moduleDeps = Seq(core.js())
@@ -127,7 +155,7 @@ object implicits extends Module {
     }
   }
 
-  object jvm extends Cross[JvmModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object jvm extends Cross[JvmModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class JvmModule(val crossScalaVersion: String) extends ImplicitsModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
     def artifactName = "upickle-implicits"
@@ -139,7 +167,7 @@ object implicits extends Module {
 
 object upack extends Module {
 
-  object js extends Cross[JsModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object js extends Cross[JsModule]("2.11.12", "2.12.7", "2.13.0-RC1")
 
   class JsModule(val crossScalaVersion: String) extends CommonJsModule {
     def moduleDeps = Seq(core.js())
@@ -150,7 +178,7 @@ object upack extends Module {
     }
   }
 
-  object jvm extends Cross[JvmModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object jvm extends Cross[JvmModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class JvmModule(val crossScalaVersion: String) extends CommonJvmModule {
     def moduleDeps = Seq(core.jvm())
     def artifactName = "upack"
@@ -166,34 +194,34 @@ object ujson extends Module{
     def artifactName = "ujson"
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = Agg(
-        ivy"org.scalatest::scalatest::3.0.7",
+        ivy"org.scalatest::scalatest::3.0.8-RC2",
         ivy"org.scalacheck::scalacheck::1.14.0"
       )
       def testFrameworks = Seq("org.scalatest.tools.Framework")
     }
   }
 
-  object js extends Cross[JsModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object js extends Cross[JsModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class JsModule(val crossScalaVersion: String) extends JsonModule with CommonJsModule{
     def moduleDeps = Seq(core.js())
 
     object test extends Tests with JawnTestModule
   }
 
-  object jvm extends Cross[JvmModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object jvm extends Cross[JvmModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class JvmModule(val crossScalaVersion: String) extends JsonModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
     object test extends Tests with JawnTestModule
   }
 
-  object argonaut extends Cross[ArgonautModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object argonaut extends Cross[ArgonautModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.3")
   }
-  object json4s extends Cross[Json4sModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object json4s extends Cross[Json4sModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
@@ -204,21 +232,21 @@ object ujson extends Module{
     )
   }
 
-  object circe extends Cross[CirceModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object circe extends Cross[CirceModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.11.1")
+    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.12.0-M1")
   }
 
-  object play extends Cross[PlayModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object play extends Cross[PlayModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-play"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
-      ivy"com.typesafe.play::play-json:2.7.2",
+      ivy"com.typesafe.play::play-json:2.7.3",
       ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4"
     )
   }
@@ -227,10 +255,10 @@ object ujson extends Module{
 trait UpickleModule extends CommonPublishModule{
   def artifactName = "upickle"
   def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"com.lihaoyi::acyclic:0.1.8"
+    ivy"com.lihaoyi::acyclic:0.1.9"
   )
   def compileIvyDeps = Agg(
-    ivy"com.lihaoyi::acyclic:0.1.8",
+    ivy"com.lihaoyi::acyclic:0.1.9",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
@@ -244,7 +272,7 @@ trait UpickleModule extends CommonPublishModule{
 
 
 object upickle extends Module{
-  object jvm extends Cross[JvmModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object jvm extends Cross[JvmModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class JvmModule(val crossScalaVersion: String) extends UpickleModule with CommonJvmModule{
     def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
 
@@ -261,16 +289,20 @@ object upickle extends Module{
     }
   }
 
-  object js extends Cross[JsModule]("2.11.12", "2.12.7", "2.13.0-M5")
+  object js extends Cross[JsModule]("2.11.12", "2.12.7", "2.13.0-RC1")
   class JsModule(val crossScalaVersion: String) extends UpickleModule with CommonJsModule {
     def moduleDeps = Seq(ujson.js(), upack.js(), implicits.js())
 
     def scalacOptions = T{
-      super.scalacOptions() ++ Seq({
-        val a = build.millSourcePath.toString.replaceFirst("[^/]+/?$", "")
-        val g = "https://raw.githubusercontent.com/lihaoyi/upickle"
-        s"-P:scalajs:mapSourceURI:$a->$g/v${publishVersion()}/"
-      })
+      super.scalacOptions() ++ {
+        // not sure why this option doesn't work with 2.13.0-RC1…
+        if (scalaVersion() == "2.13.0-RC1") Nil
+        else {
+          val a = build.millSourcePath.toString.replaceFirst("[^/]+/?$", "")
+          val g = "https://raw.githubusercontent.com/lihaoyi/upickle"
+          Seq(s"-P:scalajs:mapSourceURI:$a->$g/v${publishVersion()}/")
+        }
+      }
     }
     object test extends Tests with CommonModule{
       def moduleDeps = super.moduleDeps ++ Seq(core.js().test)
@@ -282,19 +314,19 @@ trait BenchModule extends CommonModule{
   def scalaVersion = "2.12.7"
   def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.11.1",
-    ivy"io.circe::circe-generic::0.11.1",
-    ivy"io.circe::circe-parser::0.11.1",
-    ivy"com.typesafe.play::play-json::2.7.2",
+    ivy"io.circe::circe-core::0.12.0-M1",
+    ivy"io.circe::circe-generic::0.12.0-M1",
+    ivy"io.circe::circe-parser::0.12.0-M1",
+    ivy"com.typesafe.play::play-json::2.7.3",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.5",
-    ivy"com.lihaoyi::sourcecode::0.1.5",
+    ivy"com.lihaoyi::sourcecode::0.1.6",
   )
 }
 
 object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
-    def scalaJSVersion = "0.6.25"
+    def scalaJSVersion = "0.6.27"
     def platformSegment = "js"
     def moduleDeps = Seq(upickle.js("2.12.7").test)
     def run(args: String*) = T.command {
