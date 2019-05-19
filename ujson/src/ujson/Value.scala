@@ -5,6 +5,7 @@ package ujson
 import upickle.core.Util
 import upickle.core.{ObjArrVisitor, Visitor}
 
+import scala.collection.compat._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -211,9 +212,9 @@ case class Arr(value: ArrayBuffer[Value]) extends Value
 
 object Arr{
   implicit def from[T <% Value](items: TraversableOnce[T]): Arr =
-    Arr(items.map(x => x: Value).to[mutable.ArrayBuffer])
+    Arr(items.map(x => x: Value).to(mutable.ArrayBuffer))
 
-  def apply(items: Value*): Arr = Arr(items.to[mutable.ArrayBuffer])
+  def apply(items: Value*): Arr = Arr(items.to(mutable.ArrayBuffer))
 }
 case class Num(value: Double) extends Value
 sealed abstract class Bool extends Value{

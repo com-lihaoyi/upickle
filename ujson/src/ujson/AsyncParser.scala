@@ -228,16 +228,16 @@ final class AsyncParser[J] protected[ujson](
           results.append(value)
         }
       }
-      Right(results)
+      Right(results.toSeq)
     } catch {
       case e: AsyncException =>
         if (done) {
           // if we are done, make sure we ended at a good stopping point
-          if (state == ASYNC_PREVAL || state == ASYNC_END) Right(results)
+          if (state == ASYNC_PREVAL || state == ASYNC_END) Right(results.toSeq)
           else Left(IncompleteParseException("exhausted input", e))
         } else {
           // we ran out of data, so return what we have so far
-          Right(results)
+          Right(results.toSeq)
         }
 
       case e: ParseException =>

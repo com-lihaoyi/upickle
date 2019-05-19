@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import upickle.core._
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
@@ -199,10 +199,10 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       }
     }
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
-                                      cbf: CanBuildFrom[Nothing, T, C[T]]): Reader[C[T]] = new SimpleReader[C[T]] {
+                                      factory: Factory[T, C[T]]): Reader[C[T]] = new SimpleReader[C[T]] {
     override def expectedMsg = "expected sequence"
     override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, C[T]] {
-      val b = cbf.apply()
+      val b = factory.newBuilder
 
       def visitValue(v: Any, index: Int): Unit = {
         b += v.asInstanceOf[T]
