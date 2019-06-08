@@ -2,14 +2,9 @@ sudo: false
 language: scala
 
 before_install:
-  - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6-92-68505a && chmod +x ~/bin/mill
+  - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.4.0/0.4.0-12-102ddf
+ && chmod +x ~/bin/mill
 
 script:
-- mill __[$TRAVIS_SCALA_VERSION].test
+- mill -i __.test.test
 
-jobs:
-  include:
-    - scala: 2.11.12
-    - scala: 2.12.7
-    - scala: 2.13.0-M5
-      script: for proj in core ujson upack upickle; do for pf in jvm js; do mill $proj.$pf[$TRAVIS_SCALA_VERSION].test || exit 1; done || exit 1; done
