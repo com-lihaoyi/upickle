@@ -40,14 +40,14 @@ object Main{
       Common.upickleLegacy(duration)
       Common.upickleBinaryDefault(duration)
       Common.upickleBinaryLegacy(duration)
-      Common.genCodec(duration)
+//      Common.genCodec(duration)
       Common.playJsonCached(duration)
       Common.circeCached(duration)
       Common.upickleDefaultCached(duration)
       Common.upickleLegacyCached(duration)
       Common.upickleDefaultBinaryCached(duration)
       Common.upickleLegacyBinaryCached(duration)
-      Common.genCodecCached(duration)
+//      Common.genCodecCached(duration)
       println()
     }
   }
