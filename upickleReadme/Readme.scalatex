@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 0.7.1")
+@sect("µPickle 0.7.5")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -66,7 +66,7 @@
     @p
       Add the following to your SBT config:
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %% "upickle" % "0.7.1"
+      libraryDependencies += "com.lihaoyi" %% "upickle" % "0.7.5"
 
 
     @p
@@ -85,9 +85,9 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.7.1"
+        libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.7.5"
       @p
-        Other than that, everything is used the same way. upickle-0.7.1
+        Other than that, everything is used the same way. upickle-0.7.5
         is only compatible with ScalaJS 0.6.x.
 
     @sect{Scala 2.10}
@@ -449,7 +449,7 @@
       following package coordinates:
 
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %% "ujson" % "0.7.1"
+      libraryDependencies += "com.lihaoyi" %% "ujson" % "0.7.5"
 
     @sect{Construction}
       @p
@@ -557,7 +557,7 @@
         @b{Maven Coordinates}
 
         @hl.scala
-          libraryDependencies += "com.lihaoyi" %% "ujson-argonaut" % "0.7.1"
+          libraryDependencies += "com.lihaoyi" %% "ujson-argonaut" % "0.7.5"
 
         @b{Usage}
         @hl.ref(jvmExampleTests, Seq("'argonaut", ""), "}")
@@ -565,21 +565,21 @@
       @sect{Circe}
         @b{Maven Coordinates}
         @hl.scala
-          libraryDependencies += "com.lihaoyi" %% "ujson-circe" % "0.7.1"
+          libraryDependencies += "com.lihaoyi" %% "ujson-circe" % "0.7.5"
         @b{Usage}
         @hl.ref(jvmExampleTests, Seq("'circe", ""), "}")
 
       @sect{Play-Json}
         @b{Maven Coordinates}
         @hl.scala
-          libraryDependencies += "com.lihaoyi" %% "ujson-play" % "0.7.1"
+          libraryDependencies += "com.lihaoyi" %% "ujson-play" % "0.7.5"
         @b{Usage}
         @hl.ref(jvmExampleTests, Seq("'play", ""), "}")
 
       @sect{Json4s}
         @b{Maven Coordinates}
         @hl.scala
-          libraryDependencies += "com.lihaoyi" %% "ujson-json4s" % "0.7.1"
+          libraryDependencies += "com.lihaoyi" %% "ujson-json4s" % "0.7.5"
         @b{Usage}
         @hl.ref(jvmExampleTests, Seq("'json4s", ""), "}")
 
@@ -606,7 +606,7 @@
       following package coordinates:
 
     @hl.scala
-      libraryDependencies += "com.lihaoyi" %% "upack" % "0.7.1"
+      libraryDependencies += "com.lihaoyi" %% "upack" % "0.7.5"
 
     @p
       The following basic functions are provided in the @code{upack} package
@@ -854,6 +854,10 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{0.7.5}
+      @ul
+        @li
+          Support for Scala 2.13.0 final
     @sect{0.7.1}
       @ul
         @li
