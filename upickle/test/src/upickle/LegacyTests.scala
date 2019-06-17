@@ -6,7 +6,7 @@ import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
 object LegacyTests extends TestSuite {
 
   val tests = Tests {
-    'simpleAdt {
+    test("simpleAdt"){
       implicit def ADT0rw: RW[ADTs.ADT0] = upickle.legacy.macroRW
       implicit def ADTarw: RW[ADTs.ADTa] = upickle.legacy.macroRW
       implicit def ADTbrw: RW[ADTs.ADTb] = upickle.legacy.macroRW
@@ -16,22 +16,22 @@ object LegacyTests extends TestSuite {
       implicit def ADTfrw: RW[ADTs.ADTf] = upickle.legacy.macroRW
       implicit def ADTzrw: RW[ADTs.ADTz] = upickle.legacy.macroRW
 
-      * - rw(ADTs.ADT0(), """{}""")
-      * - rw(ADTs.ADTa(1), """{"i":1}""")
-      * - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
+      test - rw(ADTs.ADT0(), """{}""")
+      test - rw(ADTs.ADTa(1), """{"i":1}""")
+      test - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
 
-      * - rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
-      * - rw(
+      test - rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
+      test - rw(
         ADTs.ADTd(1, "lol", (1.1, 1.2), ADTs.ADTa(1)),
         """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1}}"""
       )
 
-      * - rw(
+      test - rw(
         ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
         """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14]}"""
       )
 
-      * - rw(
+      test - rw(
         ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
         """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
       )
@@ -42,13 +42,13 @@ object LegacyTests extends TestSuite {
       }
 
       val expected = s"""{${chunks.mkString(",")}}"""
-      * - rw(
+      test - rw(
         ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
         expected
       )
     }
 
-    'sealedHierarchy {
+    test("sealedHierarchy"){
       // objects in sealed case class hierarchies should always read and write
       // the same way (with a tag) regardless of what their static type is when
       // written. This is feasible because sealed hierarchies can only have a
@@ -60,18 +60,18 @@ object LegacyTests extends TestSuite {
       implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(Crw, Brw)
 
       implicit def Zrw: RW[Z] = upickle.legacy.macroRW
-      'shallow {
-        * - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
-        * - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+      test("shallow"){
+        test - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
+        test - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
 
-        * - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
-        * - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
+        test - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
+        test - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
 
-        * - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i":1}]""")
-        * - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+        test - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i":1}]""")
+        test - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
       }
 
-      'deep{
+      test("deep"){
         import DeepHierarchy._
         implicit def Arw: RW[A] = upickle.legacy.macroRW
         implicit def Brw: RW[B] = upickle.legacy.macroRW
@@ -81,23 +81,23 @@ object LegacyTests extends TestSuite {
         implicit def Drw: RW[D] = upickle.legacy.macroRW
         implicit def Erw: RW[E] = upickle.legacy.macroRW
         implicit def Frw: RW[F] = upickle.legacy.macroRW
-        * - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
-        * - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
-        * - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
-        * - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+        test - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
+        test - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
+        test - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+        test - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
 
-        * - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
-        * - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
-        * - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
-        * - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-        * - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-        * - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-        * - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
-        * - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
-        * - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
+        test - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
+        test - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
+        test - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
+        test - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+        test - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+        test - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
+        test - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
+        test - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
+        test - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
       }
     }
-    'singleton {
+    test("singleton"){
       import Singletons._
 
       implicit def AArw: RW[AA] = legacy.macroRW
@@ -106,35 +106,35 @@ object LegacyTests extends TestSuite {
       rw(BB: AA, """["upickle.Singletons.BB",{}]""")
       rw(CC: AA, """["upickle.Singletons.CC",{}]""")
     }
-    'robustnessAgainstVaryingSchemas {
-      'renameKeysViaAnnotations {
+    test("robustnessAgainstVaryingSchemas"){
+      test("renameKeysViaAnnotations"){
         import Annotated._
         implicit def Arw: RW[A] = upickle.legacy.macroRW
         implicit def Brw: RW[B] = upickle.legacy.macroRW
         implicit def Crw: RW[C] = upickle.legacy.macroRW
-        * - rw(B(1), """["0", {"omg":1}]""")
-        * - rw(C("a", "b"), """["1", {"lol":"a","wtf":"b"}]""")
+        test - rw(B(1), """["0", {"omg":1}]""")
+        test - rw(C("a", "b"), """["1", {"lol":"a","wtf":"b"}]""")
 
-        * - rw(B(1): A, """["0", {"omg":1}]""")
-        * - rw(C("a", "b"): A, """["1", {"lol":"a","wtf":"b"}]""")
+        test - rw(B(1): A, """["0", {"omg":1}]""")
+        test - rw(C("a", "b"): A, """["1", {"lol":"a","wtf":"b"}]""")
       }
-      'useDefaults {
+      test("useDefaults"){
         // Ignore the values which match the default when writing and
         // substitute in defaults when reading if the key is missing
         import Defaults._
         implicit def Arw: RW[ADTa] = upickle.legacy.macroRW
         implicit def Brw: RW[ADTb] = upickle.legacy.macroRW
         implicit def Crw: RW[ADTc] = upickle.legacy.macroRW
-        * - rw(ADTa(), "{}")
-        * - rw(ADTa(321), """{"i":321}""")
-        * - rw(ADTb(s = "123"), """{"s":"123"}""")
-        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-        * - rw(ADTc(s = "123"), """{"s":"123"}""")
-        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
-        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
+        test - rw(ADTa(), "{}")
+        test - rw(ADTa(321), """{"i":321}""")
+        test - rw(ADTb(s = "123"), """{"s":"123"}""")
+        test - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        test - rw(ADTc(s = "123"), """{"s":"123"}""")
+        test - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        test - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
+        test - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
       }
-      'ignoreExtraFieldsWhenDeserializing {
+      test("ignoreExtraFieldsWhenDeserializing"){
         import ADTs._
         implicit def ADTarw: RW[ADTs.ADTa] = upickle.legacy.macroRW
         implicit def ADTbrw: RW[ADTs.ADTb] = upickle.legacy.macroRW
@@ -146,9 +146,9 @@ object LegacyTests extends TestSuite {
       }
     }
 
-    'generics{
+    test("generics"){
       import GenericADTs._
-      * - {
+      test - {
         val pref1 = "upickle.GenericADTs.Delta"
         val D1 = Delta
         implicit def D1rw[A: R: W, B: R: W]: RW[D1[A, B]] = upickle.legacy.macroRW
@@ -163,7 +163,7 @@ object LegacyTests extends TestSuite {
         rw(D1.Clear(), s"""["$pref1.Clear",{}]""")
         rw(D1.Clear(): D1[Int, Int], s"""["$pref1.Clear",{}]""")
       }
-      * - {
+      test - {
         val pref2 = "upickle.GenericADTs.DeltaInvariant"
         val D2 = DeltaInvariant
         type D2[A, B] = DeltaInvariant[A, B]
@@ -179,7 +179,7 @@ object LegacyTests extends TestSuite {
         rw(D2.Clear(): D2[Int, Int], s"""["$pref2.Clear",{}]""")
       }
     }
-    'recursiveDataTypes{
+    test("recursiveDataTypes"){
       import Recursive._
       implicit def IntTreerw: RW[IntTree] = upickle.legacy.macroRW
       implicit def SingleNoderw: RW[SingleNode] = upickle.legacy.macroRW
@@ -207,15 +207,15 @@ object LegacyTests extends TestSuite {
       rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
 
     }
-    'varargs{
+    test("varargs"){
       implicit def IntTreerw: RW[Varargs.Sentence] = upickle.legacy.macroRW
       rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
     }
 
 
-    'issues - {
-      'issue95 {
+    test("issues"){
+      test("issue95"){
         implicit def rw1: RW[C1] = legacy.macroRW
         implicit def rw2: RW[C2] = legacy.macroRW
         implicit def rw3: RW[GeoCoding2] = legacy.macroRW
@@ -234,7 +234,7 @@ object LegacyTests extends TestSuite {
           """{"results": [{"name": "a", "whatever": "b", "types": ["c"]}], "status": "d"}"""
         )
       }
-      'scalatex - {
+      test("scalatex"){
         implicit def rw1: RW[Ast] = legacy.macroRW
         implicit def rw2: RW[Ast.Block] = legacy.macroRW
         implicit def rw3: RW[Ast.Block.Sub] = legacy.macroRW
@@ -282,25 +282,25 @@ object LegacyTests extends TestSuite {
         rw(header: Ast.Block.Sub, headerText)
         rw(header: Ast.Chain.Sub, headerText)
       }
-//      'companionImplicitPickedUp{
+//      test("companionImplicitPickedUp"){
 //        assert(implicitly[upickle.default.Reader[TypedFoo]] eq TypedFoo.readWriter)
 //        assert(implicitly[upickle.default.Writer[TypedFoo]] eq TypedFoo.readWriter)
 //        assert(implicitly[upickle.default.ReadWriter[TypedFoo]] eq TypedFoo.readWriter)
 //      }
-  //    'companionImplicitWorks{
+  //    test("companionImplicitWorks"){
   //
   //      rw(TypedFoo.Bar(1): TypedFoo, """{"$type": "upickle.TypedFoo.Bar", "i": 1}""")
   //      rw(TypedFoo.Baz("lol"): TypedFoo, """{"$type": "upickle.TypedFoo.Baz", "s": "lol"}""")
   //      rw(TypedFoo.Quz(true): TypedFoo, """{"$type": "upickle.TypedFoo.Quz", "b": true}""")
   //    }
     }
-    'jsonInCaseClass - {
+    test("jsonInCaseClass"){
 
       implicit def arw: RW[CaseClassWithJson] = upickle.legacy.macroRW
       rw(new CaseClassWithJson(ujson.Num(7)), """{"json":7}""")
       rw(new CaseClassWithJson(ujson.Arr(ujson.Num(7), ujson.Str("lol"))), """{"json":[7,"lol"]}""")
     }
-    'traitFromOtherPackage - {
+    test("traitFromOtherPackage"){
       implicit val BaseRW: RW[subpackage.Base] = upickle.legacy.macroRW
       implicit val WrapperRW: RW[subpackage.Wrapper] = upickle.legacy.macroRW
       upickle.legacy.write(subpackage.Wrapper(subpackage.Base.Child))

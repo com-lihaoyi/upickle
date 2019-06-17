@@ -17,7 +17,7 @@ object MsgPackJvmTests extends TestSuite{
     upack.Arr(output)
   }
   val tests = Tests{
-    'hello - {
+    test("hello"){
 
       // Taken from:
       // https://github.com/msgpack/msgpack-ruby/tree/a22d8268f82e0f2ae95f038285af43ce5971810e/spec

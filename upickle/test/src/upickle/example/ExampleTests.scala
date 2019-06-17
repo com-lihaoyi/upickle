@@ -90,7 +90,7 @@ object ExampleTests extends TestSuite {
 
   import TestUtil._
   val tests = Tests {
-    'simple{
+    test("simple"){
       import upickle.default._
 
       write(1)                          ==> "1"
@@ -103,7 +103,7 @@ object ExampleTests extends TestSuite {
 
       read[(Int, String, Boolean)]("""[1,"omg",true]""") ==> (1, "omg", true)
     }
-    'binary{
+    test("binary"){
       import upickle.default._
 
       writeBinary(1)                          ==> Array(1)
@@ -118,13 +118,13 @@ object ExampleTests extends TestSuite {
 
       readBinary[(Int, String, Boolean)](serializedTuple) ==> (1, "omg", true)
     }
-    'more{
+    test("more"){
       import upickle.default._
-      'booleans{
+      test("booleans"){
         write(true: Boolean)              ==> "true"
         write(false: Boolean)             ==> "false"
       }
-      'numbers{
+      test("numbers"){
         write(12: Int)                    ==> "12"
         write(12: Short)                  ==> "12"
         write(12: Byte)                   ==> "12"
@@ -133,22 +133,22 @@ object ExampleTests extends TestSuite {
         write(12.5f: Float)               ==> "12.5"
         write(12.5: Double)               ==> "12.5"
       }
-      'longs{
+      test("longs"){
         write(12: Long)                   ==> "12"
         write(4000000000000L: Long)       ==> "4000000000000"
         // large longs are written as strings, to avoid floating point rounding
         write(9223372036854775807L: Long) ==> "\"9223372036854775807\""
       }
-      'specialNumbers{
+      test("specialNumbers"){
         write(1.0/0: Double)              ==> "\"Infinity\""
         write(Float.PositiveInfinity)     ==> "\"Infinity\""
         write(Float.NegativeInfinity)     ==> "\"-Infinity\""
       }
-      'charStrings{
+      test("charStrings"){
         write('o')                        ==> "\"o\""
         write("omg")                      ==> "\"omg\""
       }
-      'seqs{
+      test("seqs"){
         write(Array(1, 2, 3))             ==> "[1,2,3]"
 
         // You can pass in an `indent` parameter to format it nicely
@@ -165,16 +165,16 @@ object ExampleTests extends TestSuite {
         import collection.immutable.SortedSet
         write(SortedSet(1, 2, 3))         ==> "[1,2,3]"
       }
-      'options{
+      test("options"){
         write(Some(1))                    ==> "[1]"
         write(None)                       ==> "[]"
       }
-      'tuples{
+      test("tuples"){
         write((1, "omg"))                 ==> """[1,"omg"]"""
         write((1, "omg", true))           ==> """[1,"omg",true]"""
       }
 
-      'caseClass{
+      test("caseClass"){
         import upickle._
         write(Thing(1, "gg"))             ==> """{"myFieldA":1,"myFieldB":"gg"}"""
         read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> Thing(1, "gg")
@@ -195,7 +195,7 @@ object ExampleTests extends TestSuite {
         }
 
 
-      'sealed{
+      test("sealed"){
         write(IntThing(1)) ==> """{"$type":"upickle.example.Sealed.IntThing","i":1}"""
 
         write(TupleThing("naeem", (1, 2))) ==>
@@ -206,7 +206,7 @@ object ExampleTests extends TestSuite {
         read[IntOrTuple]("""{"$type":"upickle.example.Sealed.IntThing","i":1}""") ==> IntThing(1)
 
       }
-      'recursive{
+      test("recursive"){
         write((((1, 2), (3, 4)), ((5, 6), (7, 8)))) ==>
           """[[[1,2],[3,4]],[[5,6],[7,8]]]"""
 
@@ -217,33 +217,33 @@ object ExampleTests extends TestSuite {
           """{"name":"bearrr","foos":[{"i":1},{"i":2},{"i":3}]}"""
 
       }
-      'null{
+      test("null"){
         write(Bar(null, Seq(Foo(1), null, Foo(3)))) ==>
           """{"name":null,"foos":[{"i":1},null,{"i":3}]}"""
       }
     }
-    'defaults{
+    test("defaults"){
       import upickle.default._
-      'reading{
+      test("reading"){
         read[FooDefault]("{}")                ==> FooDefault(10, "lol")
         read[FooDefault]("""{"i": 123}""")    ==> FooDefault(123,"lol")
       }
-      'writing{
+      test("writing"){
         write(FooDefault(i = 11, s = "lol"))  ==> """{"i":11}"""
         write(FooDefault(i = 10, s = "lol"))  ==> """{}"""
         write(FooDefault())                   ==> """{}"""
       }
     }
 
-    'sources{
+    test("sources"){
       import upickle.default._
       val original = """{"myFieldA":1,"myFieldB":"gg"}"""
       read[Thing](original) ==> Thing(1, "gg")
       read[Thing](original: CharSequence) ==> Thing(1, "gg")
       read[Thing](original.getBytes) ==> Thing(1, "gg")
     }
-    'mapped{
-      'simple {
+    test("mapped"){
+      test("simple"){
         import upickle.default._
         case class Wrap(i: Int)
         implicit val fooReadWrite: ReadWriter[Wrap] =
@@ -252,7 +252,7 @@ object ExampleTests extends TestSuite {
         write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==> "[1,10,100]"
         read[Seq[Wrap]]("[1,10,100]") ==> Seq(Wrap(1), Wrap(10), Wrap(100))
       }
-      'Js {
+      test("Js"){
         import upickle.default._
         case class Bar(i: Int, s: String)
         implicit val fooReadWrite: ReadWriter[Bar] =
@@ -265,17 +265,17 @@ object ExampleTests extends TestSuite {
         read[Bar]("""["abc",123]""") ==> Bar(123, "abc")
       }
     }
-    'keyed{
+    test("keyed"){
       import upickle.default._
-      'attrs{
+      test("attrs"){
         write(KeyBar(10))                     ==> """{"hehehe":10}"""
         read[KeyBar]("""{"hehehe": 10}""")    ==> KeyBar(10)
       }
-      'tag{
+      test("tag"){
         write(B(10))                          ==> """{"$type":"Bee","i":10}"""
         read[B]("""{"$type":"Bee","i":10}""") ==> B(10)
       }
-      'snakeCase{
+      test("snakeCase"){
         object SnakePickle extends upickle.AttributeTagged{
           def camelToSnake(s: String) = {
             s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
@@ -313,7 +313,7 @@ object ExampleTests extends TestSuite {
           Thing(1, "gg")
       }
 
-      'stringLongs{
+      test("stringLongs"){
         upickle.default.write(123: Long) ==> "123"
         upickle.default.write(Long.MaxValue) ==> "\"9223372036854775807\""
 
@@ -338,12 +338,12 @@ object ExampleTests extends TestSuite {
       }
     }
 
-    'transform{
+    test("transform"){
       upickle.default.transform(Foo(123)).to[Foo] ==> Foo(123)
       val big = Big(1, true, "lol", 'Z', Thing(7, ""))
       upickle.default.transform(big).to[Big] ==> big
     }
-    'msgConstruction{
+    test("msgConstruction"){
       val msg = upack.Arr(
         upack.Obj(upack.Str("myFieldA") -> upack.Int32(1), upack.Str("myFieldB") -> upack.Str("g")),
         upack.Obj(upack.Str("myFieldA") -> upack.Int32(2), upack.Str("myFieldB") -> upack.Str("k"))
@@ -355,13 +355,13 @@ object ExampleTests extends TestSuite {
       assert(msg == read)
     }
 
-    'msgReadWrite{
+    test("msgReadWrite"){
       val big = Big(1, true, "lol", 'Z', Thing(7, ""))
       val msg: upack.Msg = upickle.default.writeMsg(big)
       upickle.default.readBinary[Big](msg) ==> big
     }
 
-    'msgInsideValue{
+    test("msgInsideValue"){
       val msgSeq = Seq[upack.Msg](
         upack.Str("hello world"),
         upack.Arr(upack.Int32(1), upack.Int32(2))
@@ -372,7 +372,7 @@ object ExampleTests extends TestSuite {
       upickle.default.readBinary[Seq[upack.Msg]](binary) ==> msgSeq
     }
 
-    'msgToJson{
+    test("msgToJson"){
       val msg = upack.Arr(
         upack.Obj(upack.Str("myFieldA") -> upack.Int32(1), upack.Str("myFieldB") -> upack.Str("g")),
         upack.Obj(upack.Str("myFieldA") -> upack.Int32(2), upack.Str("myFieldB") -> upack.Str("k"))
@@ -393,8 +393,8 @@ object ExampleTests extends TestSuite {
       val msg2 = upack.Obj(upack.Arr(upack.Int32(1), upack.Int32(2)) -> upack.Int32(1))
       upack.transform(msg2, new ujson.StringRenderer()).toString ==> """{[1,2]:1}"""
     }
-    'json{
-      'construction{
+    test("json"){
+      test("construction"){
         import ujson.Js
 
         val json0 = ujson.Arr(
@@ -417,7 +417,7 @@ object ExampleTests extends TestSuite {
 
         json2.toString ==> """{"hello":[0,1,2,3,4],"world":{"0":0,"1":1,"2":2,"3":3,"4":4}}"""
       }
-      'simple{
+      test("simple"){
         val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
         val json = ujson.read(str)
         json(0)("myFieldA").num   ==> 1
@@ -427,7 +427,7 @@ object ExampleTests extends TestSuite {
 
         ujson.write(json)         ==> str
       }
-      'mutable{
+      test("mutable"){
         val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
         val json: ujson.Js = ujson.read(str)
 
@@ -437,7 +437,7 @@ object ExampleTests extends TestSuite {
 
         ujson.write(json) ==> """[{"myFieldA":1337,"myFieldB":"glols"}]"""
       }
-      'update{
+      test("update"){
         val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
         val json: ujson.Js = ujson.read(str)
 
@@ -447,7 +447,7 @@ object ExampleTests extends TestSuite {
         val expected = """[{"myFieldA":101,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"klol"}]"""
         ujson.write(json) ==> expected
       }
-      'intermediate{
+      test("intermediate"){
         val data = Seq(Thing(1, "g"), Thing(2, "k"))
         val json = upickle.default.writeJs(data)
 
@@ -456,7 +456,7 @@ object ExampleTests extends TestSuite {
 
         upickle.default.read[Seq[Thing]](json)   ==> Seq(Thing(1337, "g"))
       }
-      'copy{
+      test("copy"){
         val data = ujson.Obj(
           "hello" -> 1,
           "world" -> 2
@@ -468,8 +468,8 @@ object ExampleTests extends TestSuite {
         data2("hello").num ==> 1
       }
     }
-    'transforms{
-      'json{
+    test("transforms"){
+      test("json"){
         import upickle.default._
         transform(1).to[ujson.Value] ==> ujson.Num(1)
         transform("hello").to[ujson.Value] ==> ujson.Str("hello")
@@ -484,7 +484,7 @@ object ExampleTests extends TestSuite {
           Thing(3, "3")
       }
 
-      'defaultTransform{
+      test("defaultTransform"){
 
         // upickle.default.transform can be used to convert between
         // JSON-equivalent data-structures without an intermediate AST
@@ -502,7 +502,7 @@ object ExampleTests extends TestSuite {
           )
 
       }
-      'misc {
+      test("misc"){
         // It can be used for parsing JSON into an AST
         val exampleAst = ujson.Arr(1, 2, 3)
 
@@ -529,7 +529,7 @@ object ExampleTests extends TestSuite {
         ujson.transform("[1, 2, 3]".getBytes, StringRenderer()).toString ==> "[1,2,3]"
 
       }
-      'validate {
+      test("validate"){
         ujson.transform("[1, 2, 3]", NoOpVisitor)
 
         intercept[IncompleteParseException](
@@ -539,7 +539,7 @@ object ExampleTests extends TestSuite {
           ujson.transform("[1, 2, 3]]", NoOpVisitor)
         )
       }
-      'upickleDefault{
+      test("upickleDefault"){
         ujson.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
           Seq(1, 2, 3)
 
@@ -547,7 +547,7 @@ object ExampleTests extends TestSuite {
           "[1,2,3]"
       }
     }
-    'byteArrays{
+    test("byteArrays"){
       import upickle.default._
       write(Array[Byte](1, 2, 3, 4)) ==> "[1,2,3,4]"
       read[Array[Byte]]("[1,2,3,4]") ==> Array(1, 2, 3, 4)

@@ -14,7 +14,7 @@ object JvmExampleTests extends TestSuite {
 
   import TestUtil._
   val tests = Tests {
-    'sources{
+    test("sources"){
       import upickle.default._
       val original = """{"myFieldA":1,"myFieldB":"gg"}"""
 
@@ -26,8 +26,8 @@ object JvmExampleTests extends TestSuite {
       read[Thing](f.toFile) ==> Thing(1, "gg")
       read[Thing](Files.newByteChannel(f)) ==> Thing(1, "gg")
     }
-    'other{
-      'argonaut{
+    test("other"){
+      test("argonaut"){
         import ujson.argonaut.ArgonautJson
         val argJson: argonaut.Json = ArgonautJson(
           """["hello", "world"]"""
@@ -48,7 +48,7 @@ object JvmExampleTests extends TestSuite {
 
         stringified ==> """["HELLO","WORLD"]"""
       }
-      'circe{
+      test("circe"){
         import ujson.circe.CirceJson
         val circeJson: io.circe.Json = CirceJson(
           """["hello", "world"]"""
@@ -70,7 +70,7 @@ object JvmExampleTests extends TestSuite {
 
         stringified ==> """["HELLO","WORLD"]"""
       }
-      'json4s{
+      test("json4s"){
         import org.json4s.JsonAST
         val json4sJson: JsonAST.JValue = Json4sJson(
           """["hello", "world"]"""
@@ -94,7 +94,7 @@ object JvmExampleTests extends TestSuite {
 
         stringified ==> """["HELLO","WORLD"]"""
       }
-      'playJson{
+      test("playJson"){
         import ujson.play.PlayJson
         import play.api.libs.json._
         val playJson: play.api.libs.json.JsValue = PlayJson(
@@ -119,7 +119,7 @@ object JvmExampleTests extends TestSuite {
 
         stringified ==> """["HELLO","WORLD"]"""
       }
-      'crossAst{
+      test("crossAst"){
         import ujson.circe.CirceJson
         val circeJson: io.circe.Json = CirceJson(
           """["hello", "world"]"""

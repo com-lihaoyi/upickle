@@ -4,7 +4,7 @@ import utest._
 
 object UnitTests extends TestSuite{
   val tests = Tests {
-    'compositeKeys{
+    test("compositeKeys"){
       val msg = Obj(Arr(Int32(1), Int32(2)) -> Int32(1))
       val written = upack.write(msg)
       val writtenStr = upickle.core.Util.bytesToString(written)

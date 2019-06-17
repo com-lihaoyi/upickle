@@ -67,7 +67,7 @@ object JsonTests extends TestSuite {
       """.stripMargin
     val parsed = ujson.read(ugly)
 
-    'correctness - {
+    test("correctness"){
       val unparsed = ujson.write(parsed)
       val reparsed = ujson.read(unparsed)
       for (json <- Seq(parsed, reparsed)){
@@ -81,14 +81,14 @@ object JsonTests extends TestSuite {
       }
       (parsed(19), reparsed(19))
     }
-    'shortcuts{
-      'positive{
+    test("shortcuts"){
+      test("positive"){
         ujson.read("[1]").arr        ==> Seq(ujson.Num(1))
         ujson.read("1").num          ==> 1
         ujson.read("\"1\"").str      ==> "1"
         ujson.read("{\"1\": 1}").obj ==> Map("1" -> ujson.Num(1))
       }
-      'negative{
+      test("negative"){
         intercept[ujson.Value.InvalidData]{ujson.read("[1]").obj}
         intercept[ujson.Value.InvalidData]{ujson.read("1").obj}
         intercept[ujson.Value.InvalidData]{ujson.read("\"1\"").obj}

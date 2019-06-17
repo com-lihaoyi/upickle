@@ -67,15 +67,15 @@ object AdvancedTests extends TestSuite {
       assert(reader != null)
       assert(writer != null)
     }
-    'GenericDataTypes{
-      'simple {
+    test("GenericDataTypes"){
+      test("simple"){
         import Generic.A
-        * - rw(A(1), """{"t":1}""")
-        * - rw(A("1"), """{"t":"1"}""")
-        * - rw(A(Seq("1", "2", "3")), """{"t":["1","2","3"]}""")
-        * - rw(A(A(A(A(A(A(A(1))))))), """{"t":{"t":{"t":{"t":{"t":{"t":{"t":1}}}}}}}""")
+        test - rw(A(1), """{"t":1}""")
+        test - rw(A("1"), """{"t":"1"}""")
+        test - rw(A(Seq("1", "2", "3")), """{"t":["1","2","3"]}""")
+        test - rw(A(A(A(A(A(A(A(1))))))), """{"t":{"t":{"t":{"t":{"t":{"t":{"t":1}}}}}}}""")
       }
-      'large{
+      test("large"){
         import Generic.ADT
         rw(ADT(1, 2, 3, 4, 5, 6), """{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6}""")
         rw(
@@ -90,9 +90,9 @@ object AdvancedTests extends TestSuite {
           """{"a":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"b":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"c":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"d":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"e":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6},"f":{"a":1,"b":2,"c":3,"d":4,"e":5,"f":6}}"""
         )
       }
-      'ADT{
+      test("ADT"){
         import GenericADTs._
-        * - {
+        test - {
           val pref1 = "upickle.GenericADTs.Delta"
           val D1 = Delta
           type D1[+A, +B] = Delta[A, B]
@@ -103,7 +103,7 @@ object AdvancedTests extends TestSuite {
           rw(D1.Clear(), s"""{"$$type":"$pref1.Clear"}""")
           rw(D1.Clear(): D1[Int, Int], s"""{"$$type":"$pref1.Clear"}""")
         }
-        * - {
+        test - {
           val pref2 = "upickle.GenericADTs.DeltaInvariant"
           val D2 = DeltaInvariant
           type D2[A, B] = DeltaInvariant[A, B]
@@ -117,7 +117,7 @@ object AdvancedTests extends TestSuite {
       }
     }
 
-    'recursiveDataTypes{
+    test("recursiveDataTypes"){
       import Recursive._
       rw(
         IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
@@ -187,8 +187,8 @@ object AdvancedTests extends TestSuite {
 
     }
 
-    'issues {
-      'issue95 {
+    test("issues"){
+      test("issue95"){
         rw(
           Tuple1(List(C1("hello", List("world")))),
           """[[{"name": "hello", "types": ["world"]}]]"""
@@ -203,7 +203,7 @@ object AdvancedTests extends TestSuite {
           """{"results": [{"name": "a", "whatever": "b", "types": ["c"]}], "status": "d"}"""
         )
       }
-      'scalatex{
+      test("scalatex"){
         val block = Ast.Block(1, Seq(Ast.Block.Text(2, "hello")))
         val blockText = """{
             "$type":"upickle.Ast.Block",
@@ -233,12 +233,12 @@ object AdvancedTests extends TestSuite {
         rw(header: Ast.Block.Sub, headerText)
         rw(header: Ast.Chain.Sub, headerText)
       }
-      //      'companionImplicitPickedUp{
+      //      test("companionImplicitPickedUp"){
       //        assert(implicitly[upickle.default.Reader[TypedFoo]] eq TypedFoo.readWriter)
       //        assert(implicitly[upickle.default.Writer[TypedFoo]] eq TypedFoo.readWriter)
       //        assert(implicitly[upickle.default.ReadWriter[TypedFoo]] eq TypedFoo.readWriter)
       //      }
-      //      'companionImplicitWorks{
+      //      test("companionImplicitWorks"){
       //
       //        rw(TypedFoo.Bar(1): TypedFoo, """{"$type": "upickle.TypedFoo.Bar", "i": 1}""")
       //        rw(TypedFoo.Baz("lol"): TypedFoo, """{"$type": "upickle.TypedFoo.Baz", "s": "lol"}""")

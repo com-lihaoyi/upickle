@@ -5,7 +5,7 @@ import upickle.core.Util
 import utest._
 object MsgPackTests extends TestSuite{
   val tests = Tests{
-    'hello - {
+    test("hello"){
       for{
         (k, v) <- unitCases.obj
         if k != "50.timestamp.yaml"

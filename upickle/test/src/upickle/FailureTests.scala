@@ -32,11 +32,11 @@ object Fi{
 object FailureTests extends TestSuite {
 
   def tests = Tests {
-//    'test - {
+//    test("test"){
 //      read[ujson.Value](""" {unquoted_key: "keys must be quoted"} """)
 //    }
 
-    'jsonFailures - {
+    test("jsonFailures"){
       // Run through the test cases from the json.org validation suite,
       // skipping the ones which we don't support yet (e.g. leading zeroes,
       // extra commas) or will never support (e.g. too deep)
@@ -93,7 +93,7 @@ object FailureTests extends TestSuite {
       intercept[IncompleteParseException]{read[ujson.Value](""" ["Unclosed array" """)}
     }
 
-    'facadeFailures - {
+    test("facadeFailures"){
       def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
         val err = intercept[AbortException] { upickle.legacy.read[T](s) }
         for (msg <- msgs) assert(err.getMessage.contains(msg))
@@ -105,51 +105,51 @@ object FailureTests extends TestSuite {
         for (msg <- msgs) assert(err.getMessage.contains(msg))
         err
       }
-      'structs - {
-        * - assertErrorMsg[Boolean]("\"lol\"", "expected boolean got string at index 0")
-        * - assertErrorMsg[Int]("\"lol\"", "expected number got string at index 0")
-        * - assertErrorMsg[Seq[Int]]("\"lol\"", "expected sequence got string at index 0")
-        * - assertErrorMsg[Seq[String]]("""["1", 2, 3]""", "expected string got number at index 6")
-        'tupleShort - {
+      test("structs"){
+        test - assertErrorMsg[Boolean]("\"lol\"", "expected boolean got string at index 0")
+        test - assertErrorMsg[Int]("\"lol\"", "expected number got string at index 0")
+        test - assertErrorMsg[Seq[Int]]("\"lol\"", "expected sequence got string at index 0")
+        test - assertErrorMsg[Seq[String]]("""["1", 2, 3]""", "expected string got number at index 6")
+        test("tupleShort"){
           assertErrorMsg[Seq[(Int, String)]](
             "[[1, \"1\"], [2, \"2\"], []]",
             "expected 2 items in sequence, found 0 at index 22"
           )
         }
       }
-      'caseClass - {
+      test("caseClass"){
         // Separate this guy out because the read macro and
         // the intercept macro play badly with each other
-        'missingKey - {
-          * - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s at index 9")
-          * - assertErrorMsg[Fee](""" {"s": "123"}""", "missing keys in dictionary: i at index 1")
-          * - assertErrorMsg[Fee]("""  {}""", "missing keys in dictionary: i, s at index 3")
+        test("missingKey"){
+          test - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s at index 9")
+          test - assertErrorMsg[Fee](""" {"s": "123"}""", "missing keys in dictionary: i at index 1")
+          test - assertErrorMsg[Fee]("""  {}""", "missing keys in dictionary: i, s at index 3")
         }
-        'badKey - {
-          * - assertErrorMsg[Fee]("""{"i": true}""", "expected number got boolean")
-        }
-
-        'wrongType - {
-          * - assertErrorMsg[Fee]("""[1, 2, 3]""", "expected dictionary got sequence at index 0")
-          * - assertErrorMsg[Fee]("""31337""", "expected dictionary got number at index 0")
+        test("badKey"){
+          test - assertErrorMsg[Fee]("""{"i": true}""", "expected number got boolean")
         }
 
-        'invalidTag - {
-          * - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
-          * - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
-          * - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
-          * - assertErrorMsgDefault[Fi]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
+        test("wrongType"){
+          test - assertErrorMsg[Fee]("""[1, 2, 3]""", "expected dictionary got sequence at index 0")
+          test - assertErrorMsg[Fee]("""31337""", "expected dictionary got number at index 0")
         }
 
-        'taggedInvalidBody - {
-          * - assertErrorMsg[Fi.Fo]("""["upickle.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 24")
-          * - assertErrorMsg[Fi]("""["upickle.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 24")
-          * - assertErrorMsgDefault[Fi.Fo]("""{"$type": "upickle.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 32")
-          * - assertErrorMsgDefault[Fi]("""{"$type": "upickle.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 32")
+        test("invalidTag"){
+          test - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
+          test - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
+          test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
+          test - assertErrorMsgDefault[Fi]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
+        }
+
+        test("taggedInvalidBody"){
+          test - assertErrorMsg[Fi.Fo]("""["upickle.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 24")
+          test - assertErrorMsg[Fi]("""["upickle.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 24")
+          test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "upickle.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 32")
+          test - assertErrorMsgDefault[Fi]("""{"$type": "upickle.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 32")
         }
       }
     }
-    'compileErrors - {
+    test("compileErrors"){
       compileError("write(new Object)")
       compileError("""read[Object]("")""")
 //      compileError("""read[Array[Object]]("")""").msg

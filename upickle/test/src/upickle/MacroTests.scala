@@ -60,49 +60,49 @@ object MacroTests extends TestSuite {
 //  implicitly[upickle.old.Writer[ADTs.ADTc]]
 
   val tests = Tests {
-    'mixedIn{
+    test("mixedIn"){
       import MixedIn._
-      * - rw(Obj.ClsB(1), """{"i":1}""")
-      * - rw(Obj.ClsA("omg"), """{"s":"omg"}""")
+      test - rw(Obj.ClsB(1), """{"i":1}""")
+      test - rw(Obj.ClsA("omg"), """{"s":"omg"}""")
      }
 //
 //    /*
 //    // TODO Currently not supported
-//    'declarationWithinFunction {
+//    test("declarationWithinFunction"){
 //      sealed trait Base
 //      case object Child extends Base
 //      case class Wrapper(base: Base)
-//      * - upickle.write(Wrapper(Child))
+//      test - upickle.write(Wrapper(Child))
 //    }
 //
 
 //    */
-    'exponential{
+    test("exponential"){
 
       // Doesn't even need to execute, as long as it can compile
       val ww1 = implicitly[upickle.default.Writer[Exponential.A1]]
     }
 
 
-    'commonCustomStructures{
-      'simpleAdt {
+    test("commonCustomStructures"){
+      test("simpleAdt"){
 
-        * - rw(ADTs.ADT0(), """{}""")
-        * - rw(ADTs.ADTa(1), """{"i":1}""")
-        * - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
+        test - rw(ADTs.ADT0(), """{}""")
+        test - rw(ADTs.ADTa(1), """{"i":1}""")
+        test - rw(ADTs.ADTb(1, "lol"), """{"i":1,"s":"lol"}""")
 
-        * - rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
-        * - rw(
+        test - rw(ADTs.ADTc(1, "lol", (1.1, 1.2)), """{"i":1,"s":"lol","t":[1.1,1.2]}""")
+        test - rw(
           ADTs.ADTd(1, "lol", (1.1, 1.2), ADTs.ADTa(1)),
           """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1}}"""
         )
 
-        * - rw(
+        test - rw(
           ADTs.ADTe(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14)),
           """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14]}"""
         )
 
-        * - rw(
+        test - rw(
           ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
           """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
         )
@@ -113,57 +113,57 @@ object MacroTests extends TestSuite {
         }
 
         val expected = s"""{${chunks.mkString(",")}}"""
-        * - rw(
+        test - rw(
           ADTs.ADTz(1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1", 1, "1"),
           expected
         )
       }
 
-      'sealedHierarchy {
+      test("sealedHierarchy"){
         // objects in sealed case class hierarchies should always read and write
         // the same way (with a tag) regardless of what their static type is when
         // written. This is feasible because sealed hierarchies can only have a
         // finite number of cases, so we can just check them all and decide which
         // class the instance belongs to.
         import Hierarchy._
-        'shallow {
-          * - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
-          * - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
-          * - rw(AnZ: Z, """{"$type": "upickle.Hierarchy.AnZ"}""")
-          * - rw(AnZ, """{"$type": "upickle.Hierarchy.AnZ"}""")
-          * - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
-          * - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
+        test("shallow"){
+          test - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
+          test - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
+          test - rw(AnZ: Z, """{"$type": "upickle.Hierarchy.AnZ"}""")
+          test - rw(AnZ, """{"$type": "upickle.Hierarchy.AnZ"}""")
+          test - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
+          test - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
 
         }
-        'tagLast - {
+        test("tagLast"){
           // Make sure the tagged dictionary parser is able to parse cases where
           // the $type-tag appears later in the dict. It does this by a totally
           // different code-path than for tag-first dicts, using an intermediate
           // AST, so make sure that code path works too.
-          * - rw(C("a", "b"), """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
-          * - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
-          * - rw(C("a", "b"): A, """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
+          test - rw(C("a", "b"), """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
+          test - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
+          test - rw(C("a", "b"): A, """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
         }
-        'deep{
+        test("deep"){
           import DeepHierarchy._
 
-          * - rw(B(1), """{"$type": "upickle.DeepHierarchy.B", "i":1}""")
-          * - rw(B(1): A, """{"$type": "upickle.DeepHierarchy.B", "i":1}""")
-          * - rw(AnQ(1): Q, """{"$type": "upickle.DeepHierarchy.AnQ", "i":1}""")
-          * - rw(AnQ(1), """{"$type": "upickle.DeepHierarchy.AnQ","i":1}""")
+          test - rw(B(1), """{"$type": "upickle.DeepHierarchy.B", "i":1}""")
+          test - rw(B(1): A, """{"$type": "upickle.DeepHierarchy.B", "i":1}""")
+          test - rw(AnQ(1): Q, """{"$type": "upickle.DeepHierarchy.AnQ", "i":1}""")
+          test - rw(AnQ(1), """{"$type": "upickle.DeepHierarchy.AnQ","i":1}""")
 
-          * - rw(F(AnQ(1)), """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":1}}""")
-          * - rw(F(AnQ(2)): A, """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":2}}""")
-          * - rw(F(AnQ(3)): C, """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":3}}""")
-          * - rw(D("1"), """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""")
-          * - rw(D("1"): C, """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""")
-          * - rw(D("1"): A, """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""")
-          * - rw(E(true), """{"$type": "upickle.DeepHierarchy.E", "b":true}""")
-          * - rw(E(true): C, """{"$type": "upickle.DeepHierarchy.E","b":true}""")
-          * - rw(E(true): A, """{"$type": "upickle.DeepHierarchy.E", "b":true}""")
+          test - rw(F(AnQ(1)), """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":1}}""")
+          test - rw(F(AnQ(2)): A, """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":2}}""")
+          test - rw(F(AnQ(3)): C, """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":3}}""")
+          test - rw(D("1"), """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""")
+          test - rw(D("1"): C, """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""")
+          test - rw(D("1"): A, """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""")
+          test - rw(E(true), """{"$type": "upickle.DeepHierarchy.E", "b":true}""")
+          test - rw(E(true): C, """{"$type": "upickle.DeepHierarchy.E","b":true}""")
+          test - rw(E(true): A, """{"$type": "upickle.DeepHierarchy.E", "b":true}""")
         }
       }
-      'singleton {
+      test("singleton"){
         import Singletons._
 
         rw(BB, """{"$type":"upickle.Singletons.BB"}""")
@@ -172,30 +172,30 @@ object MacroTests extends TestSuite {
         rw(CC: AA, """{"$type":"upickle.Singletons.CC"}""")
       }
     }
-    'robustnessAgainstVaryingSchemas {
-      'renameKeysViaAnnotations {
+    test("robustnessAgainstVaryingSchemas"){
+      test("renameKeysViaAnnotations"){
         import Annotated._
 
-        * - rw(B(1), """{"$type": "0", "omg":1}""")
-        * - rw(C("a", "b"), """{"$type": "1", "lol":"a","wtf":"b"}""")
+        test - rw(B(1), """{"$type": "0", "omg":1}""")
+        test - rw(C("a", "b"), """{"$type": "1", "lol":"a","wtf":"b"}""")
 
-        * - rw(B(1): A, """{"$type": "0", "omg":1}""")
-        * - rw(C("a", "b"): A, """{"$type": "1", "lol":"a","wtf":"b"}""")
+        test - rw(B(1): A, """{"$type": "0", "omg":1}""")
+        test - rw(C("a", "b"): A, """{"$type": "1", "lol":"a","wtf":"b"}""")
       }
-      'useDefaults {
+      test("useDefaults"){
         // Ignore the values which match the default when writing and
         // substitute in defaults when reading if the key is missing
         import Defaults._
-        * - rw(ADTa(), "{}")
-        * - rw(ADTa(321), """{"i":321}""")
-        * - rw(ADTb(s = "123"), """{"s":"123"}""")
-        * - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-        * - rw(ADTc(s = "123"), """{"s":"123"}""")
-        * - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
-        * - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
-        * - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
+        test - rw(ADTa(), "{}")
+        test - rw(ADTa(321), """{"i":321}""")
+        test - rw(ADTb(s = "123"), """{"s":"123"}""")
+        test - rw(ADTb(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        test - rw(ADTc(s = "123"), """{"s":"123"}""")
+        test - rw(ADTc(i = 234, s = "567"), """{"i":234,"s":"567"}""")
+        test - rw(ADTc(t = (12.3, 45.6), s = "789"), """{"s":"789","t":[12.3,45.6]}""")
+        test - rw(ADTc(t = (12.3, 45.6), s = "789", i = 31337), """{"i":31337,"s":"789","t":[12.3,45.6]}""")
       }
-      'ignoreExtraFieldsWhenDeserializing {
+      test("ignoreExtraFieldsWhenDeserializing"){
         import ADTs._
         val r1 = read[ADTa]( """{"i":123, "j":false, "k":"haha"}""")
         assert(r1 == ADTa(123))
@@ -204,17 +204,17 @@ object MacroTests extends TestSuite {
       }
     }
 
-    'custom {
-      'clsReaderWriter {
+    test("custom"){
+      test("clsReaderWriter"){
         rw(new Custom.Thing2(1, "s"), """ "1 s" """)
         rw(new Custom.Thing2(10, "sss"), """ "10 sss" """)
       }
-      'caseClsReaderWriter {
+      test("caseClsReaderWriter"){
         rw(new Custom.Thing3(1, "s"), """ "1 s" """)
         rw(new Custom.Thing3(10, "sss"), """ "10 sss" """)
       }
     }
-    'varargs{
+    test("varargs"){
       rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
     }

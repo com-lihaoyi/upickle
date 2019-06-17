@@ -27,7 +27,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
 }
 
 trait CommonTestModule extends CommonModule with TestModule{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.6.9", ivy"com.lihaoyi::acyclic:0.2.0")
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.1", ivy"com.lihaoyi::acyclic:0.2.0")
   def testFrameworks = Seq("upickle.core.UTestFramework")
 }
 trait CommonJvmModule extends CommonPublishModule{
@@ -322,7 +322,7 @@ object bench extends Module {
         case Right(_) =>
           ScalaJSWorkerApi.scalaJSWorker().run(
             toolsClasspath().map(_.path),
-            nodeJSConfig(),
+            jsEnvConfig(),
             fullOpt().path.toIO
           )
           mill.eval.Result.Success(())

@@ -28,10 +28,10 @@ object OptionsAsNullTests extends TestSuite {
   import OptionPickler._
   implicit def rw: OptionPickler.ReadWriter[Thing] = OptionPickler.macroRW
   val tests = TestSuite {
-    'nullAsNone {
+    test("nullAsNone"){
 
       // Quick check to ensure we didn't break anything
-      'primitive {
+      test("primitive"){
         write("A String") ==> "\"A String\""
         read[String]("\"A String\"") ==> "A String"
         write(1) ==> "1"
@@ -40,12 +40,12 @@ object OptionsAsNullTests extends TestSuite {
         read[Thing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> Thing(1, "gg")
       }
 
-      'none {
+      test("none"){
         write[None.type](None) ==> "null"
         read[None.type]("null") ==> None
       }
 
-      'some {
+      test("some"){
         write(Some("abc")) ==> "\"abc\""
         read[Some[String]]("\"abc\"") ==> Some("abc")
         write(Some(1)) ==> "1"
@@ -54,18 +54,18 @@ object OptionsAsNullTests extends TestSuite {
         read[Some[Double]]("3.14159") ==> Some(3.14159)
       }
 
-      'option {
+      test("option"){
         write(Option("abc")) ==> "\"abc\""
         read[Option[String]]("\"abc\"") ==> Some("abc")
       }
 
-      'caseClass {
+      test("caseClass"){
         write(Opt(None, None)) ==> """{"a":null,"b":null}"""
         read[Opt]("""{"a":null,"b":null}""") ==> Opt(None, None)
         write(Opt(Some("abc"), Some(1))) ==> """{"a":"abc","b":1}"""
       }
 
-      'optionCaseClass {
+      test("optionCaseClass"){
         implicit val thingReader = implicitly[Reader[Thing]]
         implicit val thingWriter = implicitly[Writer[Thing]]
 
