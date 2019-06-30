@@ -1,9 +1,6 @@
 sudo: false
 language: scala
 
-before_install:
-- curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.4.1/0.4.1-4-158d11 && chmod +x ~/bin/mill
-
 script:
-- mill -i __.test.test
+- ./mill -i __.test.test
 
