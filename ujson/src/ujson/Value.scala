@@ -20,6 +20,15 @@ sealed trait Value extends Readable {
     case Value.Str(value) => value
     case _ => throw Value.InvalidData(this, "Expected ujson.Str")
   }
+
+  /**
+    * Returns an Optional `String` value of this [[Value]] in case this [[Value]] is a 'String'.
+    */
+  def strOpt = this match{
+    case Str(value) => Some(value)
+    case _ => None
+  }
+
   /**
     * Returns the key/value map of this [[Value]], fails if it is not
     * a [[Value.Obj]]
@@ -27,6 +36,13 @@ sealed trait Value extends Readable {
   def obj = this match{
     case Value.Obj(value) => value
     case _ => throw Value.InvalidData(this, "Expected ujson.Obj")
+  }
+  /**
+    * Returns an Optional key/value map of this [[Value]] in case this [[Value]] is a 'Obj'.
+    */
+  def objOpt = this match{
+    case Obj(value) => Some(value)
+    case _ => None
   }
   /**
     * Returns the elements of this [[Value]], fails if it is not
@@ -37,6 +53,13 @@ sealed trait Value extends Readable {
     case _ => throw Value.InvalidData(this, "Expected ujson.Arr")
   }
   /**
+    * Returns The optional elements of this [[Value]] in case this [[Value]] is a 'Arr'.
+    */
+  def arrOpt = this match{
+    case Arr(value) => Some(value)
+    case _ => None
+  }
+  /**
     * Returns the `Double` value of this [[Value]], fails if it is not
     * a [[Value.Num]]
     */
@@ -45,12 +68,26 @@ sealed trait Value extends Readable {
     case _ => throw Value.InvalidData(this, "Expected ujson.Num")
   }
   /**
+    * Returns an Option[Double] in case this [[Value]] is a 'Num'.
+    */
+  def numOpt = this match{
+    case Num(value) => Some(value)
+    case _ => None
+  }
+  /**
     * Returns the `Boolean` value of this [[Value]], fails if it is not
     * a [[Value.Bool]]
     */
   def bool = this match{
     case Value.Bool(value) => value
     case _ => throw Value.InvalidData(this, "Expected ujson.Bool")
+  }
+  /**
+    * Returns an Optional `Boolean` value of this [[Value]] in case this [[Value]] is a 'Bool'.
+    */
+  def boolOpt = this match{
+    case Bool(value) => Some(value)
+    case _ => None
   }
   /**
     * Returns true if the value of this [[Value]] is ujson.Null, false otherwise
