@@ -602,7 +602,7 @@
       manipulate MessagePack source and data structures without converting them into
       Scala case-classes. This all lives in the @code{upack} package.
     @p
-      uJson comes bundled with uPickle, or can be used stand-alone via the
+      uPack comes bundled with uPickle, or can be used stand-alone via the
       following package coordinates:
 
     @hl.scala
