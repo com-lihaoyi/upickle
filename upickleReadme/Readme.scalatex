@@ -62,6 +62,14 @@
       Supports binary serialization via the MessagePack format, for even faster
       serialization/de-serialization and smaller payloads.
 
+  @p
+    This documentation is meant as a thorough reference to this library. For a hands-on
+    introduction, take a look at the following blog post:
+
+  @ul
+    @li
+      @lnk("How to work with JSON in Scala", "http://www.lihaoyi.com/post/HowtoworkwithJSONinScala.html")
+
   @sect{Getting Started}
     @p
       Add the following to your SBT config:
@@ -73,13 +81,13 @@
       And then you can immediately start writing and reading common Scala
       objects to strings:
 
-    @hl.ref(exampleTests, Seq("'simple", ""))
+    @hl.ref(exampleTests, Seq("\"simple\"", ""))
 
     @p
       Or to compact byte arrays, using the @lnk("MessagePack", "https://msgpack.org/index.html")
       format:
 
-    @hl.ref(exampleTests, Seq("'binary", ""))
+    @hl.ref(exampleTests, Seq("\"binary\"", ""))
 
     @sect{ScalaJS}
       @p
@@ -107,12 +115,12 @@
       @p
         Booleans are serialized as JSON booleans
 
-      @hl.ref(exampleTests, Seq("'more", "'booleans", ""))
+      @hl.ref(exampleTests, Seq("\"more\"", "\"booleans\"", ""))
 
       @p
         Numbers are serialized as JSON numbers
 
-      @hl.ref(exampleTests, Seq("'more", "'numbers", ""))
+      @hl.ref(exampleTests, Seq("\"more\"", "\"numbers\"", ""))
 
       @p
         Except for @hl.scala{Long}s, which too large for Javascript. These are
@@ -120,36 +128,36 @@
          with the browser's own JSON parser, which provides the best
           performance in Scala.js
 
-      @hl.ref(exampleTests, Seq("'more", "'longs", ""))
+      @hl.ref(exampleTests, Seq("\"more\"", "\"longs\"", ""))
 
       @p
         Special values of @hl.scala{Double}s and @hl.scala{Float}s are also
         serialized as Strings
 
-      @hl.ref(exampleTests, Seq("'more", "'specialNumbers", ""))
+      @hl.ref(exampleTests, Seq("\"more\"", "\"specialNumbers\"", ""))
 
 
 
       @p
         Both @hl.scala{Char}s and @hl.scala{String}s are serialized as Strings
 
-      @hl.ref(exampleTests, Seq("'more", "'charStrings", ""))
+      @hl.ref(exampleTests, Seq("\"more\"", "\"charStrings\"", ""))
 
       @p
         @code{Array}s and most immutable collections are serialized as JSON lists
 
-      @hl.ref(exampleTests, Seq("'more", "'seqs", ""))
+      @hl.ref(exampleTests, Seq("\"more\"", "\"seqs\"", ""))
 
       @p
         @code{Option}s are serialized as JSON lists with 0 or 1 element
 
-      @hl.ref(exampleTests, Seq("'more", "'options", ""))
+      @hl.ref(exampleTests, Seq("\"more\"", "\"options\"", ""))
 
 
       @p
         Tuples of all sizes (1-22) are serialized as heterogenous JSON lists
 
-      @hl.ref(exampleTests, Seq("'more", "'tuples", ""))
+      @hl.ref(exampleTests, Seq("\"more\"", "\"tuples\"", ""))
 
       @p
         Case classes of sizes 1-22 are serialized as JSON dictionaries with the
@@ -164,14 +172,14 @@
         After that, you can begin serializing that case class.
 
       @hl.ref(exampleTests, Seq("object Simple", ""))
-      @hl.ref(exampleTests, Seq("'more", "'caseClass", ""), "        }")
+      @hl.ref(exampleTests, Seq("\"more\"", "\"caseClass\"", ""), "        }")
 
       @p
         Sealed hierarchies are serialized as tagged values, the serialized
         object tagged with the full name of the instance's class:
 
       @hl.ref(exampleTests, Seq("object Sealed", ""))
-      @hl.ref(exampleTests, Seq("'more", "'sealed", ""), "  }")
+      @hl.ref(exampleTests, Seq("\"more\"", "\"sealed\"", ""), "  }")
 
       @p
         Serializability is recursive; you can serialize a type only if all
@@ -179,13 +187,13 @@
         case-classes made only of serializable members are themselves serializable
 
       @hl.ref(exampleTests, Seq("object Recursive", ""))
-      @hl.ref(exampleTests, Seq("'more", "'recursive", ""), "  }")
+      @hl.ref(exampleTests, Seq("\"more\"", "\"recursive\"", ""), "  }")
 
       @p
 
         Nulls serialize into JSON nulls, as you would expect
 
-      @hl.ref(exampleTests, Seq("'more", "'null", ""), "  }")
+      @hl.ref(exampleTests, Seq("\"more\"", "\"null\"", ""), "  }")
 
       @p
         uPickle only throws exceptions on unpickling; if a pickler is
@@ -206,8 +214,8 @@
         read from alternate sources such as @code{CharSequence}s, @code{Array[Byte]}s,
         @code{java.io.File}s and @code{java.nio.file.Path}s:
 
-      @hl.ref(exampleTests, Seq("'sources", ""), "  }")
-      @hl.ref(jvmExampleTests, Seq("'sources", ""), "  }")
+      @hl.ref(exampleTests, Seq("\"sources\"", ""), "  }")
+      @hl.ref(jvmExampleTests, Seq("\"sources\"", ""), "  }")
 
       @p
         Reading from large files is automatically streamed so you do not read the
@@ -222,14 +230,14 @@
         If a field is missing upon deserialization, uPickle uses the default
         value if one exists
 
-      @hl.ref(exampleTests, Seq("'defaults", "'reading", ""), "  }")
+      @hl.ref(exampleTests, Seq("\"defaults\"", "\"reading\"", ""), "  }")
 
       @p
 
         If a field at serialization time has the same value as the default,
          uPickle leaves it out of the serialized blob
 
-      @hl.ref(exampleTests, Seq("'defaults", "'writing", ""), "  }")
+      @hl.ref(exampleTests, Seq("\"defaults\"", "\"writing\"", ""), "  }")
 
       @p
 
@@ -298,7 +306,7 @@
 
   @sect{Customization}
     @sect{Custom Picklers}
-      @hl.ref(exampleTests, Seq("'mapped", "'simple", ""), "}")
+      @hl.ref(exampleTests, Seq("\"mapped\"", "\"simple\"", ""), "}")
 
       @p
         You can use the @code{readwriter[T].bimap[V]} function to create a pickler
@@ -323,7 +331,7 @@
         you can use @code{readwriter[Js.Value].bimap} to give yourself access to
         the raw JSON AST:
 
-      @hl.ref(exampleTests, Seq("'mapped", "'Js", ""))
+      @hl.ref(exampleTests, Seq("\"mapped\"", "\"Js\"", ""))
 
     @sect{Custom Keys}
       @p
@@ -333,7 +341,7 @@
 
 
       @hl.ref(exampleTests, Seq("object Keyed", ""))
-      @hl.ref(exampleTests, Seq("'keyed", "'attrs", ""))
+      @hl.ref(exampleTests, Seq("\"keyed\"", "\"attrs\"", ""))
 
       @p
 
@@ -350,7 +358,7 @@
         @hl.scala{@@key} to override what the class is tagged with:
 
       @hl.ref(exampleTests, Seq("object KeyedTag", ""))
-      @hl.ref(exampleTests, Seq("'keyed", "'tag", ""))
+      @hl.ref(exampleTests, Seq("\"keyed\"", "\"tag\"", ""))
 
 
 
@@ -374,7 +382,7 @@
         following example demonstrates how to customize a bundle to
         automatically @code{snake_case} all dictionary keys.
 
-        @hl.ref(exampleTests, Seq("'snakeCase", ""))
+        @hl.ref(exampleTests, Seq("\"snakeCase\"", ""))
 
       @p
         If you are using uPickle to convert JSON from another source into Scala
@@ -455,24 +463,24 @@
       @p
         You can use @code{ujson} to conveniently construct JSON blobs, either
         programmatically:
-      @hl.ref(exampleTests, Seq("'json", "'construction", ""), "}")
+      @hl.ref(exampleTests, Seq("\"json\"", "\"construction\"", ""), "}")
 
       @p
         Or parsing them from strings, byte arrays or files:
 
-      @hl.ref(exampleTests, Seq("'json", "'simple", ""), "}")
+      @hl.ref(exampleTests, Seq("\"json\"", "\"simple\"", ""), "}")
 
       @p
         @code{ujson.Js} ASTs are mutable, and can be modified before being re-serialized
         to strings:
 
-      @hl.ref(exampleTests, Seq("'json", "'mutable", ""), "}")
+      @hl.ref(exampleTests, Seq("\"json\"", "\"mutable\"", ""), "}")
 
       @p
         You can also use the `_` shorthand syntax to update a JSON value in
         place, without having to duplicate the whole path:
 
-      @hl.ref(exampleTests, Seq("'json", "'update", ""), "}")
+      @hl.ref(exampleTests, Seq("\"json\"", "\"update\"", ""), "}")
 
       @p
         case classes or other Scala data structures can be converted to
@@ -480,7 +488,7 @@
         @code{ujson.Js} ASTs can be converted back using @code{upickle.default.readJs}
         or plain @code{upickle.default.read}:
 
-      @hl.ref(exampleTests, Seq("'json", "'intermediate", ""), "}")
+      @hl.ref(exampleTests, Seq("\"json\"", "\"intermediate\"", ""), "}")
 
     @sect{JSON Utilities}
       @p
@@ -509,7 +517,7 @@
       @p
         This is done using the @code{ujson.transform(source, dest)} function:
 
-      @hl.ref(exampleTests, Seq("'json", "'misc", ""), "}")
+      @hl.ref(exampleTests, Seq("\"json\"", "\"misc\"", ""), "}")
 
       @p
         All transformations from A to B using @code{ujson.transform} happen
@@ -520,7 +528,7 @@
         You can use @code{ujson.transform} to validate JSON in a streaming
         fashion:
 
-      @hl.ref(exampleTests, Seq("'json", "'validate", ""), "}")
+      @hl.ref(exampleTests, Seq("\"json\"", "\"validate\"", ""), "}")
 
       @p
         The normal @code{upickle.default.read/write} methods to serialize Scala
@@ -528,7 +536,7 @@
         using a @code{upickle.default.transform(foo)} as the source or a
         @code{upickle.default.reader[Foo]} as the destination:
 
-      @hl.ref(exampleTests, Seq("'json", "'upickleDefault", ""), "}")
+      @hl.ref(exampleTests, Seq("\"json\"", "\"upickleDefault\"", ""), "}")
 
     @sect{Other ASTs}
       @p
@@ -560,28 +568,28 @@
           libraryDependencies += "com.lihaoyi" %% "ujson-argonaut" % "0.7.5"
 
         @b{Usage}
-        @hl.ref(jvmExampleTests, Seq("'argonaut", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("\"argonaut\"", ""), "}")
 
       @sect{Circe}
         @b{Maven Coordinates}
         @hl.scala
           libraryDependencies += "com.lihaoyi" %% "ujson-circe" % "0.7.5"
         @b{Usage}
-        @hl.ref(jvmExampleTests, Seq("'circe", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("\"circe\"", ""), "}")
 
       @sect{Play-Json}
         @b{Maven Coordinates}
         @hl.scala
           libraryDependencies += "com.lihaoyi" %% "ujson-play" % "0.7.5"
         @b{Usage}
-        @hl.ref(jvmExampleTests, Seq("'play", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("\"playJson\"", ""), "}")
 
       @sect{Json4s}
         @b{Maven Coordinates}
         @hl.scala
           libraryDependencies += "com.lihaoyi" %% "ujson-json4s" % "0.7.5"
         @b{Usage}
-        @hl.ref(jvmExampleTests, Seq("'json4s", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("\"json4s\"", ""), "}")
 
       @sect{Cross-Library Conversions}
         @p
@@ -593,7 +601,7 @@
           perform more transformations, and finally serialize it back to a
           String and check that both transformations were applied:
 
-        @hl.ref(jvmExampleTests, Seq("'crossAst", ""), "}")
+        @hl.ref(jvmExampleTests, Seq("\"crossAst\"", ""), "}")
 
   @sect{uPack}
 
@@ -621,25 +629,25 @@
       and manipulation, without needing to bind it to Scala case classes or data
       types:
 
-    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgConstruction", ""))
+    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("\"msgConstruction\"", ""))
 
     @p
       You can read/write Scala values to @code{upack.Msg}s using @code{readBinary}/@code{writeMsg}:
 
-    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgReadWrite", ""))
+    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("\"msgReadWrite\"", ""))
 
     @p
       Or include @code{upack.Msg}s inside @code{Seq}s, case-classes and other
       data structures when you read/write them:
 
-    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgInsideValue", ""))
+    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("\"msgInsideValue\"", ""))
 
     @p
       You can also convert the uPack messages or binaries to @code{ujson.Value}s via
       @code{upack.transform}. This can be handy to help debug what's going on in your
       binary message data:
 
-    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("'msgToJson", ""))
+    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("\"msgToJson\"", ""))
 
     @p
       Note that such a conversion between MessagePack structs and JSON data is
