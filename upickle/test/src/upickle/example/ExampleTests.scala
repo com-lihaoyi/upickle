@@ -7,7 +7,7 @@ import upickle.{TestUtil, default}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
 import ujson.{IncompleteParseException, ParseException, Readable}
-import ujson.{BytesRenderer, Js, StringRenderer}
+import ujson.{BytesRenderer, Value, StringRenderer}
 import upickle.core.{NoOpVisitor, Visitor}
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
@@ -252,7 +252,7 @@ object ExampleTests extends TestSuite {
         write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==> "[1,10,100]"
         read[Seq[Wrap]]("[1,10,100]") ==> Seq(Wrap(1), Wrap(10), Wrap(100))
       }
-      test("Js"){
+      test("Value"){
         import upickle.default._
         case class Bar(i: Int, s: String)
         implicit val fooReadWrite: ReadWriter[Bar] =
@@ -395,7 +395,7 @@ object ExampleTests extends TestSuite {
     }
     test("json"){
       test("construction"){
-        import ujson.Js
+        import ujson.Value
 
         val json0 = ujson.Arr(
           ujson.Obj("myFieldA" -> ujson.Num(1), "myFieldB" -> ujson.Str("g")),
@@ -429,7 +429,7 @@ object ExampleTests extends TestSuite {
       }
       test("mutable"){
         val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
-        val json: ujson.Js = ujson.read(str)
+        val json: ujson.Value = ujson.read(str)
 
         json.arr.remove(1)
         json(0)("myFieldA") = 1337
@@ -439,7 +439,7 @@ object ExampleTests extends TestSuite {
       }
       test("update"){
         val str = """[{"myFieldA":1,"myFieldB":"g"},{"myFieldA":2,"myFieldB":"k"}]"""
-        val json: ujson.Js = ujson.read(str)
+        val json: ujson.Value = ujson.read(str)
 
         json(0)("myFieldA") = _.num + 100
         json(1)("myFieldB") = _.str + "lol"
@@ -506,7 +506,7 @@ object ExampleTests extends TestSuite {
         // It can be used for parsing JSON into an AST
         val exampleAst = ujson.Arr(1, 2, 3)
 
-        ujson.transform("[1, 2, 3]", Js) ==> exampleAst
+        ujson.transform("[1, 2, 3]", Value) ==> exampleAst
 
         // Rendering the AST to a string
         ujson.transform(exampleAst, StringRenderer()).toString ==> "[1,2,3]"
