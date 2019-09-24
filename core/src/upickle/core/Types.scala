@@ -184,18 +184,16 @@ trait Types{ types =>
     }
   }
 
-  abstract class CaseR[V](val argCount: Int) extends SimpleReader[V]{
+  abstract class CaseR[V] extends SimpleReader[V]{
     override def expectedMsg = "expected dictionary"
     trait CaseObjectContext extends ObjVisitor[Any, V]{
-      val aggregated = new Array[Any](argCount)
-      val found = new Array[Boolean](argCount)
+      def storeAggregatedValue(currentIndex: Int, v: Any): Unit
+      var found = 0L
       var currentIndex = -1
-      var count = 0
       def visitValue(v: Any, index: Int): Unit = {
-        if (currentIndex != -1 && !found(currentIndex)) {
-          count += 1
-          aggregated(currentIndex) = v
-          found(currentIndex) = true
+        if (currentIndex != -1 && ((found & (1 << currentIndex)) == 0)) {
+          storeAggregatedValue(currentIndex, v)
+          found |= (1 << currentIndex)
         }
       }
     }
@@ -212,7 +210,7 @@ trait Types{ types =>
       }
     }
   }
-  class SingletonR[T](t: T) extends CaseR[T](0){
+  class SingletonR[T](t: T) extends CaseR[T]{
     override def expectedMsg = "expected dictionary"
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
       def subVisitor = NoOpVisitor

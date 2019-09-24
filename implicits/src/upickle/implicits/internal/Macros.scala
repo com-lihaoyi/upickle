@@ -245,16 +245,24 @@ object Macros {
                   targetType: c.Type,
                   varargs: Boolean) = {
       val defaults = deriveDefaults(companion, hasDefaults)
+
       q"""
-        lazy val localReaders = Array[${c.prefix}.Reader[_]](
+        new ${c.prefix}.CaseR[$targetType]{
           ..${
             for (i <- rawArgs.indices)
-            yield q"implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
+            yield q"lazy val ${TermName("localReader" + i)} = implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
           }
-        )
-
-        new ${c.prefix}.CaseR[$targetType](${rawArgs.length}){
           override def visitObject(length: Int, index: Int) = new CaseObjectContext{
+            ..${
+              for (i <- rawArgs.indices)
+              yield q"var ${TermName("aggregated" + i)}: ${argTypes(i)} = _"
+            }
+            def storeAggregatedValue(currentIndex: Int, v: Any): Unit = currentIndex match{
+              case ..${
+                for (i <- rawArgs.indices)
+                yield cq"$i => ${TermName("aggregated" + i)} = v.asInstanceOf[${argTypes(i)}]"
+              }
+            }
             def visitKey(index: Int) = upickle.core.StringVisitor
             def visitKeyValue(s: Any) = {
               currentIndex = ${c.prefix}.objectAttributeKeyReadMap(s.toString).toString match {
@@ -269,13 +277,14 @@ object Macros {
             def visitEnd(index: Int) = {
               ..${
                 for(i <- rawArgs.indices if hasDefaults(i))
-                yield q"if (!found($i)) {count += 1; found($i) = true; aggregated($i) = ${defaults(i)}}"
+                yield q"if ((found & (1 << $i)) == 0) {found |= (1 << $i); storeAggregatedValue($i, ${defaults(i)})}"
               }
-              if (count != argCount){
+
+              if (found != ${(1 << rawArgs.length) - 1}){
                 var i = 0
                 val keys = for{
                   i <- 0 until ${rawArgs.length}
-                  if !found(i)
+                  if (found & (1 << i)) == 0
                 } yield i match{
                   case ..${
                     for (i <- mappedArgs.indices)
@@ -290,15 +299,19 @@ object Macros {
                 ..${
                   for(i <- rawArgs.indices)
                   yield
-                    if (i == rawArgs.length - 1 && varargs) q"aggregated($i).asInstanceOf[${argTypes(i)}]:_*"
-                    else q"aggregated($i).asInstanceOf[${argTypes(i)}]"
+                    if (i == rawArgs.length - 1 && varargs) q"${TermName("aggregated" + i)}:_*"
+                    else q"${TermName("aggregated" + i)}"
                 }
               )
             }
 
-            def subVisitor: upickle.core.Visitor[_, _] =
-              if (currentIndex == -1) upickle.core.NoOpVisitor
-              else localReaders(currentIndex)
+            def subVisitor: upickle.core.Visitor[_, _] = currentIndex match{
+              case -1 => upickle.core.NoOpVisitor
+              case ..${
+                for (i <- rawArgs.indices)
+                yield cq"$i => ${TermName("localReader" + i)} "
+              }
+            }
           }
         }
       """
