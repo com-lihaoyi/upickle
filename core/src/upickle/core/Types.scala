@@ -191,9 +191,9 @@ trait Types{ types =>
       var found = 0L
       var currentIndex = -1
       def visitValue(v: Any, index: Int): Unit = {
-        if (currentIndex != -1 && ((found & (1 << currentIndex)) == 0)) {
+        if (currentIndex != -1 && ((found & (1L << currentIndex)) == 0)) {
           storeAggregatedValue(currentIndex, v)
-          found |= (1 << currentIndex)
+          found |= (1L << currentIndex)
         }
       }
     }
