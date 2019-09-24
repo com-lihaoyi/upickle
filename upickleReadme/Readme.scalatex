@@ -302,7 +302,7 @@
         The following common operations are available on any uPickle module,
         e.g. @code{upickle.default} or @code{upickle.legacy}:
 
-      @hl.ref(wd/'upickle/'src/'upickle/"Api.scala", Seq("trait Api", ""), "// End Api")
+      @hl.ref(wd/'upickle/'src/'upickle/"Api.scala", Seq("trait Api"), "// End Api")
 
   @sect{Customization}
     @sect{Custom Picklers}

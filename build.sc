@@ -166,25 +166,12 @@ object ujson extends Module{
     def artifactName = "ujson"
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = T{
-        if (scalaVersion() == "2.13.0") Agg()
-        else Agg(
-          ivy"org.scalatest::scalatest::3.0.7",
-          ivy"org.scalacheck::scalacheck::1.14.0"
+        Agg(
+          ivy"org.scalatest::scalatest::3.0.8",
+          ivy"org.scalacheck::scalacheck::1.14.1"
         )
       }
-      def sources = T.sources(
-        if (scalaVersion() == "2.13.0") Nil
-        else super.sources()
-      )
-
-      def test(args: String*) = T.command{
-        /*do nothing*/
-        ("", Nil)
-      }
-      def testFrameworks = T{
-        if (scalaVersion() == "2.13.0") Nil
-        else Seq("org.scalatest.tools.Framework")
-      }
+      def testFrameworks = Seq("org.scalatest.tools.Framework")
     }
   }
 
@@ -201,49 +188,45 @@ object ujson extends Module{
     object test extends Tests with JawnTestModule
   }
 
-  object argonaut extends Cross[ArgonautModule]("2.12.8")
+  object argonaut extends Cross[ArgonautModule]("2.12.8", "2.13.0")
   class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.3")
   }
-  object json4s extends Cross[Json4sModule]("2.12.8")
+  object json4s extends Cross[Json4sModule]("2.12.8", "2.13.0")
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
-      ivy"org.json4s::json4s-ast:3.6.5",
-      ivy"org.json4s::json4s-native:3.6.5"
+      ivy"org.json4s::json4s-ast:3.6.7",
+      ivy"org.json4s::json4s-native:3.6.7"
     )
   }
 
-  object circe extends Cross[CirceModule]("2.12.8")
+  object circe extends Cross[CirceModule]("2.12.8", "2.13.0")
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.11.1")
+    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.12.1")
   }
 
-  object play extends Cross[PlayModule]("2.12.8")
+  object play extends Cross[PlayModule]("2.12.8", "2.13.0")
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-play"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
-      ivy"com.typesafe.play::play-json:2.7.2",
-      ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4"
+      ivy"com.typesafe.play::play-json:2.7.4"
     )
   }
 }
 
 trait UpickleModule extends CommonPublishModule{
   def artifactName = "upickle"
-//  def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-//    ivy"com.lihaoyi::acyclic:0.2.0"
-//  )
   def compileIvyDeps = Agg(
     ivy"com.lihaoyi::acyclic:0.2.0",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
@@ -265,8 +248,7 @@ object upickle extends Module{
 
     object test extends Tests with CommonModule{
       def moduleDeps = {
-        if (crossScalaVersion == "2.13.0") super.moduleDeps ++ Seq(core.jvm().test)
-        else super.moduleDeps ++ Seq(
+        super.moduleDeps ++ Seq(
           ujson.argonaut(),
           ujson.circe(),
           ujson.json4s(),
@@ -274,15 +256,6 @@ object upickle extends Module{
           core.jvm().test
         )
       }
-      def sources = T.sources (
-        if (crossScalaVersion == "2.13.0") super.sources().filter(!_.path.last.contains("-jvm"))
-        else super.sources()
-      )
-      def ivyDeps = T {
-        if (crossScalaVersion == "2.13.0") super.ivyDeps()
-        else super.ivyDeps() ++ bench.jvm.ivyDeps()
-      }
-      def testFrameworks = Seq("upickle.core.UTestFramework")
     }
   }
 
@@ -301,10 +274,10 @@ trait BenchModule extends CommonModule{
   def scalaVersion = "2.12.8"
   def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.11.1",
-    ivy"io.circe::circe-generic::0.11.1",
-    ivy"io.circe::circe-parser::0.11.1",
-    ivy"com.typesafe.play::play-json::2.7.2",
+    ivy"io.circe::circe-core::0.12.1",
+    ivy"io.circe::circe-generic::0.12.1",
+    ivy"io.circe::circe-parser::0.12.1",
+    ivy"com.typesafe.play::play-json::2.7.4",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.5",
     ivy"com.lihaoyi::sourcecode::0.1.5",
