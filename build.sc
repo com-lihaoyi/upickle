@@ -271,7 +271,7 @@ object upickle extends Module{
 }
 
 trait BenchModule extends CommonModule{
-  def scalaVersion = "2.12.8"
+  def scalaVersion = "2.13.0"
   def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
     ivy"io.circe::circe-core::0.12.1",
@@ -279,8 +279,8 @@ trait BenchModule extends CommonModule{
     ivy"io.circe::circe-parser::0.12.1",
     ivy"com.typesafe.play::play-json::2.7.4",
     ivy"io.argonaut::argonaut:6.2.3",
-    ivy"org.json4s::json4s-ast:3.6.5",
-    ivy"com.lihaoyi::sourcecode::0.1.5",
+    ivy"org.json4s::json4s-ast:3.6.7",
+    ivy"com.lihaoyi::sourcecode::0.1.7",
   )
 }
 
@@ -288,7 +288,7 @@ object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
     def scalaJSVersion = "0.6.28"
     def platformSegment = "js"
-    def moduleDeps = Seq(upickle.js("2.12.8").test)
+    def moduleDeps = Seq(upickle.js("2.13.0").test)
     def run(args: String*) = T.command {
       finalMainClassOpt() match{
         case Left(err) => mill.eval.Result.Failure(err)
@@ -305,9 +305,9 @@ object bench extends Module {
 
   object jvm extends BenchModule {
     def platformSegment = "jvm"
-    def moduleDeps = Seq(upickle.jvm("2.12.8").test)
+    def moduleDeps = Seq(upickle.jvm("2.13.0").test)
     def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.8",
+      ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.10",
       ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
     )
   }

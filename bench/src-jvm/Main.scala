@@ -18,31 +18,31 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(500, 5000, 25000)){
+    for(duration <- Seq(500, 5000, 5000)){
       println("RUN JVM: " + duration)
       println()
 
-      Main.ujsonAst(duration)
-      Main.upackAst(duration)
-      Main.playJsonAst(duration)
-      Main.uJsonPlayJsonAst(duration)
-      Main.circeJsonAst(duration)
-      Main.uJsonCirceJsonAst(duration)
-      Main.argonautJsonAst(duration)
-      Main.uJsonArgonautJsonAst(duration)
-      Main.json4sJsonAst(duration)
-      Main.uJsonJson4sJsonAst(duration)
+//      Main.ujsonAst(duration)
+//      Main.upackAst(duration)
+//      Main.playJsonAst(duration)
+//      Main.uJsonPlayJsonAst(duration)
+//      Main.circeJsonAst(duration)
+//      Main.uJsonCirceJsonAst(duration)
+//      Main.argonautJsonAst(duration)
+//      Main.uJsonArgonautJsonAst(duration)
+//      Main.json4sJsonAst(duration)
+//      Main.uJsonJson4sJsonAst(duration)
 
-      Main.jacksonModuleScala(duration)
-      Common.playJson(duration)
-      Common.circe(duration)
+//      Main.jacksonModuleScala(duration)
+//      Common.playJson(duration)
+//      Common.circe(duration)
       Common.upickleDefault(duration)
       Common.upickleLegacy(duration)
       Common.upickleBinaryDefault(duration)
       Common.upickleBinaryLegacy(duration)
 //      Common.genCodec(duration)
-      Common.playJsonCached(duration)
-      Common.circeCached(duration)
+//      Common.playJsonCached(duration)
+//      Common.circeCached(duration)
       Common.upickleDefaultCached(duration)
       Common.upickleLegacyCached(duration)
       Common.upickleDefaultBinaryCached(duration)
@@ -166,5 +166,4 @@ object Main{
       mapper.writeValueAsString(_)
     )
   }
-
 }

@@ -246,21 +246,23 @@ object Macros {
                   varargs: Boolean) = {
       val defaults = deriveDefaults(companion, hasDefaults)
 
+      val localReaders = for (i <- rawArgs.indices) yield TermName("localReader" + i)
+      val aggregates = for (i <- rawArgs.indices) yield TermName("aggregated" + i)
       q"""
+        ..${
+          for (i <- rawArgs.indices)
+          yield q"private[this] lazy val ${localReaders(i)} = implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
+        }
         new ${c.prefix}.CaseR[$targetType]{
-          ..${
-            for (i <- rawArgs.indices)
-            yield q"lazy val ${TermName("localReader" + i)} = implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
-          }
           override def visitObject(length: Int, index: Int) = new CaseObjectContext{
             ..${
               for (i <- rawArgs.indices)
-              yield q"var ${TermName("aggregated" + i)}: ${argTypes(i)} = _"
+              yield q"private[this] var ${aggregates(i)}: ${argTypes(i)} = _"
             }
             def storeAggregatedValue(currentIndex: Int, v: Any): Unit = currentIndex match{
               case ..${
                 for (i <- rawArgs.indices)
-                yield cq"$i => ${TermName("aggregated" + i)} = v.asInstanceOf[${argTypes(i)}]"
+                yield cq"$i => ${aggregates(i)} = v.asInstanceOf[${argTypes(i)}]"
               }
             }
             def visitKey(index: Int) = upickle.core.StringVisitor
@@ -299,8 +301,8 @@ object Macros {
                 ..${
                   for(i <- rawArgs.indices)
                   yield
-                    if (i == rawArgs.length - 1 && varargs) q"${TermName("aggregated" + i)}:_*"
-                    else q"${TermName("aggregated" + i)}"
+                    if (i == rawArgs.length - 1 && varargs) q"${aggregates(i)}:_*"
+                    else q"${aggregates(i)}"
                 }
               )
             }
@@ -309,7 +311,7 @@ object Macros {
               case -1 => upickle.core.NoOpVisitor
               case ..${
                 for (i <- rawArgs.indices)
-                yield cq"$i => ${TermName("localReader" + i)} "
+                yield cq"$i => ${localReaders(i)} "
               }
             }
           }

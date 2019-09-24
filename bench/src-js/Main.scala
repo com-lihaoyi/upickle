@@ -8,12 +8,12 @@ import upickle.Recursive.{End, LL, Node}
 import scala.scalajs.js
 object Main{
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(500, 5000, 25000)){
+    for(duration <- Seq(500, 5000, 5000)){
       println("RUN JS: " + duration)
       println()
-      rawJsonParseSerialize(duration)
-      Common.playJson(duration)
-      Common.circe(duration)
+//      rawJsonParseSerialize(duration)
+//      Common.playJson(duration)
+//      Common.circe(duration)
       Common.upickleDefault(duration)
       Common.upickleLegacy(duration)
       Common.upickleBinaryDefault(duration)
@@ -21,8 +21,8 @@ object Main{
 //      Common.genCodec(duration)
       upickleWebDefault(duration)
       upickleWebLegacy(duration)
-      Common.playJsonCached(duration)
-      Common.circeCached(duration)
+//      Common.playJsonCached(duration)
+//      Common.circeCached(duration)
       Common.upickleDefaultCached(duration)
       Common.upickleLegacyCached(duration)
       Common.upickleDefaultBinaryCached(duration)

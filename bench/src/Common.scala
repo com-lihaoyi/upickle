@@ -1,6 +1,5 @@
 package upickle
 
-
 object Common{
   import ADTs.ADT0
   import Defaults._
@@ -22,7 +21,6 @@ object Common{
   )
   val benchmarkSampleJson = upickle.default.write(benchmarkSampleData)
   val benchmarkSampleMsgPack = upickle.default.writeBinary(benchmarkSampleData)
-
 
   def circe(duration: Int) = {
     import io.circe._
