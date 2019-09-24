@@ -14,49 +14,49 @@ sealed trait Value extends Readable {
 
   /**
     * Returns the `String` value of this [[Value]], fails if it is not
-    * a [[Value.Str]]
+    * a [[ujson.Str]]
     */
   def str = this match{
-    case Value.Str(value) => value
+    case ujson.Str(value) => value
     case _ => throw Value.InvalidData(this, "Expected ujson.Str")
   }
   /**
     * Returns the key/value map of this [[Value]], fails if it is not
-    * a [[Value.Obj]]
+    * a [[ujson.Obj]]
     */
   def obj = this match{
-    case Value.Obj(value) => value
+    case ujson.Obj(value) => value
     case _ => throw Value.InvalidData(this, "Expected ujson.Obj")
   }
   /**
     * Returns the elements of this [[Value]], fails if it is not
-    * a [[Value.Arr]]
+    * a [[ujson.Arr]]
     */
   def arr = this match{
-    case Value.Arr(value) => value
+    case ujson.Arr(value) => value
     case _ => throw Value.InvalidData(this, "Expected ujson.Arr")
   }
   /**
     * Returns the `Double` value of this [[Value]], fails if it is not
-    * a [[Value.Num]]
+    * a [[ujson.Num]]
     */
   def num = this match{
-    case Value.Num(value) => value
+    case ujson.Num(value) => value
     case _ => throw Value.InvalidData(this, "Expected ujson.Num")
   }
   /**
     * Returns the `Boolean` value of this [[Value]], fails if it is not
-    * a [[Value.Bool]]
+    * a [[ujson.Bool]]
     */
   def bool = this match{
-    case Value.Bool(value) => value
+    case ujson.Bool(value) => value
     case _ => throw Value.InvalidData(this, "Expected ujson.Bool")
   }
   /**
     * Returns true if the value of this [[Value]] is ujson.Null, false otherwise
     */
   def isNull = this match {
-    case Value.Null => true
+    case ujson.Null => true
     case _ => false
   }
 
@@ -130,7 +130,7 @@ object Value extends AstTransformer[Value]{
                              (implicit f: T => Value) = Arr.from(items.map(f))
   implicit def JsonableDict[T](items: TraversableOnce[(String, T)])
                               (implicit f: T => Value)= Obj.from(items.map(x => (x._1, f(x._2))))
-  implicit def JsonableBoolean(i: Boolean) = if (i) Value.True else Value.False
+  implicit def JsonableBoolean(i: Boolean) = if (i) ujson.True else ujson.False
   implicit def JsonableByte(i: Byte) = Num(i)
   implicit def JsonableShort(i: Short) = Num(i)
   implicit def JsonableInt(i: Int) = Num(i)
@@ -143,37 +143,37 @@ object Value extends AstTransformer[Value]{
 
   def transform[T](j: Value, f: Visitor[_, T]): T = {
     j match{
-      case Value.Null => f.visitNull(-1)
-      case Value.True => f.visitTrue(-1)
-      case Value.False => f.visitFalse(-1)
-      case Value.Str(s) => f.visitString(s, -1)
-      case Value.Num(d) => f.visitFloat64(d, -1)
-      case Value.Arr(items) => transformArray(f, items)
-      case Value.Obj(items) => transformObject(f, items)
+      case ujson.Null => f.visitNull(-1)
+      case ujson.True => f.visitTrue(-1)
+      case ujson.False => f.visitFalse(-1)
+      case ujson.Str(s) => f.visitString(s, -1)
+      case ujson.Num(d) => f.visitFloat64(d, -1)
+      case ujson.Arr(items) => transformArray(f, items)
+      case ujson.Obj(items) => transformObject(f, items)
     }
   }
 
-  def visitArray(length: Int, index: Int) = new AstArrVisitor[ArrayBuffer](xs => Value.Arr(xs))
+  def visitArray(length: Int, index: Int) = new AstArrVisitor[ArrayBuffer](xs => ujson.Arr(xs))
 
-  def visitObject(length: Int, index: Int) = new AstObjVisitor[mutable.LinkedHashMap[String, Value]](xs => Value.Obj(xs))
+  def visitObject(length: Int, index: Int) = new AstObjVisitor[mutable.LinkedHashMap[String, Value]](xs => ujson.Obj(xs))
 
-  def visitNull(index: Int) = Value.Null
+  def visitNull(index: Int) = ujson.Null
 
-  def visitFalse(index: Int) = Value.False
+  def visitFalse(index: Int) = ujson.False
 
-  def visitTrue(index: Int) = Value.True
+  def visitTrue(index: Int) = True
 
 
   override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-    Value.Num(
+    ujson.Num(
       if (decIndex != -1 || expIndex != -1) s.toString.toDouble
       else Util.parseIntegralNum(s, decIndex, expIndex, index)
     )
   }
 
-  override def visitFloat64(d: Double, index: Int) = Value.Num(d)
+  override def visitFloat64(d: Double, index: Int) = ujson.Num(d)
 
-  def visitString(s: CharSequence, index: Int) = Value.Str(s.toString)
+  def visitString(s: CharSequence, index: Int) = ujson.Str(s.toString)
 
   /**
     * Thrown when uPickle tries to convert a JSON blob into a given data

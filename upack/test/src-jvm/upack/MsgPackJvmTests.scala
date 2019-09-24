@@ -27,8 +27,8 @@ object MsgPackJvmTests extends TestSuite{
       val expectedJson = ujson.read(readBytes(casesJson))
       val msg = readMsgs(casesMsg)
       val msgCompact = readMsgs(casesCompactMsg)
-      val jsonMsg = upack.transform(msg, ujson.Js)
-      val jsonMsgCompact = upack.transform(msgCompact, ujson.Js)
+      val jsonMsg = upack.transform(msg, ujson.Value)
+      val jsonMsgCompact = upack.transform(msgCompact, ujson.Value)
       val writtenMsg = Util.bytesToString(upack.write(msg))
       val rewrittenMsg = Util.bytesToString(
         upack.write(upack.read(upack.write(msg)))
