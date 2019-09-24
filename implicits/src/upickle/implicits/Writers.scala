@@ -98,9 +98,10 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
       }
     }
   }
-  implicit def MapWriter[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[Map[K, V]] = {
-    if (kw eq StringWriter) new Writer[Map[String, V]]{
-      def write0[R](out: Visitor[_, R], v: Map[String, V]): R = {
+  def MapWriter0[M[A, B] <: collection.Map[A, B], K, V]
+                (implicit kw: Writer[K], vw: Writer[V]): Writer[M[K, V]] = {
+    if (kw eq StringWriter) new Writer[M[String, V]]{
+      def write0[R](out: Visitor[_, R], v: M[String, V]): R = {
         val ctx = out.visitObject(v.size, -1).narrow
         for(pair <- v){
           val (k1, v1) = pair
@@ -111,8 +112,17 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
         }
         ctx.visitEnd(-1)
       }
-    }.asInstanceOf[Writer[Map[K, V]]]
-    else SeqLikeWriter[Seq, (K, V)].comap[Map[K, V]](_.toSeq)
+    }.asInstanceOf[Writer[M[K, V]]]
+    else SeqLikeWriter[Seq, (K, V)].comap[M[K, V]](_.toSeq)
+  }
+  implicit def MapWriter1[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[collection.Map[K, V]] = {
+    MapWriter0[collection.Map, K, V]
+  }
+  implicit def MapWriter2[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[collection.immutable.Map[K, V]] = {
+    MapWriter0[collection.immutable.Map, K, V]
+  }
+  implicit def MapWriter3[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[collection.mutable.Map[K, V]] = {
+    MapWriter0[collection.mutable.Map, K, V]
   }
 
   implicit val DurationWriter = new Writer[Duration]{

@@ -124,10 +124,12 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
   implicit val BigDecimalReader: Reader[BigDecimal] = new MapStringReader(s => BigDecimal(s.toString))
   implicit val SymbolReader: Reader[Symbol] = new MapStringReader(s => Symbol(s.toString))
 
-  implicit def MapReader[K, V](implicit k: Reader[K], v: Reader[V]): Reader[Map[K, V]] = {
-    if (k ne StringReader) SeqLikeReader[Array, (K, V)].map(_.toMap)
-    else new SimpleReader[Map[K, V]]{
-      override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Map[K, V]] {
+  def MapReader0[M[A, B] <: collection.Map[A, B], K, V]
+                (make: Iterable[(K, V)] => M[K, V])
+                (implicit k: Reader[K], v: Reader[V]): Reader[M[K, V]] = {
+    if (k ne StringReader) SeqLikeReader[Array, (K, V)].map(x => make(x))
+    else new SimpleReader[M[K, V]]{
+      override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, M[K, V]] {
         val strings = mutable.Buffer.empty[K]
         val values = mutable.Buffer.empty[V]
         def subVisitor = v
@@ -140,11 +142,28 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
 
         def visitValue(v: Any, index: Int): Unit = values.append(v.asInstanceOf[V])
 
-        def visitEnd(index: Int) = strings.zip(values).toMap
+        def visitEnd(index: Int) = make(strings.zip(values))
 
       }
 
       def expectedMsg = "expected map"
+    }
+  }
+  implicit def MapReader1[K, V](implicit k: Reader[K], v: Reader[V]): Reader[collection.Map[K, V]] = {
+    MapReader0[collection.Map, K, V](_.toMap)
+  }
+  implicit def MapReader2[K, V](implicit k: Reader[K], v: Reader[V]): Reader[collection.immutable.Map[K, V]] = {
+    MapReader0[collection.immutable.Map, K, V]{seq =>
+      val b = collection.immutable.Map.newBuilder[K, V]
+      seq.foreach(b += _)
+      b.result()
+    }
+  }
+  implicit def MapReader3[K, V](implicit k: Reader[K], v: Reader[V]): Reader[collection.mutable.Map[K, V]] = {
+    MapReader0[collection.mutable.Map, K, V]{seq =>
+      val b = collection.mutable.Map.newBuilder[K, V]
+      seq.foreach(b += _)
+      b.result()
     }
   }
 

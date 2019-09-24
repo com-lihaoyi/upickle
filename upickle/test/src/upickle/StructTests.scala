@@ -67,12 +67,36 @@ object StructTests extends TestSuite {
           Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
           "[[[],[1]],[[1],[1,2,3]]]"
         )
+        test("Structured2") - rw(
+          collection.mutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
+          "[[[],[1]],[[1],[1,2,3]]]"
+        )
+        test("Structured3") - rw(
+          collection.immutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
+          "[[[],[1]],[[1],[1,2,3]]]"
+        )
+        test("Structured4") - rw(
+          collection.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
+          "[[[],[1]],[[1],[1,2,3]]]"
+        )
         test("StructuredEmpty") - rw(
           Map[List[Int], List[Int]](),
           "[]"
         )
         test("String") - rw(
           Map("Hello" -> List(1), "World" -> List(1, 2, 3)),
+          """{"Hello":[1],"World":[1,2,3]}"""
+        )
+        test("String2") - rw(
+          collection.Map("Hello" -> List(1), "World" -> List(1, 2, 3)),
+          """{"Hello":[1],"World":[1,2,3]}"""
+        )
+        test("String3") - rw(
+          collection.immutable.Map("Hello" -> List(1), "World" -> List(1, 2, 3)),
+          """{"Hello":[1],"World":[1,2,3]}"""
+        )
+        test("String4") - rw(
+          collection.mutable.Map("Hello" -> List(1), "World" -> List(1, 2, 3)),
           """{"Hello":[1],"World":[1,2,3]}"""
         )
         test("StringEmpty") - rw(
