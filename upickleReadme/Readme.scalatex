@@ -862,6 +862,13 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{0.8.0}
+      @ul
+        @li
+          Improved performance by avoiding allocations in deserialization hot paths
+          @lnk("#284", "https://github.com/lihaoyi/upickle/pull/284")
+        @li
+          Add null-safe cast helpers @lnk("#274", "https://github.com/lihaoyi/upickle/pull/274")
     @sect{0.7.5}
       @ul
         @li
