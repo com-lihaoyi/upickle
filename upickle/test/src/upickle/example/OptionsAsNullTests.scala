@@ -15,11 +15,11 @@ object OptionPickler extends upickle.AttributeTagged {
       case Some(x) => x
     }
 
-  override implicit def OptionReader[T: Reader]: Reader[Option[T]] =
-    implicitly[Reader[T]].mapNulls{
-      case null => None
-      case x => Some(x)
+  override implicit def OptionReader[T: Reader]: Reader[Option[T]] = {
+    new Reader.Delegate[Any, Option[T]](implicitly[Reader[T]].map(Some(_))){
+      override def visitNull(index: Int) = None
     }
+  }
 }
 // end_ex
 
