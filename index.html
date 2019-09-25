@@ -57,13 +57,13 @@
 span.hljs-tag, span.hljs-symbol{
     background: none;
 }
-    </style><title>µPickle 0.7.5</title><script src="scripts.js"></script></head><body><div>
+    </style><title>µPickle 0.8.0</title><script src="scripts.js"></script></head><body><div>
 
 
 
 <a href="https://github.com/lihaoyi/upickle-pprint"><img style="position: absolute;top: 0px;right: 0px;border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" /></a>
 
-<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="µPickle0.7.5" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">µPickle 0.7.5<a class=" scalatex-site-Styles-headerLink" href="#µPickle0.7.5" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="µPickle0.8.0" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">µPickle 0.8.0<a class=" scalatex-site-Styles-headerLink" href="#µPickle0.8.0" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
   <div style="display: flex;align-items: center;flex-direction: column;">
     <div>
       <a href="https://gitter.im/lihaoyi/upickle"><img src="https://badges.gitter.im/Join%20Chat.svg" /></a>
@@ -107,10 +107,8 @@ span.hljs-tag, span.hljs-symbol{
       <a href="http://www.lihaoyi.com/post/HowtoworkwithJSONinScala.html">How to work with JSON in Scala</a>
 </li></ul>
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="GettingStarted" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Getting Started<a class=" scalatex-site-Styles-headerLink" href="#GettingStarted" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
-    <p>
-      Add the following to your SBT config:</p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;upickle&quot; % &quot;0.7.5&quot;
-
+    <pre><code class="scala scalatex-site-Styles-highlightMe">&quot;com.lihaoyi&quot; %% &quot;upickle&quot; % &quot;0.8.0&quot; // SBT
+ivy&quot;com.lihaoyi::upickle:0.8.0&quot; // Mill
 </code></pre>
     <p>
       And then you can immediately start writing and reading common Scala
@@ -149,9 +147,10 @@ readBinary[(Int, String, Boolean)](serializedTuple) ==&gt; (1, &quot;omg&quot;, 
     <h1 id="ScalaJS" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ScalaJS" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>ScalaJS</h1>
       <p>
         For ScalaJS applications, use this dependencies instead:</p>
-      <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %%% &quot;upickle&quot; % &quot;0.7.5&quot;</code></pre>
+      <pre><code class="scala scalatex-site-Styles-highlightMe">&quot;com.lihaoyi&quot; %%% &quot;upickle&quot; % &quot;0.8.0&quot; // SBT
+ivy&quot;com.lihaoyi::upickle::0.8.0&quot; // Mill</code></pre>
       <p>
-        Other than that, everything is used the same way. upickle-0.7.5
+        Other than that, everything is used the same way. upickle-0.8.0
         is only compatible with ScalaJS 0.6.x.
 </p>
     <h1 id="Scala2.10" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Scala2.10" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Scala 2.10</h1>
@@ -457,74 +456,76 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
         The following common operations are available on any uPickle module,
         e.g. <code>upickle.default</code> or <code>upickle.legacy</code>:
 </p>
-      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">extends upickle.core.Types
-with implicits.Readers
-with implicits.Writers
-with WebJson
-with Api.NoOpMappers
-with JsReadWriters
-with MsgReadWriters{
-*
-* Reads the given MessagePack input into a Scala value
-*/
-f readBinary[T: Reader](s: upack.Readable): T = s.transform(reader[T])
+      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">trait Api
+    extends upickle.core.Types
+    with implicits.Readers
+    with implicits.Writers
+    with WebJson
+    with Api.NoOpMappers
+    with JsReadWriters
+    with MsgReadWriters{
+  /**
+    * Reads the given MessagePack input into a Scala value
+    */
+  def readBinary[T: Reader](s: upack.Readable): T = s.transform(reader[T])
 
-*
-* Reads the given JSON input into a Scala value
-*/
-f read[T: Reader](s: ujson.Readable): T = s.transform(reader[T])
+  /**
+    * Reads the given JSON input into a Scala value
+    */
+  def read[T: Reader](s: ujson.Readable): T = s.transform(reader[T])
 
-f reader[T: Reader] = implicitly[Reader[T]]
+  def reader[T: Reader] = implicitly[Reader[T]]
 
-*
-* Write the given Scala value as a JSON string
-*/
-f write[T: Writer](t: T,
-                   indent: Int = -1,
-                   escapeUnicode: Boolean = false): String = {
-transform(t).to(ujson.StringRenderer(indent, escapeUnicode)).toString
+  /**
+    * Write the given Scala value as a JSON string
+    */
+  def write[T: Writer](t: T,
+                       indent: Int = -1,
+                       escapeUnicode: Boolean = false): String = {
+    transform(t).to(ujson.StringRenderer(indent, escapeUnicode)).toString
+  }
+  /**
+    * Write the given Scala value as a MessagePack binary
+    */
+  def writeBinary[T: Writer](t: T): Array[Byte] = {
+    transform(t).to(new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
+  }
 
-*
-* Write the given Scala value as a MessagePack binary
-*/
-f writeBinary[T: Writer](t: T): Array[Byte] = {
-transform(t).to(new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
+  /**
+    * Write the given Scala value as a JSON struct
+    */
+  def writeJs[T: Writer](t: T): ujson.Value = transform(t).to[ujson.Value]
 
+  /**
+    * Write the given Scala value as a MessagePack struct
+    */
+  def writeMsg[T: Writer](t: T): upack.Msg = transform(t).to[upack.Msg]
 
-*
-* Write the given Scala value as a JSON struct
-*/
-f writeJs[T: Writer](t: T): ujson.Value = transform(t).to[ujson.Value]
+  /**
+    * Write the given Scala value as a JSON string to the given Writer
+    */
+  def writeTo[T: Writer](t: T,
+                         out: java.io.Writer,
+                         indent: Int = -1,
+                         escapeUnicode: Boolean = false): Unit = {
+    transform(t).to(new ujson.Renderer(out, indent = indent, escapeUnicode))
+  }
+  /**
+    * Write the given Scala value as a MessagePack binary to the given OutputStream
+    */
+  def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
+    transform(t).to(new upack.MsgPackWriter(out))
+  }
 
-*
-* Write the given Scala value as a MessagePack struct
-*/
-f writeMsg[T: Writer](t: T): upack.Msg = transform(t).to[upack.Msg]
+  def writer[T: Writer] = implicitly[Writer[T]]
 
-*
-* Write the given Scala value as a JSON string to the given Writer
-*/
-f writeTo[T: Writer](t: T,
-                     out: java.io.Writer,
-                     indent: Int = -1,
-                     escapeUnicode: Boolean = false): Unit = {
-transform(t).to(new ujson.Renderer(out, indent = indent, escapeUnicode))
+  def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
 
-*
-* Write the given Scala value as a MessagePack binary to the given OutputStream
-*/
-f writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
-transform(t).to(new upack.MsgPackWriter(out))
-
-
-f writer[T: Writer] = implicitly[Writer[T]]
-
-f readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
-
-se class transform[T: Writer](t: T) extends upack.Readable with ujson.Readable {
-def transform[V](f: Visitor[_, V]): V = writer[T].transform(t, f)
-def to[V](f: Visitor[_, V]): V = transform(f)
-def to[V](implicit f: Reader[V]): V = transform(f)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/master/upickle/src/upickle/Api.scala#L16-L85" target="_blank"><i class="fa fa-link "></i></a></pre>
+  case class transform[T: Writer](t: T) extends upack.Readable with ujson.Readable {
+    def transform[V](f: Visitor[_, V]): V = writer[T].transform(t, f)
+    def to[V](f: Visitor[_, V]): V = transform(f)
+    def to[V](implicit f: Reader[V]): V = transform(f)
+  }</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/master/upickle/src/upickle/Api.scala#L15-L85" target="_blank"><i class="fa fa-link "></i></a></pre>
 
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Customization" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Customization<a class=" scalatex-site-Styles-headerLink" href="#Customization" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <h1 id="CustomPicklers" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CustomPicklers" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Custom Picklers</h1>
@@ -689,11 +690,11 @@ SnakePickle.read[Thing](&quot;&quot;&quot;{&quot;my_field_a&quot;:1,&quot;my_fie
       case Some(x) =&gt; x
     }
 
-  override implicit def OptionReader[T: Reader]: Reader[Option[T]] =
-    implicitly[Reader[T]].mapNulls{
-      case null =&gt; None
-      case x =&gt; Some(x)
+  override implicit def OptionReader[T: Reader]: Reader[Option[T]] = {
+    new Reader.Delegate[Any, Option[T]](implicitly[Reader[T]].map(Some(_))){
+      override def visitNull(index: Int) = None
     }
+  }
 }</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/master/upickle/test/src/upickle/example/OptionsAsNullTests.scala#L10-L23" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
@@ -790,13 +791,13 @@ object TypedFoo{
       uJson comes bundled with uPickle, or can be used stand-alone via the
       following package coordinates:
 </p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson&quot; % &quot;0.7.5&quot;
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson&quot; % &quot;0.8.0&quot;
 </code></pre>
     <h1 id="Construction" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Construction" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Construction</h1>
       <p>
         You can use <code>ujson</code> to conveniently construct JSON blobs, either
         programmatically:</p>
-      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">import ujson.Js
+      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">import ujson.Value
 
 val json0 = ujson.Arr(
   ujson.Obj(&quot;myFieldA&quot; -&gt; ujson.Num(1), &quot;myFieldB&quot; -&gt; ujson.Str(&quot;g&quot;)),
@@ -827,7 +828,7 @@ ujson.write(json)         ==&gt; str</code><a class=" scalatex-site-Styles-heade
         to strings:
 </p>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val str = &quot;&quot;&quot;[{&quot;myFieldA&quot;:1,&quot;myFieldB&quot;:&quot;g&quot;},{&quot;myFieldA&quot;:2,&quot;myFieldB&quot;:&quot;k&quot;}]&quot;&quot;&quot;
-val json: ujson.Js = ujson.read(str)
+val json: ujson.Value = ujson.read(str)
 
 json.arr.remove(1)
 json(0)(&quot;myFieldA&quot;) = 1337
@@ -838,7 +839,7 @@ json(0)(&quot;myFieldB&quot;) = json(0)(&quot;myFieldB&quot;).str + &quot;lols&q
         place, without having to duplicate the whole path:
 </p>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val str = &quot;&quot;&quot;[{&quot;myFieldA&quot;:1,&quot;myFieldB&quot;:&quot;g&quot;},{&quot;myFieldA&quot;:2,&quot;myFieldB&quot;:&quot;k&quot;}]&quot;&quot;&quot;
-val json: ujson.Js = ujson.read(str)
+val json: ujson.Value = ujson.read(str)
 
 json(0)(&quot;myFieldA&quot;) = _.num + 100
 json(1)(&quot;myFieldB&quot;) = _.str + &quot;lol&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/master/upickle/test/src/upickle/example/ExampleTests.scala#L440-L446" target="_blank"><i class="fa fa-link "></i></a></pre>
@@ -932,7 +933,7 @@ def reformatTo(s: Readable, out: java.io.Writer, indent: Int = -1, escapeUnicode
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">// It can be used for parsing JSON into an AST
 val exampleAst = ujson.Arr(1, 2, 3)
 
-ujson.transform(&quot;[1, 2, 3]&quot;, Js) ==&gt; exampleAst
+ujson.transform(&quot;[1, 2, 3]&quot;, Value) ==&gt; exampleAst
 
 // Rendering the AST to a string
 ujson.transform(exampleAst, StringRenderer()).toString ==&gt; &quot;[1,2,3]&quot;
@@ -1010,7 +1011,7 @@ ujson.transform(upickle.default.transform(Seq(1, 2, 3)), StringRenderer()).toStr
       <h2 id="Argonaut" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Argonaut" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Argonaut</h2>
         <b>Maven Coordinates</b>
 
-        <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson-argonaut&quot; % &quot;0.7.5&quot;
+        <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson-argonaut&quot; % &quot;0.8.0&quot;
 </code></pre>
         <b>Usage</b>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">import ujson.argonaut.ArgonautJson
@@ -1035,7 +1036,7 @@ stringified ==&gt; &quot;&quot;&quot;[&quot;HELLO&quot;,&quot;WORLD&quot;]&quot;
 
       <h2 id="Circe" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Circe" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Circe</h2>
         <b>Maven Coordinates</b>
-        <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson-circe&quot; % &quot;0.7.5&quot;</code></pre>
+        <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson-circe&quot; % &quot;0.8.0&quot;</code></pre>
         <b>Usage</b>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">import ujson.circe.CirceJson
 val circeJson: io.circe.Json = CirceJson(
@@ -1060,7 +1061,7 @@ stringified ==&gt; &quot;&quot;&quot;[&quot;HELLO&quot;,&quot;WORLD&quot;]&quot;
 
       <h2 id="Play-Json" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Play-Json" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Play-Json</h2>
         <b>Maven Coordinates</b>
-        <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson-play&quot; % &quot;0.7.5&quot;</code></pre>
+        <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson-play&quot; % &quot;0.8.0&quot;</code></pre>
         <b>Usage</b>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">import ujson.play.PlayJson
 import play.api.libs.json._
@@ -1088,7 +1089,7 @@ stringified ==&gt; &quot;&quot;&quot;[&quot;HELLO&quot;,&quot;WORLD&quot;]&quot;
 
       <h2 id="Json4s" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Json4s" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Json4s</h2>
         <b>Maven Coordinates</b>
-        <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson-json4s&quot; % &quot;0.7.5&quot;</code></pre>
+        <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;ujson-json4s&quot; % &quot;0.8.0&quot;</code></pre>
         <b>Usage</b>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">import org.json4s.JsonAST
 val json4sJson: JsonAST.JValue = Json4sJson(
@@ -1158,7 +1159,7 @@ stringified ==&gt; &quot;&quot;&quot;[&quot;OLLEH&quot;,&quot;DLROW&quot;]&quot;
       uPack comes bundled with uPickle, or can be used stand-alone via the
       following package coordinates:
 </p>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;upack&quot; % &quot;0.7.5&quot;
+    <pre><code class="scala scalatex-site-Styles-highlightMe">libraryDependencies += &quot;com.lihaoyi&quot; %% &quot;upack&quot; % &quot;0.8.0&quot;
 </code></pre>
     <p>
       The following basic functions are provided in the <code>upack</code> package
@@ -1464,6 +1465,13 @@ upack.transform(msg2, new ujson.StringRenderer()).toString ==&gt; &quot;&quot;&q
       JSON library, and inherits a lot of it's performance from Erik's work.
 </p>
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="VersionHistory" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Version History<a class=" scalatex-site-Styles-headerLink" href="#VersionHistory" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <h1 id="0.8.0" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.8.0" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.8.0</h1>
+      <ul>
+        <li>
+          Improved performance by avoiding allocations in deserialization hot paths
+          <a href="https://github.com/lihaoyi/upickle/pull/284">#284</a></li>
+        <li>
+          Add null-safe cast helpers <a href="https://github.com/lihaoyi/upickle/pull/274">#274</a></li></ul>
     <h1 id="0.7.5" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#0.7.5" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>0.7.5</h1>
       <ul>
         <li>
@@ -1789,7 +1797,7 @@ upack.transform(msg2, new ujson.StringRenderer()).toString ==&gt; &quot;&quot;&q
           Specification of the exception-throwing behavior: instead of failing with random <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">MatchError</code>s or similar, parse failures now are restricted to subclasses <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">upickle.Invalid</code> which define different failure modes.</li></ul></div>
 </div><script>
     scalatex.scrollspy.Controller().main(
-      [{"value":"µPickle 0.7.5","children":[{"value":"Getting Started","children":[{"value":"ScalaJS","children":[]},{"value":"Scala 2.10","children":[]}]},{"value":"Basics","children":[{"value":"Builtins","children":[]},{"value":"Read/Writing Other Things","children":[]},{"value":"Defaults","children":[]},{"value":"Supported Types","children":[]},{"value":"Common Operations","children":[]}]},{"value":"Customization","children":[{"value":"Custom Picklers","children":[]},{"value":"Custom Keys","children":[]},{"value":"Custom Configuration","children":[]}]},{"value":"Limitations","children":[{"value":"Manual Sealed Trait Picklers","children":[]}]},{"value":"uJson","children":[{"value":"Construction","children":[]},{"value":"JSON Utilities","children":[]},{"value":"Transformations","children":[]},{"value":"Other ASTs","children":[{"value":"Argonaut","children":[]},{"value":"Circe","children":[]},{"value":"Play-Json","children":[]},{"value":"Json4s","children":[]},{"value":"Cross-Library Conversions","children":[]}]}]},{"value":"uPack","children":[]},{"value":"Performance","children":[{"value":"JVM Case Class Serialization Performance","children":[]},{"value":"JVM AST Serialization Performance","children":[]},{"value":"JS Case Class Serialization Performance","children":[]}]},{"value":"Version History","children":[{"value":"0.7.5","children":[]},{"value":"0.7.1","children":[]},{"value":"0.6.7","children":[]},{"value":"0.6.6","children":[]},{"value":"0.6.5","children":[]},{"value":"0.6.4","children":[]},{"value":"0.6.3","children":[]},{"value":"0.6.2","children":[]},{"value":"0.6.0","children":[]},{"value":"0.5.1","children":[]},{"value":"0.4.3","children":[]},{"value":"0.4.1","children":[]},{"value":"0.4.1","children":[]},{"value":"0.4.0","children":[]},{"value":"0.3.9","children":[]},{"value":"0.3.8","children":[]},{"value":"0.3.7","children":[]},{"value":"0.3.6","children":[]},{"value":"0.3.5","children":[]},{"value":"0.3.4","children":[]},{"value":"0.3.3","children":[]},{"value":"0.3.2","children":[]},{"value":"0.3.1","children":[]},{"value":"0.3.0","children":[]},{"value":"0.2.8","children":[]},{"value":"0.2.7","children":[]},{"value":"0.2.6","children":[]},{"value":"0.2.5","children":[]},{"value":"0.2.4","children":[]},{"value":"0.2.3","children":[]},{"value":"0.2.2","children":[]},{"value":"0.2.1","children":[]},{"value":"0.2.0","children":[]},{"value":"0.1.7","children":[]},{"value":"0.1.6","children":[]},{"value":"0.1.5","children":[]},{"value":"0.1.4","children":[]},{"value":"0.1.3","children":[]}]}]}]
+      [{"value":"µPickle 0.8.0","children":[{"value":"Getting Started","children":[{"value":"ScalaJS","children":[]},{"value":"Scala 2.10","children":[]}]},{"value":"Basics","children":[{"value":"Builtins","children":[]},{"value":"Read/Writing Other Things","children":[]},{"value":"Defaults","children":[]},{"value":"Supported Types","children":[]},{"value":"Common Operations","children":[]}]},{"value":"Customization","children":[{"value":"Custom Picklers","children":[]},{"value":"Custom Keys","children":[]},{"value":"Custom Configuration","children":[]}]},{"value":"Limitations","children":[{"value":"Manual Sealed Trait Picklers","children":[]}]},{"value":"uJson","children":[{"value":"Construction","children":[]},{"value":"JSON Utilities","children":[]},{"value":"Transformations","children":[]},{"value":"Other ASTs","children":[{"value":"Argonaut","children":[]},{"value":"Circe","children":[]},{"value":"Play-Json","children":[]},{"value":"Json4s","children":[]},{"value":"Cross-Library Conversions","children":[]}]}]},{"value":"uPack","children":[]},{"value":"Performance","children":[{"value":"JVM Case Class Serialization Performance","children":[]},{"value":"JVM AST Serialization Performance","children":[]},{"value":"JS Case Class Serialization Performance","children":[]}]},{"value":"Version History","children":[{"value":"0.8.0","children":[]},{"value":"0.7.5","children":[]},{"value":"0.7.1","children":[]},{"value":"0.6.7","children":[]},{"value":"0.6.6","children":[]},{"value":"0.6.5","children":[]},{"value":"0.6.4","children":[]},{"value":"0.6.3","children":[]},{"value":"0.6.2","children":[]},{"value":"0.6.0","children":[]},{"value":"0.5.1","children":[]},{"value":"0.4.3","children":[]},{"value":"0.4.1","children":[]},{"value":"0.4.1","children":[]},{"value":"0.4.0","children":[]},{"value":"0.3.9","children":[]},{"value":"0.3.8","children":[]},{"value":"0.3.7","children":[]},{"value":"0.3.6","children":[]},{"value":"0.3.5","children":[]},{"value":"0.3.4","children":[]},{"value":"0.3.3","children":[]},{"value":"0.3.2","children":[]},{"value":"0.3.1","children":[]},{"value":"0.3.0","children":[]},{"value":"0.2.8","children":[]},{"value":"0.2.7","children":[]},{"value":"0.2.6","children":[]},{"value":"0.2.5","children":[]},{"value":"0.2.4","children":[]},{"value":"0.2.3","children":[]},{"value":"0.2.2","children":[]},{"value":"0.2.1","children":[]},{"value":"0.2.0","children":[]},{"value":"0.1.7","children":[]},{"value":"0.1.6","children":[]},{"value":"0.1.5","children":[]},{"value":"0.1.4","children":[]},{"value":"0.1.3","children":[]}]}]}]
   )</script><script>
     ['DOMContentLoaded', 'load'].forEach(function(ev){
       addEventListener(ev, function(){
@@ -1799,4 +1807,4 @@ upack.transform(msg2, new ujson.StringRenderer()).toString ==&gt; &quot;&quot;&q
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
