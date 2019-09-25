@@ -57,6 +57,7 @@ object OptionsAsNullTests extends TestSuite {
       test("option"){
         write(Option("abc")) ==> "\"abc\""
         read[Option[String]]("\"abc\"") ==> Some("abc")
+        read[Option[String]]("null") ==> None
       }
 
       test("caseClass"){
@@ -75,6 +76,60 @@ object OptionsAsNullTests extends TestSuite {
 
         write(Option(Thing(1, "gg"))) ==> """{"myFieldA":1,"myFieldB":"gg"}"""
         read[Option[Thing]]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> Option(Thing(1, "gg"))
+      }
+
+      // New tests.  Work as expected.
+      'customPickler {
+        // Custom pickler copied from the documentation
+        class CustomThing2(val i: Int, val s: String)
+
+        object CustomThing2 {
+          implicit val rw = /*upickle.default*/ OptionPickler.readwriter[String].bimap[CustomThing2](
+            x => x.i + " " + x.s,
+            str => {
+              val Array(i, s) = str.split(" ", 2)
+              new CustomThing2(i.toInt, s)
+            }
+          )
+        }
+
+        'customClass {
+          write(new CustomThing2(10, "Custom")) ==> "\"10 Custom\""
+          val r = read[CustomThing2]("\"10 Custom\"")
+          assert(r.i == 10, r.s == "Custom")
+        }
+
+        'optCustomClass_Some {
+          write(Some(new CustomThing2(10, "Custom"))) ==> "\"10 Custom\""
+          val r = read[Option[CustomThing2]]("\"10 Custom\"")
+          assert(r.get.i == 10, r.get.s == "Custom")
+        }
+
+        'optCustomClass_None {
+          read[Option[CustomThing2]]("null") ==> None
+        }
+
+      }
+
+      // Copied from ExampleTests
+      'Js {
+        import OptionPickler._   // changed from upickle.default._
+        case class Bar(i: Int, s: String)
+        implicit val fooReadWrite: ReadWriter[Bar] =
+          readwriter[ujson.Value].bimap[Bar](
+            x => ujson.Arr(x.s, x.i),
+            json => new Bar(json(1).num.toInt, json(0).str)
+          )
+
+        write(Bar(123, "abc")) ==> """["abc",123]"""
+        read[Bar]("""["abc",123]""") ==> Bar(123, "abc")
+
+        // New tests.  Last one fails.  Why?
+        'option {
+          'write {write(Some(Bar(123, "abc"))) ==> """["abc",123]"""}
+          'readSome {read[Option[Bar]]("""["abc",123]""") ==> Some(Bar(123, "abc"))}
+          'readNull {read[Option[Bar]]("""null""") ==> None}
+        }
       }
 
     }
