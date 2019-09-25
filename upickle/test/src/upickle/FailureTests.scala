@@ -156,6 +156,33 @@ object FailureTests extends TestSuite {
       // Make sure this doesn't hang the compiler =/
       compileError("implicitly[upickle.default.Reader[Nothing]]")
     }
+    test("expWholeNumbers"){
+      upickle.default.read[Byte]("0e0") ==> 0.toByte
+      upickle.default.read[Short]("0e0") ==> 0
+      upickle.default.read[Char]("0e0") ==> 0.toChar
+      upickle.default.read[Int]("0e0") ==> 0
+      upickle.default.read[Long]("0e0") ==> 0
+
+      upickle.default.read[Byte]("10e1") ==> 100
+      upickle.default.read[Short]("10e1") ==> 100
+      upickle.default.read[Char]("10e1") ==> 100
+      upickle.default.read[Int]("10e1") ==> 100
+      upickle.default.read[Long]("10e1") ==> 100
+
+      upickle.default.read[Byte]("10.1e1") ==> 101
+      upickle.default.read[Short]("10.1e1") ==> 101
+      upickle.default.read[Char]("10.1e1") ==> 101
+      upickle.default.read[Int]("10.1e1") ==> 101
+      upickle.default.read[Long]("10.1e1") ==> 101
+
+      // Not supporting these for now, since AFAIK none of the
+      // JSON serializers I know generate numbers of this form
+//      upickle.default.read[Byte]("10e-1") ==> 1
+//      upickle.default.read[Short]("10e-1") ==> 1
+//      upickle.default.read[Char]("10e-1") ==> 1
+//      upickle.default.read[Int]("10e-1") ==> 1
+//      upickle.default.read[Long]("10e-1") ==> 1
+    }
     test("tooManyFields"){
       val b63 = Big63(
         0, 1, 2, 3, 4, 5, 6, 7,

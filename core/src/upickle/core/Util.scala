@@ -40,7 +40,11 @@ object Util {
       }
 
     val intPortion = {
-      val end = if(decIndex != -1) decIndex else s.length
+      val end =
+        if(decIndex != -1) decIndex
+        else if (expIndex != -1) expIndex
+        else s.length
+
       parseLong(s, 0, end) * expMul
     }
 
