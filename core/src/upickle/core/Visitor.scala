@@ -161,8 +161,8 @@ object Visitor{
     override def visitFloat64(d: Double, index: Int) = {
       delegatedReader.visitFloat64(d, index)
     }
-    override def visitObject(length: Int, index: Int) = delegatedReader.visitObject(-1, index)
-    override def visitArray(length: Int, index: Int) = delegatedReader.visitArray(-1, index)
+    override def visitObject(length: Int, index: Int) = delegatedReader.visitObject(length, index)
+    override def visitArray(length: Int, index: Int) = delegatedReader.visitArray(length, index)
 
     override def visitFloat32(d: Float, index: Int) = delegatedReader.visitFloat32(d, index)
     override def visitInt32(i: Int, index: Int) = delegatedReader.visitInt32(i, index)
