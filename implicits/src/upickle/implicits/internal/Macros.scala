@@ -4,7 +4,7 @@ import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 import compat._
 import acyclic.file
-import upickle.implicits.key
+import upickle.implicits.{discriminator, key}
 
 import language.higherKinds
 import language.existentials
@@ -209,14 +209,25 @@ object Macros {
     def annotate(tpe: c.Type)(derived: c.universe.Tree) = {
       val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
       sealedParent.fold(derived) { parent =>
-        val index = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
-        q"${c.prefix}.annotate($derived, $index)"
+        val tagName = customDiscriminator(parent) match {
+          case Some(customName) => Literal(Constant(customName))
+          case None => q"${c.prefix}.tagName"
+        }
+        val tag = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
+        q"""${c.prefix}.annotate($derived, $tagName, $tag)"""
       }
     }
 
     def customKey(sym: c.Symbol): Option[String] = {
         sym.annotations
           .find(_.tpe == typeOf[key])
+          .flatMap(_.scalaArgs.headOption)
+          .map{case Literal(Constant(s)) => s.toString}
+    }
+
+    def customDiscriminator(sym: c.Symbol): Option[String] = {
+        sym.annotations
+          .find(_.tpe == typeOf[discriminator])
           .flatMap(_.scalaArgs.headOption)
           .map{case Literal(Constant(s)) => s.toString}
     }

@@ -88,9 +88,21 @@ trait Api
 object Api{
   trait NoOpMappers{
 
+    /**
+      * Transforms object keys.
+      * e.g. {"food_group": "vegetable"} => {"FoodGroup": "vegetable"}
+      *
+      * @see http://www.lihaoyi.com/upickle/#CustomConfiguration
+      */
     def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
     def objectAttributeKeyWriteMap(s: CharSequence): CharSequence = s
 
+    /**
+      * Transforms sealed trait/class $type discriminator values.
+      * e.g. {"$type": "com.lihaoyi.Bee"} => {"$type": "com-lihaoyi-bee"}
+      *
+      * @see http://www.lihaoyi.com/upickle/#CustomConfiguration
+      */
     def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
     def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
   }
@@ -109,10 +121,10 @@ object default extends AttributeTagged{
  */
 object legacy extends LegacyApi
 trait LegacyApi extends Api{
-  def annotate[V](rw: Reader[V], n: String) = new TaggedReader.Leaf[V](n, rw)
+  def annotate[V](rw: Reader[V], tagName: String, tag: String) = new TaggedReader.Leaf[V](tagName, tag, rw)
 
-  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]) = {
-    new TaggedWriter.Leaf[V](c, n, rw)
+  def annotate[V](rw: CaseW[V], tagName: String, tag: String)(implicit c: ClassTag[V]) = {
+    new TaggedWriter.Leaf[V](c, tagName, tag, rw)
   }
 
   def taggedExpectedMsg = "expected sequence"
@@ -167,13 +179,18 @@ trait LegacyApi extends Api{
  * of the attribute is.
  */
 trait AttributeTagged extends Api{
+  /**
+    * Default discriminator field name.
+    * Overridable here globally, or for a specific class hierarcy using the
+    * [[com.rallyhealth.weepickle.v1.implicits.discriminator]] annotation.
+    */
   def tagName = "$type"
-  def annotate[V](rw: CaseR[V], n: String) = {
-    new TaggedReader.Leaf[V](n, rw)
+  def annotate[V](rw: CaseR[V], tagName: String, tag: String) = {
+    new TaggedReader.Leaf[V](tagName, tag, rw)
   }
 
-  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]) = {
-    new TaggedWriter.Leaf[V](c, n, rw)
+  def annotate[V](rw: CaseW[V], tagName: String, tag: String)(implicit c: ClassTag[V]) = {
+    new TaggedWriter.Leaf[V](c, tagName, tag, rw)
   }
 
   def taggedExpectedMsg = "expected dictionary"
@@ -192,7 +209,7 @@ trait AttributeTagged extends Api{
       def visitKeyValue(s: Any): Unit = {
         if (context != null) context.visitKeyValue(s)
         else {
-          if (s.toString == tagName) () //do nothing
+          if (s.toString == taggedReader.tagName) () //do nothing
           else {
             // otherwise, go slow path
             val slowCtx = IndexedValue.Builder.visitObject(-1, index).narrow
@@ -222,7 +239,8 @@ trait AttributeTagged extends Api{
         else if (fastPath) context.visitEnd(index).asInstanceOf[T]
         else{
           val x = context.visitEnd(index).asInstanceOf[IndexedValue.Obj]
-          val keyAttr = x.value0.find(_._1.toString == tagName).get._2
+          val tagInfo = x.value0.find(_._1.toString == taggedReader.tagName).getOrElse(throw Abort(s"missing tag key: ${taggedReader.tagName}"))
+          val keyAttr = tagInfo._2
           val key = keyAttr.asInstanceOf[IndexedValue.Str].value0.toString
           val delegate = taggedReader.findReader(key)
           if (delegate == null){
@@ -232,7 +250,7 @@ trait AttributeTagged extends Api{
           for (p <- x.value0) {
             val (k0, v) = p
             val k = k0.toString
-            if (k != tagName){
+            if (k != taggedReader.tagName){
               val keyVisitor = ctx2.visitKey(-1)
 
               ctx2.visitKeyValue(keyVisitor.visitString(k, -1))
@@ -245,7 +263,7 @@ trait AttributeTagged extends Api{
 
     }
   }
-  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
+  def taggedWrite[T, R](w: CaseW[T], tagName: String, tag: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, -1)
     val keyVisitor = ctx.visitKey(-1)
 
