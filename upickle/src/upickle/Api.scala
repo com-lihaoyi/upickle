@@ -163,7 +163,7 @@ trait LegacyApi extends Api{
     }
 
   }
-  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
+  def taggedWrite[T, R](w: CaseW[T], tagName: String, tag: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(2, -1)
     ctx.visitValue(out.visitString(objectTypeKeyWriteMap(tag), -1), -1)
 

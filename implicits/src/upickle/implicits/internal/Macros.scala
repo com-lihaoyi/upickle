@@ -211,7 +211,11 @@ object Macros {
       sealedParent.fold(derived) { parent =>
         val tagName = customDiscriminator(parent) match {
           case Some(customName) => Literal(Constant(customName))
-          case None => q"${c.prefix}.tagName"
+          case None =>
+            c.prefix.actualType.members.find(_.name == TermName("tagName")) match {
+              case None => Literal(Constant("$type")) // legacyApi doesn't use this.
+              case Some(_) => q"${c.prefix}.tagName"
+            }
         }
         val tag = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
         q"""${c.prefix}.annotate($derived, $tagName, $tag)"""

@@ -56,7 +56,7 @@ object Keyed{
   }
 }
 object KeyedTag{
-  @discriminator("customDiscriminator")
+  @upickle.implicits.discriminator("customDiscriminator")
   sealed trait A
   object A{
     implicit val rw: RW[A] = RW.merge(B.rw, macroRW[C.type])
