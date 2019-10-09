@@ -861,6 +861,10 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{master}
+      @ul
+        @li
+          Basic support for GADTs @lnk("#288", "https://github.com/lihaoyi/upickle/pull/288")
     @sect{0.8.0}
       @ul
         @li
