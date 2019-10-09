@@ -69,32 +69,27 @@ object Macros {
         }
       defaults
     }
+
     /**
       * If a super-type is generic, find all the subtypes, but at the same time
       * fill in all the generic type parameters that are based on the super-type's
       * concrete type
       */
-    def fleshedOutSubtypes(tpe: TypeRef) = {
-      // Get ready to run this twice because for some reason scalac always
-      // drops the type arguments from the subclasses the first time we
-      // run this in 2.10.x
-      def impl =
-        for{
-          subtypeSym <- tpe.typeSymbol.asClass.knownDirectSubclasses.filter(!_.toString.contains("<local child>"))
-          if subtypeSym.isType
-          st = subtypeSym.asType.toType
-          baseClsArgs = st.baseType(tpe.typeSymbol).asInstanceOf[TypeRef].args
-          // If the type arguments don't line up, just give up and fail to find
-          // the subclasses. It should fall back to plain-old-toString
-          if baseClsArgs.size == tpe.args.size
-        } yield {
-
-          val sub2 = st.substituteTypes(baseClsArgs.map(_.typeSymbol), tpe.args)
-          //        println(Console.YELLOW + "sub2 " + Console.RESET + sub2)
-          sub2
+    def fleshedOutSubtypes(tpe: Type) = {
+      for{
+        subtypeSym <- tpe.typeSymbol.asClass.knownDirectSubclasses.filter(!_.toString.contains("<local child>"))
+        if subtypeSym.isType
+        st = subtypeSym.asType.toType
+        baseClsArgs = st.baseType(tpe.typeSymbol).asInstanceOf[TypeRef].args
+      } yield {
+        tpe match{
+          case ExistentialType(_, TypeRef(pre, sym, args)) =>
+            st.substituteTypes(baseClsArgs.map(_.typeSymbol), args)
+          case ExistentialType(_, _) => st
+          case TypeRef(pre, sym, args) =>
+            st.substituteTypes(baseClsArgs.map(_.typeSymbol), args)
         }
-      impl
-      impl
+      }
     }
 
     def deriveObject(tpe: c.Type) = {
@@ -129,7 +124,7 @@ object Macros {
             "http://www.lihaoyi.com/upickle/#ManualSealedTraitPicklers"
         fail(tpe, msg)
       }else{
-        val subTypes = fleshedOutSubtypes(tpe.asInstanceOf[TypeRef]).toSeq
+        val subTypes = fleshedOutSubtypes(tpe).toSeq
         //    println("deriveTrait")
         val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
         //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)

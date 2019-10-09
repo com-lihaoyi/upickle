@@ -58,6 +58,51 @@ object All {
   }
 }
 
+import upickle.default.{ReadWriter, macroRW}
+sealed trait Gadt[T]
+object Gadt{
+  implicit def rw[T]: ReadWriter[Gadt[T]] = macroRW[Gadt[_]].asInstanceOf[ReadWriter[Gadt[T]]]
+  case class IsDir(path: String) extends Gadt[Boolean]
+  object IsDir{
+    implicit val rw: ReadWriter[IsDir] = macroRW
+  }
+  case class Exists(path: String) extends Gadt[Boolean]
+  object Exists{
+    implicit val rw: ReadWriter[Exists] = macroRW
+  }
+  case class ReadBytes(path: String) extends Gadt[Array[Byte]]
+  object ReadBytes{
+    implicit val rw: ReadWriter[ReadBytes] = macroRW
+  }
+  case class CopyOver(src: Seq[Byte], path: String) extends Gadt[Unit]
+  object CopyOver{
+    implicit val rw: ReadWriter[CopyOver] = macroRW
+  }
+}
+
+sealed trait Gadt2[T, V]
+object Gadt2{
+  implicit def rw[T, V: ReadWriter]: ReadWriter[Gadt2[T, V]] =
+    macroRW[Gadt2[_, V]].asInstanceOf[ReadWriter[Gadt2[T, V]]]
+
+  case class IsDir[V](v: V) extends Gadt2[Boolean, V]
+  object IsDir{
+    implicit def rw[V: ReadWriter]: ReadWriter[IsDir[V]] = macroRW
+  }
+  case class Exists[V](v: V) extends Gadt2[Boolean, V]
+  object Exists{
+    implicit def rw[V: ReadWriter]: ReadWriter[Exists[V]] = macroRW
+  }
+  case class ReadBytes[V](v: V) extends Gadt2[Array[Byte], V]
+  object ReadBytes{
+    implicit def rw[V: ReadWriter]: ReadWriter[ReadBytes[V]] = macroRW
+  }
+  case class CopyOver[V](src: Seq[Byte], v: String) extends Gadt2[Int, V]
+  object CopyOver{
+    implicit def rw[V]: ReadWriter[CopyOver[V]] = macroRW
+  }
+}
+
 object AdvancedTests extends TestSuite {
   import All._
   val tests = Tests {
@@ -186,7 +231,28 @@ object AdvancedTests extends TestSuite {
         }""")
 
     }
-
+    test("gadt"){
+      test("simple"){
+        test - rw(Gadt.Exists("hello"), """{"$type":"upickle.Gadt.Exists","path":"hello"}""")
+        test - rw(Gadt.Exists("hello"): Gadt[_], """{"$type":"upickle.Gadt.Exists","path":"hello"}""")
+        test - rw(Gadt.IsDir(" "), """{"$type":"upickle.Gadt.IsDir","path":" "}""")
+        test - rw(Gadt.IsDir(" "): Gadt[_], """{"$type":"upickle.Gadt.IsDir","path":" "}""")
+        test - rw(Gadt.ReadBytes("\""), """{"$type":"upickle.Gadt.ReadBytes","path":"\""}""")
+        test - rw(Gadt.ReadBytes("\""): Gadt[_], """{"$type":"upickle.Gadt.ReadBytes","path":"\""}""")
+        test - rw(Gadt.CopyOver(Seq(1, 2, 3), ""), """{"$type":"upickle.Gadt.CopyOver","src":[1,2,3],"path":""}""")
+        test - rw(Gadt.CopyOver(Seq(1, 2, 3), ""): Gadt[_], """{"$type":"upickle.Gadt.CopyOver","src":[1,2,3],"path":""}""")
+      }
+      test("partial"){
+        test - rw(Gadt2.Exists("hello"), """{"$type":"upickle.Gadt2.Exists","v":"hello"}""")
+        test - rw(Gadt2.Exists("hello"): Gadt2[_, String], """{"$type":"upickle.Gadt2.Exists","v":"hello"}""")
+        test - rw(Gadt2.IsDir(123), """{"$type":"upickle.Gadt2.IsDir","v":123}""")
+        test - rw(Gadt2.IsDir(123): Gadt2[_, Int], """{"$type":"upickle.Gadt2.IsDir","v":123}""")
+        test - rw(Gadt2.ReadBytes('h'), """{"$type":"upickle.Gadt2.ReadBytes","v":"h"}""")
+        test - rw(Gadt2.ReadBytes('h'): Gadt2[_, Char], """{"$type":"upickle.Gadt2.ReadBytes","v":"h"}""")
+        test - rw(Gadt2.CopyOver(Seq(1, 2, 3), ""), """{"$type":"upickle.Gadt2.CopyOver","src":[1,2,3],"v":""}""")
+        test - rw(Gadt2.CopyOver(Seq(1, 2, 3), ""): Gadt2[_, Unit], """{"$type":"upickle.Gadt2.CopyOver","src":[1,2,3],"v":""}""")
+      }
+    }
     test("issues"){
       test("issue95"){
         rw(
