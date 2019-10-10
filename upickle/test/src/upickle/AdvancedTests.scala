@@ -299,6 +299,12 @@ object AdvancedTests extends TestSuite {
         rw(header: Ast.Block.Sub, headerText)
         rw(header: Ast.Chain.Sub, headerText)
       }
+      test("scala-issue-11768"){
+        // Make sure this compiles
+        class Thing[T: upickle.default.Writer, V: upickle.default.Writer](t: Option[(V, T)]){
+          implicitly[upickle.default.Writer[Option[(V, T)]]]
+        }
+      }
       //      test("companionImplicitPickedUp"){
       //        assert(implicitly[upickle.default.Reader[TypedFoo]] eq TypedFoo.readWriter)
       //        assert(implicitly[upickle.default.Writer[TypedFoo]] eq TypedFoo.readWriter)

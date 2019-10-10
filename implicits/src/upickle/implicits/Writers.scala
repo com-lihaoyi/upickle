@@ -6,7 +6,7 @@ import upickle.core.Visitor
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-trait Writers extends upickle.core.Types with Generated with MacroImplicits{
+trait Writers extends upickle.core.Types with Generated with MacroImplicits with LowPriWriters{
   implicit val StringWriter = new Writer[String] {
     def write0[R](out: Visitor[_, R], v: String): R = out.visitString(v, -1)
   }
@@ -66,19 +66,7 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
 
   implicit def SomeWriter[T: Writer]: Writer[Some[T]] = OptionWriter[T].narrow[Some[T]]
   implicit def NoneWriter: Writer[None.type] = OptionWriter[Unit].narrow[None.type]
-  implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]) = new Writer[C[T]] {
-    def write0[R](out: Visitor[_, R], v: C[T]): R = {
-      val ctx = out.visitArray(v.size, -1).narrow
-      val x = v.iterator
-      while(x.nonEmpty){
-        val next = x.next().asInstanceOf[T]
-        val written = r.write(ctx.subVisitor, next)
-        ctx.visitValue(written, -1)
-      }
 
-      ctx.visitEnd(-1)
-    }
-  }
   implicit def ArrayWriter[T](implicit r: Writer[T]) = {
     if (r == ByteWriter) new Writer[Array[T]] {
       def write0[R](out: Visitor[_, R], v: Array[T]): R = {
@@ -159,4 +147,23 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits{
     EitherWriter[T1, T2].narrow[Right[T1, T2]]
   implicit def LeftWriter[T1: Writer, T2: Writer] =
     EitherWriter[T1, T2].narrow[Left[T1, T2]]
+}
+
+/**
+  * This needs to be split into a separate trait due to https://github.com/scala/bug/issues/11768
+  */
+trait LowPriWriters extends upickle.core.Types{
+  implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]) = new Writer[C[T]] {
+    def write0[R](out: Visitor[_, R], v: C[T]): R = {
+      val ctx = out.visitArray(v.size, -1).narrow
+      val x = v.iterator
+      while(x.nonEmpty){
+        val next = x.next().asInstanceOf[T]
+        val written = r.write(ctx.subVisitor, next)
+        ctx.visitValue(written, -1)
+      }
+
+      ctx.visitEnd(-1)
+    }
+  }
 }
