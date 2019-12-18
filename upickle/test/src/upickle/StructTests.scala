@@ -1,4 +1,6 @@
 package upickle
+import java.io.ByteArrayOutputStream
+
 import utest._
 import upickle.legacy.{read, write}
 
@@ -154,6 +156,23 @@ object StructTests extends TestSuite {
         rw(Right(Some(0.33 millis)): Either[Int, Option[Duration]], """[1,["330000"]]""")
         rw(Left(10 seconds): Either[Duration, Option[Duration]], """[0,"10000000000"]""")
         rw(Right(Some(0.33 millis)): Either[Duration, Option[Duration]], """[1,["330000"]]""")
+      }
+    }
+
+    test("writeBytesTo"){
+      test("json") {
+        type Thing = Seq[List[Map[Option[String], String]]]
+        val thing: Thing = Seq(Nil, List(Map(Some("omg") -> "omg"), Map(Some("lol") -> "lol", None -> "")), List(Map()))
+        val out = new ByteArrayOutputStream()
+        upickle.default.writable(thing).writeBytesTo(out)
+        out.toByteArray ==> upickle.default.write(thing).getBytes
+      }
+      test("msgpack") {
+        type Thing = Seq[List[Map[Option[String], String]]]
+        val thing: Thing = Seq(Nil, List(Map(Some("omg") -> "omg"), Map(Some("lol") -> "lol", None -> "")), List(Map()))
+        val out = new ByteArrayOutputStream()
+        upickle.default.writableBinary(thing).writeBytesTo(out)
+        out.toByteArray ==> upickle.default.writeBinary(thing)
       }
     }
 

@@ -9,7 +9,7 @@ import scala.collection.compat._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-sealed trait Value extends Readable {
+sealed trait Value extends Readable with geny.Writable{
   def value: Any
 
   /**
@@ -112,6 +112,13 @@ sealed trait Value extends Readable {
   def transform[T](f: Visitor[_, T]) = Value.transform(this, f)
   override def toString = render()
   def render(indent: Int = -1, escapeUnicode: Boolean = false) = this.transform(StringRenderer(indent, escapeUnicode)).toString
+
+  def writeBytesTo(out: java.io.OutputStream, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
+    val w = new java.io.OutputStreamWriter(out, java.nio.charset.StandardCharsets.UTF_8)
+    this.transform(new ujson.BaseRenderer(w, indent, escapeUnicode))
+    w.flush()
+  }
+  def writeBytesTo(out: java.io.OutputStream): Unit = writeBytesTo(out, -1, false)
 }
 
 /**

@@ -1,5 +1,6 @@
 package upack
-import upickle.core.Abort
+import java.io.ByteArrayOutputStream
+
 import utest._
 
 object UnitTests extends TestSuite{
@@ -13,12 +14,20 @@ object UnitTests extends TestSuite{
       upack.read(written) ==> msg
 
 
-      intercept[Abort]{
+      intercept[upickle.core.Abort]{
         upack.transform(written, ujson.Value)
       }
-      intercept[Abort] {
+      intercept[upickle.core.Abort] {
         upack.transform(msg, ujson.Value)
       }
+    }
+    test("writeBytesTo"){
+      val msg = Obj(Arr(Int32(1), Int32(2)) -> Int32(1))
+      val out = new ByteArrayOutputStream()
+      msg.writeBytesTo(out)
+      val bytes = out.toByteArray
+      val parsed = upack.read(bytes)
+      assert(msg == parsed)
     }
   }
 }

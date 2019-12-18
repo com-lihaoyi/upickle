@@ -6,8 +6,8 @@ import upickle.core.{Visitor, ArrVisitor, ObjVisitor}
 
 import scala.annotation.switch
 
-case class BytesRenderer(indent: Int = -1)
-  extends BaseRenderer(new BytesRenderer.BytesWriter(), indent){
+case class BytesRenderer(indent: Int = -1, escapeUnicode: Boolean = false)
+  extends BaseRenderer(new BytesRenderer.BytesWriter(), indent, escapeUnicode){
 }
 
 object BytesRenderer{
