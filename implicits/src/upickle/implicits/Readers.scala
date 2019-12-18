@@ -10,7 +10,7 @@ import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
 
-trait Readers extends upickle.core.Types with Generated with MacroImplicits{
+trait Readers extends upickle.core.Types with Generated with ReadersVersionSpecific {
   implicit val UnitReader: Reader[Unit] = new SimpleReader[Unit] {
     override def expectedMsg = "expected unit"
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
@@ -149,6 +149,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       def expectedMsg = "expected map"
     }
   }
+
   implicit def MapReader1[K, V](implicit k: Reader[K], v: Reader[V]): Reader[collection.Map[K, V]] = {
     MapReader0[collection.Map, K, V](_.toMap)
   }
@@ -233,7 +234,7 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }
   }
 
-  implicit val DurationReader = new MapStringReader( s =>
+  implicit val DurationReader: Reader[Duration] = new MapStringReader( s =>
     if (s.charAt(0) == 'i' &&
         s.charAt(1) == 'n' &&
         s.charAt(2) == 'f'
@@ -255,10 +256,10 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
     }else Duration(upickle.core.Util.parseLong(s, 0, s.length()), TimeUnit.NANOSECONDS)
   )
 
-  implicit val InfiniteDurationReader = DurationReader.narrow[Duration.Infinite]
-  implicit val FiniteDurationReader = DurationReader.narrow[FiniteDuration]
+  implicit val InfiniteDurationReader: Reader[Duration.Infinite] = DurationReader.narrow[Duration.Infinite]
+  implicit val FiniteDurationReader: Reader[FiniteDuration] = DurationReader.narrow[FiniteDuration]
 
-  implicit def EitherReader[T1: Reader, T2: Reader] = new SimpleReader[Either[T1, T2]]{
+  implicit def EitherReader[T1: Reader, T2: Reader]: SimpleReader[Either[T1, T2]] = new SimpleReader[Either[T1, T2]]{
     override def expectedMsg = "expected sequence"
     override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, Either[T1, T2]] {
       var right: java.lang.Boolean = null
@@ -282,8 +283,8 @@ trait Readers extends upickle.core.Types with Generated with MacroImplicits{
       }
     }
   }
-  implicit def RightReader[T1: Reader, T2: Reader] =
+  implicit def RightReader[T1: Reader, T2: Reader]: Reader[Right[T1, T2]] =
     EitherReader[T1, T2].narrow[Right[T1, T2]]
-  implicit def LeftReader[T1: Reader, T2: Reader] =
+  implicit def LeftReader[T1: Reader, T2: Reader]: Reader[Left[T1, T2]] =
     EitherReader[T1, T2].narrow[Left[T1, T2]]
 }

@@ -1,0 +1,3 @@
+package upickle.implicits
+
+trait WritersVersionSpecific

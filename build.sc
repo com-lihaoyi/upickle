@@ -119,10 +119,11 @@ object core extends Module {
 object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
-    def compileIvyDeps = Agg(
+    def compileIvyDeps = if (!isDotty) Agg(
       ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
+    else Agg.empty[Dep]
     def generatedSources = T{
       val dir = T.ctx().dest
       val file = dir / "upickle" / "Generated.scala"
@@ -146,8 +147,6 @@ object implicits extends Module {
 
       ammonite.ops.write(file, s"""
       package upickle.implicits
-      import acyclic.file
-      import language.experimental.macros
       /**
        * Auto-generated picklers and unpicklers, used for creating the 22
        * versions of tuple-picklers and case-class picklers
