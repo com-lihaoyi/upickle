@@ -68,11 +68,11 @@ trait Api
     transform(t).to(new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
   /**
-    * Write the given Scala value as a JSON string to the given Writer
+    * Write the given Scala value as a JSON string via a `geny.Writable`
     */
-  def writable[T: Writer](t: T,
-                          indent: Int = -1,
-                          escapeUnicode: Boolean = false): geny.Writable = new geny.Writable{
+  def stream[T: Writer](t: T,
+                        indent: Int = -1,
+                        escapeUnicode: Boolean = false): geny.Writable = new geny.Writable{
     def writeBytesTo(out: java.io.OutputStream) = {
       val w = new java.io.OutputStreamWriter(out, java.nio.charset.StandardCharsets.UTF_8)
       transform(t).to(new ujson.BaseRenderer(w, indent = indent, escapeUnicode))
@@ -83,10 +83,12 @@ trait Api
     * Write the given Scala value as a MessagePack binary to the given OutputStream
     */
   def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
-    writableBinary[T](t).writeBytesTo(out)
+    streamBinary[T](t).writeBytesTo(out)
   }
-
-  def writableBinary[T: Writer](t: T): geny.Writable = new geny.Writable{
+  /**
+    * Write the given Scala value as a MessagePack binary via a `geny.Writable`
+    */
+  def streamBinary[T: Writer](t: T): geny.Writable = new geny.Writable{
     def writeBytesTo(out: java.io.OutputStream) = transform(t).to(new upack.MsgPackWriter(out))
   }
 

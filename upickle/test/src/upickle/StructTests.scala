@@ -164,14 +164,14 @@ object StructTests extends TestSuite {
         type Thing = Seq[List[Map[Option[String], String]]]
         val thing: Thing = Seq(Nil, List(Map(Some("omg") -> "omg"), Map(Some("lol") -> "lol", None -> "")), List(Map()))
         val out = new ByteArrayOutputStream()
-        upickle.default.writable(thing).writeBytesTo(out)
+        upickle.default.stream(thing).writeBytesTo(out)
         out.toByteArray ==> upickle.default.write(thing).getBytes
       }
       test("msgpack") {
         type Thing = Seq[List[Map[Option[String], String]]]
         val thing: Thing = Seq(Nil, List(Map(Some("omg") -> "omg"), Map(Some("lol") -> "lol", None -> "")), List(Map()))
         val out = new ByteArrayOutputStream()
-        upickle.default.writableBinary(thing).writeBytesTo(out)
+        upickle.default.streamBinary(thing).writeBytesTo(out)
         out.toByteArray ==> upickle.default.writeBinary(thing)
       }
     }
