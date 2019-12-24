@@ -861,7 +861,7 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
-    @sect{0.9.1}
+    @sect{0.9.2}
       @ul
         @li
           Bump Geny dependency
