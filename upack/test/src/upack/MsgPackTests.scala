@@ -28,12 +28,17 @@ object MsgPackTests extends TestSuite{
         assert(jsonified == expectedJson)
 
         val msg = upack.read(packed)
+        val msg2 = upack.read(packed: geny.Readable)
+
 
         val rewrittenBytes = upack.write(msg)
+        val rewrittenBytes2 = upack.write(msg2)
         val rewritten = Util.bytesToString(rewrittenBytes)
+        val rewritten2 = Util.bytesToString(rewrittenBytes2)
         val possibilities = testCase("msgpack").arr.map(_.str)
 
         assert(possibilities.contains(rewritten))
+        assert(possibilities.contains(rewritten2))
       }
     }
   }
