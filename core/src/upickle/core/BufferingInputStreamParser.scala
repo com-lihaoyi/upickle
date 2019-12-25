@@ -3,9 +3,9 @@ package upickle.core
 trait BufferingInputStreamParser{
   def bufferSize: Int
   def data: java.io.InputStream
-  private[this] var buffer = new Array[Byte](bufferSize)
+  protected[this] var buffer = new Array[Byte](bufferSize)
 
-  private[this] var firstIdx = 0
+  protected[this] var firstIdx = 0
   private[this] var lastIdx = 0
   private[this] var dropped = 0
 
@@ -17,9 +17,9 @@ trait BufferingInputStreamParser{
     buffer.apply(i - firstIdx)
   }
 
-  def sliceString(i: Int, n: Int): String = {
-    requestUntil(i + n)
-    new String(buffer.slice(i - firstIdx, i + n - firstIdx))
+  def sliceString(i: Int, k: Int): String = {
+    requestUntil(k)
+    new String(buffer.slice(i - firstIdx, k - firstIdx))
   }
 
   def sliceBytes(i: Int, n: Int): (Array[Byte], Int, Int) = {

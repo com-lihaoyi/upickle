@@ -13,12 +13,8 @@ import upickle.core.{ObjArrVisitor, Visitor}
   *
   * Generally not meant to be used directly, but via [[ujson.Readable.fromReadable]]
   */
-final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) extends Parser[J] with ByteBasedParser[J] {
-  private[this] var buffer = new Array[Byte](bufferSize)
-
-  private[this] var firstIdx = 0
-  private[this] var lastIdx = 0
-  private[this] var dropped = 0
+final class InputStreamParser[J](val data: java.io.InputStream, val bufferSize: Int)
+extends Parser[J] with ByteBasedParser[J] with upickle.core.BufferingInputStreamParser{
 
   private[this] var eof = -1
 
@@ -29,54 +25,23 @@ final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) ext
   protected[this] final def column(i: Int) = i
 
   protected[this] final def close() {}
-  protected[this] final def dropBufferUntil(i: Int): Unit = {
-    dropped = i
-    i
-  }
-  protected[this] final def byte(i: Int): Byte = {
-    requestUntil(i)
-    buffer.apply(i - firstIdx)
-  }
   protected[this] final def char(i: Int): Char = {
-    requestUntil(i)
-    buffer.apply(i - firstIdx).toChar
-  }
-
-  protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
-    requestUntil(k)
-    new String(buffer.slice(i - firstIdx, k - firstIdx))
+    byte(i).toChar
   }
 
   protected[this] final def atEof(i: Int) = {
     if (eof != -1) i == eof
     else{
-      readDataIntoBuffer()
+      val done = readDataIntoBuffer()
+      if (done) eof = getLastIdx
       i == eof
     }
   }
 
-  protected def requestUntil(until: Int): Unit = {
-    val requiredSize = until - firstIdx
-    if (requiredSize >= buffer.size){
-      var newSize = buffer.length
-      while (newSize <= requiredSize) newSize *= 2
-
-      val arr = if (newSize > buffer.length) new Array[Byte](newSize) else buffer
-      System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
-      firstIdx = dropped
-      buffer = arr
-    }
-
-    while (lastIdx <= until && eof == -1) readDataIntoBuffer()
-  }
-
-  def readDataIntoBuffer() = {
-
-    val bufferOffset = lastIdx - firstIdx
-    data.read(buffer, bufferOffset, buffer.length - bufferOffset) match{
-      case -1 => eof = lastIdx
-      case n => lastIdx += n
-    }
+  override protected def requestUntil(until: Int): Boolean = {
+    val done = super.requestUntil(until)
+    if (done) eof = getLastIdx
+    done
   }
 }
 

@@ -8,7 +8,7 @@ class MsgPackReader(startIndex: Int = 0, input0: Array[Byte]) extends BaseMsgPac
   private[this] var index0 = startIndex
   def incrementIndex(i: Int): Unit = index0 += i
   def setIndex(i: Int): Unit = index0 = i
-  def sliceString(i: Int, n: Int): String = new String(input0, i, n)
+  def sliceString(i: Int, k: Int): String = new String(input0, i, n)
   def sliceBytes(i: Int, n: Int): (Array[Byte], Int, Int) = (input0, i, n)
   def index = index0
   def byte(i: Int): Byte = input0(i)
@@ -35,7 +35,7 @@ abstract class BaseMsgPackReader{
   def byte(i: Int): Byte
   def incrementIndex(i: Int): Unit
   def setIndex(i: Int): Unit
-  def sliceString(i: Int, j: Int): String
+  def sliceString(i: Int, k: Int): String
   def sliceBytes(i: Int, j: Int): (Array[Byte], Int, Int)
   def dropBufferUntil(i: Int): Unit
   def parse[T](visitor: Visitor[_, T]): T = {
@@ -112,7 +112,7 @@ abstract class BaseMsgPackReader{
   }
 
   def parseStr[T](n: Int, visitor: Visitor[_, T]) = {
-    val res = visitor.visitString(sliceString(index, n), index)
+    val res = visitor.visitString(sliceString(index, index + n), index)
     incrementIndex(n)
     res
   }
