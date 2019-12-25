@@ -1,5 +1,6 @@
 package ujson
 
+import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
 import org.scalacheck.Gen._
@@ -70,8 +71,12 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
     val r1 = Try(StringParser.transform(s, NoOpVisitor)).isSuccess
     val bb = ByteBuffer.wrap(s.getBytes("UTF-8"))
     val r2 = Try(ByteBufferParser.transform(bb, NoOpVisitor)).isSuccess
-    if (r0 == r1) r1 else sys.error(s"CharSequence/String parsing disagree($r0, $r1): $s")
-    if (r1 == r2) r1 else sys.error(s"String/ByteBuffer parsing disagree($r1, $r2): $s")
+    val r3 = Try(InputStreamParser.transform(new ByteArrayInputStream(s.getBytes), NoOpVisitor)).isSuccess
+    val r4 = Try(ByteArrayParser.transform(s.getBytes, NoOpVisitor)).isSuccess
+    if (r0 != r1) sys.error(s"CharSequence/String parsing disagree($r0, $r1): $s")
+    if (r1 != r2) sys.error(s"String/ByteBuffer parsing disagree($r1, $r2): $s")
+    if (r2 != r3) sys.error(s"ByteBuffer/InputStream parsing disagree($r2, $r3): $s")
+    if (r3 != r4) sys.error(s"InputStream/ByteArray parsing disagree($r3, $r4): $s")
 
     locally {
       val async = AsyncParser[Unit](AsyncParser.SingleValue)
@@ -137,4 +142,6 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
   property("1.1e+1 is ok") { isValidSyntax("1.1e+1") shouldBe true }
   property("1+ is invalid") { isValidSyntax("1+") shouldBe false }
   property("1- is invalid") { isValidSyntax("1-") shouldBe false }
+
+  property("[] is valid") { isValidSyntax("[]") shouldBe true }
 }
