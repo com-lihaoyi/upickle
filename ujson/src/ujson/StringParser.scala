@@ -14,12 +14,11 @@ import upickle.core.{Visitor, ObjArrVisitor}
  * memory at once. So this limit will probably not be a problem in
  * practice.
  */
-private[ujson] final class StringParser[J](s: String) extends SyncParser[J] with CharBasedParser[J] {
+private[ujson] final class StringParser[J](s: String) extends Parser[J] with CharBasedParser[J] {
   var line = 0
   final def column(i: Int) = i
   final def newline(i: Int) { line += 1 }
   final def reset(i: Int): Int = i
-  final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]], path: List[Any]): Unit = ()
   final def at(i: Int): Char = Platform.charAt(s, i)
   final def at(i: Int, j: Int): CharSequence = s.substring(i, j)
   final def atEof(i: Int) = i == s.length

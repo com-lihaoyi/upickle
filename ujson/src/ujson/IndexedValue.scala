@@ -42,19 +42,19 @@ object IndexedValue extends Transformer[IndexedValue]{
       case IndexedValue.NumRaw(i, d) => f.visitFloat64(d, i)
       case IndexedValue.Arr(i, items @_*) =>
         val ctx = f.visitArray(-1, -1).narrow
-        for(item <- items) try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
+        for(item <- items) try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index)
         ctx.visitEnd(i)
       case IndexedValue.Obj(i, items @_*) =>
         val ctx = f.visitObject(-1, -1).narrow
         for((k, item) <- items) {
-          val keyVisitor = try ctx.visitKey(i) catch reject(i, Nil)
+          val keyVisitor = try ctx.visitKey(i) catch reject(i)
 
           ctx.visitKeyValue(keyVisitor.visitString(k, i))
-          try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index, Nil)
+          try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index)
         }
         ctx.visitEnd(i)
     }
-  } catch reject(j.index, Nil)
+  } catch reject(j.index)
 
 
   object Builder extends JsVisitor[IndexedValue, IndexedValue]{

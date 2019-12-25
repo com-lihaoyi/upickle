@@ -77,20 +77,7 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
     if (r1 != r2) sys.error(s"String/ByteBuffer parsing disagree($r1, $r2): $s")
     if (r2 != r3) sys.error(s"ByteBuffer/InputStream parsing disagree($r2, $r3): $s")
     if (r3 != r4) sys.error(s"InputStream/ByteArray parsing disagree($r3, $r4): $s")
-
-    locally {
-      val async = AsyncParser[Unit](AsyncParser.SingleValue)
-      val r3 = async.absorb(s, NoOpVisitor).isRight && async.finish(NoOpVisitor).isRight
-      if (r1 == r3) r1 else sys.error(s"Sync/Async parsing disagree($r1, $r3): $s")
-    }
-
-    locally {
-      val async = AsyncParser[Unit](AsyncParser.SingleValue)
-      val r3 = s.getBytes(StandardCharsets.UTF_8).foldLeft(true) { (isValid, byte) =>
-        isValid && async.absorb(Array(byte), NoOpVisitor).isRight
-      } && async.finish(NoOpVisitor).isRight
-      if (r1 == r3) r1 else sys.error(s"Sync/Async parsing disagree($r1, $r3): $s")
-    }
+    r0
   }
 
   property("syntax-checking") {

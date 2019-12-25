@@ -46,6 +46,8 @@ object Main{
 //      Common.upickleDefaultCached(duration)
       Common.upickleDefaultCached(duration)
       Common.upickleDefaultCachedReadable(duration)
+      Common.upickleDefaultCachedReadablePath(duration)
+      Common.upickleDefaultCachedChannelPath(duration)
       Common.upickleDefaultCachedByteArray(duration)
 //      Common.upickleLegacyCached(duration)
       Common.upickleDefaultBinaryCached(duration)

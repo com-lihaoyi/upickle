@@ -13,12 +13,12 @@ import upickle.core.{ObjArrVisitor, Visitor, UberBuffer}
   *
   * Generally not meant to be used directly, but via [[ujson.Readable.fromReadable]]
   */
-final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) extends SyncParser[J] with ByteBasedParser[J] {
+final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) extends Parser[J] with ByteBasedParser[J] {
   private[this] val buffer: UberBuffer = new UberBuffer(16)
   private[this] val streamBuffer = new Array[Byte](bufferSize)
   private[this] var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
 
-  private var eof = -1
+  private[this] var eof = -1
   def length: Int = firstIdx + buffer.length
 
   private[this] var lineState = 0
@@ -35,7 +35,6 @@ final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) ext
     }
     i
   }
-  protected[this] final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]], path: List[Any]) {}
   protected[this] final def byte(i: Int): Byte = {
     requestUntil(i)
     buffer.apply(i - firstIdx)
@@ -51,10 +50,9 @@ final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) ext
   }
 
   protected[this] final def atEof(i: Int) = {
-    if (i == eof) true
-    else if (eof != -1 && i != eof) false
+    if (eof != -1) i == eof
     else if (i < length) false
-    else {
+    else{
       readDataIntoBuffer()
       i == eof
     }

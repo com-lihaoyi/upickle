@@ -11,13 +11,9 @@ object FileParser extends Transformer[java.io.File]{
 
 object PathParser extends Transformer[java.nio.file.Path]{
   def transform[T](j: java.nio.file.Path, f: Visitor[_, T]) = {
-    if (java.nio.file.Files.size(j) > ChannelParser.ParseAsStringThreshold){
-      val channel = java.nio.file.Files.newByteChannel(j)
-      try new ChannelParser(channel, ChannelParser.DefaultBufferSize).parse(f)
-      finally channel.close()
-    }else{
-      ByteArrayParser.transform(java.nio.file.Files.readAllBytes(j), f)
-    }
+    val channel = java.nio.file.Files.newByteChannel(j)
+    try new ChannelParser(channel, ChannelParser.DefaultBufferSize).parse(f)
+    finally channel.close()
   }
 }
 
@@ -28,17 +24,9 @@ object ChannelParser extends Transformer[ReadableByteChannel]{
 
   final val DefaultBufferSize = 1048576
 
-  final val ParseAsStringThreshold = 20 * 1048576
 
-  def fromFile[J](f: File, bufferSize: Int = DefaultBufferSize): SyncParser[J] =
-    if (f.length < ParseAsStringThreshold) {
-      val bytes = new Array[Byte](f.length.toInt)
-      val fis = new FileInputStream(f)
-      fis.read(bytes)
-      new StringParser[J](new String(bytes, "UTF-8"))
-    } else {
-      new ChannelParser[J](new FileInputStream(f).getChannel, bufferSize)
-    }
+  def fromFile[J](f: File, bufferSize: Int = DefaultBufferSize): Parser[J] =
+    new ChannelParser[J](new FileInputStream(f).getChannel, bufferSize)
 
   def fromChannel[J](ch: ReadableByteChannel, bufferSize: Int = DefaultBufferSize): ChannelParser[J] =
     new ChannelParser[J](ch, bufferSize)
@@ -68,7 +56,7 @@ object ChannelParser extends Transformer[ReadableByteChannel]{
  * Given a file name this parser opens it, chunks the data, and parses
  * it.
  */
-final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends SyncParser[J] with ByteBasedParser[J] {
+final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends Parser[J] with ByteBasedParser[J] {
 
   var Bufsize: Int = ChannelParser.computeBufferSize(bufferSize)
   var Mask: Int = Bufsize - 1
@@ -131,7 +119,6 @@ final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends S
       i
     }
 
-  protected[this] final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]], path: List[Any]): Unit = ()
 
   /**
    * This is a specialized accessor for the case where our underlying

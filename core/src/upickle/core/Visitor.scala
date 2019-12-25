@@ -262,7 +262,6 @@ case class AbortException(clue: String,
                           index: Int,
                           line: Int,
                           col: Int,
-                          path: List[Any],
                           cause: Throwable) extends Exception(clue + " at index " + index, cause)
 
 /**

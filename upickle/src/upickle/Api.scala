@@ -244,7 +244,7 @@ trait AttributeTagged extends Api{
           val key = keyAttr.asInstanceOf[IndexedValue.Str].value0.toString
           val delegate = taggedReader.findReader(key)
           if (delegate == null){
-            throw new AbortException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, Nil, null)
+            throw new AbortException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, null)
           }
           val ctx2 = delegate.visitObject(-1, -1)
           for (p <- x.value0) {

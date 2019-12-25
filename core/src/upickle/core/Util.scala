@@ -96,8 +96,8 @@ object Util {
     inverseSum * inverseSign
   }
 
-  def reject(j: Int, path: List[Any]): PartialFunction[Throwable, Nothing] = {
+  def reject(j: Int): PartialFunction[Throwable, Nothing] = {
     case e: Abort =>
-      throw new AbortException(e.msg, j, -1, -1, path, e)
+      throw new AbortException(e.msg, j, -1, -1, e)
   }
 }

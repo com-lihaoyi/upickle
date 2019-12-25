@@ -13,7 +13,7 @@ import upickle.core.{Visitor, ObjArrVisitor}
   * The parser makes absolute calls to the ByteBuffer, which will not
   * update its own mutable position fields.
   */
-final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0) extends SyncParser[J] with ByteBasedParser[J] {
+final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0) extends Parser[J] with ByteBasedParser[J] {
   private[this] var lineState = 0
   protected[this] def line(): Int = lineState
 
@@ -22,7 +22,6 @@ final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0)
 
   protected[this] final def close() {}
   protected[this] final def reset(i: Int): Int = i
-  protected[this] final def checkpoint(state: Int, i: Int, stack: List[ObjArrVisitor[_, J]], path: List[Any]) {}
   protected[this] final def byte(i: Int): Byte = Platform.byteAt(src, i + start)
   protected[this] final def at(i: Int): Char = Platform.byteAt(src, i + start).toChar
 
