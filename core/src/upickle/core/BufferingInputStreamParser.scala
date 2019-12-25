@@ -1,5 +1,12 @@
 package upickle.core
 
+/**
+  * Defines common functionality to any parser that works on a `java.io.InputStream`
+  *
+  * Allows you to look up individual bytes by index, take slices of byte ranges or
+  * strings, and drop old portions of buffered data once you are certain you no
+  * longer need them.
+  */
 trait BufferingInputStreamParser{
   def bufferSize: Int
   def data: java.io.InputStream
@@ -29,7 +36,12 @@ trait BufferingInputStreamParser{
   }
 
   protected def requestUntil(until: Int): Boolean = {
-    val requiredSize = until - firstIdx
+    // + 1 to make sure we always have just a bit more space than is necessary to
+    // store the entire stream contents. This is necessary to avoid trying to
+    // check for EOF when the entire buffer is full, which fails on Scala.js due to
+    //
+    // - https://github.com/scala-js/scala-js/issues/3913
+    val requiredSize = until - firstIdx + 1
     if (requiredSize >= buffer.size){
       var newSize = buffer.length
       while (newSize <= requiredSize) newSize *= 2
@@ -47,7 +59,7 @@ trait BufferingInputStreamParser{
   def readDataIntoBuffer(): Boolean = {
     var done = false
     val bufferOffset = lastIdx - firstIdx
-    data.read(buffer, bufferOffset, buffer.length - bufferOffset) match{
+    data.read(buffer, bufferOffset, buffer.length - bufferOffset)  match{
       case -1 => done = true
       case n => lastIdx += n
     }

@@ -40,11 +40,11 @@ trait CommonJvmModule extends CommonPublishModule{
 }
 trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
-  def scalaJSVersion = "0.6.28"
+  def scalaJSVersion = "0.6.31"
   def millSourcePath = super.millSourcePath / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "js"
-    def scalaJSVersion = "0.6.28"
+    def scalaJSVersion = "0.6.31"
   }
 }
 
@@ -288,7 +288,7 @@ trait BenchModule extends CommonModule{
 
 object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
-    def scalaJSVersion = "0.6.28"
+    def scalaJSVersion = "0.6.31"
     def platformSegment = "js"
     def moduleDeps = Seq(upickle.js("2.13.0").test)
     def run(args: String*) = T.command {

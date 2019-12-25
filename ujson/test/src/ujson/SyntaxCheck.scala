@@ -135,4 +135,5 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
   property("[] is valid") { isValidSyntax("[]") shouldBe true }
   property("{} is valid") { isValidSyntax("""{"a": true}""") shouldBe true }
   property("other {} is valid") { isValidSyntax("""{"abc": true}""") shouldBe true }
+  property("duh is valid") { isValidSyntax(""""duh"""") shouldBe true }
 }
