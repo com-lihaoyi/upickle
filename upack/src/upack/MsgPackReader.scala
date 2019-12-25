@@ -15,9 +15,9 @@ class MsgPackReader(startIndex: Int = 0, input0: Array[Byte]) extends BaseMsgPac
   def dropBufferUntil(i: Int): Unit = ()//donothing
 }
 class InputStreamMsgPackReader(input0: java.io.InputStream, bufferSize: Int) extends BaseMsgPackReader {
-  protected val buffer: UberBuffer = new UberBuffer(16)
-  private val streamBuffer = new Array[Byte](bufferSize)
-  protected var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
+  private[this] val buffer: UberBuffer = new UberBuffer(16)
+  private[this] val streamBuffer = new Array[Byte](bufferSize)
+  private[this] var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
   private[this] var index0 = 0
 
   def incrementIndex(i: Int): Unit = {
@@ -45,7 +45,7 @@ class InputStreamMsgPackReader(input0: java.io.InputStream, bufferSize: Int) ext
   def requestUntil(until: Int): Unit = {
     var done = false
     while (length <= until && !done) {
-      input0.read(streamBuffer, 0, math.min(bufferSize, until - length + 1)) match{
+      input0.read(streamBuffer, 0, bufferSize) match{
         case -1 => done = true
         case n => buffer.write(streamBuffer, n)
       }

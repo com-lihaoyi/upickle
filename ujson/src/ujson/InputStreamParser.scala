@@ -14,11 +14,11 @@ import upickle.core.{ObjArrVisitor, Visitor, UberBuffer}
   * Generally not meant to be used directly, but via [[ujson.Readable.fromReadable]]
   */
 final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) extends SyncParser[J] with ByteBasedParser[J] {
-  protected val buffer: UberBuffer = new UberBuffer(16)
-  private val streamBuffer = new Array[Byte](bufferSize)
-  protected var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
+  private[this] val buffer: UberBuffer = new UberBuffer(16)
+  private[this] val streamBuffer = new Array[Byte](bufferSize)
+  private[this] var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
 
-  protected var eof = -1
+  private var eof = -1
   def length: Int = firstIdx + buffer.length
 
   private[this] var lineState = 0

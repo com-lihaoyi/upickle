@@ -253,6 +253,22 @@ object Common{
       upickle.default.write(_)
     )
   }
+  def upickleDefaultCachedByteArray(duration: Int) = {
+    implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
+    implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
+    implicit lazy val rw3: upickle.default.ReadWriter[B] = upickle.default.macroRW
+    implicit lazy val rw4: upickle.default.ReadWriter[C] = upickle.default.macroRW
+    implicit lazy val rw5: upickle.default.ReadWriter[LL] = upickle.default.macroRW
+    implicit lazy val rw6: upickle.default.ReadWriter[Node] = upickle.default.macroRW
+    implicit lazy val rw7: upickle.default.ReadWriter[End.type] = upickle.default.macroRW
+    implicit lazy val rw8: upickle.default.ReadWriter[ADTc] = upickle.default.macroRW
+    implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
+
+    bench[Array[Byte]](duration)(
+      upickle.default.read[Seq[Data]](_),
+      upickle.default.write(_).getBytes
+    )
+  }
   def upickleDefaultCachedReadable(duration: Int) = {
     implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
     implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
