@@ -15,9 +15,14 @@ object Readable {
   }
   implicit def fromString(s: String) = new fromTransformer(s, StringParser)
   implicit def fromCharSequence(s: CharSequence) = new fromTransformer(s, CharSequenceParser)
-  implicit def fromChannel(s: ReadableByteChannel) = new fromTransformer(s, ChannelParser)
-  implicit def fromPath(s: java.nio.file.Path) = new fromTransformer(s, PathParser)
-  implicit def fromFile(s: java.io.File) = new fromTransformer(s, FileParser)
+  implicit def fromPath(s: java.nio.file.Path) = new fromTransformer(
+    java.nio.file.Files.newInputStream(s),
+    InputStreamParser
+  )
+  implicit def fromFile(s: java.io.File) = new fromTransformer(
+    java.nio.file.Files.newInputStream(s.toPath),
+    InputStreamParser
+  )
   implicit def fromByteBuffer(s: ByteBuffer) = new fromTransformer(s, ByteBufferParser)
   implicit def fromByteArray(s: Array[Byte]) = new fromTransformer(s, ByteArrayParser)
   implicit def fromReadable(s: geny.Readable) = new Readable{

@@ -22,6 +22,8 @@ object Common{
   val benchmarkSampleJson = upickle.default.write(benchmarkSampleData)
   val benchmarkSampleMsgPack = upickle.default.writeBinary(benchmarkSampleData)
 
+  println("benchmarkSampleJson " + benchmarkSampleJson.size + " bytes")
+  println("benchmarkSampleMsgPack " + benchmarkSampleMsgPack.size + " bytes")
   def circe(duration: Int) = {
     import io.circe._
     import io.circe.generic.semiauto._
@@ -299,30 +301,6 @@ object Common{
 
     bench[java.nio.file.Path](duration)(
       file => upickle.default.read[Seq[Data]](java.nio.file.Files.newInputStream(file): geny.Readable),
-      data => java.nio.file.Files.write(
-        java.nio.file.Files.createTempFile("temp", ".json"),
-        upickle.default.write(data).getBytes
-      ),
-      checkEqual = false
-    )
-  }
-
-  def upickleDefaultCachedChannelPath(duration: Int) = {
-    implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
-    implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
-    implicit lazy val rw3: upickle.default.ReadWriter[B] = upickle.default.macroRW
-    implicit lazy val rw4: upickle.default.ReadWriter[C] = upickle.default.macroRW
-    implicit lazy val rw5: upickle.default.ReadWriter[LL] = upickle.default.macroRW
-    implicit lazy val rw6: upickle.default.ReadWriter[Node] = upickle.default.macroRW
-    implicit lazy val rw7: upickle.default.ReadWriter[End.type] = upickle.default.macroRW
-    implicit lazy val rw8: upickle.default.ReadWriter[ADTc] = upickle.default.macroRW
-    implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
-
-    bench[java.nio.file.Path](duration)(
-      file => ujson.ChannelParser.transform(
-        java.nio.file.Files.newByteChannel(file),
-        upickle.default.reader[Seq[Data]]
-      ),
       data => java.nio.file.Files.write(
         java.nio.file.Files.createTempFile("temp", ".json"),
         upickle.default.write(data).getBytes

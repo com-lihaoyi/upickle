@@ -14,12 +14,13 @@ import upickle.core.{ObjArrVisitor, Visitor, UberBuffer}
   * Generally not meant to be used directly, but via [[ujson.Readable.fromReadable]]
   */
 final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) extends Parser[J] with ByteBasedParser[J] {
-  private[this] val buffer: UberBuffer = new UberBuffer(16)
-  private[this] val streamBuffer = new Array[Byte](bufferSize)
-  private[this] var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
+  private[this] var buffer = new Array[Byte](bufferSize)
+
+  private[this] var firstIdx = 0
+  private[this] var lastIdx = 0
+  private[this] var dropped = 0
 
   private[this] var eof = -1
-  def length: Int = firstIdx + buffer.length
 
   private[this] var lineState = 0
   protected[this] def line(): Int = lineState
@@ -29,10 +30,7 @@ final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) ext
 
   protected[this] final def close() {}
   protected[this] final def reset(i: Int): Int = {
-    if (i > firstIdx) {
-      buffer.drop(i - firstIdx)
-      firstIdx = i
-    }
+    dropped = i
     i
   }
   protected[this] final def byte(i: Int): Byte = {
@@ -51,7 +49,6 @@ final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) ext
 
   protected[this] final def atEof(i: Int) = {
     if (eof != -1) i == eof
-    else if (i < length) false
     else{
       readDataIntoBuffer()
       i == eof
@@ -59,17 +56,30 @@ final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) ext
   }
 
   protected def requestUntil(until: Int): Unit = {
-    while (this.length <= until && eof == -1) readDataIntoBuffer()
+    val requiredSize = until - firstIdx
+    if (requiredSize >= buffer.size){
+      var newSize = buffer.length
+      while (newSize <= requiredSize) newSize *= 2
+
+      val arr = if (newSize > buffer.length) new Array[Byte](newSize) else buffer
+      System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
+      firstIdx = dropped
+      buffer = arr
+    }
+
+    while (lastIdx <= until && eof == -1) readDataIntoBuffer()
   }
 
   def readDataIntoBuffer() = {
-    data.read(streamBuffer) match{
-      case -1 => eof = length
-      case n => buffer.write(streamBuffer, n)
+
+    val bufferOffset = lastIdx - firstIdx
+    data.read(buffer, bufferOffset, buffer.length - bufferOffset) match{
+      case -1 => eof = lastIdx
+      case n => lastIdx += n
     }
   }
 }
 
 object InputStreamParser extends Transformer[java.io.InputStream]{
-  def transform[T](j: java.io.InputStream, f: Visitor[_, T]) = new InputStreamParser(j, 4096).parse(f)
+  def transform[T](j: java.io.InputStream, f: Visitor[_, T]) = new InputStreamParser(j, 16 * 1024).parse(f)
 }
