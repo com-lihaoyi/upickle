@@ -53,7 +53,7 @@ object Main{
     implicit def rw8: RW[ADTc] = upickle.default.macroRW
     implicit def rw9: RW[ADT0] = upickle.default.macroRW
     bench[String](duration)(
-      upickle.default.web.read[Data],
+      upickle.default.web.read[Seq[Data]],
       upickle.default.web.write(_)
     )
   }
@@ -69,7 +69,7 @@ object Main{
     implicit lazy val rw8: RW[ADTc] = upickle.default.macroRW
     implicit lazy val rw9: RW[ADT0] = upickle.default.macroRW
     bench[String](duration)(
-      upickle.default.web.read[Data],
+      upickle.default.web.read[Seq[Data]],
       upickle.default.web.write(_)
     )
   }
@@ -85,7 +85,7 @@ object Main{
     implicit def rw8: RW[ADTc] = upickle.legacy.macroRW
     implicit def rw9: RW[ADT0] = upickle.legacy.macroRW
     bench[String](duration)(
-      upickle.legacy.web.read[Data],
+      upickle.legacy.web.read[Seq[Data]],
       upickle.legacy.web.write(_)
     )
   }
@@ -101,7 +101,7 @@ object Main{
     implicit lazy val rw8: RW[ADTc] = upickle.legacy.macroRW
     implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
     bench[String](duration)(
-      upickle.legacy.web.read[Data],
+      upickle.legacy.web.read[Seq[Data]],
       upickle.legacy.web.write(_)
     )
   }

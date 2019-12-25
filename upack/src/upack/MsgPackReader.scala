@@ -4,40 +4,31 @@ import upack.{MsgPackKeys => MPK}
 
 import scala.annotation.switch
 
-class MsgPackReader(startIndex: Int = 0, input0: Array[Byte]) extends BaseMsgPackReader {
-  private[this] var index0 = startIndex
-  def incrementIndex(i: Int): Unit = index0 += i
-  def setIndex(i: Int): Unit = index0 = i
-  def sliceString(i: Int, k: Int): String = new String(input0, i, n)
+class MsgPackReader(val startIndex: Int = 0, input0: Array[Byte]) extends BaseMsgPackReader {
+  def sliceString(i: Int, k: Int): String = new String(input0, i, k - i)
   def sliceBytes(i: Int, n: Int): (Array[Byte], Int, Int) = (input0, i, n)
-  def index = index0
   def byte(i: Int): Byte = input0(i)
   def dropBufferUntil(i: Int): Unit = ()//donothing
 }
+
 class InputStreamMsgPackReader(val data: java.io.InputStream, val bufferSize: Int)
 extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
-
-  private[this] var index0 = 0
-
-  def incrementIndex(i: Int): Unit = {
-    index0 += i
-  }
-  def setIndex(i: Int): Unit = {
-    index0 = i
-  }
-
-  def index = index0
+  def startIndex = 0
 }
 
 abstract class BaseMsgPackReader{
 
-  def index: Int
+  def startIndex: Int
   def byte(i: Int): Byte
-  def incrementIndex(i: Int): Unit
-  def setIndex(i: Int): Unit
   def sliceString(i: Int, k: Int): String
   def sliceBytes(i: Int, j: Int): (Array[Byte], Int, Int)
   def dropBufferUntil(i: Int): Unit
+
+  private[this] var index0 = startIndex
+  def incrementIndex(i: Int): Unit = index0 += i
+  def setIndex(i: Int): Unit = index0 = i
+  def index = index0
+
   def parse[T](visitor: Visitor[_, T]): T = {
     dropBufferUntil(index)
     val n = byte(index)

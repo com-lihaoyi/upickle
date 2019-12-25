@@ -19,7 +19,7 @@ private[ujson] final class StringParser[J](s: String) extends Parser[J] with Cha
   final def column(i: Int) = i
   final def newline(i: Int) { line += 1 }
   final def dropBufferUntil(i: Int): Unit = ()
-  final def char(i: Int): Char = Platform.charAt(s, i)
+  final def char(i: Int): Char = upickle.core.Platform.charAt(s, i)
   final def sliceString(i: Int, j: Int): CharSequence = s.substring(i, j)
   final def atEof(i: Int) = i == s.length
   final def close() = ()
