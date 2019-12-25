@@ -6,6 +6,20 @@ package upickle.core
   * Allows you to look up individual bytes by index, take slices of byte ranges or
   * strings, and drop old portions of buffered data once you are certain you no
   * longer need them.
+  *
+  * The `buffer` size is managed by allowing it to grow in size until it exceeds its
+  * capacity. When that happens, one of two things happen:
+  *
+  * - If the buffer has enough space, we left-shift the data in the
+  *   buffer to over-write the portion that has already been dropped.
+  *
+  * - If the buffer does not have enough space, we allocate a new buffer big
+  *   enough to hold the new data we need to store (size a power of two multiple of
+  *   the old size) and copy the data over, again shifted left
+  *
+  * "has enough space" is defined as being sized twice as large as the data being
+  * stored in the buffer, to avoid pathological cases where we end up doing tons
+  * of copying for very small amounts of data being processed.
   */
 trait BufferingInputStreamParser{
   def bufferSize: Int
@@ -15,7 +29,6 @@ trait BufferingInputStreamParser{
   private[this] var firstIdx = 0
   private[this] var lastIdx = 0
   private[this] var dropped = 0
-
 
   def getLastIdx = lastIdx
 
@@ -41,12 +54,16 @@ trait BufferingInputStreamParser{
     // check for EOF when the entire buffer is full, which fails on Scala.js due to
     //
     // - https://github.com/scala-js/scala-js/issues/3913
-    val requiredSize = until - firstIdx + 1
-    if (requiredSize >= buffer.size){
+    val untilBufferOffset = until - firstIdx + 1
+    if (untilBufferOffset >= buffer.size){
       var newSize = buffer.length
-      while (newSize <= requiredSize) newSize *= 2
 
-      val arr = if (newSize > buffer.length) new Array[Byte](newSize) else buffer
+      // * 2 to ensure the buffer always has a good amount of free space, so we
+      // do not end up doing tons of copying to free tiny amounts of space to hold data
+      val growGoalSize = (until - dropped + 1) * 2
+      while (newSize <= growGoalSize) newSize *= 2
+
+      val arr = if (newSize > buffer.length / 2) new Array[Byte](newSize) else buffer
       System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
       firstIdx = dropped
       buffer = arr
