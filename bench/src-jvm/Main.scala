@@ -18,7 +18,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(500, 5000, 5000)){
+    for(duration <- Seq(5000000, 5000, 5000)){
       println("RUN JVM: " + duration)
       println()
 
@@ -36,17 +36,19 @@ object Main{
 //      Main.jacksonModuleScala(duration)
 //      Common.playJson(duration)
 //      Common.circe(duration)
-      Common.upickleDefault(duration)
-      Common.upickleLegacy(duration)
-      Common.upickleBinaryDefault(duration)
-      Common.upickleBinaryLegacy(duration)
+//      Common.upickleDefault(duration)
+//      Common.upickleLegacy(duration)
+//      Common.upickleBinaryDefault(duration)
+//      Common.upickleBinaryLegacy(duration)
 //      Common.genCodec(duration)
 //      Common.playJsonCached(duration)
 //      Common.circeCached(duration)
-      Common.upickleDefaultCached(duration)
-      Common.upickleLegacyCached(duration)
+//      Common.upickleDefaultCached(duration)
+      Common.upickleDefaultCachedReadable(duration)
+//      Common.upickleLegacyCached(duration)
       Common.upickleDefaultBinaryCached(duration)
-      Common.upickleLegacyBinaryCached(duration)
+      Common.upickleDefaultBinaryCachedReadable(duration)
+//      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
       println()
     }
@@ -162,7 +164,7 @@ object Main{
     val jacksonType = new TypeReference[Common.Data] {}
 
     Common.bench[String](duration)(
-      mapper.readValue[Common.Data](_, jacksonType),
+      mapper.readValue[Seq[Common.Data]](_, jacksonType),
       mapper.writeValueAsString(_)
     )
   }

@@ -7,7 +7,7 @@ object Common{
   import Hierarchy._
   import Recursive._
   type Data = ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]
-  val benchmarkSampleData: Data = ADT(
+  val benchmarkSampleData: Seq[Data] = Seq.fill(1000)(ADT(
     Vector((1, 2), (3, 4), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13)),
     """
       |I am cow, hear me moo
@@ -18,7 +18,7 @@ object Common{
     Node(-11, Node(-22, Node(-33, Node(-44, End)))): LL,
     ADTc(i = 1234567890, s = "i am a strange loop"),
     ADT0()
-  )
+  ))
   val benchmarkSampleJson = upickle.default.write(benchmarkSampleData)
   val benchmarkSampleMsgPack = upickle.default.writeBinary(benchmarkSampleData)
 
@@ -48,8 +48,8 @@ object Common{
     implicit def _w9: Encoder[ADT0] = deriveEncoder
 
     bench[String](duration)(
-      decode[Data](_).right.get,
-      implicitly[Encoder[Data]].apply(_).toString()
+      decode[Seq[Data]](_).right.get,
+      implicitly[Encoder[Seq[Data]]].apply(_).toString()
     )
 
   }
@@ -76,7 +76,7 @@ object Common{
 
 
     bench[String](duration)(
-      s => Json.fromJson[Data](Json.parse(s)).get,
+      s => Json.fromJson[Seq[Data]](Json.parse(s)).get,
       d => Json.stringify(Json.toJson(d))
     )
   }
@@ -96,7 +96,7 @@ object Common{
 
 
     bench[String](duration)(
-      upickle.legacy.read[Data](_),
+      upickle.legacy.read[Seq[Data]](_),
       upickle.legacy.write(_)
     )
 
@@ -105,7 +105,7 @@ object Common{
   def upickleDefault(duration: Int) = {
 
     bench[String](duration)(
-      upickle.default.read[Data](_),
+      upickle.default.read[Seq[Data]](_),
       upickle.default.write(_)
     )
   }
@@ -125,7 +125,7 @@ object Common{
 
 
     bench[Array[Byte]](duration)(
-      upickle.legacy.readBinary[Data](_),
+      upickle.legacy.readBinary[Seq[Data]](_),
       upickle.legacy.writeBinary(_)
     )
 
@@ -134,7 +134,7 @@ object Common{
   def upickleBinaryDefault(duration: Int) = {
 
     bench[Array[Byte]](duration)(
-      upickle.default.readBinary[Data](_),
+      upickle.default.readBinary[Seq[Data]](_),
       upickle.default.writeBinary(_)
     )
   }
@@ -184,8 +184,8 @@ object Common{
     implicit lazy val _w9: Encoder[ADT0] = deriveEncoder
 
     bench[String](duration)(
-      decode[Data](_).right.get,
-      implicitly[Encoder[Data]].apply(_).toString()
+      decode[Seq[Data]](_).right.get,
+      implicitly[Encoder[Seq[Data]]].apply(_).toString()
     )
   }
 
@@ -212,7 +212,7 @@ object Common{
 
 
     bench[String](duration)(
-      s => Json.fromJson[Data](Json.parse(s)).get,
+      s => Json.fromJson[Seq[Data]](Json.parse(s)).get,
       d => Json.stringify(Json.toJson(d))
     )
 
@@ -232,7 +232,7 @@ object Common{
     implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
 
     bench[String](duration)(
-      upickle.legacy.read[Data](_),
+      upickle.legacy.read[Seq[Data]](_),
       upickle.legacy.write(_)
     )
   }
@@ -249,7 +249,23 @@ object Common{
     implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
 
     bench[String](duration)(
-      upickle.default.read[Data](_),
+      upickle.default.read[Seq[Data]](_),
+      upickle.default.write(_)
+    )
+  }
+  def upickleDefaultCachedReadable(duration: Int) = {
+    implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
+    implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
+    implicit lazy val rw3: upickle.default.ReadWriter[B] = upickle.default.macroRW
+    implicit lazy val rw4: upickle.default.ReadWriter[C] = upickle.default.macroRW
+    implicit lazy val rw5: upickle.default.ReadWriter[LL] = upickle.default.macroRW
+    implicit lazy val rw6: upickle.default.ReadWriter[Node] = upickle.default.macroRW
+    implicit lazy val rw7: upickle.default.ReadWriter[End.type] = upickle.default.macroRW
+    implicit lazy val rw8: upickle.default.ReadWriter[ADTc] = upickle.default.macroRW
+    implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
+
+    bench[String](duration)(
+      x => upickle.default.read[Seq[Data]](x: geny.Readable),
       upickle.default.write(_)
     )
   }
@@ -268,7 +284,7 @@ object Common{
     implicit lazy val rw9: RW[ADT0] = upickle.legacy.macroRW
 
     bench[Array[Byte]](duration)(
-      upickle.legacy.readBinary[Data](_),
+      upickle.legacy.readBinary[Seq[Data]](_),
       upickle.legacy.writeBinary(_)
     )
   }
@@ -285,7 +301,23 @@ object Common{
     implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
 
     bench[Array[Byte]](duration)(
-      upickle.default.readBinary[Data](_),
+      upickle.default.readBinary[Seq[Data]](_),
+      upickle.default.writeBinary(_)
+    )
+  }
+  def upickleDefaultBinaryCachedReadable(duration: Int) = {
+    implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
+    implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
+    implicit lazy val rw3: upickle.default.ReadWriter[B] = upickle.default.macroRW
+    implicit lazy val rw4: upickle.default.ReadWriter[C] = upickle.default.macroRW
+    implicit lazy val rw5: upickle.default.ReadWriter[LL] = upickle.default.macroRW
+    implicit lazy val rw6: upickle.default.ReadWriter[Node] = upickle.default.macroRW
+    implicit lazy val rw7: upickle.default.ReadWriter[End.type] = upickle.default.macroRW
+    implicit lazy val rw8: upickle.default.ReadWriter[ADTc] = upickle.default.macroRW
+    implicit lazy val rw9: upickle.default.ReadWriter[ADT0] = upickle.default.macroRW
+
+    bench[Array[Byte]](duration)(
+      x => upickle.default.readBinary[Seq[Data]](x: geny.Readable),
       upickle.default.writeBinary(_)
     )
   }
@@ -310,7 +342,7 @@ object Common{
 //  }
 
   def bench[T](duration: Int)
-              (f1: T => Data, f2: Data => T)
+              (f1: T => Seq[Data], f2: Seq[Data] => T)
               (implicit name: sourcecode.Name) = {
     val stringified = f2(benchmarkSampleData)
     val r1 = f1(stringified)
@@ -322,7 +354,7 @@ object Common{
       case (lhs: Array[_], rhs: Array[_]) => assert(lhs.toSeq == rhs.toSeq)
       case _ => assert(stringified == rewritten)
     }
-    bench0[T, Data](duration, stringified)(f1, f2)
+    bench0[T, Seq[Data]](duration, stringified)(f1, f2)
   }
 
   def bench0[T, V](duration: Int, stringified: T)
