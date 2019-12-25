@@ -21,11 +21,11 @@ final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0)
   protected[this] final def column(i: Int) = i
 
   protected[this] final def close() {}
-  protected[this] final def reset(i: Int): Int = i
+  protected[this] final def dropBufferUntil(i: Int): Unit = ()
   protected[this] final def byte(i: Int): Byte = Platform.byteAt(src, i + start)
-  protected[this] final def at(i: Int): Char = Platform.byteAt(src, i + start).toChar
+  protected[this] final def char(i: Int): Char = Platform.byteAt(src, i + start).toChar
 
-  protected[this] final def at(i: Int, k: Int): CharSequence = {
+  protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
     new String(src, i, k - i, utf8)
   }
 

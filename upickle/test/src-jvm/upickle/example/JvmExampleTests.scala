@@ -24,7 +24,6 @@ object JvmExampleTests extends TestSuite {
 
       read[Thing](f) ==> Thing(1, "gg")
       read[Thing](f.toFile) ==> Thing(1, "gg")
-      read[Thing](Files.newByteChannel(f)) ==> Thing(1, "gg")
     }
     test("other"){
       test("argonaut"){

@@ -24,12 +24,12 @@ trait CharBasedParser[J] extends Parser[J] {
    */
   protected[this] final def parseStringSimple(i: Int): Int = {
     var j = i
-    var c = at(j)
+    var c = char(j)
     while (c != '"') {
       if (c < ' ') return die(j, s"control char (${c.toInt}) in string")
       if (c == '\\') return -1 - j
       j += 1
-      c = at(j)
+      c = char(j)
     }
     j + 1
   }
@@ -42,15 +42,15 @@ trait CharBasedParser[J] extends Parser[J] {
                                                key: Boolean): (CharSequence, Int) = {
 
     val sb = charBuilder.reset()
-    sb.extend(at(pre, i))
+    sb.extend(sliceString(pre, i))
     var j = i
 
-    var c = at(j)
+    var c = char(j)
     while (c != '"') {
       if (c < ' ') {
         die(j, s"control char (${c.toInt}) in string")
       } else if (c == '\\') {
-        (at(j + 1): @switch) match {
+        (char(j + 1): @switch) match {
           case 'b' => { sb.append('\b'); j += 2 }
           case 'f' => { sb.append('\f'); j += 2 }
           case 'n' => { sb.append('\n'); j += 2 }
@@ -62,7 +62,7 @@ trait CharBasedParser[J] extends Parser[J] {
           case '\\' => { sb.append('\\'); j += 2 }
 
           // if there's a problem then descape will explode
-          case 'u' => { sb.append(descape(at(j + 2, j + 6))); j += 6 }
+          case 'u' => { sb.append(descape(sliceString(j + 2, j + 6))); j += 6 }
 
           case c => die(j, s"illegal escape sequence (\\$c)")
         }
@@ -75,8 +75,8 @@ trait CharBasedParser[J] extends Parser[J] {
         sb.append(c)
         j += 1
       }
-      j = reset(j)
-      c = at(j)
+      dropBufferUntil(j)
+      c = char(j)
     }
 
     (sb.makeString, j + 1)
@@ -94,7 +94,7 @@ trait CharBasedParser[J] extends Parser[J] {
 
     val k = parseStringSimple(i + 1)
 
-    if (k >= 0) (at(i + 1, k - 1), k)
+    if (k >= 0) (sliceString(i + 1, k - 1), k)
     else parseStringComplex(i + 1, (-k) - 1, key)
   }
 }

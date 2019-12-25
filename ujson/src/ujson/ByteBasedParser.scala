@@ -62,7 +62,7 @@ trait ByteBasedParser[J] extends Parser[J] {
           case 92 => { sb.append('\\'); j += 2 }
 
           // if there's a problem then descape will explode
-          case 117 => { sb.append(descape(at(j + 2, j + 6))); j += 6 }
+          case 117 => { sb.append(descape(sliceString(j + 2, j + 6))); j += 6 }
 
           case c => die(j, s"invalid escape sequence (\\${c.toChar})")
         }
@@ -74,15 +74,15 @@ trait ByteBasedParser[J] extends Parser[J] {
         j += 1
       } else if ((c & 224) == 192) {
         // 2-byte UTF-8 sequence
-        sb.extend(at(j, j + 2))
+        sb.extend(sliceString(j, j + 2))
         j += 2
       } else if ((c & 240) == 224) {
         // 3-byte UTF-8 sequence
-        sb.extend(at(j, j + 3))
+        sb.extend(sliceString(j, j + 3))
         j += 3
       } else if ((c & 248) == 240) {
         // 4-byte UTF-8 sequence
-        sb.extend(at(j, j + 4))
+        sb.extend(sliceString(j, j + 4))
         j += 4
       } else {
         die(j, "invalid UTF-8 encoding")
@@ -101,7 +101,7 @@ trait ByteBasedParser[J] extends Parser[J] {
   protected[this] final def parseString(i: Int, key: Boolean): (CharSequence, Int) = {
     val k = parseStringSimple(i + 1)
     if (k != -1) {
-      val s = at(i + 1, k - 1)
+      val s = sliceString(i + 1, k - 1)
       (s, k)
     }else{
       parseStringComplex(i)

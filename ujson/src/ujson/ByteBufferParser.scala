@@ -24,11 +24,11 @@ final class ByteBufferParser[J](src: ByteBuffer) extends Parser[J] with ByteBase
   protected[this] final def column(i: Int) = i
 
   protected[this] final def close() { src.position(src.limit) }
-  protected[this] final def reset(i: Int): Int = i
+  protected[this] final def dropBufferUntil(i: Int): Unit = ()
   protected[this] final def byte(i: Int): Byte = src.get(i + start)
-  protected[this] final def at(i: Int): Char = src.get(i + start).toChar
+  protected[this] final def char(i: Int): Char = src.get(i + start).toChar
 
-  protected[this] final def at(i: Int, k: Int): CharSequence = {
+  protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
     val len = k - i
     val arr = new Array[Byte](len)
     src.position(i + start)

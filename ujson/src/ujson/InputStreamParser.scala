@@ -3,7 +3,7 @@ package ujson
 import scala.annotation.{switch, tailrec}
 import java.nio.ByteBuffer
 
-import upickle.core.{ObjArrVisitor, Visitor, UberBuffer}
+import upickle.core.{ObjArrVisitor, Visitor}
 /**
   * Parser that reads in bytes from an InputStream, buffering them in memory
   * until a `reset` call discards them.
@@ -29,7 +29,7 @@ final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) ext
   protected[this] final def column(i: Int) = i
 
   protected[this] final def close() {}
-  protected[this] final def reset(i: Int): Int = {
+  protected[this] final def dropBufferUntil(i: Int): Unit = {
     dropped = i
     i
   }
@@ -37,12 +37,12 @@ final class InputStreamParser[J](data: java.io.InputStream, bufferSize: Int) ext
     requestUntil(i)
     buffer.apply(i - firstIdx)
   }
-  protected[this] final def at(i: Int): Char = {
+  protected[this] final def char(i: Int): Char = {
     requestUntil(i)
     buffer.apply(i - firstIdx).toChar
   }
 
-  protected[this] final def at(i: Int, k: Int): CharSequence = {
+  protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
     requestUntil(k)
     new String(buffer.slice(i - firstIdx, k - firstIdx))
   }

@@ -1,6 +1,6 @@
 package ujson
 
-import upickle.core.{ArrVisitor, ObjVisitor, Visitor, UberBuffer}
+import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 
 /**
   * A [[Visitor]] specialized to work with JSON types. Forwards the

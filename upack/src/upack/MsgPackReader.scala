@@ -1,5 +1,5 @@
 package upack
-import upickle.core.{Visitor, UberBuffer}
+import upickle.core.Visitor
 import upack.{MsgPackKeys => MPK}
 
 import scala.annotation.switch
@@ -11,13 +11,12 @@ class MsgPackReader(startIndex: Int = 0, input0: Array[Byte]) extends BaseMsgPac
   def sliceString(i: Int, n: Int): String = new String(input0, i, n)
   def sliceBytes(i: Int, n: Int): (Array[Byte], Int, Int) = (input0, i, n)
   def index = index0
-  def input(i: Int): Byte = input0(i)
+  def byte(i: Int): Byte = input0(i)
   def dropBufferUntil(i: Int): Unit = ()//donothing
 }
-class InputStreamMsgPackReader(input0: java.io.InputStream, bufferSize: Int) extends BaseMsgPackReader {
-  private[this] val buffer: UberBuffer = new UberBuffer(16)
-  private[this] val streamBuffer = new Array[Byte](bufferSize)
-  private[this] var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
+class InputStreamMsgPackReader(val data: java.io.InputStream, val bufferSize: Int)
+extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
+
   private[this] var index0 = 0
 
   def incrementIndex(i: Int): Unit = {
@@ -26,43 +25,14 @@ class InputStreamMsgPackReader(input0: java.io.InputStream, bufferSize: Int) ext
   def setIndex(i: Int): Unit = {
     index0 = i
   }
-  def sliceString(i: Int, n: Int): String = {
-    requestUntil(i + n)
-    new String(buffer.slice(i - firstIdx, i + n - firstIdx))
-  }
-  def sliceBytes(i: Int, n: Int): (Array[Byte], Int, Int) = {
-    requestUntil(i + n)
-    val arr = buffer.slice(i - firstIdx, i + n - firstIdx)
-    (arr, 0, arr.length)
-  }
-  def index = index0
-  def input(i: Int): Byte = {
-    requestUntil(i)
-    buffer.apply(i - firstIdx)
-  }
 
-  def length: Int = firstIdx + buffer.length
-  def requestUntil(until: Int): Unit = {
-    var done = false
-    while (length <= until && !done) {
-      input0.read(streamBuffer, 0, bufferSize) match{
-        case -1 => done = true
-        case n => buffer.write(streamBuffer, n)
-      }
-    }
-  }
-  def dropBufferUntil(i: Int): Unit = {
-    if (i > firstIdx){
-      buffer.drop(i  - firstIdx)
-      firstIdx = i
-    }
-  }
+  def index = index0
 }
 
 abstract class BaseMsgPackReader{
 
   def index: Int
-  def input(i: Int): Byte
+  def byte(i: Int): Byte
   def incrementIndex(i: Int): Unit
   def setIndex(i: Int): Unit
   def sliceString(i: Int, j: Int): String
@@ -70,7 +40,7 @@ abstract class BaseMsgPackReader{
   def dropBufferUntil(i: Int): Unit
   def parse[T](visitor: Visitor[_, T]): T = {
     dropBufferUntil(index)
-    val n = input(index)
+    val n = byte(index)
     (n & 0xFF: @switch) match{
       case MPK.Nil => incrementIndex(1); visitor.visitNull(index)
       case MPK.False => incrementIndex(1); visitor.visitFalse(index)
@@ -138,7 +108,7 @@ abstract class BaseMsgPackReader{
   }
   def parseExt[T](n: Int, visitor: Visitor[_, T]) = {
     val (arr, i, j) = sliceBytes(index + 1, n)
-    visitor.visitExt(input(index), arr, i, j, index)
+    visitor.visitExt(byte(index), arr, i, j, index)
   }
 
   def parseStr[T](n: Int, visitor: Visitor[_, T]) = {
@@ -178,21 +148,21 @@ abstract class BaseMsgPackReader{
   }
   def parseUInt8(i: Int) = {
     setIndex(i + 1)
-    input(i) & 0xff
+    byte(i) & 0xff
   }
   def parseUInt16(i: Int) = {
     setIndex(i + 2)
-    (input(i) & 0xff) << 8 | input(i + 1) & 0xff
+    (byte(i) & 0xff) << 8 | byte(i + 1) & 0xff
   }
   def parseUInt32(i: Int) = {
     setIndex(i + 4)
-    (input(i) & 0xff) << 24 | (input(i + 1) & 0xff) << 16 | (input(i + 2) & 0xff) << 8 | input(i + 3) & 0xff
+    (byte(i) & 0xff) << 24 | (byte(i + 1) & 0xff) << 16 | (byte(i + 2) & 0xff) << 8 | byte(i + 3) & 0xff
   }
   def parseUInt64(i: Int) = {
     setIndex(i + 8)
-    (input(i + 0).toLong & 0xff) << 56 | (input(i + 1).toLong & 0xff) << 48 |
-    (input(i + 2).toLong & 0xff) << 40 | (input(i + 3).toLong & 0xff) << 32 |
-    (input(i + 4).toLong & 0xff) << 24 | (input(i + 5).toLong & 0xff) << 16 |
-    (input(i + 6).toLong & 0xff) << 8 | (input(i + 7).toLong & 0xff) << 0
+    (byte(i + 0).toLong & 0xff) << 56 | (byte(i + 1).toLong & 0xff) << 48 |
+    (byte(i + 2).toLong & 0xff) << 40 | (byte(i + 3).toLong & 0xff) << 32 |
+    (byte(i + 4).toLong & 0xff) << 24 | (byte(i + 5).toLong & 0xff) << 16 |
+    (byte(i + 6).toLong & 0xff) << 8 | (byte(i + 7).toLong & 0xff) << 0
   }
 }

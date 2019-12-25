@@ -42,12 +42,12 @@ abstract class Parser[J] {
    * Note that this should not be used on potential multi-byte
    * sequences.
    */
-  protected[this] def at(i: Int): Char
+  protected[this] def char(i: Int): Char
 
   /**
    * Read the bytes/chars from 'i' until 'j' as a String.
    */
-  protected[this] def at(i: Int, j: Int): CharSequence
+  protected[this] def sliceString(i: Int, j: Int): CharSequence
 
   /**
    * Return true iff 'i' is at or beyond the end of the input (EOF).
@@ -61,7 +61,7 @@ abstract class Parser[J] {
    * (e.g. PathParser) will need to use this information to release
    * and allocate different areas.
    */
-  protected[this] def reset(i: Int): Int
+  protected[this] def dropBufferUntil(i: Int): Unit
 
   /**
    * Should be called when parsing is finished.
@@ -104,7 +104,7 @@ abstract class Parser[J] {
     val (value, i) = parse(0, facade)
     var j = i
     while (!atEof(j)) {
-      (at(j): @switch) match {
+      (char(j): @switch) match {
         case '\n' => newline(j); j += 1
         case ' ' | '\t' | '\r' => j += 1
         case _ => die(j, "expected whitespace or eof")
@@ -121,7 +121,7 @@ abstract class Parser[J] {
   protected[this] def die(i: Int, msg: String): Nothing = {
     val y = line() + 1
     val x = column(i) + 1
-    val s = "%s got %s (line %d, column %d)" format (msg, at(i), y, x)
+    val s = "%s got %s (line %d, column %d)" format (msg, char(i), y, x)
     throw ParseException(s, i, y, x)
   }
 
@@ -146,46 +146,46 @@ abstract class Parser[J] {
    */
   protected[this] final def parseNum(i: Int, ctxt: ObjArrVisitor[Any, J], facade: Visitor[_, J]): Int = {
     var j = i
-    var c = at(j)
+    var c = char(j)
     var decIndex = -1
     var expIndex = -1
 
     if (c == '-') {
       j += 1
-      c = at(j)
+      c = char(j)
     }
     if (c == '0') {
       j += 1
-      c = at(j)
+      c = char(j)
     } else {
       val j0 = j
-      while ('0' <= c && c <= '9') { j += 1; c = at(j) }
+      while ('0' <= c && c <= '9') { j += 1; c = char(j) }
       if (j == j0) die(i, "expected digit")
     }
 
     if (c == '.') {
       decIndex = j - i
       j += 1
-      c = at(j)
+      c = char(j)
       val j0 = j
-      while ('0' <= c && c <= '9') { j += 1; c = at(j) }
+      while ('0' <= c && c <= '9') { j += 1; c = char(j) }
       if (j0 == j) die(i, "expected digit")
     }
 
     if (c == 'e' || c == 'E') {
       expIndex = j - i
       j += 1
-      c = at(j)
+      c = char(j)
       if (c == '+' || c == '-') {
         j += 1
-        c = at(j)
+        c = char(j)
       }
       val j0 = j
-      while ('0' <= c && c <= '9') { j += 1; c = at(j) }
+      while ('0' <= c && c <= '9') { j += 1; c = char(j) }
       if (j0 == j)  die(i, "expected digit")
     }
 
-    ctxt.visitValue(facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), i)
+    ctxt.visitValue(facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), i)
     j
   }
 
@@ -205,29 +205,29 @@ abstract class Parser[J] {
    */
   protected[this] final def parseNumSlow(i: Int, facade: Visitor[_, J]): (J, Int) = {
     var j = i
-    var c = at(j)
+    var c = char(j)
     var decIndex = -1
     var expIndex = -1
 
     if (c == '-') {
       // any valid input will require at least one digit after -
       j += 1
-      c = at(j)
+      c = char(j)
     }
     if (c == '0') {
       j += 1
       if (atEof(j)) {
-        return (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
+        return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
       }
-      c = at(j)
+      c = char(j)
     } else {
       val j0 = j
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          return (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
         }
-        c = at(j)
+        c = char(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
@@ -236,14 +236,14 @@ abstract class Parser[J] {
       // any valid input will require at least one digit after .
       decIndex = j - i
       j += 1
-      c = at(j)
+      c = char(j)
       val j0 = j
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
-          return (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
         }
-        c = at(j)
+        c = char(j)
       }
       if(j0 == j) die(i, "expected digit")
     }
@@ -252,24 +252,24 @@ abstract class Parser[J] {
       // any valid input will require at least one digit after e, e+, etc
       expIndex = j - i
       j += 1
-      c = at(j)
+      c = char(j)
       if (c == '+' || c == '-') {
         j += 1
-        c = at(j)
+        c = char(j)
       }
       val j0 = j
       while ('0' <= c && c <= '9') {
         j += 1
         if (atEof(j)) {
 
-          return (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
         }
-        c = at(j)
+        c = char(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
 
-    (facade.visitFloat64StringParts(at(i, j), decIndex, expIndex, i), j)
+    (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
   }
 
   /**
@@ -300,7 +300,7 @@ abstract class Parser[J] {
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseTrue(i: Int, facade: Visitor[_, J]): J =
-    if (at(i + 1) == 'r' && at(i + 2) == 'u' && at(i + 3) == 'e') {
+    if (char(i + 1) == 'r' && char(i + 2) == 'u' && char(i + 3) == 'e') {
       facade.visitTrue(i)
     } else {
       die(i, "expected true")
@@ -312,7 +312,7 @@ abstract class Parser[J] {
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseFalse(i: Int, facade: Visitor[_, J]): J =
-    if (at(i + 1) == 'a' && at(i + 2) == 'l' && at(i + 3) == 's' && at(i + 4) == 'e') {
+    if (char(i + 1) == 'a' && char(i + 2) == 'l' && char(i + 3) == 's' && char(i + 4) == 'e') {
       facade.visitFalse(i)
     } else {
       die(i, "expected false")
@@ -324,7 +324,7 @@ abstract class Parser[J] {
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseNull(i: Int, facade: Visitor[_, J]): J =
-    if (at(i + 1) == 'u' && at(i + 2) == 'l' && at(i + 3) == 'l') {
+    if (char(i + 1) == 'u' && char(i + 2) == 'l' && char(i + 3) == 'l') {
       facade.visitNull(i)
     } else {
       die(i, "expected null")
@@ -334,7 +334,7 @@ abstract class Parser[J] {
    * Parse and return the next JSON value and the position beyond it.
    */
   protected[this] final def parse(i: Int, facade: Visitor[_, J]): (J, Int) = try {
-    (at(i): @switch) match {
+    (char(i): @switch) match {
       // ignore whitespace
       case ' ' => parse(i + 1, facade)
       case '\t' => parse(i + 1, facade)
@@ -398,9 +398,10 @@ abstract class Parser[J] {
   protected[this] final def rparse(state: Int,
                                    j: Int,
                                    stack: List[ObjArrVisitor[_, J]]) : (J, Int) = {
-    val i = reset(j)
+    val i = j
+    dropBufferUntil(j)
     def facade: Visitor[_, J] = stack.head.subVisitor.asInstanceOf[Visitor[_, J]]
-    val c = at(i)
+    val c = char(i)
 
     if (c == '\n') {
       newline(i)
