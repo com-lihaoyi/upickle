@@ -7,7 +7,7 @@ trait Readable {
   def transform[T](f: Visitor[_, T]): T
 }
 
-object Readable {
+object Readable extends ReadableLowPri{
   case class fromTransformer[T](t: T, w: Transformer[T]) extends Readable{
     def transform[T](f: Visitor[_, T]): T = {
       w.transform(t, f)
@@ -25,7 +25,10 @@ object Readable {
   )
   implicit def fromByteBuffer(s: ByteBuffer) = new fromTransformer(s, ByteBufferParser)
   implicit def fromByteArray(s: Array[Byte]) = new fromTransformer(s, ByteArrayParser)
-  implicit def fromReadable(s: geny.Readable) = new Readable{
-    def transform[T](f: Visitor[_, T]): T = s.readBytesThrough(InputStreamParser.transform(_, f))
+}
+
+trait ReadableLowPri{
+  implicit def fromReadable[T](s: T)(implicit conv: T => geny.Readable) = new Readable{
+    def transform[T](f: Visitor[_, T]): T = conv(s).readBytesThrough(InputStreamParser.transform(_, f))
   }
 }

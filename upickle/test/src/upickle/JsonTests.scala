@@ -81,6 +81,15 @@ object JsonTests extends TestSuite {
       }
       (parsed(19), reparsed(19))
     }
+    test("inputs"){
+      val unparsed = ujson.write(parsed)
+      val fromString = ujson.read(unparsed)
+      val fromBytes = ujson.read(unparsed.getBytes)
+      val fromInputStream = ujson.read(new java.io.ByteArrayInputStream(unparsed.getBytes))
+
+      assert(fromString == fromBytes)
+      assert(fromBytes == fromInputStream)
+    }
     test("shortcuts"){
       test("positive"){
         ujson.read("[1]").arr        ==> Seq(ujson.Num(1))
