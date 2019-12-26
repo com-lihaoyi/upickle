@@ -23,20 +23,22 @@ trait BufferingInputStreamParser{
   def minStartBufferSize: Int
   def data: java.io.InputStream
   private[this] var buffer = new Array[Byte]({
-    val available = data.available()
-    // + 1 to make sure we always have just a bit more space than is necessary to
-    // store the entire stream contents. This is necessary to avoid trying to
-    // check for EOF when the entire buffer is full, which fails on Scala.js due to
-    //
-    // - https://github.com/scala-js/scala-js/issues/3913
-    if (available + 1 < minStartBufferSize) minStartBufferSize
-    else if (available + 1 > maxStartBufferSize) maxStartBufferSize
-    else available + 1
+    val available = bumpBufferSize(data.available())
+    if (available < minStartBufferSize) minStartBufferSize
+    else if (available > maxStartBufferSize) maxStartBufferSize
+    else available
   })
 
   private[this] var firstIdx = 0
   private[this] var lastIdx = 0
   private[this] var dropped = 0
+
+  // + 1 to make sure we always have just a bit more space than is necessary to
+  // store the entire stream contents. This is necessary to avoid trying to
+  // check for EOF when the entire buffer is full, which fails on Scala.js due to
+  //
+  // - https://github.com/scala-js/scala-js/issues/3913
+  private[this] def bumpBufferSize(n: Int) = n + 1
 
   def getLastIdx = lastIdx
 
@@ -57,16 +59,15 @@ trait BufferingInputStreamParser{
   }
 
   protected def requestUntil(until: Int): Boolean = {
-    // + 1 to make sure we always have just a bit more space than is necessary to
-    // store the entire stream contents. This is necessary to avoid trying to
-    // check for EOF when the entire buffer is full, which fails on Scala.js due to
-    //
-    // - https://github.com/scala-js/scala-js/issues/3913
-    val untilBufferOffset = until - firstIdx + 1
-    if (untilBufferOffset >= buffer.size){
+    val untilBufferOffset = bumpBufferSize(until - firstIdx)
+    if (untilBufferOffset >= buffer.length){
       var newSize = buffer.length
 
-      val growGoalSize = (until - dropped + 1)
+      // Bump growGoalSiz by 50%. This helps ensure the utilization of the buffer
+      // ranges from 33% to 66%, rather than from 50% to 100%. We want to avoid being
+      // near 100% because we could end up doing large numbers of huge System.arraycopy
+      // calls even when processing tiny amounts of data
+      val growGoalSize = (until - dropped + 1) * 3 / 2
       while (newSize <= growGoalSize) newSize *= 2
 
       val arr = if (newSize > buffer.length / 2) new Array[Byte](newSize) else buffer
