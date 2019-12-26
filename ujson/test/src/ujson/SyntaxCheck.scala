@@ -73,7 +73,7 @@ class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
     val r2 = Try(ByteBufferParser.transform(bb, NoOpVisitor)).isSuccess
     val r3 = Try(InputStreamParser.transform(new ByteArrayInputStream(s.getBytes), NoOpVisitor)).isSuccess
     val r4 = Try(ByteArrayParser.transform(s.getBytes, NoOpVisitor)).isSuccess
-    val r5 = Try(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 5).parse(NoOpVisitor)).isSuccess
+    val r5 = Try(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 5, 5).parse(NoOpVisitor)).isSuccess
     if (r0 != r1) sys.error(s"CharSequence/String parsing disagree($r0, $r1): $s")
     if (r1 != r2) sys.error(s"String/ByteBuffer parsing disagree($r1, $r2): $s")
     if (r2 != r3) sys.error(s"ByteBuffer/InputStream parsing disagree($r2, $r3): $s")

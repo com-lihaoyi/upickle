@@ -11,7 +11,9 @@ class MsgPackReader(val startIndex: Int = 0, input0: Array[Byte]) extends BaseMs
   def dropBufferUntil(i: Int): Unit = ()//donothing
 }
 
-class InputStreamMsgPackReader(val data: java.io.InputStream, val bufferSize: Int)
+class InputStreamMsgPackReader(val data: java.io.InputStream,
+                               val minStartBufferSize: Int,
+                               val maxStartBufferSize: Int)
 extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
   def startIndex = 0
 }

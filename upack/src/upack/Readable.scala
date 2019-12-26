@@ -12,7 +12,13 @@ object Readable {
   }
   implicit def fromReadable(s: geny.Readable) = new Readable{
     def transform[T](f: Visitor[_, T]): T = {
-      s.readBytesThrough(new InputStreamMsgPackReader(_, 4096).parse(f))
+      s.readBytesThrough(
+        new InputStreamMsgPackReader(
+          _,
+          upickle.core.BufferingInputStreamParser.defaultMinBufferStartSize,
+          upickle.core.BufferingInputStreamParser.defaultMaxBufferStartSize
+        ).parse(f)
+      )
     }
   }
 }

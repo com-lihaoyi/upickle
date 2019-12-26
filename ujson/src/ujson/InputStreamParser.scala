@@ -13,7 +13,9 @@ import upickle.core.{ObjArrVisitor, Visitor}
   *
   * Generally not meant to be used directly, but via [[ujson.Readable.fromReadable]]
   */
-final class InputStreamParser[J](val data: java.io.InputStream, val bufferSize: Int)
+final class InputStreamParser[J](val data: java.io.InputStream,
+                                 val minStartBufferSize: Int,
+                                 val maxStartBufferSize: Int)
 extends Parser[J] with ByteBasedParser[J] with upickle.core.BufferingInputStreamParser{
 
   private[this] var eof = -1
@@ -46,5 +48,12 @@ extends Parser[J] with ByteBasedParser[J] with upickle.core.BufferingInputStream
 }
 
 object InputStreamParser extends Transformer[java.io.InputStream]{
-  def transform[T](j: java.io.InputStream, f: Visitor[_, T]) = new InputStreamParser(j, 16 * 1024).parse(f)
+  def transform[T](j: java.io.InputStream, f: Visitor[_, T]) = {
+    val p = new InputStreamParser[T](
+      j,
+      upickle.core.BufferingInputStreamParser.defaultMinBufferStartSize,
+      upickle.core.BufferingInputStreamParser.defaultMaxBufferStartSize
+    )
+    p.parse(f)
+  }
 }

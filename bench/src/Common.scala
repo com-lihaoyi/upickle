@@ -395,7 +395,7 @@ object Common{
         case _ => assert(stringified == rewritten)
       }
     }
-    bench0[T, Seq[Data]](duration, stringified)(f1, f2)
+//    bench0[T, Seq[Data]](duration, stringified)(f1, f2)
   }
 
   def bench0[T, V](duration: Int, stringified: T)
