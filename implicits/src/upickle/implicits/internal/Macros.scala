@@ -5,6 +5,7 @@ import scala.language.experimental.macros
 import compat._
 import acyclic.file
 import upickle.implicits.key
+import upickle.implicits.serialize
 
 import language.higherKinds
 import language.existentials
@@ -347,6 +348,12 @@ object Macros {
                   targetType: c.Type,
                   varargs: Boolean) = {
       val defaults = deriveDefaults(companion, hasDefaults)
+      
+      val serDfltVals = targetType.typeSymbol.annotations
+        .find(_.tpe == typeOf[serialize])
+        .flatMap(_.scalaArgs.headOption)
+        .collect { case Literal(Constant(defaultValues: Boolean)) => defaultValues }
+        .getOrElse(false)
 
       def write(i: Int) = {
         val snippet = q"""
@@ -361,7 +368,7 @@ object Macros {
           val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]]
           ctx.narrow.visitValue(w.write(ctx.subVisitor, v.${TermName(rawArgs(i))}), -1)
         """
-        if (!hasDefaults(i)) snippet
+        if (serDfltVals || !hasDefaults(i)) snippet
         else q"""if (v.${TermName(rawArgs(i))} != ${defaults(i)}) $snippet"""
       }
       q"""
@@ -371,7 +378,7 @@ object Macros {
             ..${
               for(i <- 0 until rawArgs.length)
               yield {
-                if (!hasDefaults(i)) q"n += 1"
+                if (serDfltVals || !hasDefaults(i)) q"n += 1"
                 else q"""if (v.${TermName(rawArgs(i))} != ${defaults(i)}) n += 1"""
               }
             }

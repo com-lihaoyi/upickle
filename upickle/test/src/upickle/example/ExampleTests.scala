@@ -48,6 +48,12 @@ object Defaults{
   object FooDefault{
     implicit val rw: RW[FooDefault] = macroRW
   }
+
+  @upickle.implicits.serialize(defaultValues = true)
+  case class BarDefault(i: Int = 10, s: String = "lol")
+  object BarDefault{
+    implicit val rw: RW[BarDefault] = macroRW
+  }
 }
 object Keyed{
   case class KeyBar(@upickle.implicits.key("hehehe") kekeke: Int)
@@ -232,6 +238,10 @@ object ExampleTests extends TestSuite {
         write(FooDefault(i = 11, s = "lol"))  ==> """{"i":11}"""
         write(FooDefault(i = 10, s = "lol"))  ==> """{}"""
         write(FooDefault())                   ==> """{}"""
+        // serialize values which have defaults:
+        write(BarDefault(i = 11, s = "lol"))  ==> """{"i":11,"s":"lol"}"""
+        write(BarDefault(i = 10, s = "lol"))  ==> """{"i":10,"s":"lol"}"""
+        write(BarDefault())                   ==> """{"i":10,"s":"lol"}"""
       }
     }
 
