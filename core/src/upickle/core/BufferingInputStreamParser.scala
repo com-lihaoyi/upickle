@@ -69,7 +69,7 @@ trait BufferingInputStreamParser{
       val growGoalSize = (until - dropped + 1)
       while (newSize <= growGoalSize) newSize *= 2
 
-      val arr = if (newSize > buffer.length / 2) new Array[Byte](newSize) else buffer
+      val arr = if (newSize > buffer.length) new Array[Byte](newSize) else buffer
 
       System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
       firstIdx = dropped
