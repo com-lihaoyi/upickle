@@ -63,7 +63,7 @@ trait BufferingInputStreamParser{
     //
     // - https://github.com/scala-js/scala-js/issues/3913
     val untilBufferOffset = until - firstIdx + 1
-    if (untilBufferOffset >= buffer.size){
+    if (untilBufferOffset >= buffer.length){
       var newSize = buffer.length
 
       val growGoalSize = (until - dropped + 1)
