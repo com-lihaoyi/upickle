@@ -347,10 +347,10 @@ object Macros {
                   targetType: c.Type,
                   varargs: Boolean) = {
       val defaults = deriveDefaults(companion, hasDefaults)
+      val serDfltVals  = q"${c.prefix}.serializeDefaults"
 
       def write(i: Int) = {
         val snippet = q"""
-
           val keyVisitor = ctx.visitKey(-1)
           ctx.visitKeyValue(
             keyVisitor.visitString(
@@ -361,8 +361,9 @@ object Macros {
           val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]]
           ctx.narrow.visitValue(w.write(ctx.subVisitor, v.${TermName(rawArgs(i))}), -1)
         """
+        
         if (!hasDefaults(i)) snippet
-        else q"""if (v.${TermName(rawArgs(i))} != ${defaults(i)}) $snippet"""
+        else q"""if ($serDfltVals || v.${TermName(rawArgs(i))} != ${defaults(i)}) $snippet"""
       }
       q"""
         new ${c.prefix}.CaseW[$targetType]{
@@ -372,7 +373,7 @@ object Macros {
               for(i <- 0 until rawArgs.length)
               yield {
                 if (!hasDefaults(i)) q"n += 1"
-                else q"""if (v.${TermName(rawArgs(i))} != ${defaults(i)}) n += 1"""
+                else q"""if ($serDfltVals || v.${TermName(rawArgs(i))} != ${defaults(i)}) n += 1"""
               }
             }
             n

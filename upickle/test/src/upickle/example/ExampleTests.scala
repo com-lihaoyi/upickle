@@ -336,6 +336,16 @@ object ExampleTests extends TestSuite {
         NumLongs.write(Long.MaxValue) ==> "9223372036854775807"
 
       }
+
+      test("serializeDefaults"){
+        object SerializeDefaults extends upickle.AttributeTagged{
+          override def serializeDefaults = true
+        }
+        implicit val fooDefaultRW: SerializeDefaults.ReadWriter[FooDefault] = SerializeDefaults.macroRW
+        SerializeDefaults.write(FooDefault(i = 11, s = "lol"))  ==> """{"i":11,"s":"lol"}"""
+        SerializeDefaults.write(FooDefault(i = 10, s = "lol"))  ==> """{"i":10,"s":"lol"}"""
+        SerializeDefaults.write(FooDefault())                   ==> """{"i":10,"s":"lol"}"""
+      }
     }
 
     test("transform"){
