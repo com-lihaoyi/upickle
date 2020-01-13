@@ -7,6 +7,7 @@ import language.higherKinds
 import upickle.core._
 import scala.reflect.ClassTag
 import ujson.IndexedValue
+
 /**
  * An instance of the upickle API. There's a default instance at
  * `upickle.default`, but you can also implement it yourself to customize
@@ -21,6 +22,9 @@ trait Api
     with Api.NoOpMappers
     with JsReadWriters
     with MsgReadWriters{
+
+  def serializeDefaults: Boolean = false
+
   /**
     * Reads the given MessagePack input into a Scala value
     */
