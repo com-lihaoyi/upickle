@@ -16,7 +16,7 @@ trait CommonModule extends ScalaModule {
   )
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def publishVersion = "0.9.7"
+  def publishVersion = "0.9.8"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
