@@ -141,6 +141,12 @@ object MacroTests extends TestSuite {
           // different code-path than for tag-first dicts, using an intermediate
           // AST, so make sure that code path works too.
           test - rw(C("a", "b"), """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
+          test("mutable") {
+            // Make sure that the buffering done by the macro captures immutable values.
+            val r = new upickle.default.Reader.Delegate(new MutableCharSequenceVisitor(upickle.default.reader[C]))
+            val w = upickle.default.writer[C]
+            rw(C("a", "b"), """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")(r, w)
+          }
           test - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
           test - rw(C("a", "b"): A, """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
         }
