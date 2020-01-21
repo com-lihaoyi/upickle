@@ -129,14 +129,14 @@ trait Writers extends upickle.core.Types with Generated with MacroImplicits with
     def write0[R](out: Visitor[_, R], v: Either[T1, T2]): R = v match{
       case Left(t1) =>
         val ctx = out.visitArray(2, -1).narrow
-        ctx.visitValue(out.visitFloat64StringParts("0", -1, -1, -1), -1)
+        ctx.visitValue(ctx.subVisitor.visitFloat64StringParts("0", -1, -1, -1), -1)
 
         ctx.visitValue(implicitly[Writer[T1]].write(ctx.subVisitor, t1), -1)
 
         ctx.visitEnd(-1)
       case Right(t2) =>
         val ctx = out.visitArray(2, -1).narrow
-        ctx.visitValue(out.visitFloat64StringParts("1", -1, -1, -1), -1)
+        ctx.visitValue(ctx.subVisitor.visitFloat64StringParts("1", -1, -1, -1), -1)
 
         ctx.visitValue(implicitly[Writer[T2]].write(ctx.subVisitor, t2), -1)
 
