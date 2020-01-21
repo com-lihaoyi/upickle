@@ -195,10 +195,10 @@ object Visitor{
     override def visitTrue(index: Int) = mapFunction(delegatedReader.visitTrue(index))
 
     override def visitObject(length: Int, index: Int): ObjVisitor[T, Z] = {
-      new MapObjContext[T, V, Z](delegatedReader.visitObject(-1, index), mapNonNullsFunction)
+      new MapObjContext[T, V, Z](delegatedReader.visitObject(length, index), mapNonNullsFunction)
     }
     override def visitArray(length: Int, index: Int): ArrVisitor[T, Z] = {
-      new MapArrContext[T, V, Z](delegatedReader.visitArray(-1, index), mapNonNullsFunction)
+      new MapArrContext[T, V, Z](delegatedReader.visitArray(length, index), mapNonNullsFunction)
     }
 
     override def visitFloat32(d: Float, index: Int) = mapFunction(delegatedReader.visitFloat32(d, index))
