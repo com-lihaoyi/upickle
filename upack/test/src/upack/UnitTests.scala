@@ -11,6 +11,11 @@ object UnitTests extends TestSuite{
       val written = upack.write(msg)
       upack.read(written: geny.Readable) ==> msg
     }
+    test("map"){
+      val msg = Arr(Str("a"))
+      val written = transform(msg, new MsgPackWriter().map(_.toByteArray)) // does map preserve array lengths?
+      upack.read(written: geny.Readable) ==> msg
+    }
     test("compositeKeys"){
       val msg = Obj(Arr(Int32(1), Int32(2)) -> Int32(1))
       val written = upack.write(msg)
