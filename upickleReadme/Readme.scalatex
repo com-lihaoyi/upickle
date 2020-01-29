@@ -97,10 +97,10 @@
         Other than that, everything is used the same way. upickle-0.9.4
         is only compatible with ScalaJS 0.6.x.
 
-    @sect{Scala 2.10}
+    @sect{Scala Versions}
       @p
 
-        uPickle does not support Scala 2.10; only 2.11 and 2.12 are supported
+        uPickle does not support Scala 2.10 or 2.11; only 2.12 and 2.13 are supported.
 
   @sect{Basics}
     @sect{Builtins}
