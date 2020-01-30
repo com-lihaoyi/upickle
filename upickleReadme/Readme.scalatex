@@ -159,7 +159,7 @@
       @hl.ref(exampleTests, Seq("\"more\"", "\"tuples\"", ""))
 
       @p
-        Case classes of sizes 1-22 are serialized as JSON dictionaries with the
+        Case classes of sizes 1-64 are serialized as JSON dictionaries with the
         keys being the names of each field.
         To begin with, you need to define a serializer in the Case Class's
         companion object:
