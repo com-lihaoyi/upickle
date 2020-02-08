@@ -159,7 +159,7 @@
       @hl.ref(exampleTests, Seq("\"more\"", "\"tuples\"", ""))
 
       @p
-        Case classes of sizes 1-22 are serialized as JSON dictionaries with the
+        Case classes of sizes 1-64 are serialized as JSON dictionaries with the
         keys being the names of each field.
         To begin with, you need to define a serializer in the Case Class's
         companion object:
@@ -281,7 +281,7 @@
          readable, and only writable if all its contents are writable. That means
           that you cannot serialize a @hl.scala{List[Any]}, since uPickle doesn't
            provide a generic way of serializing @code{Any}. Case classes are only
-           serializable up to 22 fields.
+           serializable up to 64 fields.
 
       @p
         Case classes are serialized using the @hl.scala{apply} and
