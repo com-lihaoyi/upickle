@@ -15,12 +15,11 @@ object Readable extends ReadableLowPri{
   }
   implicit def fromString(s: String) = new fromTransformer(s, StringParser)
   implicit def fromCharSequence(s: CharSequence) = new fromTransformer(s, CharSequenceParser)
-  implicit def fromPath(s: java.nio.file.Path) = {
-    val inputStream = java.nio.file.Files.newInputStream(s)
-    new fromTransformer(inputStream, InputStreamParser) {
-      override def transform[T](f: Visitor[_, T]) =
-        try super.transform(f)
-        finally inputStream.close()
+  implicit def fromPath(s: java.nio.file.Path) = new Readable {
+    override def transform[T](f: Visitor[_, T]) = {
+      val inputStream = java.nio.file.Files.newInputStream(s)
+      try InputStreamParser.transform(inputStream, f)
+      finally inputStream.close()
     }
   }
   implicit def fromFile(s: java.io.File) = fromPath(s.toPath)
