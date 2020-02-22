@@ -3,8 +3,8 @@ import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._
 val scalaJSVersions = Seq(
   ("2.12.8", "0.6.31"),
   ("2.13.0", "0.6.31"),
-  ("2.12.8", "1.0.0-RC2"),
-  ("2.13.0", "1.0.0-RC2")
+  ("2.12.8", "1.0.0"),
+  ("2.13.0", "1.0.0")
 )
 trait CommonModule extends ScalaModule {
   def scalacOptions = T{ if (scalaVersion() == "2.12.8") Seq("-opt:l:method") else Nil }
@@ -16,7 +16,7 @@ trait CommonModule extends ScalaModule {
   )
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def publishVersion = "0.9.8"
+  def publishVersion = "1.0.0"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -33,7 +33,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
 }
 
 trait CommonTestModule extends CommonModule with TestModule{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.3", ivy"com.lihaoyi::acyclic:0.2.0")
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4", ivy"com.lihaoyi::acyclic:0.2.0")
   def testFrameworks = Seq("upickle.core.UTestFramework")
 }
 trait CommonJvmModule extends CommonPublishModule{
@@ -61,8 +61,8 @@ object core extends Module {
   class CoreJsModule(val crossScalaVersion: String, val crossScalaJSVersion: String) extends CommonJsModule {
     def artifactName = "upickle-core"
     def ivyDeps = Agg(
-      ivy"org.scala-lang.modules::scala-collection-compat::2.1.3",
-      ivy"com.lihaoyi::geny::0.5.0"
+      ivy"org.scala-lang.modules::scala-collection-compat::2.1.4",
+      ivy"com.lihaoyi::geny::0.5.1"
     )
 
     object test extends Tests
@@ -72,8 +72,8 @@ object core extends Module {
   class CoreJvmModule(val crossScalaVersion: String) extends CommonJvmModule {
     def artifactName = "upickle-core"
     def ivyDeps = Agg(
-      ivy"org.scala-lang.modules::scala-collection-compat:2.1.3",
-      ivy"com.lihaoyi::geny:0.5.0"
+      ivy"org.scala-lang.modules::scala-collection-compat:2.1.4",
+      ivy"com.lihaoyi::geny:0.5.1"
     )
 
     object test extends Tests
@@ -196,7 +196,7 @@ object ujson extends Module{
 
     object test extends Tests with JawnTestModule{
       def ivyDeps =
-        if (crossScalaJSVersion == "1.0.0-RC2") T{Agg(ivy"com.lihaoyi::utest::0.7.3")}
+        if (crossScalaJSVersion == "1.0.0-RC2") T{Agg(ivy"com.lihaoyi::utest::0.7.4")}
         else super.ivyDeps
       def sources = if (crossScalaJSVersion == "1.0.0-RC2") T.sources() else super.sources
       def testFrameworks =
@@ -307,7 +307,7 @@ trait BenchModule extends CommonModule{
     ivy"com.typesafe.play::play-json::2.7.4",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.7",
-    ivy"com.lihaoyi::sourcecode::0.2.0",
+    ivy"com.lihaoyi::sourcecode::0.2.1",
   )
 }
 
