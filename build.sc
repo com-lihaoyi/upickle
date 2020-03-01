@@ -361,7 +361,8 @@ object upickle extends Module{
     )
 
     object test extends Tests with CommonModule{
-      def testFrameworks = Seq("upickle.core.UTestFramework")
+      def testFrameworks = if(crossScalaNativeVersion == "0.3.9") T(Seq.empty[String]) else super.testFrameworks()
+      def sources = if(crossScalaNativeVersion == "0.3.9") T.sources(Seq.empty) else super.sources
       def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
     }
   }
