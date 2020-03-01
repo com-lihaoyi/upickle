@@ -1,9 +1,10 @@
 package ujson
 
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatest.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class FileJNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
+class FileJNumIndexCheck extends AnyPropSpec with Matchers with ScalaCheckPropertyChecks {
 
   property("visitFloat64StringParts provides the correct indices with parseFromFile") {
     forAll { (value: BigDecimal) =>
