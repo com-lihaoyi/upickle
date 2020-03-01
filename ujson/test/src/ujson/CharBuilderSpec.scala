@@ -1,9 +1,10 @@
 package ujson
 
 import org.scalatest._
-import org.scalatest.prop._
+import org.scalatest.propspec._
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class CharBuilderSpec extends PropSpec with Matchers with PropertyChecks {
+class CharBuilderSpec extends AnyPropSpec with Matchers with ScalaCheckPropertyChecks {
 
   property("append") {
     forAll { xs: List[Char] =>

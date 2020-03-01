@@ -1,9 +1,10 @@
 package ujson
 
 import org.scalatest._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalacheck._
 
-class BoolSpec extends PropSpec with Matchers with PropertyChecks with Inside {
+class BoolSpec extends propspec.AnyPropSpec with Matchers with ScalaCheckPropertyChecks with Inside {
 
   property("ujson.Bool apply") {
     ujson.Bool(true) shouldBe ujson.True

@@ -1,9 +1,12 @@
 package ujson
 
-import org.scalatest._
+import org.scalatest.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+
 import upickle.core.NoOpVisitor
 
-class ChannelSpec extends PropSpec with Matchers {
+class ChannelSpec extends AnyPropSpec with Matchers with ScalaCheckPropertyChecks {
 
   val M = 1
   val q = "\""

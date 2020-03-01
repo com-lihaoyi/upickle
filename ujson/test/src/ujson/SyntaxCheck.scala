@@ -6,12 +6,14 @@ import java.nio.charset.StandardCharsets
 import org.scalacheck.Gen._
 import org.scalacheck._
 import org.scalatest._
-import org.scalatest.prop._
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+
 import upickle.core.NoOpVisitor
 
 import scala.util.Try
 
-class SyntaxCheck extends PropSpec with Matchers with PropertyChecks {
+class SyntaxCheck extends AnyPropSpec with Matchers with ScalaCheckPropertyChecks {
 
   // failed to detect some failures in issue #243 at minSuccessful=10. Raised to minSuccessful=100.
   override implicit val generatorDrivenConfig: PropertyCheckConfiguration = PropertyCheckConfiguration(minSuccessful = 100)

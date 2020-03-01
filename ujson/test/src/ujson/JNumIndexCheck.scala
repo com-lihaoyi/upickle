@@ -2,8 +2,9 @@ package ujson
 
 import java.nio.ByteBuffer
 
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatest.Matchers
+import org.scalatest.propspec.AnyPropSpec
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 object JNumIndexCheckFacade extends JsVisitor[Boolean, Boolean] {
   def visitArray(length: Int, index: Int)  = new ArrVisitor[Boolean, Boolean] {
@@ -42,7 +43,7 @@ object JNumIndexCheckFacade extends JsVisitor[Boolean, Boolean] {
 }
 
 
-class JNumIndexCheck extends PropSpec with Matchers with PropertyChecks {
+class JNumIndexCheck extends AnyPropSpec with Matchers with ScalaCheckPropertyChecks {
 
   property("visitFloat64StringParts provides the correct indices with parseFromString") {
     forAll { (value: BigDecimal) =>

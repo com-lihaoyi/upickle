@@ -126,14 +126,6 @@ object StructTests extends TestSuite {
       }
     }
 
-    test("durations"){
-      test("inf") - rw(Duration.Inf, """ "inf" """)
-      "-inf" - rw(Duration.MinusInf, """ "-inf" """)
-      test("undef") - rw(Duration.Undefined, """ "undef" """)
-      "1-second" - rw(1.second, """ "1000000000" """)
-      "2-hour" - rw(2.hours, """ "7200000000000" """)
-    }
-
     test("combinations"){
       test("SeqListMapOptionString") - rw[Seq[List[Map[Option[String], String]]]](
         Seq(Nil, List(Map(Some("omg") -> "omg"), Map(Some("lol") -> "lol", None -> "")), List(Map())),

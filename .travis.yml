@@ -1,6 +1,6 @@
-sudo: false
+os: linux
 language: scala
 
 script:
-- ./mill -i __.test.test
-
+  - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
+  - ./mill -i __.test.test
