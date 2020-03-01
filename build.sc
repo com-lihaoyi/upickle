@@ -363,6 +363,7 @@ object upickle extends Module{
     object test extends Tests with CommonModule{
       def testFrameworks = if(crossScalaNativeVersion == "0.3.9") T(Seq.empty[String]) else super.testFrameworks()
       def sources = if(crossScalaNativeVersion == "0.3.9") T.sources(Seq.empty) else super.sources
+      def allSourceFiles = T(super.allSourceFiles().filterNot(pr => Seq("Primitive", "Durations").map(s => s"${s}Tests.scala").contains(pr.path.last)))
       def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
     }
   }

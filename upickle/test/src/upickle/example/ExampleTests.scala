@@ -9,6 +9,7 @@ import upickle.default.{macroRW, ReadWriter => RW}
 import ujson.{IncompleteParseException, ParseException, Readable}
 import ujson.{BytesRenderer, Value, StringRenderer}
 import upickle.core.{NoOpVisitor, Visitor}
+
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
   object Thing{
@@ -278,7 +279,7 @@ object ExampleTests extends TestSuite {
       test("snakeCase"){
         object SnakePickle extends upickle.AttributeTagged{
           def camelToSnake(s: String) = {
-            s.split("(?=[A-Z])", -1).map(_.toLowerCase).mkString("_")
+            s.replaceAll("([A-Z])","#$1").split('#').map(_.toLowerCase).mkString("_")
           }
           def snakeToCamel(s: String) = {
             val res = s.split("_", -1).map(x => x(0).toUpper + x.drop(1)).mkString
