@@ -19,6 +19,7 @@ import scala.collection.mutable.ArrayBuffer
   * to bytes.
   */
 sealed trait Msg extends Readable with geny.Writable{
+  override def httpContentType = Some("application/octet-stream")
   def transform[T](f: Visitor[_, T]) = Msg.transform(this, f)
 
   /**

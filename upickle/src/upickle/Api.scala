@@ -77,6 +77,7 @@ trait Api
   def stream[T: Writer](t: T,
                         indent: Int = -1,
                         escapeUnicode: Boolean = false): geny.Writable = new geny.Writable{
+    override def httpContentType = Some("application/json")
     def writeBytesTo(out: java.io.OutputStream) = {
       val w = new java.io.OutputStreamWriter(out, java.nio.charset.StandardCharsets.UTF_8)
       transform(t).to(new ujson.BaseRenderer(w, indent = indent, escapeUnicode))
@@ -93,6 +94,7 @@ trait Api
     * Write the given Scala value as a MessagePack binary via a `geny.Writable`
     */
   def streamBinary[T: Writer](t: T): geny.Writable = new geny.Writable{
+    override def httpContentType = Some("application/octet-stream")
     def writeBytesTo(out: java.io.OutputStream) = transform(t).to(new upack.MsgPackWriter(out))
   }
 

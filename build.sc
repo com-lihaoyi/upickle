@@ -32,7 +32,7 @@ trait CommonModule extends ScalaModule {
   )
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def publishVersion = "1.0.0"
+  def publishVersion = "1.1.0"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -86,7 +86,7 @@ trait CommonCoreModule extends ScalaModule {
   def artifactName = "upickle-core"
   def ivyDeps = Agg(
     ivy"org.scala-lang.modules::scala-collection-compat::2.1.4",
-    ivy"com.lihaoyi::geny::0.5.1"
+    ivy"com.lihaoyi::geny::0.6.0"
   )
 }
 object core extends Module {

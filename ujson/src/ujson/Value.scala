@@ -10,6 +10,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 sealed trait Value extends Readable with geny.Writable{
+  override def httpContentType = Some("application/json")
   def value: Any
 
   /**
