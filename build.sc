@@ -7,9 +7,11 @@ val scala213  = "2.13.1"
 val scalaJS06 = "0.6.32"
 val scalaJS1  = "1.0.0"
 
+val dottyCustomVersion = Option(sys.props("dottyVersion"))
+
 def acyclicVersion(scalaVersion: String): String = if(scalaVersion.startsWith("2.11.")) "0.1.8" else "0.2.0"
 
-val scalaJVMVersions = Seq(scala212, scala213)
+val scalaJVMVersions = Seq(scala212, scala213) ++ dottyCustomVersion
 
 val scalaJSVersions = Seq(
   (scala212, scalaJS06),
@@ -33,7 +35,8 @@ trait CommonModule extends ScalaModule {
   )
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def publishVersion = "1.2.0"
+  def publishVersion = "1.1.0"
+  def isDotty = crossScalaVersion.startsWith("0")
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -47,12 +50,15 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
   )
+  trait CommonTestModule extends CommonModule with TestModule{
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4") ++ (
+      if (isDotty) Agg.empty[mill.scalalib.Dep]
+      else Agg(ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}")
+    )
+    def testFrameworks = Seq("upickle.core.UTestFramework")
+  }
 }
 
-trait CommonTestModule extends CommonModule with TestModule{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4", ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}")
-  def testFrameworks = Seq("upickle.core.UTestFramework")
-}
 trait CommonJvmModule extends CommonPublishModule{
   def platformSegment = "jvm"
   def millSourcePath = super.millSourcePath / os.up
@@ -83,12 +89,14 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
   }
 }
 
-trait CommonCoreModule extends ScalaModule {
+trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.0") ++ (if (!isDotty) Agg(
     ivy"org.scala-lang.modules::scala-collection-compat::2.1.4",
-    ivy"com.lihaoyi::geny::0.6.2"
   )
+  else Agg(
+    ivy"org.scala-lang.modules:scala-collection-compat_2.13:2.1.4",
+  ))
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
