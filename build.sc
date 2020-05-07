@@ -244,9 +244,14 @@ object ujson extends Module{
     def artifactName = "ujson"
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = T{
-        Agg(
+        if (!isDotty) Agg(
           ivy"org.scalatest::scalatest::3.1.1",
           ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
+        )
+        else Agg(
+          ivy"org.scalatest::scalatest::3.1.0-SNAP13",
+          ivy"org.scalacheck::scalacheck::1.14.1-SNAPSHOT",
+          ivy"org.scalatestplus::scalacheck-1-14:3.1.0.0-RC3"
         )
       }
       def testFrameworks = Seq("org.scalatest.tools.Framework")

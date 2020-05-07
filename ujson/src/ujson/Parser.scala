@@ -81,7 +81,7 @@ abstract class Parser[J] {
   @inline protected[this] final val KEYVALUE = 2
 
   protected[this] def newline(i: Int): Unit
-  protected[this] def line(): Int
+  protected[this] def line: Int
   protected[this] def column(i: Int): Int
 
   protected[this] final val HexChars: Array[Int] = {
@@ -119,7 +119,7 @@ abstract class Parser[J] {
    * Used to generate error messages with character info and offsets.
    */
   protected[this] def die(i: Int, msg: String): Nothing = {
-    val y = line() + 1
+    val y = line + 1
     val x = column(i) + 1
     val s = "%s got %s (line %d, column %d)" format (msg, char(i), y, x)
     throw ParseException(s, i, y, x)
@@ -366,14 +366,14 @@ abstract class Parser[J] {
       // invalid
       case _ => die(i, "expected json value")
     }
-  } catch reject(i) orElse[Throwable, Nothing] {
+  } catch (reject(i).orElse[Throwable, Nothing] {
     case e: IndexOutOfBoundsException =>
       throw IncompleteParseException("exhausted input", e)
-  }
+  })
 
   def reject(j: Int): PartialFunction[Throwable, Nothing] = {
     case e: Abort =>
-      val y = line() + 1
+      val y = line + 1
       val x = column(j) + 1
       throw new AbortException(e.msg, j, y, x, e)
   }

@@ -9,7 +9,7 @@ import upickle.core.{Visitor, ObjArrVisitor}
 private[ujson] final class CharSequenceParser[J](cs: CharSequence) extends Parser[J] with CharBasedParser[J] {
   var line = 0
   final def column(i: Int) = i
-  final def newline(i: Int) { line += 1 }
+  final def newline(i: Int) = { line += 1 }
   final def dropBufferUntil(i: Int): Unit = ()
   final def char(i: Int): Char = upickle.core.Platform.charAt(cs, i)
   final def sliceString(i: Int, j: Int): CharSequence = cs.subSequence(i, j)

@@ -18,12 +18,12 @@ final class ByteBufferParser[J](src: ByteBuffer) extends Parser[J] with ByteBase
   private[this] final val limit = src.limit() - start
 
   private[this] var lineState = 0
-  protected[this] def line(): Int = lineState
+  protected[this] def line: Int = lineState
 
-  protected[this] final def newline(i: Int) { lineState += 1 }
+  protected[this] final def newline(i: Int) = { lineState += 1 }
   protected[this] final def column(i: Int) = i
 
-  protected[this] final def close() { src.position(src.limit) }
+  protected[this] final def close() = { src.position(src.limit) }
   protected[this] final def dropBufferUntil(i: Int): Unit = ()
   protected[this] final def byte(i: Int): Byte = src.get(i + start)
   protected[this] final def char(i: Int): Char = src.get(i + start).toChar

@@ -53,10 +53,10 @@ class SyntaxCheck extends AnyPropSpec with Matchers with ScalaCheckPropertyCheck
 
   def jvalue(lvl: Int): Gen[J] =
     if (lvl < 3) {
-      Gen.frequency((16, 'ato), (1, 'arr), (2, 'obj)).flatMap {
-        case 'ato => jatom
-        case 'arr => jarray(lvl)
-        case 'obj => jobject(lvl)
+      Gen.frequency((16, "ato"), (1, "arr"), (2, "obj")).flatMap {
+        case "ato" => jatom
+        case "arr" => jarray(lvl)
+        case "obj" => jobject(lvl)
       }
     } else {
       jatom
