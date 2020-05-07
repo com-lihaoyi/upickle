@@ -320,11 +320,12 @@ object ujson extends Module{
 
 trait UpickleModule extends CommonPublishModule{
   def artifactName = "upickle"
-  def compileIvyDeps = Agg(
+  def compileIvyDeps = if (!isDotty) Agg(
     ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
+  else Agg.empty[Dep]
   def scalacOptions = Seq(
     "-unchecked",
     "-deprecation",
