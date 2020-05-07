@@ -7,10 +7,10 @@ trait Readable {
 }
 
 object Readable {
-  implicit def fromByteArray(s: Array[Byte]) = new Readable{
+  implicit def fromByteArray(s: Array[Byte]): Readable = new Readable{
     def transform[T](f: Visitor[_, T]): T = new MsgPackReader(0, s).parse(f)
   }
-  implicit def fromReadable(s: geny.Readable) = new Readable{
+  implicit def fromReadable(s: geny.Readable): Readable = new Readable{
     def transform[T](f: Visitor[_, T]): T = {
       s.readBytesThrough(
         new InputStreamMsgPackReader(
