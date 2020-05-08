@@ -25,126 +25,127 @@ object JvmExampleTests extends TestSuite {
       read[Thing](f) ==> Thing(1, "gg")
       read[Thing](f.toFile) ==> Thing(1, "gg")
     }
-    test("other"){
-      test("argonaut"){
-        import ujson.argonaut.ArgonautJson
-        val argJson: argonaut.Json = ArgonautJson(
-          """["hello", "world"]"""
-        )
+    // TODO: unsupported by Dotty so far
+    // test("other"){
+    //   test("argonaut"){
+    //     import ujson.argonaut.ArgonautJson
+    //     val argJson: argonaut.Json = ArgonautJson(
+    //       """["hello", "world"]"""
+    //     )
 
-        val updatedArgJson = argJson.withArray(_.map(_.withString(_.toUpperCase)))
+    //     val updatedArgJson = argJson.withArray(_.map(_.withString(_.toUpperCase)))
 
-        val items: Seq[String] = ArgonautJson.transform(
-          updatedArgJson,
-          upickle.default.reader[Seq[String]]
-        )
+    //     val items: Seq[String] = ArgonautJson.transform(
+    //       updatedArgJson,
+    //       upickle.default.reader[Seq[String]]
+    //     )
 
-        items ==> Seq("HELLO", "WORLD")
+    //     items ==> Seq("HELLO", "WORLD")
 
-        val rewritten = upickle.default.transform(items).to(ArgonautJson)
+    //     val rewritten = upickle.default.transform(items).to(ArgonautJson)
 
-        val stringified = ArgonautJson.transform(rewritten, StringRenderer()).toString
+    //     val stringified = ArgonautJson.transform(rewritten, StringRenderer()).toString
 
-        stringified ==> """["HELLO","WORLD"]"""
-      }
-      test("circe"){
-        import ujson.circe.CirceJson
-        val circeJson: io.circe.Json = CirceJson(
-          """["hello", "world"]"""
-        )
+    //     stringified ==> """["HELLO","WORLD"]"""
+    //   }
+    //   test("circe"){
+    //     import ujson.circe.CirceJson
+    //     val circeJson: io.circe.Json = CirceJson(
+    //       """["hello", "world"]"""
+    //     )
 
-        val updatedCirceJson =
-          circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
+    //     val updatedCirceJson =
+    //       circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
 
-        val items: Seq[String] = CirceJson.transform(
-          updatedCirceJson,
-          upickle.default.reader[Seq[String]]
-        )
+    //     val items: Seq[String] = CirceJson.transform(
+    //       updatedCirceJson,
+    //       upickle.default.reader[Seq[String]]
+    //     )
 
-        items ==> Seq("HELLO", "WORLD")
+    //     items ==> Seq("HELLO", "WORLD")
 
-        val rewritten = upickle.default.transform(items).to(CirceJson)
+    //     val rewritten = upickle.default.transform(items).to(CirceJson)
 
-        val stringified = CirceJson.transform(rewritten, StringRenderer()).toString
+    //     val stringified = CirceJson.transform(rewritten, StringRenderer()).toString
 
-        stringified ==> """["HELLO","WORLD"]"""
-      }
-      test("json4s"){
-        import org.json4s.JsonAST
-        val json4sJson: JsonAST.JValue = Json4sJson(
-          """["hello", "world"]"""
-        )
+    //     stringified ==> """["HELLO","WORLD"]"""
+    //   }
+    //   test("json4s"){
+    //     import org.json4s.JsonAST
+    //     val json4sJson: JsonAST.JValue = Json4sJson(
+    //       """["hello", "world"]"""
+    //     )
 
-        val updatedJson4sJson = JsonAST.JArray(
-          for(v <- json4sJson.children)
-            yield JsonAST.JString(v.values.toString.toUpperCase())
-        )
+    //     val updatedJson4sJson = JsonAST.JArray(
+    //       for(v <- json4sJson.children)
+    //         yield JsonAST.JString(v.values.toString.toUpperCase())
+    //     )
 
-        val items: Seq[String] = Json4sJson.transform(
-          updatedJson4sJson,
-          upickle.default.reader[Seq[String]]
-        )
+    //     val items: Seq[String] = Json4sJson.transform(
+    //       updatedJson4sJson,
+    //       upickle.default.reader[Seq[String]]
+    //     )
 
-        items ==> Seq("HELLO", "WORLD")
+    //     items ==> Seq("HELLO", "WORLD")
 
-        val rewritten = upickle.default.transform(items).to(Json4sJson)
+    //     val rewritten = upickle.default.transform(items).to(Json4sJson)
 
-        val stringified = Json4sJson.transform(rewritten, StringRenderer()).toString
+    //     val stringified = Json4sJson.transform(rewritten, StringRenderer()).toString
 
-        stringified ==> """["HELLO","WORLD"]"""
-      }
-      test("playJson"){
-        import ujson.play.PlayJson
-        import play.api.libs.json._
-        val playJson: play.api.libs.json.JsValue = PlayJson(
-          """["hello", "world"]"""
-        )
+    //     stringified ==> """["HELLO","WORLD"]"""
+    //   }
+    //   test("playJson"){
+    //     import ujson.play.PlayJson
+    //     import play.api.libs.json._
+    //     val playJson: play.api.libs.json.JsValue = PlayJson(
+    //       """["hello", "world"]"""
+    //     )
 
-        val updatedPlayJson = JsArray(
-          for(v <- playJson.as[JsArray].value)
-            yield JsString(v.as[String].toUpperCase())
-        )
+    //     val updatedPlayJson = JsArray(
+    //       for(v <- playJson.as[JsArray].value)
+    //         yield JsString(v.as[String].toUpperCase())
+    //     )
 
-        val items: Seq[String] = PlayJson.transform(
-          updatedPlayJson,
-          upickle.default.reader[Seq[String]]
-        )
+    //     val items: Seq[String] = PlayJson.transform(
+    //       updatedPlayJson,
+    //       upickle.default.reader[Seq[String]]
+    //     )
 
-        items ==> Seq("HELLO", "WORLD")
+    //     items ==> Seq("HELLO", "WORLD")
 
-        val rewritten = upickle.default.transform(items).to(PlayJson)
+    //     val rewritten = upickle.default.transform(items).to(PlayJson)
 
-        val stringified = PlayJson.transform(rewritten, StringRenderer()).toString
+    //     val stringified = PlayJson.transform(rewritten, StringRenderer()).toString
 
-        stringified ==> """["HELLO","WORLD"]"""
-      }
-      test("crossAst"){
-        import ujson.circe.CirceJson
-        val circeJson: io.circe.Json = CirceJson(
-          """["hello", "world"]"""
-        )
+    //     stringified ==> """["HELLO","WORLD"]"""
+    //   }
+    //   test("crossAst"){
+    //     import ujson.circe.CirceJson
+    //     val circeJson: io.circe.Json = CirceJson(
+    //       """["hello", "world"]"""
+    //     )
 
-        val updatedCirceJson =
-          circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
+    //     val updatedCirceJson =
+    //       circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
 
-        import ujson.play.PlayJson
-        import play.api.libs.json._
+    //     import ujson.play.PlayJson
+    //     import play.api.libs.json._
 
-        val playJson: play.api.libs.json.JsValue = CirceJson.transform(
-          updatedCirceJson,
-          PlayJson
-        )
+    //     val playJson: play.api.libs.json.JsValue = CirceJson.transform(
+    //       updatedCirceJson,
+    //       PlayJson
+    //     )
 
-        val updatedPlayJson = JsArray(
-          for(v <- playJson.as[JsArray].value)
-            yield JsString(v.as[String].reverse)
-        )
+    //     val updatedPlayJson = JsArray(
+    //       for(v <- playJson.as[JsArray].value)
+    //         yield JsString(v.as[String].reverse)
+    //     )
 
-        val stringified = PlayJson.transform(updatedPlayJson, StringRenderer()).toString
+    //     val stringified = PlayJson.transform(updatedPlayJson, StringRenderer()).toString
 
-        stringified ==> """["OLLEH","DLROW"]"""
-      }
-    }
+    //     stringified ==> """["OLLEH","DLROW"]"""
+    //   }
+    // }
 
   }
 }
