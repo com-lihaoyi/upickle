@@ -1,6 +1,5 @@
 package upickle
 import utest._
-import acyclic.file
 /**
 * Created by haoyi on 4/22/14.
 */

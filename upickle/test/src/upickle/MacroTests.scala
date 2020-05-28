@@ -1,8 +1,7 @@
 package upickle
-import acyclic.file
 import utest._
 import upickle.TestUtil._
-import upickle.default.{read, write}
+import upickle.default.{read, write, ReadWriter => RW}
 
 object Custom {
   trait ThingBase{
@@ -20,7 +19,7 @@ object Custom {
   class Thing2(val i: Int, val s: String) extends ThingBase
 
   abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
-    implicit val thing2Writer = upickle.default.readwriter[String].bimap[T](
+    implicit val thing2Writer: RW[T] = upickle.default.readwriter[String].bimap[T](
       t => t.i + " " + t.s,
       str => {
         val Array(i, s) = str.toString.split(" ", 2)

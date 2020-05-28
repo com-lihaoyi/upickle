@@ -1,6 +1,5 @@
 package upickle
 import utest._
-import acyclic.file
 import upickle.TestUtil.rw
 
 object shared {

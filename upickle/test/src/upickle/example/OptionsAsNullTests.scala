@@ -79,7 +79,7 @@ object OptionsAsNullTests extends TestSuite {
       }
 
       // New tests.  Work as expected.
-      'customPickler {
+      "customPickler" {
         // Custom pickler copied from the documentation
         class CustomThing2(val i: Int, val s: String)
 
@@ -93,26 +93,26 @@ object OptionsAsNullTests extends TestSuite {
           )
         }
 
-        'customClass {
+        "customClass" {
           write(new CustomThing2(10, "Custom")) ==> "\"10 Custom\""
           val r = read[CustomThing2]("\"10 Custom\"")
           assert(r.i == 10, r.s == "Custom")
         }
 
-        'optCustomClass_Some {
+        "optCustomClass_Some" {
           write(Some(new CustomThing2(10, "Custom"))) ==> "\"10 Custom\""
           val r = read[Option[CustomThing2]]("\"10 Custom\"")
           assert(r.get.i == 10, r.get.s == "Custom")
         }
 
-        'optCustomClass_None {
+        "optCustomClass_None" {
           read[Option[CustomThing2]]("null") ==> None
         }
 
       }
 
       // Copied from ExampleTests
-      'Js {
+      "Js" {
         import OptionPickler._   // changed from upickle.default._
         case class Bar(i: Int, s: String)
         implicit val fooReadWrite: ReadWriter[Bar] =
@@ -125,10 +125,10 @@ object OptionsAsNullTests extends TestSuite {
         read[Bar]("""["abc",123]""") ==> Bar(123, "abc")
 
         // New tests.  Last one fails.  Why?
-        'option {
-          'write {write(Some(Bar(123, "abc"))) ==> """["abc",123]"""}
-          'readSome {read[Option[Bar]]("""["abc",123]""") ==> Some(Bar(123, "abc"))}
-          'readNull {read[Option[Bar]]("""null""") ==> None}
+        "option" {
+          "write" {write(Some(Bar(123, "abc"))) ==> """["abc",123]"""}
+          "readSome" {read[Option[Bar]]("""["abc",123]""") ==> Some(Bar(123, "abc"))}
+          "readNull" {read[Option[Bar]]("""null""") ==> None}
         }
       }
 

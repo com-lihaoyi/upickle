@@ -6,6 +6,10 @@ import deriving._, compiletime._
 
 trait ReadersVersionSpecific extends CaseClassReaderPiece:
   this: upickle.core.Types with Readers =>
+
+  def macroRW[T]: ReadWriter[T] = ???
+
+
   inline given macroReaderProduct[T](using m: Mirror.ProductOf[T]) as Reader[T] =
     val visitors: List[(String, Visitor[_, _])] =
       inferVisitors[m.MirroredElemLabels, m.MirroredElemTypes]
