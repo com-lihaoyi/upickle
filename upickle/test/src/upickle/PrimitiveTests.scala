@@ -31,11 +31,6 @@ object PrimitiveTests extends TestSuite {
         }
       }
     }
-    test("Symbol"){
-      test("plain") - rw("i_am_a_cow", """ "i_am_a_cow" """)(upickle.default.SymbolReader, upickle.default.SymbolWriter)
-      test("unicode") - rw("叉烧包", """ "叉烧包" """)
-      test("null") - rw(null: Symbol, "null")
-    }
     test("Long"){
       test("small") - rw(1: Long, """ "1" """)
       test("med") - rw(125123: Long, """ "125123" """)
