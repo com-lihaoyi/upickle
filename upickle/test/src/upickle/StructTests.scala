@@ -9,8 +9,6 @@ import scala.concurrent.duration._
 import TestUtil._
 import java.util.UUID
 
-import acyclic.file
-
 import scala.reflect.ClassTag
 import language.postfixOps
 
@@ -65,23 +63,23 @@ object StructTests extends TestSuite {
         test("SortedSet") - rw(collection.mutable.SortedSet("omg", "i am", "cow"), """["cow","i am","omg"]""")
       }
       test("Map"){
-        test("Structured") - rw(
+        test("Structured") - rw[Map[List[Int], List[Int]]](
           Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
           "[[[],[1]],[[1],[1,2,3]]]"
         )
-        test("Structured2") - rw(
+        test("Structured2") - rw[collection.mutable.Map[List[Int], List[Int]]](
           collection.mutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
           "[[[],[1]],[[1],[1,2,3]]]"
         )
-        test("Structured3") - rw(
+        test("Structured3") - rw[collection.immutable.Map[List[Int], List[Int]]](
           collection.immutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
           "[[[],[1]],[[1],[1,2,3]]]"
         )
-        test("Structured4") - rw(
+        test("Structured4") - rw[collection.Map[List[Int], List[Int]]](
           collection.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
           "[[[],[1]],[[1],[1,2,3]]]"
         )
-        test("StructuredEmpty") - rw(
+        test("StructuredEmpty") - rw[Map[List[Int], List[Int]]](
           Map[List[Int], List[Int]](),
           "[]"
         )
@@ -97,7 +95,7 @@ object StructTests extends TestSuite {
           collection.immutable.Map("Hello" -> List(1), "World" -> List(1, 2, 3)),
           """{"Hello":[1],"World":[1,2,3]}"""
         )
-        test("String4") - rw(
+        test("String4") - rw[collection.mutable.Map[String, List[Int]]](
           collection.mutable.Map("Hello" -> List(1), "World" -> List(1, 2, 3)),
           """{"Hello":[1],"World":[1,2,3]}"""
         )
