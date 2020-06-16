@@ -31,6 +31,10 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       val normalizedReadString = normalize(readS)
       val normalizedValue = normalize(t)
       assert(normalizedReadString == normalizedValue)
+
+      def normalized(value: T): Boolean = normalize(value) == normalizedValue
+      assert(api.readEither[T](s) exists normalized)
+      assert(api.readTry[T](s).toOption exists normalized)
     }
 
     val normalizedReadWrittenT = normalize(api.read[T](writtenT))
@@ -45,7 +49,6 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       case (lhs: Array[_], rhs: Array[_]) => assert(lhs.toSeq == rhs.toSeq)
       case _ => assert(roundTrippedBinary == t)
     }
-
 
     // Test binary-JSON equivalence
     if (checkBinaryJson){

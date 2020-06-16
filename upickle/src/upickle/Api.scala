@@ -2,11 +2,13 @@ package upickle
 
 import java.io.ByteArrayOutputStream
 
-import language.experimental.macros
-import language.higherKinds
-import upickle.core._
+import scala.language.experimental.macros
+import scala.language.higherKinds
 import scala.reflect.ClassTag
+import scala.util.Try
+
 import ujson.IndexedValue
+import upickle.core._
 
 /**
  * An instance of the upickle API. There's a default instance at
@@ -31,9 +33,32 @@ trait Api
   def readBinary[T: Reader](s: upack.Readable): T = s.transform(reader[T])
 
   /**
+   * Same as `readBinary` but any non-fatal exception thrown by `readBinary` is returned as a `Failure` instead.
+   */
+  final def readBinaryTry[T: Reader](s: upack.Readable): Try[T] = Try(readBinary[T](s))
+
+  /**
+   * Same as `readBinary` but the message of any non-fatal exception thrown by `readBinary` is returned as a `Left` instead.
+   */
+  final def readBinaryEither[T: Reader](s: upack.Readable): Either[String, T] = toMessageOrT(readBinaryTry[T](s))
+
+  /**
     * Reads the given JSON input into a Scala value
     */
   def read[T: Reader](s: ujson.Readable): T = s.transform(reader[T])
+
+  /**
+   * Same as `read` but any non-fatal exception thrown by `read` is returned as a `Failure` instead.
+   */
+  final def readTry[T: Reader](s: ujson.Readable): Try[T] = Try(read[T](s))
+
+  /**
+   * Same as `read` but the message of any non-fatal exception thrown by `read` is returned as a `Left` instead.
+   */
+  final def readEither[T: Reader](s: ujson.Readable): Either[String, T] = toMessageOrT(readTry[T](s))
+
+  private def toMessageOrT[T](result: Try[T]): Either[String, T] =
+    result.fold(failure => Left(failure.getMessage), Right(_))
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
