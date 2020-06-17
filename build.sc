@@ -350,6 +350,8 @@ object upickle extends Module{
           core.jvm().test
         )
       }
+
+      def scalacOptions = Seq("-Ximport-suggestion-timeout", "0")
     }
   }
 
