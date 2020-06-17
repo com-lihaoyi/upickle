@@ -299,3 +299,8 @@ trait Types{ types =>
   }
 
 }
+
+trait Annotator { this: Types =>
+  def annotate[V](rw: CaseR[V], n: String): TaggedReader[V]
+  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]): TaggedWriter[V]
+}

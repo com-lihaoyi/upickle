@@ -10,7 +10,9 @@ import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
 
-trait Readers extends upickle.core.Types with Generated with ReadersVersionSpecific {
+trait Readers extends upickle.core.Types
+  with Generated
+  with ReadersVersionSpecific { this: Annotator =>
   implicit val UnitReader: Reader[Unit] = new SimpleReader[Unit] {
     override def expectedMsg = "expected unit"
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {

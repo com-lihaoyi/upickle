@@ -21,7 +21,8 @@ trait Api
     with WebJson
     with Api.NoOpMappers
     with JsReadWriters
-    with MsgReadWriters{
+    with MsgReadWriters
+    with Annotator{
 
   def serializeDefaults: Boolean = false
 
@@ -137,8 +138,8 @@ object default extends AttributeTagged{
  * being the type-tag and the second being the serialized object
  */
 object legacy extends LegacyApi
-trait LegacyApi extends Api{
-  def annotate[V](rw: Reader[V], n: String) = new TaggedReader.Leaf[V](n, rw)
+trait LegacyApi extends Api with Annotator{
+  def annotate[V](rw: CaseR[V], n: String) = new TaggedReader.Leaf[V](n, rw)
 
   def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]) = {
     new TaggedWriter.Leaf[V](c, n, rw)
@@ -195,7 +196,7 @@ trait LegacyApi extends Api{
  * behavior of using an attribute, but allow you to control what the name
  * of the attribute is.
  */
-trait AttributeTagged extends Api{
+trait AttributeTagged extends Api with Annotator{
   def tagName = "$type"
   def annotate[V](rw: CaseR[V], n: String) = {
     new TaggedReader.Leaf[V](n, rw)

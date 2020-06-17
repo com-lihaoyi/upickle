@@ -2,11 +2,14 @@ package upickle.implicits
 
 import java.util.UUID
 
-import upickle.core.Visitor
+import upickle.core.{ Visitor, Annotator }
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-trait Writers extends upickle.core.Types with Generated with WritersVersionSpecific with LowPriWriters{
+trait Writers extends upickle.core.Types
+  with Generated
+  with WritersVersionSpecific
+  with LowPriWriters { this: Annotator =>
   implicit val StringWriter: Writer[String] = new Writer[String] {
     def write0[R](out: Visitor[_, R], v: String): R = out.visitString(v, -1)
   }

@@ -1,10 +1,12 @@
 package upickle.implicits
 
-import upickle.core.{ Visitor, ObjVisitor }
+import deriving._, compiletime._
+
+import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
 trait CaseClassReaderPiece:
-  this: upickle.core.Types with Readers =>
-  trait CaseClassReader[T] extends SimpleReader[T]:
+  this: upickle.core.Types with Readers with Annotator =>
+  trait CaseClassReader[T] extends CaseR[T]:
     def make(bldr: Map[String, Any]): T
 
     def visitorForKey(currentKey: String): Visitor[_, _]
@@ -30,13 +32,31 @@ trait CaseClassReaderPiece:
     }
   end CaseClassReader
 
-  // For each field:
-  // 1. Get its name and type T
-  // 2. Resolve Reader[T]
-  // 3. Resolve its default parameter if exists
-  def mkReader[T](visitors: Map[String, Visitor[_, _]],
-      maker: Map[String, Any] => T): Reader[T] = new CaseClassReader[T] {
-    override def visitorForKey(key: String) = visitors(key)
-    override def make(params: Map[String, Any]): T = maker(params)
-  }
+  inline given [T](using m: Mirror.ProductOf[T]) as Reader[T] =
+    val labels: List[String] =
+      constValueList[m.MirroredElemLabels].asInstanceOf[List[String]]
+    val visitors: List[Visitor[_, _]] =
+      summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
+        .asInstanceOf[List[upickle.core.Visitor[_, _]]]
+    val defaultParams: Map[String, AnyRef] = getDefaultParams[T]
+
+    val reader = new CaseClassReader[T] {
+      override def visitorForKey(key: String) =
+        labels.zip(visitors).toMap.apply(key)
+      override def make(params: Map[String, Any]): T =
+        val values: List[AnyRef] = labels.zip(visitors).map { case (fieldName, _) =>
+          params.getOrElse(fieldName, defaultParams(fieldName)).asInstanceOf[AnyRef] }
+        m.fromProduct(ArrayProduct(values.toArray))
+      end make
+    }
+
+    if isMemberOfSealedHierarchy[T] then annotate(reader, fullClassName[T])
+    else reader
+  end given
+
+  inline given [T](using m: Mirror.SumOf[T]) as Reader[T] =
+    val readers: List[Reader[_ <: T]] = summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
+      .asInstanceOf[List[Reader[_ <: T]]]
+    Reader.merge[T](readers:_*)
+  end given
 end CaseClassReaderPiece
