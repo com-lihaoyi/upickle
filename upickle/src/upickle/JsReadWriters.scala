@@ -1,7 +1,10 @@
 package upickle
-import upickle.core.Visitor
 
-trait JsReadWriters extends upickle.core.Types {
+import upickle.core.Visitor
+import upickle.implicits.MacroImplicits
+
+
+trait JsReadWriters extends upickle.core.Types with MacroImplicits {
 
   implicit val JsValueR: Reader[ujson.Value] = new Reader.Delegate(ujson.Value)
 
