@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.ClassTag
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 import ujson.IndexedValue
 import upickle.core._
@@ -58,7 +58,10 @@ trait Api
   final def readEither[T: Reader](s: ujson.Readable): Either[String, T] = toMessageOrT(readTry[T](s))
 
   private def toMessageOrT[T](result: Try[T]): Either[String, T] =
-    result.fold(failure => Left(failure.getMessage), Right(_))
+    result match {
+      case Success(r) => Right(r)
+      case Failure(e) => Left(e.getMessage)
+    }
 
   def reader[T: Reader] = implicitly[Reader[T]]
 
