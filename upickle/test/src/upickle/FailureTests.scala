@@ -2,10 +2,11 @@ package upickle
 
 import scala.reflect.ClassTag
 
-import utest._
-import upickle.legacy.{read, readEither, readTry}
 import ujson.{IncompleteParseException, ParseException, ParsingFailedException}
+import upickle.TestUtil.exists
 import upickle.core.AbortException
+import upickle.legacy.{read, readEither, readTry}
+import utest._
 
 case class Fee(i: Int, s: String)
 object Fee{
@@ -46,9 +47,9 @@ object FailureTests extends TestSuite {
 
         val msg = err.getMessage
         assert(errEither.isLeft)
-        assert(errEither.swap exists (_ == msg))
+        assert(exists(errEither.swap, (_: String) == msg))
         assert(errTry.isFailure)
-        assert(errTry.toEither.swap exists (_.getMessage == msg))
+        assert(exists(errTry.toEither.swap, (_: Throwable).getMessage == msg))
         err
       }
 
@@ -124,9 +125,9 @@ object FailureTests extends TestSuite {
         for (msg <- msgs) {
           assert(err.getMessage.contains(msg))
           assert(errEither.isLeft)
-          assert(errEither.swap exists (_ contains msg))
+          assert(exists(errEither.swap, (_: String) contains msg))
           assert(errTry.isFailure)
-          assert(errTry.toEither.swap exists (_.getMessage contains msg))
+          assert(exists(errTry.toEither.swap, (_: Throwable).getMessage contains msg))
         }
       }
       test("structs"){

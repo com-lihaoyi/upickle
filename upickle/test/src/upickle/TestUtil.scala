@@ -1,6 +1,8 @@
 package upickle
+import scala.util.Right
+
 import utest._
-import acyclic.file
+
 /**
 * Created by haoyi on 4/22/14.
 */
@@ -33,7 +35,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       assert(normalizedReadString == normalizedValue)
 
       def normalized(value: T): Boolean = normalize(value) == normalizedValue
-      assert(api.readEither[T](s) exists normalized)
+      assert(exists(api.readEither[T](s), normalized))
       assert(api.readTry[T](s).toOption exists normalized)
     }
 
@@ -58,5 +60,11 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       val rewrittenBinaryStr = upickle.core.Util.bytesToString(rewrittenBinary)
       assert(writtenBinaryStr == rewrittenBinaryStr)
     }
+  }
+
+  // replacement for Either.exists that is not available in Scala 2.11
+  def exists[L, R](either: Either[L, R], p: R => Boolean): Boolean = either match {
+    case Right(b) => p(b)
+    case _        => false
   }
 }
