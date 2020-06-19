@@ -1,6 +1,6 @@
 package upickle
-import scala.util.Right
 
+import upickle.Scala_2_11_Compat._
 import utest._
 
 /**
@@ -61,10 +61,21 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       assert(writtenBinaryStr == rewrittenBinaryStr)
     }
   }
+}
 
-  // replacement for Either.exists that is not available in Scala 2.11
+object Scala_2_11_Compat {
+  import scala.util.{Failure, Success, Try}
+
   def exists[L, R](either: Either[L, R], p: R => Boolean): Boolean = either match {
     case Right(b) => p(b)
-    case _        => false
+    case _ => false
+  }
+  def toEither[A](`try`: Try[A]): Either[Throwable, A] = `try` match {
+    case Success(r) => Right(r)
+    case Failure(e) => Left(e)
+  }
+  def swap[L, R](either: Either[L, R]): Either[R, L] = either match {
+    case Right(r) => Left(r)
+    case Left(l) => Right(l)
   }
 }
