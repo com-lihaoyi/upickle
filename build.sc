@@ -342,13 +342,13 @@ object upickle extends Module{
 
     object test extends Tests with CommonModule{
       def moduleDeps = {
-        super.moduleDeps ++ Seq(
-        //   ujson.argonaut(),
-        //   ujson.circe(),
-        //   ujson.json4s(),
-        //   ujson.play(),
-          core.jvm().test
-        )
+        (super.moduleDeps :+ core.jvm().test) ++ (
+          if (isDotty) Nil else Seq(
+          ujson.argonaut(),
+          ujson.circe(),
+          ujson.json4s(),
+          ujson.play(),
+        ))
       }
 
       def scalacOptions =
