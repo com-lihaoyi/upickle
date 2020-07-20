@@ -861,6 +861,12 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{1.2.0}
+      @ul
+        @li
+          Add optional `trace = true` parameter to `ujson.read`, `upack.read`,
+          `upickle.default.read` and `upickle.default.readBinary` to provide better error
+          messages when parsing or deserialization fails
     @sect{0.9.6}
       @ul
         @li

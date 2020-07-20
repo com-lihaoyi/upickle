@@ -6,7 +6,7 @@ package object upack{
   /**
     * Read the given MessagePack input into a MessagePack struct
     */
-  def read(s: Readable): Msg = transform(s, Msg)
+  def read(s: Readable, trace: Boolean = false): Msg = upickle.core.TraceVisitor.withTrace(trace, Msg)(transform(s, _))
 
   def copy(t: Msg): Msg = transform(t, Msg)
   /**

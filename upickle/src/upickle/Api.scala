@@ -25,15 +25,20 @@ trait Api
 
   def serializeDefaults: Boolean = false
 
+
   /**
     * Reads the given MessagePack input into a Scala value
     */
-  def readBinary[T: Reader](s: upack.Readable): T = s.transform(reader[T])
+  def readBinary[T: Reader](s: upack.Readable, trace: Boolean = false): T = {
+    TraceVisitor.withTrace(trace, reader[T])(s.transform(_))
+  }
 
   /**
     * Reads the given JSON input into a Scala value
     */
-  def read[T: Reader](s: ujson.Readable): T = s.transform(reader[T])
+  def read[T: Reader](s: ujson.Readable, trace: Boolean = false): T = {
+    TraceVisitor.withTrace(trace, reader[T])(s.transform(_))
+  }
 
   def reader[T: Reader] = implicitly[Reader[T]]
 

@@ -1,4 +1,5 @@
-import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill.scalanativelib._
+
+import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill.scalanativelib._, mill.modules._
 
 val scala211  = "2.11.12"
 val scala212  = "2.12.10"
@@ -32,7 +33,7 @@ trait CommonModule extends ScalaModule {
   )
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def publishVersion = "1.1.0"
+  def publishVersion = "1.2.0"
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -86,7 +87,7 @@ trait CommonCoreModule extends ScalaModule {
   def artifactName = "upickle-core"
   def ivyDeps = Agg(
     ivy"org.scala-lang.modules::scala-collection-compat::2.1.4",
-    ivy"com.lihaoyi::geny::0.6.0"
+    ivy"com.lihaoyi::geny::0.6.2"
   )
 }
 object core extends Module {
@@ -180,12 +181,12 @@ object implicits extends Module {
     def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
     def artifactName = "upickle-implicits"
 
-    object test extends Tests {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        ujson.native(crossScalaVersion, crossScalaNativeVersion).test,
-        core.native(crossScalaVersion, crossScalaNativeVersion).test
-      )
-    }
+//    object test extends Tests {
+//      def moduleDeps = super.moduleDeps ++ Seq(
+//        ujson.native(crossScalaVersion, crossScalaNativeVersion).test,
+//        core.native(crossScalaVersion, crossScalaNativeVersion).test
+//      )
+//    }
   }
 }
 
@@ -220,12 +221,12 @@ object upack extends Module {
     def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
     def artifactName = "upack"
 
-    object test extends Tests {
-      def moduleDeps = super.moduleDeps ++ Seq(
-        ujson.native(crossScalaVersion, crossScalaNativeVersion).test,
-        core.native(crossScalaVersion, crossScalaNativeVersion).test
-      )
-    }
+//    object test extends Tests {
+//      def moduleDeps = super.moduleDeps ++ Seq(
+//        ujson.native(crossScalaVersion, crossScalaNativeVersion).test,
+//        core.native(crossScalaVersion, crossScalaNativeVersion).test
+//      )
+//    }
   }
 }
 
@@ -261,11 +262,11 @@ object ujson extends Module{
   class NativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends JsonModule with CommonNativeModule{
     def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
 
-    object test extends Tests with JawnTestModule {
-      def ivyDeps = if(crossScalaNativeVersion == "0.3.9") T(Agg.empty) else super.ivyDeps()
-      def testFrameworks = if(crossScalaNativeVersion == "0.3.9") T(Seq.empty[String]) else super.testFrameworks()
-      def sources = if(crossScalaNativeVersion == "0.3.9") T.sources(Seq.empty) else super.sources
-    }
+//    object test extends Tests with JawnTestModule {
+//      def ivyDeps = if(crossScalaNativeVersion == "0.3.9") T(Agg.empty) else super.ivyDeps()
+//      def testFrameworks = if(crossScalaNativeVersion == "0.3.9") T(Seq.empty[String]) else super.testFrameworks()
+//      def sources = if(crossScalaNativeVersion == "0.3.9") T.sources(Seq.empty) else super.sources
+//    }
   }
 
   object argonaut extends Cross[ArgonautModule](scalaJVMVersions:_*)
@@ -360,12 +361,12 @@ object upickle extends Module{
       implicits.native(crossScalaVersion, crossScalaNativeVersion)
     )
 
-    object test extends Tests with CommonModule{
-      def testFrameworks = if(crossScalaNativeVersion == "0.3.9") T(Seq.empty[String]) else super.testFrameworks()
-      def sources = if(crossScalaNativeVersion == "0.3.9") T.sources(Seq.empty) else super.sources
-      def allSourceFiles = T(super.allSourceFiles().filterNot(pr => Seq("Primitive", "Durations").map(s => s"${s}Tests.scala").contains(pr.path.last)))
-      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
-    }
+//    object test extends Tests with CommonModule{
+//      def testFrameworks = if(crossScalaNativeVersion == "0.3.9") T(Seq.empty[String]) else super.testFrameworks()
+//      def sources = if(crossScalaNativeVersion == "0.3.9") T.sources(Seq.empty) else super.sources
+//      def allSourceFiles = T(super.allSourceFiles().filterNot(pr => Seq("Primitive", "Durations", "Legacy").map(s => s"${s}Tests.scala").contains(pr.path.last)))
+//      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
+//    }
   }
 }
 

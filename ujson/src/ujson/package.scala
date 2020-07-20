@@ -6,7 +6,8 @@ package object ujson{
   /**
     * Read the given JSON input as a JSON struct
     */
-  def read(s: Readable): Value.Value = transform(s, Value)
+  def read(s: Readable, trace: Boolean = false): Value.Value =
+    upickle.core.TraceVisitor.withTrace(trace, Value)(transform(s, _))
 
   def copy(t: Value.Value): Value.Value = transform(t, Value)
 
