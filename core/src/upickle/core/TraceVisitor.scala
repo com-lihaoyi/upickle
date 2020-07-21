@@ -3,17 +3,15 @@ package upickle.core
 import upickle.core.TraceVisitor._
 
 import scala.annotation.tailrec
-import scala.util.control.{NoStackTrace, NonFatal}
+import scala.util.control.NoStackTrace
 
 /**
-  * Adds a JSON Pointer to exceptions thrown by the delegate Visitor.
-  *
-  * JSON Pointer is standardized by RFC 6901 and commonly used by JSON Schema.
+  * Adds a JSON Path to exceptions thrown by the delegate Visitor.
   *
   * Useful for debugging failures.
   * Adds ~10% overhead depending on the parser.
   *
-  * @see https://tools.ietf.org/html/rfc6901
+  * @see https://goessner.net/articles/JsonPath/
   */
 object TraceVisitor {
   def withTrace[T, J](trace: Boolean, v: Visitor[T, J])(f: Visitor[T, J] => J): J = {
@@ -63,7 +61,7 @@ object TraceVisitor {
     }
 
     /**
-      * @return the full path, slash-delimited.
+      * @return the full JSONPath
       */
     def path: String = "$" + components.iterator.flatMap(_.pathComponent).map("[" + _ + "]").mkString
 
