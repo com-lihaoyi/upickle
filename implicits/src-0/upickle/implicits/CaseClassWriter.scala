@@ -5,7 +5,7 @@ import deriving.{ArrayProduct, Mirror}
 import scala.reflect.ClassTag
 import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
-trait CaseClassWriterPiece:
+trait CaseClassWriterPiece extends MacrosCommon:
   this: upickle.core.Types with Writers with Annotator =>
   class CaseClassWriter[V](
     elemsInfo: V => List[(String, Writer[_], Any)],
@@ -15,16 +15,23 @@ trait CaseClassWriterPiece:
       for
         (name, _, value) <- elemsInfo(v)
         defaultValue <- defaultParams.get(name)
-        if defaultValue != value
+        if defaultValue != value || serializeDefaults
       do n += 1
       n
     end length
 
     def writeToObject[R](ctx: ObjVisitor[_, R], v: V): Unit =
-      for (name, writer, value) <- elemsInfo(v) do
+      for
+        (name, writer, value) <- elemsInfo(v)
+        defaultValue = defaultParams.get(name)
+        if serializeDefaults || defaultValue.isEmpty || defaultValue.get != value
+      do
         val keyVisitor = ctx.visitKey(-1)
         ctx.visitKeyValue(
-          keyVisitor.visitString(name, -1)
+          keyVisitor.visitString(
+            objectAttributeKeyWriteMap(name),
+            -1
+          )
         )
         ctx.narrow.visitValue(
           writer.narrow.write(ctx.subVisitor, value), -1)
@@ -34,9 +41,7 @@ trait CaseClassWriterPiece:
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
       def elemsInfo(v: T): List[(String, Writer[_], Any)] =
-        val labels: List[String] =
-          constValueList[m.MirroredElemLabels]
-            .asInstanceOf[List[String]]
+        val labels: List[String] = fieldLabels[T]
         val writers: List[Writer[_]] =
           summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
             .asInstanceOf[List[Writer[_]]]

@@ -4,7 +4,7 @@ import compiletime.{summonInline}
 import deriving.{ArrayProduct, Mirror}
 import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
-trait CaseClassReaderPiece:
+trait CaseClassReaderPiece extends MacrosCommon:
   this: upickle.core.Types with Readers with Annotator =>
   trait CaseClassReader[T] extends CaseR[T]:
     def make(bldr: Map[String, Any]): T
@@ -22,7 +22,7 @@ trait CaseClassReaderPiece:
       def visitKey(index: Int): Visitor[_, _] = StringReader
 
       def visitKeyValue(v: Any): Unit =
-        currentKey = v.asInstanceOf[String]
+        currentKey = objectAttributeKeyReadMap(v.asInstanceOf[String]).toString
 
       def visitValue(v: Any, index: Int): Unit =
         builder(currentKey) = v
@@ -34,8 +34,7 @@ trait CaseClassReaderPiece:
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val labels: List[String] =
-        constValueList[m.MirroredElemLabels].asInstanceOf[List[String]]
+      val labels: List[String] = fieldLabels[T]
       val visitors: List[Visitor[_, _]] =
         summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
           .asInstanceOf[List[upickle.core.Visitor[_, _]]]
@@ -46,7 +45,8 @@ trait CaseClassReaderPiece:
           labels.zip(visitors).toMap.apply(key)
         override def make(params: Map[String, Any]): T =
           val values: List[AnyRef] = labels.zip(visitors).map { case (fieldName, _) =>
-            params.getOrElse(fieldName, defaultParams(fieldName)).asInstanceOf[AnyRef] }
+            params.getOrElse(fieldName, defaultParams(fieldName)).asInstanceOf[AnyRef]
+          }
           m.fromProduct(ArrayProduct(values.toArray))
         end make
       }

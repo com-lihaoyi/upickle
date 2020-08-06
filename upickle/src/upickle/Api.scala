@@ -19,13 +19,9 @@ trait Api
     with implicits.Readers
     with implicits.Writers
     with WebJson
-    with Api.NoOpMappers
     with JsReadWriters
     with MsgReadWriters
     with Annotator{
-
-  def serializeDefaults: Boolean = false
-
 
   /**
     * Reads the given MessagePack input into a Scala value
@@ -114,17 +110,6 @@ trait Api
     def to[V](implicit f: Reader[V]): V = transform(f)
   }
   // End Api
-}
-object Api{
-  trait NoOpMappers{
-
-    def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
-    def objectAttributeKeyWriteMap(s: CharSequence): CharSequence = s
-
-    def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
-    def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
-  }
-
 }
 /**
  * The default way of accessing upickle
