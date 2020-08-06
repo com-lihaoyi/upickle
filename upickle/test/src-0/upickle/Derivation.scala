@@ -30,8 +30,6 @@ object Singleton
 
 object DerivationTests extends TestSuite {
 
-  summon[Reader[Singleton]]
-
   val tests = Tests {
     test("caseClassReader") - {
       val dogJson = """
@@ -81,7 +79,7 @@ object DerivationTests extends TestSuite {
     test("traitWriter") - {
       val person: Animal = Person("Peter", "Avenue 10 Zurich")
       val result = write(person)
-      val expected = """{"$type":"upickle.Person","name":"Peter","address":"Avenue 10 Zurich","age":20}"""
+      val expected = """{"$type":"upickle.Person","name":"Peter","address":"Avenue 10 Zurich"}"""
       assert(result == expected)
     }
 

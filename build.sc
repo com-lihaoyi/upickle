@@ -29,10 +29,10 @@ trait CommonModule extends ScalaModule {
   def scalacOptions = T{ if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil }
   def platformSegment: String
 
-  def sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
-  )
+  def sources = T.sources{
+    super.sources() ++
+    Seq(PathRef(millSourcePath / s"src-$platformSegment"))
+  }
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
   def publishVersion = "1.1.0"
