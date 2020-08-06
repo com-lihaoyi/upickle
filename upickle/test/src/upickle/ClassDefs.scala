@@ -72,7 +72,9 @@ object Hierarchy {
     )
   }
   sealed trait Z //new line
-  case object AnZ extends Z //new line
+  case object AnZ extends Z { //new line
+    implicit def rw: upickle.default.ReadWriter[AnZ.type] = default.macroRW
+  }
 }
 
 object DeepHierarchy {

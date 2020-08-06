@@ -1,8 +1,8 @@
 package upickle.example
 
-import acyclic.file
 import utest._
 import upickle.example.Simple.Thing
+import scala.language.implicitConversions
 
 case class Opt(a: Option[String], b: Option[Int])
 object Opt{
@@ -67,8 +67,8 @@ object OptionsAsNullTests extends TestSuite {
       }
 
       test("optionCaseClass"){
-        implicit val thingReader = implicitly[Reader[Thing]]
-        implicit val thingWriter = implicitly[Writer[Thing]]
+        //implicit val thingReader: Reader[Thing] = implicitly[Reader[Thing]]
+        //implicit val thingWriter: Writer[Thing] = implicitly[Writer[Thing]]
 
         write(Opt(None, None)) ==> """{"a":null,"b":null}"""
         read[Opt]("""{"a":null,"b":null}""") ==> Opt(None, None)
@@ -84,7 +84,7 @@ object OptionsAsNullTests extends TestSuite {
         class CustomThing2(val i: Int, val s: String)
 
         object CustomThing2 {
-          implicit val rw = /*upickle.default*/ OptionPickler.readwriter[String].bimap[CustomThing2](
+          implicit val rw: OptionPickler.ReadWriter[CustomThing2] = /*upickle.default*/ OptionPickler.readwriter[String].bimap[CustomThing2](
             x => x.i + " " + x.s,
             str => {
               val Array(i, s) = str.split(" ", 2)

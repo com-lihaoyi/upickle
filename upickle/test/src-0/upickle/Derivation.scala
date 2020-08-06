@@ -26,7 +26,12 @@ object Dog {
   given ReadWriter[Dog] = upickle.default.macroRW
 }
 
+object Singleton
+
 object DerivationTests extends TestSuite {
+
+  summon[Reader[Singleton]]
+
   val tests = Tests {
     test("caseClassReader") - {
       val dogJson = """
