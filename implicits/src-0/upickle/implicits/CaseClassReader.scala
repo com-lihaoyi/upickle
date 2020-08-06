@@ -1,7 +1,7 @@
 package upickle.implicits
 
-import deriving._, compiletime._
-
+import compiletime.{summonInline}
+import deriving.{ArrayProduct, Mirror}
 import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
 trait CaseClassReaderPiece:
@@ -32,31 +32,32 @@ trait CaseClassReaderPiece:
     }
   end CaseClassReader
 
-  inline given [T](using m: Mirror.ProductOf[T]) as Reader[T] =
-    val labels: List[String] =
-      constValueList[m.MirroredElemLabels].asInstanceOf[List[String]]
-    val visitors: List[Visitor[_, _]] =
-      summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
-        .asInstanceOf[List[upickle.core.Visitor[_, _]]]
-    val defaultParams: Map[String, AnyRef] = getDefaultParams[T]
+  inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
+    case m: Mirror.ProductOf[T] =>
+      val labels: List[String] =
+        constValueList[m.MirroredElemLabels].asInstanceOf[List[String]]
+      val visitors: List[Visitor[_, _]] =
+        summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
+          .asInstanceOf[List[upickle.core.Visitor[_, _]]]
+      val defaultParams: Map[String, AnyRef] = getDefaultParams[T]
 
-    val reader = new CaseClassReader[T] {
-      override def visitorForKey(key: String) =
-        labels.zip(visitors).toMap.apply(key)
-      override def make(params: Map[String, Any]): T =
-        val values: List[AnyRef] = labels.zip(visitors).map { case (fieldName, _) =>
-          params.getOrElse(fieldName, defaultParams(fieldName)).asInstanceOf[AnyRef] }
-        m.fromProduct(ArrayProduct(values.toArray))
-      end make
-    }
+      val reader = new CaseClassReader[T] {
+        override def visitorForKey(key: String) =
+          labels.zip(visitors).toMap.apply(key)
+        override def make(params: Map[String, Any]): T =
+          val values: List[AnyRef] = labels.zip(visitors).map { case (fieldName, _) =>
+            params.getOrElse(fieldName, defaultParams(fieldName)).asInstanceOf[AnyRef] }
+          m.fromProduct(ArrayProduct(values.toArray))
+        end make
+      }
 
-    if isMemberOfSealedHierarchy[T] then annotate(reader, fullClassName[T])
-    else reader
-  end given
+      if isMemberOfSealedHierarchy[T] then annotate(reader, fullClassName[T])
+      else reader
 
-  inline given [T](using m: Mirror.SumOf[T]) as Reader[T] =
-    val readers: List[Reader[_ <: T]] = summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
-      .asInstanceOf[List[Reader[_ <: T]]]
-    Reader.merge[T](readers:_*)
-  end given
+    case m: Mirror.SumOf[T] =>
+      val readers: List[Reader[_ <: T]] = summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
+        .asInstanceOf[List[Reader[_ <: T]]]
+      Reader.merge[T](readers:_*)
+  }
+
 end CaseClassReaderPiece

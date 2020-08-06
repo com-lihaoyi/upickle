@@ -26,11 +26,11 @@ def getDefaultParmasImpl[T](using qctx: QuoteContext,
   '{ $namesExpr.zip($identsExpr.map(_.asInstanceOf[AnyRef])).toMap }
 end getDefaultParmasImpl
 
-inline def summonAll[T <: Tuple]: List[_] =
+inline def summonList[T <: Tuple]: List[_] =
   inline erasedValue[T] match
     case _: EmptyTuple => Nil
-    case _: (t *: ts) => summonInline[t] :: summonAll[ts]
-end summonAll
+    case _: (t *: ts) => summonInline[t] :: summonList[ts]
+end summonList
 
 inline def constValueList[Types <: Tuple]: List[_] =
   inline erasedValue[Types] match

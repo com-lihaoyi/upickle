@@ -1,8 +1,8 @@
 package upickle.implicits
 
+import compiletime.{summonInline}
+import deriving.{ArrayProduct, Mirror}
 import scala.reflect.ClassTag
-import deriving._, compiletime._
-
 import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
 trait CaseClassWriterPiece:
@@ -31,27 +31,27 @@ trait CaseClassWriterPiece:
     end writeToObject
   end CaseClassWriter
 
-  inline given [T <: Product: ClassTag](using m: Mirror.ProductOf[T]) as Writer[T] =
-    def elemsInfo(v: T): List[(String, Writer[_], Any)] =
-      val labels: List[String] =
-        constValueList[m.MirroredElemLabels]
-          .asInstanceOf[List[String]]
-      val writers: List[Writer[_]] =
-        summonAll[Tuple.Map[m.MirroredElemTypes, Writer]]
-          .asInstanceOf[List[Writer[_]]]
-      val values: List[Any] = v.productIterator.toList
-      for ((l, w), v) <- labels.zip(writers).zip(values)
-      yield (l, w, v)
-    end elemsInfo
-    val writer = CaseClassWriter[T](elemsInfo, getDefaultParams[T])
+  inline def macroW[T <: Product: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
+    case m: Mirror.ProductOf[T] =>
+      def elemsInfo(v: T): List[(String, Writer[_], Any)] =
+        val labels: List[String] =
+          constValueList[m.MirroredElemLabels]
+            .asInstanceOf[List[String]]
+        val writers: List[Writer[_]] =
+          summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+            .asInstanceOf[List[Writer[_]]]
+        val values: List[Any] = v.productIterator.toList
+        for ((l, w), v) <- labels.zip(writers).zip(values)
+        yield (l, w, v)
+      end elemsInfo
+      val writer = CaseClassWriter[T](elemsInfo, getDefaultParams[T])
 
-    if isMemberOfSealedHierarchy[T] then annotate(writer, fullClassName[T])
-    else writer
-  end given
+      if isMemberOfSealedHierarchy[T] then annotate(writer, fullClassName[T])
+      else writer
+    case m: Mirror.SumOf[T] =>
+      val writers: List[Writer[_ <: T]] = summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+        .asInstanceOf[List[Writer[_ <: T]]]
+      Writer.merge[T](writers:_*)
+  }
 
-  inline given [T](using m: Mirror.SumOf[T]) as Writer[T] =
-    val writers: List[Writer[_ <: T]] = summonAll[Tuple.Map[m.MirroredElemTypes, Writer]]
-      .asInstanceOf[List[Writer[_ <: T]]]
-    Writer.merge[T](writers:_*)
-  end given
 end CaseClassWriterPiece
