@@ -13,9 +13,10 @@ trait CaseClassReaderPiece extends MacrosCommon:
 
     override def expectedMsg = "expected case class"
 
+    private val builder = collection.mutable.Map.empty[String, Any]
+
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
       var currentKey: String = null
-      private val builder = collection.mutable.Map.empty[String, Any]
 
       def subVisitor: Visitor[_, _] = visitorForKey(currentKey)
 
@@ -42,7 +43,11 @@ trait CaseClassReaderPiece extends MacrosCommon:
 
       val reader = new CaseClassReader[T] {
         override def visitorForKey(key: String) =
-          labels.zip(visitors).toMap.apply(key)
+          labels.zip(visitors).toMap.get(key) match {
+            case None => upickle.core.NoOpVisitor
+            case Some(v) => v
+          }
+
         override def make(params: Map[String, Any]): T =
           val values: List[AnyRef] = labels.zip(visitors).map { case (fieldName, _) =>
             params.getOrElse(fieldName, defaultParams(fieldName)).asInstanceOf[AnyRef]

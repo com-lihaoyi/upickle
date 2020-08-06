@@ -63,12 +63,8 @@ object MacroTests extends TestSuite {
     test("mixedIn"){
       import MixedIn._
 
-
-      println(upickle.default.read[Obj.ClsB]("""{"i":1}"""))
-      println(upickle.default.write(Obj.ClsB(1)))
-
-      test("a") - rw(Obj.ClsB(1), """{"i":1}""")
-      //test - rw(Obj.ClsA("omg"), """{"s":"omg"}""")
+      test - rw(Obj.ClsB(1), """{"i":1}""")
+      test - rw(Obj.ClsA("omg"), """{"s":"omg"}""")
      }
 //
 //    /*
