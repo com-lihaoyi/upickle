@@ -31,7 +31,7 @@ trait CaseClassWriterPiece:
     end writeToObject
   end CaseClassWriter
 
-  inline def macroW[T <: Product: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
+  inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
       def elemsInfo(v: T): List[(String, Writer[_], Any)] =
         val labels: List[String] =
@@ -40,7 +40,7 @@ trait CaseClassWriterPiece:
         val writers: List[Writer[_]] =
           summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
             .asInstanceOf[List[Writer[_]]]
-        val values: List[Any] = v.productIterator.toList
+        val values: List[Any] = v.asInstanceOf[Product].productIterator.toList
         for ((l, w), v) <- labels.zip(writers).zip(values)
         yield (l, w, v)
       end elemsInfo
