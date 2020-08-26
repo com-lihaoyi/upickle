@@ -13,7 +13,7 @@ object TraceVisitorTests extends TestSuite {
 
   case class Foo(foo: List[String], s: String, i: Int, b: Boolean)
 
-  implicit lazy val rw = upickle.default.macroRW[Foo]
+  implicit lazy val rw: upickle.default.ReadWriter[Foo] = upickle.default.macroRW[Foo]
 
   override def tests: Tests = Tests {
     test("failures") {
