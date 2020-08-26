@@ -67,9 +67,6 @@ object OptionsAsNullTests extends TestSuite {
       }
 
       test("optionCaseClass"){
-        //implicit val thingReader: Reader[Thing] = implicitly[Reader[Thing]]
-        //implicit val thingWriter: Writer[Thing] = implicitly[Writer[Thing]]
-
         write(Opt(None, None)) ==> """{"a":null,"b":null}"""
         read[Opt]("""{"a":null,"b":null}""") ==> Opt(None, None)
         write(Opt(Some("abc"), Some(1))) ==> """{"a":"abc","b":1}"""
