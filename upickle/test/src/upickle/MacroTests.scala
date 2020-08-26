@@ -167,9 +167,8 @@ object MacroTests extends TestSuite {
       test("singleton"){
         import Singletons._
 
-        // TODO: dotty?
-        // rw(BB, """{"$type":"upickle.Singletons.BB"}""")
-        // rw(CC, """{"$type":"upickle.Singletons.CC"}""")
+        rw(BB, """{"$type":"upickle.Singletons.BB"}""")
+        rw(CC, """{"$type":"upickle.Singletons.CC"}""")
         rw(BB: AA, """{"$type":"upickle.Singletons.BB"}""")
         rw(CC: AA, """{"$type":"upickle.Singletons.CC"}""")
       }

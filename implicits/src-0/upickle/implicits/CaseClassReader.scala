@@ -77,4 +77,6 @@ trait CaseClassReaderPiece extends MacrosCommon:
       Reader.merge[T](readers:_*)
   }
 
+  inline given [T <: Singleton: Mirror.Of] as Reader[T] = macroR[T]
+
 end CaseClassReaderPiece
