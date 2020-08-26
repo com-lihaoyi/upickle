@@ -26,8 +26,6 @@ object Dog {
   given ReadWriter[Dog] = upickle.default.macroRW
 }
 
-object Singleton
-
 object DerivationTests extends TestSuite {
 
   val tests = Tests {
