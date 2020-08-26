@@ -33,11 +33,11 @@ trait CaseClassReaderPiece extends MacrosCommon:
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val labels: List[String] = fieldLabels[T]
+      val labels: List[String] = macros.fieldLabels[T]
       val visitors: List[Visitor[_, _]] =
-        summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
+        macros.summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
           .asInstanceOf[List[upickle.core.Visitor[_, _]]]
-      val defaultParams: Map[String, AnyRef] = getDefaultParams[T]
+      val defaultParams: Map[String, AnyRef] = macros.getDefaultParams[T]
 
       val reader = new CaseClassReader[T] {
         override def visitorForKey(key: String) =
@@ -68,11 +68,11 @@ trait CaseClassReaderPiece extends MacrosCommon:
         end make
       }
 
-      if isMemberOfSealedHierarchy[T] then annotate(reader, fullClassName[T])
+      if macros.isMemberOfSealedHierarchy[T] then annotate(reader, macros.fullClassName[T])
       else reader
 
     case m: Mirror.SumOf[T] =>
-      val readers: List[Reader[_ <: T]] = summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
+      val readers: List[Reader[_ <: T]] = macros.summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
         .asInstanceOf[List[Reader[_ <: T]]]
       Reader.merge[T](readers:_*)
   }

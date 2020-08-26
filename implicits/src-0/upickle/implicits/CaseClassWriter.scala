@@ -41,20 +41,20 @@ trait CaseClassWriterPiece extends MacrosCommon:
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
       def elemsInfo(v: T): List[(String, Writer[_], Any)] =
-        val labels: List[String] = fieldLabels[T]
+        val labels: List[String] = macros.fieldLabels[T]
         val writers: List[Writer[_]] =
-          summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+          macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
             .asInstanceOf[List[Writer[_]]]
         val values: List[Any] = v.asInstanceOf[Product].productIterator.toList
         for ((l, w), v) <- labels.zip(writers).zip(values)
         yield (l, w, v)
       end elemsInfo
-      val writer = CaseClassWriter[T](elemsInfo, getDefaultParams[T])
+      val writer = CaseClassWriter[T](elemsInfo, macros.getDefaultParams[T])
 
-      if isMemberOfSealedHierarchy[T] then annotate(writer, fullClassName[T])
+      if macros.isMemberOfSealedHierarchy[T] then annotate(writer, macros.fullClassName[T])
       else writer
     case m: Mirror.SumOf[T] =>
-      val writers: List[Writer[_ <: T]] = summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+      val writers: List[Writer[_ <: T]] = macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
         .asInstanceOf[List[Writer[_ <: T]]]
       Writer.merge[T](writers:_*)
   }

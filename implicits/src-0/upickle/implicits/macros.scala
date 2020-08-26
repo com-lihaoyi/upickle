@@ -1,4 +1,4 @@
-package upickle.implicits
+package upickle.implicits.macros
 
 import scala.quoted.{ given _, _ }
 import deriving._, compiletime._
@@ -79,6 +79,6 @@ def fullClassNameImpl[T](using qctx: QuoteContext,
   val sym = tpe.unseal.symbol
   extractKey(sym) match {
     case Some(name) => Expr(name)
-    case None => Expr(sym.fullName.replace("$", "")) // TODO: not sure about the replacement
+    case None => Expr(sym.fullName.replace("$", ""))
   }
 end fullClassNameImpl
