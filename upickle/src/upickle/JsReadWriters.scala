@@ -6,8 +6,6 @@ import upickle.implicits.MacroImplicits
 
 trait JsReadWriters extends upickle.core.Types with MacroImplicits {
 
-  implicit val JsValueR: Reader[ujson.Value] = new Reader.Delegate(ujson.Value)
-
   implicit def JsObjR: Reader[ujson.Obj] = JsValueR.narrow[ujson.Obj]
   implicit def JsArrR: Reader[ujson.Arr] = JsValueR.narrow[ujson.Arr]
   implicit def JsStrR: Reader[ujson.Str] = JsValueR.narrow[ujson.Str]
@@ -26,7 +24,15 @@ trait JsReadWriters extends upickle.core.Types with MacroImplicits {
   implicit def JsTrueW: Writer[ujson.True.type] = JsValueW.narrow[ujson.True.type]
   implicit def JsFalseW: Writer[ujson.False.type] = JsValueW.narrow[ujson.False.type]
   implicit def JsNullW: Writer[ujson.Null.type] = JsValueW.narrow[ujson.Null.type]
-  implicit val JsValueW: Writer[ujson.Value] = new Writer[ujson.Value] {
+
+  // This trait has no instance. Its only purpose is to deprioritize implicit
+  // lookup of JsValueR and JsValueW over all other instances. This is not
+  // required in Scala 2, but is required in Dotty to avoid implicit ambiguities
+  // when summoning readers and writers in certain circumstances.
+  trait ImplicitDummy
+
+  implicit def JsValueR(implicit dummy: ImplicitDummy = null): Reader[ujson.Value] = new Reader.Delegate(ujson.Value)
+  implicit def JsValueW(implicit dummy: ImplicitDummy = null): Writer[ujson.Value] = new Writer[ujson.Value] {
     def write0[R](out: Visitor[_, R], v: ujson.Value): R = ujson.transform(v, out)
   }
 }
