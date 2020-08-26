@@ -35,7 +35,7 @@ trait CommonModule extends ScalaModule {
   }
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
-  def publishVersion = "1.1.0"
+  def publishVersion = "1.2.0"
   def isDotty = crossScalaVersion.startsWith("0")
   def pomSettings = PomSettings(
     description = artifactName(),
