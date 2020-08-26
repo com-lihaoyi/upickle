@@ -4,6 +4,7 @@ import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill
 val scala211  = "2.11.12"
 val scala212  = "2.12.10"
 val scala213  = "2.13.1"
+val scala3    = "0.26.0-RC1"
 val scalaJS06 = "0.6.32"
 val scalaJS1  = "1.0.0"
 
@@ -11,7 +12,8 @@ val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
 def acyclicVersion(scalaVersion: String): String = if(scalaVersion.startsWith("2.11.")) "0.1.8" else "0.2.0"
 
-val scalaJVMVersions = Seq(scala212, scala213) ++ dottyCustomVersion
+val scala2JVMVersions = Seq(scala212, scala213)
+val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 val scalaJSVersions = Seq(
   (scala212, scalaJS06),
@@ -247,13 +249,9 @@ object ujson extends Module{
           ivy"org.scalatest::scalatest::3.1.1",
           ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
         )
-        else Agg(
-          ivy"org.scalatest::scalatest::3.1.0-SNAP13",
-          ivy"org.scalacheck::scalacheck::1.14.1-SNAPSHOT",
-          ivy"org.scalatestplus::scalacheck-1-14:3.1.0.0-RC3"
-        )
+        else Agg()
       }
-      def testFrameworks = Seq("org.scalatest.tools.Framework")
+      def testFrameworks = if (!isDotty) Seq("org.scalatest.tools.Framework") else Seq.empty[String]
     }
   }
 
@@ -281,14 +279,14 @@ object ujson extends Module{
 //    }
   }
 
-  object argonaut extends Cross[ArgonautModule](scalaJVMVersions:_*)
+  object argonaut extends Cross[ArgonautModule](scala2JVMVersions:_*)
   class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.3")
   }
-  object json4s extends Cross[Json4sModule](scalaJVMVersions:_*)
+  object json4s extends Cross[Json4sModule](scala2JVMVersions:_*)
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
@@ -299,7 +297,7 @@ object ujson extends Module{
     )
   }
 
-  object circe extends Cross[CirceModule](scalaJVMVersions:_*)
+  object circe extends Cross[CirceModule](scala2JVMVersions:_*)
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
@@ -307,7 +305,7 @@ object ujson extends Module{
     def ivyDeps = Agg(ivy"io.circe::circe-parser:0.12.1")
   }
 
-  object play extends Cross[PlayModule](scalaJVMVersions:_*)
+  object play extends Cross[PlayModule](scala2JVMVersions:_*)
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-play"
     def platformSegment = "jvm"
