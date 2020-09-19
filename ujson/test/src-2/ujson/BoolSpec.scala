@@ -12,13 +12,13 @@ class BoolSpec extends propspec.AnyPropSpec with Matchers with ScalaCheckPropert
   }
 
   property("ujson.Bool.value") {
-    forAll { bool: Boolean =>
+    forAll { (bool: Boolean) =>
       ujson.Bool(bool).value shouldBe bool
     }
   }
 
   property("ujson.Bool unapply") {
-    forAll { bool: Boolean =>
+    forAll { (bool: Boolean) =>
       val jsb = ujson.Bool(bool)
       inside(jsb) {
         case ujson.Bool(value) =>

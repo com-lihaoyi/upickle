@@ -15,12 +15,12 @@ import upickle.core.{Visitor, ObjArrVisitor}
   */
 final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0) extends Parser[J] with ByteBasedParser[J] {
   private[this] var lineState = 0
-  protected[this] def line(): Int = lineState
+  protected[this] def line: Int = lineState
 
-  protected[this] final def newline(i: Int) { lineState += 1 }
+  protected[this] final def newline(i: Int) = { lineState += 1 }
   protected[this] final def column(i: Int) = i
 
-  protected[this] final def close() {}
+  protected[this] final def close() = {}
   protected[this] final def dropBufferUntil(i: Int): Unit = ()
   protected[this] final def byte(i: Int): Byte = upickle.core.Platform.byteAt(src, i + start)
   protected[this] final def char(i: Int): Char = upickle.core.Platform.byteAt(src, i + start).toChar

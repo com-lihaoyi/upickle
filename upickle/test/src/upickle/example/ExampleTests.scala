@@ -2,7 +2,6 @@ package upickle.example
 
 import java.io.StringWriter
 
-import acyclic.file
 import upickle.{TestUtil, default}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
@@ -70,7 +69,7 @@ object KeyedTag{
 object Custom2{
   class CustomThing2(val i: Int, val s: String)
   object CustomThing2 {
-    implicit val rw = upickle.default.readwriter[String].bimap[CustomThing2](
+    implicit val rw: RW[CustomThing2] = upickle.default.readwriter[String].bimap[CustomThing2](
       x => x.i + " " + x.s,
       str => {
         val Array(i, s) = str.split(" ", 2)

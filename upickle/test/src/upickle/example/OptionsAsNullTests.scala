@@ -1,8 +1,8 @@
 package upickle.example
 
-import acyclic.file
 import utest._
 import upickle.example.Simple.Thing
+import scala.language.implicitConversions
 
 case class Opt(a: Option[String], b: Option[Int])
 object Opt{
@@ -67,9 +67,6 @@ object OptionsAsNullTests extends TestSuite {
       }
 
       test("optionCaseClass"){
-        implicit val thingReader = implicitly[Reader[Thing]]
-        implicit val thingWriter = implicitly[Writer[Thing]]
-
         write(Opt(None, None)) ==> """{"a":null,"b":null}"""
         read[Opt]("""{"a":null,"b":null}""") ==> Opt(None, None)
         write(Opt(Some("abc"), Some(1))) ==> """{"a":"abc","b":1}"""
@@ -79,12 +76,12 @@ object OptionsAsNullTests extends TestSuite {
       }
 
       // New tests.  Work as expected.
-      'customPickler {
+      test("customPickler") {
         // Custom pickler copied from the documentation
         class CustomThing2(val i: Int, val s: String)
 
         object CustomThing2 {
-          implicit val rw = /*upickle.default*/ OptionPickler.readwriter[String].bimap[CustomThing2](
+          implicit val rw: OptionPickler.ReadWriter[CustomThing2] = /*upickle.default*/ OptionPickler.readwriter[String].bimap[CustomThing2](
             x => x.i + " " + x.s,
             str => {
               val Array(i, s) = str.split(" ", 2)
@@ -93,26 +90,26 @@ object OptionsAsNullTests extends TestSuite {
           )
         }
 
-        'customClass {
+        test("customClass") {
           write(new CustomThing2(10, "Custom")) ==> "\"10 Custom\""
           val r = read[CustomThing2]("\"10 Custom\"")
           assert(r.i == 10, r.s == "Custom")
         }
 
-        'optCustomClass_Some {
+        test("optCustomClass_Some") {
           write(Some(new CustomThing2(10, "Custom"))) ==> "\"10 Custom\""
           val r = read[Option[CustomThing2]]("\"10 Custom\"")
           assert(r.get.i == 10, r.get.s == "Custom")
         }
 
-        'optCustomClass_None {
+        test("optCustomClass_None") {
           read[Option[CustomThing2]]("null") ==> None
         }
 
       }
 
       // Copied from ExampleTests
-      'Js {
+      test("Js") {
         import OptionPickler._   // changed from upickle.default._
         case class Bar(i: Int, s: String)
         implicit val fooReadWrite: ReadWriter[Bar] =
@@ -125,10 +122,10 @@ object OptionsAsNullTests extends TestSuite {
         read[Bar]("""["abc",123]""") ==> Bar(123, "abc")
 
         // New tests.  Last one fails.  Why?
-        'option {
-          'write {write(Some(Bar(123, "abc"))) ==> """["abc",123]"""}
-          'readSome {read[Option[Bar]]("""["abc",123]""") ==> Some(Bar(123, "abc"))}
-          'readNull {read[Option[Bar]]("""null""") ==> None}
+        test("option") {
+          test("write") {write(Some(Bar(123, "abc"))) ==> """["abc",123]"""}
+          test("readSome") {read[Option[Bar]]("""["abc",123]""") ==> Some(Bar(123, "abc"))}
+          test("readNull") {read[Option[Bar]]("""null""") ==> None}
         }
       }
 

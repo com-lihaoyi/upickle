@@ -4,12 +4,16 @@ import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill
 val scala211  = "2.11.12"
 val scala212  = "2.12.10"
 val scala213  = "2.13.1"
+val scala3    = "0.27.0-RC1"
 val scalaJS06 = "0.6.32"
 val scalaJS1  = "1.0.0"
 
+val dottyCustomVersion = Option(sys.props("dottyVersion"))
+
 def acyclicVersion(scalaVersion: String): String = if(scalaVersion.startsWith("2.11.")) "0.1.8" else "0.2.0"
 
-val scalaJVMVersions = Seq(scala212, scala213)
+val scala2JVMVersions = Seq(scala212, scala213)
+val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 val scalaJSVersions = Seq(
   (scala212, scalaJS06),
@@ -27,13 +31,14 @@ trait CommonModule extends ScalaModule {
   def scalacOptions = T{ if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil }
   def platformSegment: String
 
-  def sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
-  )
+  def sources = T.sources{
+    super.sources() ++
+    Seq(PathRef(millSourcePath / s"src-$platformSegment"))
+  }
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
   def publishVersion = "1.2.0"
+  def isDotty = crossScalaVersion.startsWith("0")
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -47,12 +52,15 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
   )
+  trait CommonTestModule extends CommonModule with TestModule{
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4") ++ (
+      if (isDotty) Agg.empty[mill.scalalib.Dep]
+      else Agg(ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}")
+    )
+    def testFrameworks = Seq("upickle.core.UTestFramework")
+  }
 }
 
-trait CommonTestModule extends CommonModule with TestModule{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4", ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}")
-  def testFrameworks = Seq("upickle.core.UTestFramework")
-}
 trait CommonJvmModule extends CommonPublishModule{
   def platformSegment = "jvm"
   def millSourcePath = super.millSourcePath / os.up
@@ -83,12 +91,14 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
   }
 }
 
-trait CommonCoreModule extends ScalaModule {
+trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.2") ++ (if (!isDotty) Agg(
     ivy"org.scala-lang.modules::scala-collection-compat::2.1.4",
-    ivy"com.lihaoyi::geny::0.6.2"
   )
+  else Agg(
+    ivy"org.scala-lang.modules:scala-collection-compat_2.13:2.1.4",
+  ))
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
@@ -111,10 +121,11 @@ object core extends Module {
 object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
-    def compileIvyDeps = Agg(
+    def compileIvyDeps = if (!isDotty) Agg(
       ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
+    else Agg.empty[Dep]
     def generatedSources = T{
       val dir = T.ctx().dest
       val file = dir / "upickle" / "Generated.scala"
@@ -138,8 +149,6 @@ object implicits extends Module {
 
       ammonite.ops.write(file, s"""
       package upickle.implicits
-      import acyclic.file
-      import language.experimental.macros
       /**
        * Auto-generated picklers and unpicklers, used for creating the 22
        * versions of tuple-picklers and case-class picklers
@@ -236,12 +245,13 @@ object ujson extends Module{
     def artifactName = "ujson"
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = T{
-        Agg(
+        if (!isDotty) Agg(
           ivy"org.scalatest::scalatest::3.1.1",
           ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
         )
+        else Agg()
       }
-      def testFrameworks = Seq("org.scalatest.tools.Framework")
+      def testFrameworks = if (!isDotty) Seq("org.scalatest.tools.Framework") else Seq.empty[String]
     }
   }
 
@@ -269,14 +279,14 @@ object ujson extends Module{
 //    }
   }
 
-  object argonaut extends Cross[ArgonautModule](scalaJVMVersions:_*)
+  object argonaut extends Cross[ArgonautModule](scala2JVMVersions:_*)
   class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.3")
   }
-  object json4s extends Cross[Json4sModule](scalaJVMVersions:_*)
+  object json4s extends Cross[Json4sModule](scala2JVMVersions:_*)
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
@@ -287,7 +297,7 @@ object ujson extends Module{
     )
   }
 
-  object circe extends Cross[CirceModule](scalaJVMVersions:_*)
+  object circe extends Cross[CirceModule](scala2JVMVersions:_*)
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
@@ -295,7 +305,7 @@ object ujson extends Module{
     def ivyDeps = Agg(ivy"io.circe::circe-parser:0.12.1")
   }
 
-  object play extends Cross[PlayModule](scalaJVMVersions:_*)
+  object play extends Cross[PlayModule](scala2JVMVersions:_*)
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-play"
     def platformSegment = "jvm"
@@ -308,11 +318,12 @@ object ujson extends Module{
 
 trait UpickleModule extends CommonPublishModule{
   def artifactName = "upickle"
-  def compileIvyDeps = Agg(
+  def compileIvyDeps = if (!isDotty) Agg(
     ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
+  else Agg.empty[Dep]
   def scalacOptions = Seq(
     "-unchecked",
     "-deprecation",
@@ -329,14 +340,18 @@ object upickle extends Module{
 
     object test extends Tests with CommonModule{
       def moduleDeps = {
-        super.moduleDeps ++ Seq(
+        (super.moduleDeps :+ core.jvm().test) ++ (
+          if (isDotty) Nil else Seq(
           ujson.argonaut(),
           ujson.circe(),
           ujson.json4s(),
           ujson.play(),
-          core.jvm().test
-        )
+        ))
       }
+
+      def scalacOptions =
+        if (isDotty) Seq("-Ximport-suggestion-timeout", "0")
+        else Nil
     }
   }
 

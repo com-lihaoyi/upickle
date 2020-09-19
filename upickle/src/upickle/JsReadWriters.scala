@@ -1,10 +1,10 @@
 package upickle
-import upickle.implicits.MacroImplicits
+
 import upickle.core.Visitor
+import upickle.implicits.MacroImplicits
 
-trait JsReadWriters extends upickle.core.Types with MacroImplicits{
 
-  implicit val JsValueR: Reader[ujson.Value] = new Reader.Delegate(ujson.Value)
+trait JsReadWriters extends upickle.core.Types with MacroImplicits with LowPriReadWriters {
 
   implicit def JsObjR: Reader[ujson.Obj] = JsValueR.narrow[ujson.Obj]
   implicit def JsArrR: Reader[ujson.Arr] = JsValueR.narrow[ujson.Arr]
@@ -15,7 +15,6 @@ trait JsReadWriters extends upickle.core.Types with MacroImplicits{
   implicit def JsFalseR: Reader[ujson.False.type] = JsValueR.narrow[ujson.False.type]
   implicit def JsNullR: Reader[ujson.Null.type] = JsValueR.narrow[ujson.Null.type]
 
-
   implicit def JsObjW: Writer[ujson.Obj] = JsValueW.narrow[ujson.Obj]
   implicit def JsArrW: Writer[ujson.Arr] = JsValueW.narrow[ujson.Arr]
   implicit def JsStrW: Writer[ujson.Str] = JsValueW.narrow[ujson.Str]
@@ -24,7 +23,14 @@ trait JsReadWriters extends upickle.core.Types with MacroImplicits{
   implicit def JsTrueW: Writer[ujson.True.type] = JsValueW.narrow[ujson.True.type]
   implicit def JsFalseW: Writer[ujson.False.type] = JsValueW.narrow[ujson.False.type]
   implicit def JsNullW: Writer[ujson.Null.type] = JsValueW.narrow[ujson.Null.type]
-  implicit val JsValueW: Writer[ujson.Value] = new Writer[ujson.Value] {
+
+}
+
+trait LowPriReadWriters { self: JsReadWriters =>
+
+  implicit def JsValueR: Reader[ujson.Value] = new Reader.Delegate(ujson.Value)
+  implicit def JsValueW: Writer[ujson.Value] = new Writer[ujson.Value] {
     def write0[R](out: Visitor[_, R], v: ujson.Value): R = ujson.transform(v, out)
   }
+
 }

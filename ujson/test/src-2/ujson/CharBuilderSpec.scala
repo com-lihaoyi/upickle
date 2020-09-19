@@ -7,7 +7,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 class CharBuilderSpec extends AnyPropSpec with Matchers with ScalaCheckPropertyChecks {
 
   property("append") {
-    forAll { xs: List[Char] =>
+    forAll { (xs: List[Char]) =>
       val builder = new ujson.util.CharBuilder
       xs.foreach(builder.append)
       builder.makeString shouldBe xs.mkString
@@ -15,7 +15,7 @@ class CharBuilderSpec extends AnyPropSpec with Matchers with ScalaCheckPropertyC
   }
 
   property("extend") {
-    forAll { xs: List[String] =>
+    forAll { (xs: List[String]) =>
       val builder = new ujson.util.CharBuilder
       xs.foreach(builder.extend)
       builder.makeString shouldBe xs.mkString

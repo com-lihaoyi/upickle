@@ -21,12 +21,12 @@ extends Parser[J] with ByteBasedParser[J] with upickle.core.BufferingInputStream
   private[this] var eof = -1
 
   private[this] var lineState = 0
-  protected[this] def line(): Int = lineState
+  protected[this] def line: Int = lineState
 
-  protected[this] final def newline(i: Int) { lineState += 1 }
+  protected[this] final def newline(i: Int) = { lineState += 1 }
   protected[this] final def column(i: Int) = i
 
-  protected[this] final def close() {}
+  protected[this] final def close() = {}
   protected[this] final def char(i: Int): Char = {
     byte(i).toChar
   }

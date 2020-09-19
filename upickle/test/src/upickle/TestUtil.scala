@@ -1,6 +1,8 @@
 package upickle
-import utest._
-import acyclic.file
+// TODO: utest's assert throws a cyclic dependency error in the version currently
+// published for Dotty. Use utest's assert once the fix has been published in
+// a new version.
+import utest.{assert => _, _}
 /**
 * Created by haoyi on 4/22/14.
 */

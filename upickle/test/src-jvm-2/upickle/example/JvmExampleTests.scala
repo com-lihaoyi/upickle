@@ -2,8 +2,7 @@ package upickle.example
 
 import java.io.StringWriter
 
-import acyclic.file
-import ujson.json4s.Json4sJson
+// import ujson.json4s.Json4sJson
 import upickle.TestUtil
 import utest._
 import ujson.StringRenderer

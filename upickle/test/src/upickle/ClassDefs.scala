@@ -72,7 +72,7 @@ object Hierarchy {
     )
   }
   sealed trait Z //new line
-  case object AnZ extends Z //new line
+  case object AnZ extends Z
 }
 
 object DeepHierarchy {

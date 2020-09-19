@@ -243,7 +243,7 @@ trait ObjVisitor[-T, +J] extends ObjArrVisitor[T, J] {
   def visitKey(index: Int): Visitor[_, _]
   def visitKeyValue(v: Any): Unit
   def isObj = true
-  override def narrow = this.asInstanceOf[ObjVisitor[Any, J]]
+  override def narrow: ObjVisitor[Any, J] = this.asInstanceOf[ObjVisitor[Any, J]]
 }
 
 /**
