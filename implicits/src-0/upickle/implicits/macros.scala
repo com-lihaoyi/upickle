@@ -42,7 +42,7 @@ def extractKey[A](using qctx: QuoteContext)(sym: qctx.tasty.Symbol): Option[Stri
   sym
     .annots
     .find(_.tpe =:= Type.of[upickle.implicits.key])
-    .map{case Apply(_, Literal(Constant(s)) :: Nil) => s.toString}
+    .map{case Apply(_, Literal(Constant.String(s)) :: Nil) => s}
 end extractKey
 
 inline def fieldLabels[T] = ${fieldLabelsImpl[T]}
