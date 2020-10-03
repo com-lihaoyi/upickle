@@ -5,26 +5,18 @@ import utest._
 
 import upickle.default.{ read, write, Reader, ReadWriter }
 
-sealed trait Animal
-object Animal {
-  given ReadWriter[Animal] = upickle.default.macroRW
-}
-case class Person(name: String, address: String,
-  age: Int = 20) extends Animal
-object Person {
-  given ReadWriter[Person] = upickle.default.macroRW
-}
+sealed trait Animal derives ReadWriter
+
+case class Person(name: String, address: String, age: Int = 20)
+  extends Animal
+  derives ReadWriter
 
 case class Cat(name: String, owner: Person)
   extends Animal
-object Cat {
-  given ReadWriter[Cat] = upickle.default.macroRW
-}
+  derives ReadWriter
 
 case class Dog(name: String, age: Int)
-object Dog {
-  given ReadWriter[Dog] = upickle.default.macroRW
-}
+  derives ReadWriter
 
 object DerivationTests extends TestSuite {
 
