@@ -79,4 +79,9 @@ trait CaseClassReaderPiece extends MacrosCommon:
 
   inline given [T <: Singleton: Mirror.Of] as Reader[T] = macroR[T]
 
+  // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
+  implicit class ReaderExtension(r: Reader.type):
+    inline def derived[T](using Mirror.Of[T]): Reader[T] = macroR[T]
+  end ReaderExtension
+
 end CaseClassReaderPiece

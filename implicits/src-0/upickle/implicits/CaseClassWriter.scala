@@ -61,4 +61,9 @@ trait CaseClassWriterPiece extends MacrosCommon:
 
   inline given [T <: Singleton: Mirror.Of: ClassTag] as Writer[T] = macroW[T]
 
+  // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
+  implicit class WriterExtension(r: Writer.type):
+    inline def derived[T](using Mirror.Of[T], ClassTag[T]): Writer[T] = macroW[T]
+  end WriterExtension
+
 end CaseClassWriterPiece
