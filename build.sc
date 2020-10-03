@@ -302,7 +302,7 @@ object ujson extends Module{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.12.1")
+    def ivyDeps = Agg(ivy"io.circe::circe-parser:0.13.0")
   }
 
   object play extends Cross[PlayModule](scala2JVMVersions:_*)
