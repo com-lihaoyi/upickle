@@ -41,7 +41,7 @@ def extractKey[A](using qctx: QuoteContext)(sym: qctx.tasty.Symbol): Option[Stri
   import qctx.tasty._
   sym
     .annots
-    .find(_.tpe =:= Type.of[upickle.implicits.key])
+    .find(_.tpe =:= TypeRepr.of[upickle.implicits.key])
     .map{case Apply(_, Literal(Constant.String(s)) :: Nil) => s}
 end extractKey
 
