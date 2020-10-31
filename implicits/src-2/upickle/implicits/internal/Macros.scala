@@ -262,7 +262,7 @@ object Macros {
                 yield cq"$i => ${aggregates(i)} = v.asInstanceOf[${argTypes(i)}]"
               }
             }
-            def visitKey(index: Int) = upickle.core.StringVisitor
+            def visitKey(index: Int) = _root_.upickle.core.StringVisitor
             def visitKeyValue(s: Any) = {
               currentIndex = ${c.prefix}.objectAttributeKeyReadMap(s.toString).toString match {
                 case ..${
@@ -292,7 +292,7 @@ object Macros {
                     yield cq"$i => ${mappedArgs(i)}"
                   }
                 }
-                throw new upickle.core.Abort(
+                throw new _root_.upickle.core.Abort(
                   "missing keys in dictionary: " + keys.mkString(", ")
                 )
               }
@@ -306,8 +306,8 @@ object Macros {
               )
             }
 
-            def subVisitor: upickle.core.Visitor[_, _] = currentIndex match{
-              case -1 => upickle.core.NoOpVisitor
+            def subVisitor: _root_.upickle.core.Visitor[_, _] = currentIndex match{
+              case -1 => _root_.upickle.core.NoOpVisitor
               case ..${
                 for (i <- rawArgs.indices)
                 yield cq"$i => ${localReaders(i)} "
@@ -378,7 +378,7 @@ object Macros {
             }
             n
           }
-          def writeToObject[R](ctx: upickle.core.ObjVisitor[_, R],
+          def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}
 
