@@ -6,7 +6,7 @@ import deriving._, compiletime._
 inline def getDefaultParams[T]: Map[String, AnyRef] = ${ getDefaultParmasImpl[T] }
 def getDefaultParmasImpl[T](using qctx: QuoteContext,
   tpe: Type[T]): Expr[Map[String, AnyRef]] =
-  import qctx.tasty._
+  import qctx.reflect._
   val sym = tpe.unseal.symbol
 
   if (sym.isClassDef) {
@@ -37,8 +37,8 @@ inline def summonList[T <: Tuple]: List[_] =
     case _: (t *: ts) => summonInline[t] :: summonList[ts]
 end summonList
 
-def extractKey[A](using qctx: QuoteContext)(sym: qctx.tasty.Symbol): Option[String] =
-  import qctx.tasty._
+def extractKey[A](using qctx: QuoteContext)(sym: qctx.reflect.Symbol): Option[String] =
+  import qctx.reflect._
   sym
     .annots
     .find(_.tpe =:= TypeRepr.of[upickle.implicits.key])
@@ -47,7 +47,7 @@ end extractKey
 
 inline def fieldLabels[T] = ${fieldLabelsImpl[T]}
 def fieldLabelsImpl[T](using qctx: QuoteContext, tpe: Type[T]): Expr[List[String]] =
-  import qctx.tasty._
+  import qctx.reflect._
   val fields: List[Symbol] = tpe.unseal.symbol
     .primaryConstructor
     .paramSymss
@@ -65,7 +65,7 @@ end fieldLabelsImpl
 inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
 def isMemberOfSealedHierarchyImpl[T](using qctx: QuoteContext,
   tpe: Type[T]): Expr[Boolean] =
-  import qctx.tasty._
+  import qctx.reflect._
 
   val parents = tpe.unseal.tpe.baseClasses
   Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
@@ -74,7 +74,7 @@ def isMemberOfSealedHierarchyImpl[T](using qctx: QuoteContext,
 inline def fullClassName[T]: String = ${ fullClassNameImpl[T] }
 def fullClassNameImpl[T](using qctx: QuoteContext,
   tpe: Type[T]): Expr[String] =
-  import qctx.tasty._
+  import qctx.reflect._
 
   val sym = tpe.unseal.symbol
   extractKey(sym) match {
