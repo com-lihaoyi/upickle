@@ -1,13 +1,12 @@
 package upickle.implicits.macros
 
-import scala.quoted.{ given _, _ }
+import scala.quoted.{ given, _ }
 import deriving._, compiletime._
 
 inline def getDefaultParams[T]: Map[String, AnyRef] = ${ getDefaultParmasImpl[T] }
-def getDefaultParmasImpl[T](using qctx: QuoteContext,
-  tpe: Type[T]): Expr[Map[String, AnyRef]] =
+def getDefaultParmasImpl[T](using QuoteContext, Type[T]): Expr[Map[String, AnyRef]] =
   import qctx.reflect._
-  val sym = tpe.unseal.symbol
+  val sym = TypeTree.of[T].symbol
 
   if (sym.isClassDef) {
     val comp = if (sym.isClassDef) sym.companionClass else sym
@@ -37,7 +36,7 @@ inline def summonList[T <: Tuple]: List[_] =
     case _: (t *: ts) => summonInline[t] :: summonList[ts]
 end summonList
 
-def extractKey[A](using qctx: QuoteContext)(sym: qctx.reflect.Symbol): Option[String] =
+def extractKey[A](using QuoteContext)(sym: qctx.reflect.Symbol): Option[String] =
   import qctx.reflect._
   sym
     .annots
@@ -46,9 +45,9 @@ def extractKey[A](using qctx: QuoteContext)(sym: qctx.reflect.Symbol): Option[St
 end extractKey
 
 inline def fieldLabels[T] = ${fieldLabelsImpl[T]}
-def fieldLabelsImpl[T](using qctx: QuoteContext, tpe: Type[T]): Expr[List[String]] =
+def fieldLabelsImpl[T](using QuoteContext, Type[T]): Expr[List[String]] =
   import qctx.reflect._
-  val fields: List[Symbol] = tpe.unseal.symbol
+  val fields: List[Symbol] = TypeTree.of[T].symbol
     .primaryConstructor
     .paramSymss
     .flatten
@@ -63,20 +62,18 @@ def fieldLabelsImpl[T](using qctx: QuoteContext, tpe: Type[T]): Expr[List[String
 end fieldLabelsImpl
 
 inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
-def isMemberOfSealedHierarchyImpl[T](using qctx: QuoteContext,
-  tpe: Type[T]): Expr[Boolean] =
+def isMemberOfSealedHierarchyImpl[T](using QuoteContext, Type[T]): Expr[Boolean] =
   import qctx.reflect._
 
-  val parents = tpe.unseal.tpe.baseClasses
+  val parents = TypeRepr.of[T].baseClasses
   Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
 
 
 inline def fullClassName[T]: String = ${ fullClassNameImpl[T] }
-def fullClassNameImpl[T](using qctx: QuoteContext,
-  tpe: Type[T]): Expr[String] =
+def fullClassNameImpl[T](using QuoteContext, Type[T]): Expr[String] =
   import qctx.reflect._
 
-  val sym = tpe.unseal.symbol
+  val sym = TypeTree.of[T].symbol
   extractKey(sym) match {
     case Some(name) => Expr(name)
     case None => Expr(sym.fullName.replace("$", ""))
