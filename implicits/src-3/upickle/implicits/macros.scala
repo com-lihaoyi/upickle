@@ -22,7 +22,7 @@ def getDefaultParmasImpl[T](using QuoteContext, Type[T]): Expr[Map[String, AnyRe
       if name.startsWith("$lessinit$greater$default")
       yield Ref(deff.symbol)
     val identsExpr: Expr[List[Any]] =
-      Expr.ofList(idents.map(_.seal.cast[Any]))
+      Expr.ofList(idents.map(_.asExpr))
 
     '{ $namesExpr.zip($identsExpr.map(_.asInstanceOf[AnyRef])).toMap }
   } else {
