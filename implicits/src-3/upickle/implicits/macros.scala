@@ -4,7 +4,7 @@ import scala.quoted.{ given, _ }
 import deriving._, compiletime._
 
 inline def getDefaultParams[T]: Map[String, AnyRef] = ${ getDefaultParmasImpl[T] }
-def getDefaultParmasImpl[T](using QuoteContext, Type[T]): Expr[Map[String, AnyRef]] =
+def getDefaultParmasImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
   import qctx.reflect._
   val sym = TypeTree.of[T].symbol
 
@@ -36,7 +36,7 @@ inline def summonList[T <: Tuple]: List[_] =
     case _: (t *: ts) => summonInline[t] :: summonList[ts]
 end summonList
 
-def extractKey[A](using QuoteContext)(sym: qctx.reflect.Symbol): Option[String] =
+def extractKey[A](using Quotes)(sym: qctx.reflect.Symbol): Option[String] =
   import qctx.reflect._
   sym
     .annots
@@ -45,7 +45,7 @@ def extractKey[A](using QuoteContext)(sym: qctx.reflect.Symbol): Option[String] 
 end extractKey
 
 inline def fieldLabels[T] = ${fieldLabelsImpl[T]}
-def fieldLabelsImpl[T](using QuoteContext, Type[T]): Expr[List[String]] =
+def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[String]] =
   import qctx.reflect._
   val fields: List[Symbol] = TypeTree.of[T].symbol
     .primaryConstructor
@@ -62,7 +62,7 @@ def fieldLabelsImpl[T](using QuoteContext, Type[T]): Expr[List[String]] =
 end fieldLabelsImpl
 
 inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
-def isMemberOfSealedHierarchyImpl[T](using QuoteContext, Type[T]): Expr[Boolean] =
+def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
   import qctx.reflect._
 
   val parents = TypeRepr.of[T].baseClasses
@@ -70,7 +70,7 @@ def isMemberOfSealedHierarchyImpl[T](using QuoteContext, Type[T]): Expr[Boolean]
 
 
 inline def fullClassName[T]: String = ${ fullClassNameImpl[T] }
-def fullClassNameImpl[T](using QuoteContext, Type[T]): Expr[String] =
+def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
   import qctx.reflect._
 
   val sym = TypeTree.of[T].symbol
