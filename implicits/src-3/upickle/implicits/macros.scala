@@ -5,7 +5,7 @@ import deriving._, compiletime._
 
 inline def getDefaultParams[T]: Map[String, AnyRef] = ${ getDefaultParmasImpl[T] }
 def getDefaultParmasImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
-  import qctx.reflect._
+  import quotes.reflect._
   val sym = TypeTree.of[T].symbol
 
   if (sym.isClassDef) {
@@ -36,8 +36,8 @@ inline def summonList[T <: Tuple]: List[_] =
     case _: (t *: ts) => summonInline[t] :: summonList[ts]
 end summonList
 
-def extractKey[A](using Quotes)(sym: qctx.reflect.Symbol): Option[String] =
-  import qctx.reflect._
+def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
+  import quotes.reflect._
   sym
     .annots
     .find(_.tpe =:= TypeRepr.of[upickle.implicits.key])
@@ -46,7 +46,7 @@ end extractKey
 
 inline def fieldLabels[T] = ${fieldLabelsImpl[T]}
 def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[String]] =
-  import qctx.reflect._
+  import quotes.reflect._
   val fields: List[Symbol] = TypeTree.of[T].symbol
     .primaryConstructor
     .paramSymss
@@ -63,7 +63,7 @@ end fieldLabelsImpl
 
 inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
 def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
-  import qctx.reflect._
+  import quotes.reflect._
 
   val parents = TypeRepr.of[T].baseClasses
   Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
@@ -71,7 +71,7 @@ def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
 
 inline def fullClassName[T]: String = ${ fullClassNameImpl[T] }
 def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
-  import qctx.reflect._
+  import quotes.reflect._
 
   val sym = TypeTree.of[T].symbol
   extractKey(sym) match {
