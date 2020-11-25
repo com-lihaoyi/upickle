@@ -53,7 +53,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     )
   )
   trait CommonTestModule extends CommonModule with TestModule{
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4") ++ (
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.5") ++ (
       if (isDotty) Agg.empty[mill.scalalib.Dep]
       else Agg(ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}")
     )
