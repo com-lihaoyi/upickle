@@ -4,7 +4,7 @@ import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill
 val scala211  = "2.11.12"
 val scala212  = "2.12.10"
 val scala213  = "2.13.1"
-val scala3    = "0.27.0-RC1"
+val scala3    = "3.0.0-M2"
 val scalaJS06 = "0.6.32"
 val scalaJS1  = "1.0.0"
 
