@@ -4,7 +4,7 @@ import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill
 val scala211  = "2.11.12"
 val scala212  = "2.12.10"
 val scala213  = "2.13.1"
-val scala3    = "0.27.0-RC1"
+val scala3    = "3.0.0-M2"
 val scalaJS06 = "0.6.32"
 val scalaJS1  = "1.0.0"
 
@@ -38,7 +38,7 @@ trait CommonModule extends ScalaModule {
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
   def publishVersion = "1.2.2"
-  def isDotty = crossScalaVersion.startsWith("0")
+  def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -53,7 +53,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     )
   )
   trait CommonTestModule extends CommonModule with TestModule{
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.4") ++ (
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.5") ++ (
       if (isDotty) Agg.empty[mill.scalalib.Dep]
       else Agg(ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}")
     )
