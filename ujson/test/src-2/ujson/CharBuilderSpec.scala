@@ -1,6 +1,7 @@
 package ujson
 
 import org.scalatest._
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec._
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 

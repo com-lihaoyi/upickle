@@ -5,8 +5,7 @@ val scala211  = "2.11.12"
 val scala212  = "2.12.10"
 val scala213  = "2.13.1"
 val scala3    = "3.0.0-M2"
-val scalaJS06 = "0.6.32"
-val scalaJS1  = "1.0.0"
+val scalaJS1  = "1.3.1"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
@@ -16,8 +15,6 @@ val scala2JVMVersions = Seq(scala212, scala213)
 val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 val scalaJSVersions = Seq(
-  (scala212, scalaJS06),
-  (scala213, scalaJS06),
   (scala212, scalaJS1),
   (scala213, scalaJS1)
 )
@@ -246,8 +243,8 @@ object ujson extends Module{
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = T{
         if (!isDotty) Agg(
-          ivy"org.scalatest::scalatest::3.1.1",
-          ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
+          ivy"org.scalatest::scalatest::3.2.3",
+          ivy"org.scalatestplus::scalacheck-1-15::3.2.3.0"
         )
         else Agg()
       }

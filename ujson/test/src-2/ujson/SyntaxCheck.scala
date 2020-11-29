@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets
 
 import org.scalacheck.Gen._
 import org.scalacheck._
+import org.scalatest.matchers.should.Matchers
 import org.scalatest._
 import org.scalatest.propspec.AnyPropSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks

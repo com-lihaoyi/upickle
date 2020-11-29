@@ -2,7 +2,7 @@ package ujson
 
 import java.nio.ByteBuffer
 
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.propspec.AnyPropSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
