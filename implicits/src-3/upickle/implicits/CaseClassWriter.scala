@@ -1,7 +1,7 @@
 package upickle.implicits
 
 import compiletime.{summonInline}
-import deriving.{ArrayProduct, Mirror}
+import deriving.Mirror
 import scala.reflect.ClassTag
 import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
