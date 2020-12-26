@@ -83,7 +83,7 @@ trait CaseClassReaderPiece extends MacrosCommon:
       Reader.merge[T](readers:_*)
   }
 
-  inline given [T <: Singleton: Mirror.Of] as Reader[T] = macroR[T]
+  inline given [T <: Singleton: Mirror.Of]: Reader[T] = macroR[T]
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class ReaderExtension(r: Reader.type):
