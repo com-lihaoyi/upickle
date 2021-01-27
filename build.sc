@@ -92,10 +92,10 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
 trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
   def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.5") ++ (if (!isDotty) Agg(
-    ivy"org.scala-lang.modules::scala-collection-compat::2.1.4",
+    ivy"org.scala-lang.modules::scala-collection-compat::2.4.0",
   )
   else Agg(
-    ivy"org.scala-lang.modules:scala-collection-compat_2.13:2.1.4",
+    ivy"org.scala-lang.modules:scala-collection-compat_2.13:2.4.0",
   ))
 }
 object core extends Module {
