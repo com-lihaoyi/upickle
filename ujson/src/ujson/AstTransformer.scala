@@ -1,7 +1,7 @@
 package ujson
 import upickle.core._
 
-import scala.collection.compat._
+import upickle.core.compat._
 
 trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
   def apply(t: Readable): I = t.transform(this)
