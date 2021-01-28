@@ -1,6 +1,15 @@
-os: linux
 language: scala
+os: linux
+dist: bionic
+addons:
+  apt:
+    update: true
+
+before_script:
+  - git fetch --tags
+
+jdk:
+  - openjdk8
 
 script:
-  - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
-  - ./mill -i __.test.test
+  - ./mill -i __.__.test

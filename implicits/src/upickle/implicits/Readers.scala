@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import upickle.core._
 
-import scala.collection.compat._
+import upickle.core.compat._
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag

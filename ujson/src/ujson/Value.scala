@@ -5,7 +5,7 @@ package ujson
 import upickle.core.Util
 import upickle.core.{ObjArrVisitor, Visitor}
 
-import scala.collection.compat._
+import upickle.core.compat._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -256,10 +256,21 @@ object Obj{
 case class Arr(value: ArrayBuffer[Value]) extends Value
 
 object Arr{
-  implicit def from[T](items: TraversableOnce[T])(implicit conv: T => Value): Arr =
-    Arr(items.map(x => conv(x): Value).to(mutable.ArrayBuffer))
+  implicit def from[T](items: TraversableOnce[T])(implicit conv: T => Value): Arr = {
+    val buf = new mutable.ArrayBuffer[Value]()
+    items.foreach{ item =>
+      buf += (conv(item): Value)
+    }
+    Arr(buf)
+  }
 
-  def apply(items: Value*): Arr = Arr(items.to(mutable.ArrayBuffer))
+  def apply(items: Value*): Arr = {
+    val buf = new mutable.ArrayBuffer[Value](items.length)
+    items.foreach{ item =>
+      buf += item
+    }
+    Arr(buf)
+  }
 }
 case class Num(value: Double) extends Value
 sealed abstract class Bool extends Value{

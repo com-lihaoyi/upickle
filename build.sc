@@ -1,16 +1,14 @@
 
 import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill.scalanativelib._, mill.modules._
 
-val scala211  = "2.11.12"
-val scala212  = "2.12.10"
-val scala213  = "2.13.1"
-val scala3    = "3.0.0-M2"
-val scalaJS06 = "0.6.32"
-val scalaJS1  = "1.0.0"
+val scala212  = "2.12.13"
+val scala213  = "2.13.4"
+val scala3    = "3.0.0-M3"
+val scalaJS06 = "0.6.33"
+val scalaJS1  = "1.4.0"
+val scalaNative = "0.4.0"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
-
-def acyclicVersion(scalaVersion: String): String = if(scalaVersion.startsWith("2.11.")) "0.1.8" else "0.2.0"
 
 val scala2JVMVersions = Seq(scala212, scala213)
 val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
@@ -23,8 +21,8 @@ val scalaJSVersions = Seq(
 )
 
 val scalaNativeVersions = Seq(
-  (scala211, "0.3.9"),
-  (scala211, "0.4.0-M2")
+  (scala212, scalaNative),
+  (scala213, scalaNative)
 )
 
 trait CommonModule extends ScalaModule {
@@ -33,7 +31,10 @@ trait CommonModule extends ScalaModule {
 
   def sources = T.sources{
     super.sources() ++
-    Seq(PathRef(millSourcePath / s"src-$platformSegment"))
+    Seq(PathRef(millSourcePath / s"src-$platformSegment")) ++
+    (if (scalaVersion() != scala212) {
+      Seq(PathRef(millSourcePath / "src-2.13+"))
+    } else Seq())
   }
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
@@ -53,9 +54,9 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     )
   )
   trait CommonTestModule extends CommonModule with TestModule{
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.5") ++ (
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.7") ++ (
       if (isDotty) Agg.empty[mill.scalalib.Dep]
-      else Agg(ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}")
+      else Agg(ivy"com.lihaoyi::acyclic:0.2.0")
     )
     def testFrameworks = Seq("upickle.core.UTestFramework")
   }
@@ -93,12 +94,7 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
 
 trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.2") ++ (if (!isDotty) Agg(
-    ivy"org.scala-lang.modules::scala-collection-compat::2.1.4",
-  )
-  else Agg(
-    ivy"org.scala-lang.modules:scala-collection-compat_2.13:2.1.4",
-  ))
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.5")
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
@@ -122,7 +118,7 @@ object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
     def compileIvyDeps = if (!isDotty) Agg(
-      ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}",
+      ivy"com.lihaoyi::acyclic:0.2.0",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
     else Agg.empty[Dep]
@@ -319,7 +315,7 @@ object ujson extends Module{
 trait UpickleModule extends CommonPublishModule{
   def artifactName = "upickle"
   def compileIvyDeps = if (!isDotty) Agg(
-    ivy"com.lihaoyi::acyclic:${acyclicVersion(scalaVersion())}",
+    ivy"com.lihaoyi::acyclic:0.2.0",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )

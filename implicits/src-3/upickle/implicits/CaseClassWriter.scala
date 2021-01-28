@@ -59,7 +59,7 @@ trait CaseClassWriterPiece extends MacrosCommon:
       Writer.merge[T](writers:_*)
   }
 
-  inline given [T <: Singleton: Mirror.Of: ClassTag] as Writer[T] = macroW[T]
+  inline given [T <: Singleton: Mirror.Of: ClassTag]: Writer[T] = macroW[T]
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class WriterExtension(r: Writer.type):

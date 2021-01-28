@@ -2,7 +2,7 @@ package upack
 
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 
-import scala.collection.compat._
+import upickle.core.compat._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -110,7 +110,11 @@ case class Str(value: String) extends Msg
 case class Binary(value: Array[Byte]) extends Msg
 case class Arr(value: mutable.ArrayBuffer[Msg]) extends Msg
 object Arr{
-  def apply(items: Msg*): Arr = Arr(items.to(mutable.ArrayBuffer))
+  def apply(items: Msg*): Arr = {
+    val buf = new mutable.ArrayBuffer[Msg](items.size)
+    items.foreach(item => buf += item)
+    Arr(buf)
+  }
 }
 case class Obj(value: mutable.LinkedHashMap[Msg, Msg]) extends Msg
 object Obj{

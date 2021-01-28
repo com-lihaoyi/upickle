@@ -39,9 +39,9 @@ end summonList
 def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
   import quotes.reflect._
   sym
-    .annots
+    .annotations
     .find(_.tpe =:= TypeRepr.of[upickle.implicits.key])
-    .map{case Apply(_, Literal(Constant.String(s)) :: Nil) => s}
+    .map{case Apply(_, Literal(StringConstant(s)) :: Nil) => s}
 end extractKey
 
 inline def fieldLabels[T] = ${fieldLabelsImpl[T]}

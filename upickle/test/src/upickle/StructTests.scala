@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream
 import utest._
 import upickle.legacy.{read, write}
 
-import scala.collection.compat._
+import upickle.core.compat._
 import scala.concurrent.duration._
 import TestUtil._
 import java.util.UUID
@@ -13,7 +13,7 @@ import scala.reflect.ClassTag
 import language.postfixOps
 
 object StructTests extends TestSuite {
-  Seq(1).to(Vector)
+
   val tests = Tests {
     test("arrays"){
       test("empty") - rwk(Array[Int](), "[]")(_.toSeq)
