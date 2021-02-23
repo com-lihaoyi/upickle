@@ -1,6 +1,6 @@
 uPickle: a simple Scala JSON and Binary (MessagePack) serialization library
 
-- [Documentation](https://lihaoyi.github.io/upickle)
+- [Documentation](http://com-lihaoyi.github.io/upickle/)
 
 
 If you use uPickle and like it, you will probably enjoy the following book by the Author:
