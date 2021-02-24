@@ -18,7 +18,7 @@ def getDefaultParmasImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
 
     val body = comp.tree.asInstanceOf[ClassDef].body
     val idents: List[Ref] =
-      for case deff @ DefDef(name, _, _, _, tree) <- body
+      for case deff @ DefDef(name, _, _, _) <- body
       if name.startsWith("$lessinit$greater$default")
       yield Ref(deff.symbol)
     val identsExpr: Expr[List[Any]] =

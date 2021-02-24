@@ -3,7 +3,7 @@ import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill
 
 val scala212  = "2.12.13"
 val scala213  = "2.13.4"
-val scala3    = "3.0.0-M3"
+val scala3    = "3.0.0-RC1"
 val scalaJS06 = "0.6.33"
 val scalaJS1  = "1.4.0"
 val scalaNative = "0.4.0"
@@ -68,6 +68,17 @@ trait CommonJvmModule extends CommonPublishModule{
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "jvm"
   }
+
+  // FIXME: scaladoc 3 is not supported by mill yet. Remove the override
+  // once it is.
+  override def docJar =
+    if (crossScalaVersion.startsWith("2")) super.docJar
+    else T {
+      val outDir = T.ctx().dest
+      val javadocDir = outDir / 'javadoc
+      os.makeDir.all(javadocDir)
+      mill.api.Result.Success(mill.modules.Jvm.createJar(Agg(javadocDir))(outDir))
+    }
 
 }
 trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
