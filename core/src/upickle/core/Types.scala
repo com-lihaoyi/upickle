@@ -197,6 +197,7 @@ trait Types{ types =>
           found |= (1L << currentIndex)
         }
       }
+      def visitKey(index: Int) = _root_.upickle.core.StringVisitor
       protected def storeValueIfNotFound(i: Int, v: Any) = {
         if ((found & (1L << i)) == 0) {
           found |= (1L << i)

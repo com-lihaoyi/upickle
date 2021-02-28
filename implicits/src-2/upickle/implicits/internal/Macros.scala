@@ -262,7 +262,7 @@ object Macros {
                 yield cq"$i => ${aggregates(i)} = v.asInstanceOf[${argTypes(i)}]"
               }
             }
-            def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+
             def visitKeyValue(s: Any) = {
               currentIndex = ${c.prefix}.objectAttributeKeyReadMap(s.toString).toString match {
                 case ..${
