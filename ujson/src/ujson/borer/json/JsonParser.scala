@@ -39,7 +39,7 @@ import scala.annotation.{switch, tailrec}
   *
   * @see https://tools.ietf.org/html/rfc8259
   */
-final private[borer] class JsonParser[Bytes](val input: Input[Bytes], val config: JsonParser.Config)(
+final class JsonParser[Bytes](val input: Input[Bytes], val config: JsonParser.Config)(
   implicit byteAccess: ByteAccess[Bytes])
   extends Parser[Bytes] {
 
@@ -756,7 +756,7 @@ final private[borer] class JsonParser[Bytes](val input: Input[Bytes], val config
   private def pos(offset: Int) = input.position(input.cursor + cursorExtra + offset.toLong)
 }
 
-private[borer] object JsonParser {
+object JsonParser {
 
   trait Config {
     def readDecimalNumbersOnlyAsNumberStrings: Boolean

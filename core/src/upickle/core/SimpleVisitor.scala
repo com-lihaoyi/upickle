@@ -34,7 +34,17 @@ trait SimpleVisitor[-T, +V] extends Visitor[T, V] {
 
   def visitUInt64(i: Long, index: Int): V = throw new Abort(expectedMsg + " got uint64")
 
-  def visitFloat64String(s: String, index: Int): V = throw new Abort(expectedMsg + " got float64 string")
+  def visitFloat64String(s: String, index: Int): V = {
+    visitFloat64StringParts(
+      s,
+      s.indexOf('.'),
+      s.indexOf('E') match{
+        case -1 => s.indexOf('e')
+        case n => n
+      },
+      -1
+    )
+  }
 
   def visitChar(s: Char, index: Int): V = throw new Abort(expectedMsg + " got char")
 
