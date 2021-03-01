@@ -250,11 +250,16 @@ object upack extends Module {
 object ujson extends Module{
   trait JsonModule extends CommonPublishModule{
     def artifactName = "ujson"
+    def ivyDeps = Agg(
+      ivy"org.scala-lang.modules::scala-collection-compat:2.4.2",
+//      ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
+    )
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = T{
         if (!isDotty) Agg(
           ivy"org.scalatest::scalatest::3.1.1",
-          ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
+          ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1",
+
         )
         else Agg()
       }
