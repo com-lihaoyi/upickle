@@ -10,9 +10,9 @@ sealed abstract class Error[+IO](private var _io: IO @uncheckedVariance, msg: St
 
   final def io: IO = _io
 
-  private[borer] def withPosOf(reader: Reader): Error[Input.Position] = {
+  private[borer] def withPosOf(reader: Input[_]): Error[Input.Position] = {
     val thiz = this.asInstanceOf[Error[Input.Position]]
-    if (thiz._io.asInstanceOf[AnyRef] eq null) thiz._io = reader.position
+    if (thiz._io.asInstanceOf[AnyRef] eq null) thiz._io = reader.position(reader.cursor)
     thiz
   }
 
