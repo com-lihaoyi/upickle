@@ -186,6 +186,7 @@ trait Types{ types =>
 
   abstract class CaseR[V] extends SimpleReader[V]{
     override def expectedMsg = "expected dictionary"
+
     trait CaseObjectContext extends ObjVisitor[Any, V]{
       def storeAggregatedValue(currentIndex: Int, v: Any): Unit
       var found = 0L
@@ -195,6 +196,22 @@ trait Types{ types =>
           storeAggregatedValue(currentIndex, v)
           found |= (1L << currentIndex)
         }
+      }
+      def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+      protected def storeValueIfNotFound(i: Int, v: Any) = {
+        if ((found & (1L << i)) == 0) {
+          found |= (1L << i)
+          storeAggregatedValue(i, v)
+        }
+      }
+      protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]) = {
+        val keys = for{
+          i <- 0 until rawArgsLength
+          if (found & (1L << i)) == 0
+        } yield mappedArgs(i)
+        throw new _root_.upickle.core.Abort(
+          "missing keys in dictionary: " + keys.mkString(", ")
+        )
       }
     }
   }
@@ -208,6 +225,17 @@ trait Types{ types =>
         writeToObject(ctx, v)
         ctx.visitEnd(-1)
       }
+    }
+    protected def writeSnippet[R, V](objectAttributeKeyWriteMap: CharSequence => CharSequence,
+                                     ctx: _root_.upickle.core.ObjVisitor[_, R],
+                                     mappedArgsI: String,
+                                     w: Writer[V],
+                                     value: V) = {
+      val keyVisitor = ctx.visitKey(-1)
+      ctx.visitKeyValue(
+        keyVisitor.visitString(objectAttributeKeyWriteMap(mappedArgsI), -1)
+      )
+      ctx.narrow.visitValue(w.write(ctx.subVisitor, value), -1)
     }
   }
   class SingletonR[T](t: T) extends CaseR[T]{

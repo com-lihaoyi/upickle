@@ -262,7 +262,7 @@ object Macros {
                 yield cq"$i => ${aggregates(i)} = v.asInstanceOf[${argTypes(i)}]"
               }
             }
-            def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+
             def visitKeyValue(s: Any) = {
               currentIndex = ${c.prefix}.objectAttributeKeyReadMap(s.toString).toString match {
                 case ..${
@@ -276,25 +276,13 @@ object Macros {
             def visitEnd(index: Int) = {
               ..${
                 for(i <- rawArgs.indices if hasDefaults(i))
-                yield q"if ((found & (1L << $i)) == 0) {found |= (1L << $i); storeAggregatedValue($i, ${defaults(i)})}"
+                yield q"this.storeValueIfNotFound($i, ${defaults(i)})"
               }
 
               // Special-case 64 because java bit shifting ignores any RHS values above 63
               // https://docs.oracle.com/javase/specs/jls/se7/html/jls-15.html#jls-15.19
               if (found != ${if (rawArgs.length == 64) -1 else (1L << rawArgs.length) - 1}){
-                var i = 0
-                val keys = for{
-                  i <- 0 until ${rawArgs.length}
-                  if (found & (1L << i)) == 0
-                } yield i match{
-                  case ..${
-                    for (i <- mappedArgs.indices)
-                    yield cq"$i => ${mappedArgs(i)}"
-                  }
-                }
-                throw new _root_.upickle.core.Abort(
-                  "missing keys in dictionary: " + keys.mkString(", ")
-                )
+                this.errorMissingKeys(${rawArgs.length}, ${mappedArgs.toArray})
               }
               $companion.apply(
                 ..${
@@ -351,15 +339,13 @@ object Macros {
 
       def write(i: Int) = {
         val snippet = q"""
-          val keyVisitor = ctx.visitKey(-1)
-          ctx.visitKeyValue(
-            keyVisitor.visitString(
-              ${c.prefix}.objectAttributeKeyWriteMap(${mappedArgs(i)}),
-              -1
-            )
-          )
-          val w = implicitly[${c.prefix}.Writer[${argTypes(i)}]]
-          ctx.narrow.visitValue(w.write(ctx.subVisitor, v.${TermName(rawArgs(i))}), -1)
+          this.writeSnippet[R, ${argTypes(i)}](
+            ${c.prefix}.objectAttributeKeyWriteMap,
+             ctx,
+             ${mappedArgs(i)},
+             implicitly[${c.prefix}.Writer[${argTypes(i)}]],
+             v.${TermName(rawArgs(i))}
+           )
         """
         
         if (!hasDefaults(i)) snippet
@@ -368,20 +354,18 @@ object Macros {
       q"""
         new ${c.prefix}.CaseW[$targetType]{
           def length(v: $targetType) = {
-            var n = 0
-            ..${
-              for(i <- 0 until rawArgs.length)
-              yield {
-                if (!hasDefaults(i)) q"n += 1"
-                else q"""if ($serDfltVals || v.${TermName(rawArgs(i))} != ${defaults(i)}) n += 1"""
-              }
+            ${
+              Range(0, rawArgs.length)
+                .map(i =>
+                  if (!hasDefaults(i)) q"1"
+                  else q"""if ($serDfltVals || v.${TermName(rawArgs(i))} != ${defaults(i)}) 1 else 0"""
+                )
+                .foldLeft[Tree](q"0"){case (prev, next) => q"$prev + $next"}
             }
-            n
           }
           def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}
-
           }
         }
        """
