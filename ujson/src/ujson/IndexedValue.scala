@@ -85,9 +85,9 @@ object IndexedValue extends Transformer[IndexedValue]{
 
     def visitTrue(i: Int) = IndexedValue.True(i)
 
-    def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, i: Int) = IndexedValue.Num(i, s, decIndex, expIndex)
+    def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, i: Int) = IndexedValue.Num(i, s.toString, decIndex, expIndex)
     override def visitFloat64(d: Double, i: Int) = IndexedValue.NumRaw(i, d)
 
-    def visitString(s: CharSequence, i: Int) = IndexedValue.Str(i, s)
+    def visitString(s: CharSequence, i: Int) = IndexedValue.Str(i, s.toString)
   }
 }

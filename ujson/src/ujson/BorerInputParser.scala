@@ -50,7 +50,9 @@ object BorerInputParser {
       def onDouble(value: Double): Unit = storeResult(f.visitFloat64(value, cursorInt))
       def onNumberString(value: String): Unit = storeResult(f.visitFloat64String(value, cursorInt))
       def onChars(buffer: Array[Char], length: Int): Unit = {
-        storeResult(f.visitString(java.nio.CharBuffer.wrap(buffer, 0, length), cursorInt))
+        storeResult(
+          f.visitString(new scala.runtime.ArrayCharSequence(buffer, 0, length), cursorInt)
+        )
       }
       def onArrayStart(): Unit = {
         val ctx = f.visitArray(-1, cursorInt).narrow
