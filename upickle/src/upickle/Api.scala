@@ -34,7 +34,7 @@ trait Api
     * Reads the given JSON input into a Scala value
     */
   def read[T: Reader](s: ujson.Readable, trace: Boolean = false): T = {
-    TraceVisitor.withTrace(trace, reader[T])(s.transform(_))
+    TraceVisitor.withTrace(trace, new LogVisitor(reader[T]))(s.transform(_))
   }
 
   def reader[T: Reader] = implicitly[Reader[T]]

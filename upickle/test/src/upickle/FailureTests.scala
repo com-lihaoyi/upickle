@@ -94,7 +94,7 @@ object FailureTests extends TestSuite {
 
     test("facadeFailures"){
       def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
-        val err = intercept[AbortException] { upickle.legacy.read[T](s) }
+        val err = intercept[AbortException] { println("ZZZ " + upickle.legacy.read[T](s)) }
         for (msg <- msgs) assert(err.getMessage.contains(msg))
 
         err
@@ -108,7 +108,7 @@ object FailureTests extends TestSuite {
         test - assertErrorMsg[Boolean]("\"lol\"", "expected boolean got string at index 0")
         test - assertErrorMsg[Int]("\"lol\"", "expected number got string at index 0")
         test - assertErrorMsg[Seq[Int]]("\"lol\"", "expected sequence got string at index 0")
-        test - assertErrorMsg[Seq[String]]("""["1", 2, 3]""", "expected string got number at index 6")
+        test - assertErrorMsg[Seq[String]]("""["1", 2, 3]""", "expected string got int32 at index 6")
         test("tupleShort"){
           assertErrorMsg[Seq[(Int, String)]](
             "[[1, \"1\"], [2, \"2\"], []]",
@@ -130,7 +130,7 @@ object FailureTests extends TestSuite {
 
         test("wrongType"){
           test - assertErrorMsg[Fee]("""[1, 2, 3]""", "expected dictionary got sequence at index 0")
-          test - assertErrorMsg[Fee]("""31337""", "expected dictionary got number at index 0")
+          test - assertErrorMsg[Fee]("""31337""", "expected dictionary got int32 at index 0")
         }
 
         test("invalidTag"){

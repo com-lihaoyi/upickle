@@ -32,7 +32,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       val readS = api.read[T](s)
       val normalizedReadString = normalize(readS)
       val normalizedValue = normalize(t)
-      assert(normalizedReadString == normalizedValue)
+      utest.assert(normalizedReadString == normalizedValue)
     }
 
     val normalizedReadWrittenT = normalize(api.read[T](writtenT))
