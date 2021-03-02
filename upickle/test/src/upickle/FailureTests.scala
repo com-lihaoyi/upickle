@@ -102,7 +102,7 @@ object FailureTests extends TestSuite {
         test("tupleShort"){
           assertErrorMsg[Seq[(Int, String)]](
             "[[1, \"1\"], [2, \"2\"], []]",
-            "expected 2 items in sequence, found 0 at index 22"
+            "expected 2 items in sequence, found 0 at index 21"
           )
         }
       }
@@ -110,9 +110,9 @@ object FailureTests extends TestSuite {
         // Separate this guy out because the read macro and
         // the intercept macro play badly with each other
         test("missingKey"){
-          test - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s at index 9")
+          test - assertErrorMsg[Fee]("""{"i": 123}""", "missing keys in dictionary: s at index 0")
           test - assertErrorMsg[Fee](""" {"s": "123"}""", "missing keys in dictionary: i at index 1")
-          test - assertErrorMsg[Fee]("""  {}""", "missing keys in dictionary: i, s at index 3")
+          test - assertErrorMsg[Fee]("""  {}""", "missing keys in dictionary: i, s at index 2")
         }
         test("badKey"){
           test - assertErrorMsg[Fee]("""{"i": true}""", "expected number got boolean")
@@ -124,10 +124,10 @@ object FailureTests extends TestSuite {
         }
 
         test("invalidTag"){
-          test - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
-          test - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
-          test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
-          test - assertErrorMsgDefault[Fi]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
+          test - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg at index 0")
+          test - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg at index 0")
+          test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 0")
+          test - assertErrorMsgDefault[Fi]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 0")
         }
 
         test("taggedInvalidBody"){
