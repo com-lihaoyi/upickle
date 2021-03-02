@@ -334,11 +334,10 @@ abstract class Parser[J] {
    * Parse and return the next JSON value and the position beyond it.
    */
   protected[this] final def parse(i: Int, facade: Visitor[_, J]): (J, Int) = try {
+//    rparse(DATA, i, Nil)
     (char(i): @switch) match {
       // ignore whitespace
-      case ' ' => parse(i + 1, facade)
-      case '\t' => parse(i + 1, facade)
-      case '\r' => parse(i + 1, facade)
+      case ' ' | '\t' | 'r' => parse(i + 1, facade)
       case '\n' => newline(i); parse(i + 1, facade)
 
       // if we have a recursive top-level structure, we'll delegate the parsing
@@ -402,94 +401,114 @@ abstract class Parser[J] {
     dropBufferUntil(j)
     def facade: Visitor[_, J] = stack.head.subVisitor.asInstanceOf[Visitor[_, J]]
     val c = char(i)
+    (c: @switch) match{
+      case '\n' =>
+        newline(i)
+        rparse(state, i + 1, stack)
+      case ' ' | '\t' | '\r' =>
+        rparse(state, i + 1, stack)
+      case _ =>
+        (state: @switch) match{
+          case DATA =>
+            // we are inside an object or array expecting to see data
+            lazy val ctxt = stack.head.narrow
+            (c: @switch) match{
+              case '[' =>
+                val ctx = try facade.visitArray(-1, i) catch reject(j)
+                rparse(ARRBEG, i + 1, ctx :: stack)
+              case '{' =>
+                val ctx = try facade.visitObject(-1, i) catch reject(j)
+                rparse(OBJBEG, i + 1, ctx :: stack)
+              case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
+                val j = try parseNum(i, ctxt, facade) catch reject(i)
+                rparse(collectionEndFor(stack), j, stack)
+              case '"' =>
+                val nextJ = try {
+                  val (s, j) = parseString(i, false)
+                  val v = facade.visitString(s, i)
+                  ctxt.visitValue(v, i)
+                  j
+                } catch reject(i)
+                rparse(collectionEndFor(stack), nextJ, stack)
 
-    if (c == '\n') {
-      newline(i)
-      rparse(state, i + 1, stack)
-    } else if (c == ' ' || c == '\t' || c == '\r') {
-      rparse(state, i + 1, stack)
-    } else if (state == DATA) {
-      // we are inside an object or array expecting to see data
-      if (c == '[') {
-        val ctx = try facade.visitArray(-1, i) catch reject(j)
-        rparse(ARRBEG, i + 1, ctx :: stack)
-      } else if (c == '{') {
-        val ctx = try facade.visitObject(-1, i) catch reject(j)
-        rparse(OBJBEG, i + 1, ctx :: stack)
-      } else {
-        val ctxt = stack.head.narrow
+              case 't' =>
+                ctxt.visitValue(try parseTrue(i, facade) catch reject(i), i)
+                rparse(collectionEndFor(stack), i + 4, stack)
+              case 'f' =>
+                ctxt.visitValue(try parseFalse(i, facade) catch reject(i), i)
+                rparse(collectionEndFor(stack), i + 5, stack)
+              case 'n' =>
+                ctxt.visitValue(try parseNull(i, facade) catch reject(i), i)
+                rparse(collectionEndFor(stack), i + 4, stack)
+              case _ => die(i, "expected json value")
+            }
 
-        if ((c >= '0' && c <= '9') || c == '-') {
-          val j = try parseNum(i, ctxt, facade) catch reject(i)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, j, stack)
-        } else if (c == '"') {
-          val nextJ = try {
-            val (s, j) = parseString(i, false)
-            val v = facade.visitString(s, i)
-            ctxt.visitValue(v, i)
-            j
-          } catch reject(i)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, nextJ, stack)
-        } else if (c == 't') {
-          ctxt.visitValue(try parseTrue(i, facade) catch reject(i), i)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack)
-        } else if (c == 'f') {
-          ctxt.visitValue(try parseFalse(i, facade) catch reject(i), i)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 5, stack)
-        } else if (c == 'n') {
-          ctxt.visitValue(try parseNull(i, facade) catch reject(i), i)
-          rparse(if (ctxt.isObj) OBJEND else ARREND, i + 4, stack)
-        } else {
-          die(i, "expected json value")
+          case KEY =>
+            // we are in an object expecting to see a key.
+            if (c == '"') {
+
+              val obj = stack.head.asInstanceOf[ObjVisitor[Any, _]]
+              val keyVisitor = obj.visitKey(j)
+              val (s, nextJ) = parseString(i, true)
+              obj.visitKeyValue(keyVisitor.visitString(s, j))
+              rparse(SEP, nextJ, stack)
+            } else die(i, "expected \"")
+          case SEP =>
+            // we are in an object just after a key, expecting to see a colon.
+            if (c == ':') rparse(DATA, i + 1, stack)
+            else die(i, "expected :")
+          case ARREND =>
+            // we are in an array, expecting to see a comma (before more data).
+            if (c == ',') rparse(DATA, i + 1, stack)
+            else if (c == ']') tryCloseCollection(stack, i) match{
+              case Some(t) => t
+              case None => rparse(collectionEndFor(stack.tail), i + 1, stack.tail)
+            }
+            else die(i, "expected ] or ,")
+          case OBJEND =>
+            // we are in an object, expecting to see a comma (before more data).
+            if (c == ',') rparse(KEY, i + 1, stack)
+            else if (c == '}') tryCloseCollection(stack, i) match{
+              case Some(t) => t
+              case None => rparse(collectionEndFor(stack.tail), i + 1, stack.tail)
+            }
+            else die(i, "expected } or ,")
+          case ARRBEG =>
+            // we are starting an array, expecting to see data or a closing bracket.
+            if (c == ']') tryCloseCollection(stack, i) match{
+              case Some(t) => t
+              case None => rparse(collectionEndFor(stack.tail), i + 1, stack.tail)
+            }
+            else rparse(DATA, i, stack)
+          case OBJBEG =>
+            // we are starting an object, expecting to see a key or a closing brace.
+            if (c == '}') tryCloseCollection(stack, i) match{
+              case Some(t) => t
+              case None => rparse(collectionEndFor(stack.tail), i + 1, stack.tail)
+            }
+            else rparse(KEY, i, stack)
         }
-      }
-    } else if (
-      (c == ']' && (state == ARREND || state == ARRBEG)) ||
-      (c == '}' && (state == OBJEND || state == OBJBEG))
-    ) {
-      // we are inside an array or object and have seen a key or a closing
-      // brace, respectively.
-      if (stack.isEmpty) {
-        error("invalid stack")
-      } else {
-        val ctxt1 = stack.head
-        val tail = stack.tail
-        if (tail.isEmpty) {
-          (try ctxt1.visitEnd(i) catch reject(i), i + 1)
-        } else {
-          val ctxt2 = tail.head.narrow
-          try ctxt2.visitValue(ctxt1.visitEnd(i) , i) catch reject(i)
-          rparse(if (ctxt2.isObj) OBJEND else ARREND, i + 1, tail)
-        }
-      }
-    } else if (state == KEY) {
-      // we are in an object expecting to see a key.
-      if (c == '"') {
 
-        val obj = stack.head.asInstanceOf[ObjVisitor[Any, _]]
-        val keyVisitor = obj.visitKey(j)
-        val (s, nextJ) = parseString(i, true)
-        obj.visitKeyValue(keyVisitor.visitString(s, j))
-        rparse(SEP, nextJ, stack)
-      } else die(i, "expected \"")
-    } else if (state == SEP) {
-      // we are in an object just after a key, expecting to see a colon.
-      if (c == ':') rparse(DATA, i + 1, stack)
-      else die(i, "expected :")
-    } else if (state == ARREND) {
-      // we are in an array, expecting to see a comma (before more data).
-      if (c == ',') rparse(DATA, i + 1, stack)
-      else die(i, "expected ] or ,")
-    } else if (state == OBJEND) {
-      // we are in an object, expecting to see a comma (before more data).
-      if (c == ',') rparse(KEY, i + 1, stack)
-      else die(i, "expected } or ,")
-    } else if (state == ARRBEG) {
-      // we are starting an array, expecting to see data or a closing bracket.
-      rparse(DATA, i, stack)
-    } else {
-      // we are starting an object, expecting to see a key or a closing brace.
-      rparse(KEY, i, stack)
+
     }
+  }
+  def tryCloseCollection(stack: List[ObjArrVisitor[_, J]], i: Int) = {
+    if (stack.isEmpty) error("invalid stack")
+    else {
+      val ctxt1 = stack.head
+      val tail = stack.tail
+      if (tail.isEmpty) {
+        Some(try ctxt1.visitEnd(i) catch reject(i), i + 1)
+      } else {
+        val ctxt2 = tail.head.narrow
+        try ctxt2.visitValue(ctxt1.visitEnd(i), i) catch reject(i)
+        None
+
+      }
+    }
+  }
+  def collectionEndFor(stack: List[ObjArrVisitor[_, _]]) = {
+    if (stack.head.isObj) OBJEND
+    else ARREND
   }
 }
