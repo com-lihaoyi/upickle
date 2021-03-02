@@ -493,18 +493,15 @@ abstract class Parser[J] {
     }
   }
   def tryCloseCollection(stack: List[ObjArrVisitor[_, J]], i: Int) = {
-    if (stack.isEmpty) error("invalid stack")
-    else {
-      val ctxt1 = stack.head
-      val tail = stack.tail
-      if (tail.isEmpty) {
-        Some(try ctxt1.visitEnd(i) catch reject(i), i + 1)
-      } else {
-        val ctxt2 = tail.head.narrow
-        try ctxt2.visitValue(ctxt1.visitEnd(i), i) catch reject(i)
-        None
+    val ctxt1 = stack.head
+    val tail = stack.tail
+    if (tail.isEmpty) {
+      Some(try ctxt1.visitEnd(i) catch reject(i), i + 1)
+    } else {
+      val ctxt2 = tail.head.narrow
+      try ctxt2.visitValue(ctxt1.visitEnd(i), i) catch reject(i)
+      None
 
-      }
     }
   }
   def collectionEndFor(stack: List[ObjArrVisitor[_, _]]) = {

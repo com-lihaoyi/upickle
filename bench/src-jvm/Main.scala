@@ -18,7 +18,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(1)){
+    for(duration <- Seq(500, 5000, 50000, 500000)){
       println("RUN JVM: " + duration)
       println()
 
