@@ -1,0 +1,96 @@
+8019b55b0fde9571a773a21106eb9ceddb3c547b (HEAD -> perf-no-unify, origin/perf-no-unify) .
+
+    RUN JVM: 5000
+
+    upickleDefaultCached Read 516
+    upickleDefaultCached Write 726
+    upickleDefaultCachedByteArray Read 541
+    upickleDefaultCachedByteArray Write 847
+
+    RUN JVM: 50000
+
+    upickleDefaultCached Read 5856
+    upickleDefaultCached Write 7406
+    upickleDefaultCachedByteArray Read 6042
+    upickleDefaultCachedByteArray Write 8371
+
+cb13b1465eb32945af11988f528bafc955b7ccef get rid of parseStringSimple
+942bd67057d8692080fc4cb4eb76433392eac0f8 use char literals in byte based parser
+4522c50c5de51ecbc438bf77e8624e917c49d369 Interleave string construction together with parseString logic
+a1a17914c5787b8c72c0af436afd803e0d4d0a7f mirror changes to CharBasedParser and fix CharSequenceParser
+138d9207a66c0a6f6e727ba34cf071395132d511 extract more helpers
+349107f424bac8fbe78b3fccf8a44f8a46c1560e tweak
+661625ee9910eb65bd03cf14fd43fa1cf040671c switch-based string parsing
+
+    RUN JVM: 5000
+
+    upickleDefaultCached Read 651
+    upickleDefaultCached Write 739
+    upickleDefaultCachedByteArray Read 540
+    upickleDefaultCachedByteArray Write 758
+
+    RUN JVM: 50000
+
+    upickleDefaultCached Read 7005
+    upickleDefaultCached Write 7753
+    upickleDefaultCachedByteArray Read 5593
+    upickleDefaultCachedByteArray Write 7227
+
+0c30999fafc9168d823c4f3c344f691cbf3bc34e Overhaul UTF8 string parsing
+
+    RUN JVM: 5000
+
+    upickleDefaultCached Read 723
+    upickleDefaultCached Write 852
+    upickleDefaultCachedByteArray Read 608
+    upickleDefaultCachedByteArray Write 880
+
+    RUN JVM: 50000
+
+    upickleDefaultCached Read 7610
+    upickleDefaultCached Write 9029
+    upickleDefaultCachedByteArray Read 5624
+    upickleDefaultCachedByteArray Write 8337
+
+1374ad7a43301f1cb677c70fb9b9c00ec6cc042b Re-use parseStringSimple output in parseStringComplex
+
+    RUN JVM: 5000
+
+    upickleDefaultCached Read 668
+    upickleDefaultCached Write 749
+    upickleDefaultCachedByteArray Read 666
+    upickleDefaultCachedByteArray Write 736
+
+    RUN JVM: 50000
+
+    upickleDefaultCached Read 7103
+    upickleDefaultCached Write 7754
+    upickleDefaultCachedByteArray Read 7076
+    upickleDefaultCachedByteArray Write 7983
+
+110800d2f654e606faef421db278a3d2381e15a3 Flatten out `rparse` switches
+11f018feca29f6628ddea2cdb61b4a4b4d4275e1 Remove redundant if-check
+265047c968add6c215c0e9be2a78d7e865f05cd3 convert rparse to switch
+807b70196f12a84c1676348900d42398da5945a4 (origin/master, origin/HEAD, master) Reduce generated code size of macros by moving generated code into helpers (#335)
+
+    RUN JVM: 5000
+
+    upickleDefaultCached Read 665
+    upickleDefaultCached Write 837
+    upickleDefaultCachedByteArray Read 632
+    upickleDefaultCachedByteArray Write 828
+
+    RUN JVM: 50000
+
+    upickleDefaultCached Read 6852
+    upickleDefaultCached Write 7749
+    upickleDefaultCachedByteArray Read 6293
+    upickleDefaultCachedByteArray Write 6831
+
+8aa42807e7b8a3c911f513cf940a0aed50a363e5 Merge pull request #334 from dotty-staging/backprop
+e14d9aee29f3458152cd835f45e33da7e6472c61 update readme link
+8029cfab75dc3e222401d1eebca5888c6c745398 Merge branch 'master' of github.com:lihaoyi/upickle-pprint
+297bfe2e2adca7e41e1c98211318d87cf1680c7b Upgrade to Scala 3.0.0-RC1
+c1c03c9e8a13cf10019612272ae1fc4d771f6194 Update reflect param clauses API
+cc8e39f6f00ee6901e31d541a5426e25a35edd17 1.2.3 (#332)
+bd163a8b49896a43d139c3361659a9b314f6bfc7 (tag: 1.2.3) 1.2.3 (#332)

@@ -28,9 +28,6 @@ final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0)
   protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
     new String(src, i, k - i, utf8)
   }
-  protected[this] final def sliceStringInto(i: Int, k: Int, builder: ujson.util.CharBuilder): Unit = {
-    builder.extend(new String(src, i, k - i, utf8))
-  }
 
   protected[this] final def atEof(i: Int) = i >= limit
 }

@@ -26,9 +26,10 @@ trait CharBasedParser[J] extends Parser[J] {
     var j = i
     var c = char(j)
     while (c != '"') {
-      if (c < ' ') return die(j, s"control char (${c.toInt}) in string")
+      if (c < ' ') die(j, s"control char (${c.toInt}) in string")
       if (c == '\\') return -1 - j
       j += 1
+      charBuilder.append(c)
       c = char(j)
     }
     j + 1
@@ -37,34 +38,29 @@ trait CharBasedParser[J] extends Parser[J] {
   /**
    * Parse a string that is known to have escape sequences.
    */
-  protected[this] final def parseStringComplex(pre: Int,
-                                               i: Int,
-                                               key: Boolean): (CharSequence, Int) = {
+  protected[this] final def parseStringComplex(i0: Int): (CharSequence, Int) = {
 
-    val sb = charBuilder.reset()
-    sb.extend(sliceString(pre, i))
-    var j = i
-
-    var c = char(j)
+    var i = i0
+    var c = char(i)
     while (c != '"') {
       if (c < ' ') {
-        die(j, s"control char (${c.toInt}) in string")
+        die(i, s"control char (${c.toInt}) in string")
       } else if (c == '\\') {
-        (char(j + 1): @switch) match {
-          case 'b' => { sb.append('\b'); j += 2 }
-          case 'f' => { sb.append('\f'); j += 2 }
-          case 'n' => { sb.append('\n'); j += 2 }
-          case 'r' => { sb.append('\r'); j += 2 }
-          case 't' => { sb.append('\t'); j += 2 }
+        (char(i + 1): @switch) match {
+          case 'b' => { charBuilder.append('\b'); i += 2 }
+          case 'f' => { charBuilder.append('\f'); i += 2 }
+          case 'n' => { charBuilder.append('\n'); i += 2 }
+          case 'r' => { charBuilder.append('\r'); i += 2 }
+          case 't' => { charBuilder.append('\t'); i += 2 }
 
-          case '"' => { sb.append('"'); j += 2 }
-          case '/' => { sb.append('/'); j += 2 }
-          case '\\' => { sb.append('\\'); j += 2 }
+          case '"' => { charBuilder.append('"'); i += 2 }
+          case '/' => { charBuilder.append('/'); i += 2 }
+          case '\\' => { charBuilder.append('\\'); i += 2 }
 
           // if there's a problem then descape will explode
-          case 'u' => { sb.append(descape(sliceString(j + 2, j + 6))); j += 6 }
+          case 'u' => { charBuilder.append(descape(sliceString(i + 2, i + 6))); i += 6 }
 
-          case c => die(j, s"illegal escape sequence (\\$c)")
+          case c => die(i, s"illegal escape sequence (\\$c)")
         }
       } else {
         // this case is for "normal" code points that are just one Char.
@@ -72,14 +68,13 @@ trait CharBasedParser[J] extends Parser[J] {
         // we don't have to worry about surrogate pairs, since those
         // will all be in the ranges D800–DBFF (high surrogates) or
         // DC00–DFFF (low surrogates).
-        sb.append(c)
-        j += 1
+        charBuilder.append(c)
+        i += 1
       }
-      dropBufferUntil(j)
-      c = char(j)
+      c = char(i)
     }
 
-    (sb.makeString, j + 1)
+    (charBuilder.makeString, i + 1)
   }
 
   /**
@@ -91,10 +86,9 @@ trait CharBasedParser[J] extends Parser[J] {
    * interpret a multi-char code point incorrectly.
    */
   protected[this] final def parseString(i: Int,  key: Boolean): (CharSequence, Int) = {
-
+    charBuilder.reset()
     val k = parseStringSimple(i + 1)
-
-    if (k >= 0) (sliceString(i + 1, k - 1), k)
-    else parseStringComplex(i + 1, (-k) - 1, key)
+    if (k >= 0) (charBuilder.makeString, k)
+    else parseStringComplex(-k - 1)
   }
 }

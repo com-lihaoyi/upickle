@@ -18,7 +18,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(500, 5000, 50000, 500000)){
+    for(duration <- Seq(500, 5000, 10000)){
       println("RUN JVM: " + duration)
       println()
 
@@ -44,10 +44,10 @@ object Main{
 //      Common.playJsonCached(duration)
 //      Common.circeCached(duration)
 //      Common.upickleDefaultCached(duration)
-//      Common.upickleDefaultCached(duration)
+      Common.upickleDefaultCached(duration)
 //      Common.upickleDefaultCachedReadable(duration)
-      Common.upickleDefaultCachedReadablePath(duration)
-//      Common.upickleDefaultCachedByteArray(duration)
+//      Common.upickleDefaultCachedReadablePath(duration)
+      Common.upickleDefaultCachedByteArray(duration)
 //      Common.upickleLegacyCached(duration)
 //      Common.upickleDefaultBinaryCached(duration)
 //      Common.upickleDefaultBinaryCachedReadable(duration)

@@ -13,9 +13,6 @@ private[ujson] final class CharSequenceParser[J](cs: CharSequence) extends Parse
   final def dropBufferUntil(i: Int): Unit = ()
   final def char(i: Int): Char = upickle.core.Platform.charAt(cs, i)
   final def sliceString(i: Int, j: Int): CharSequence = cs.subSequence(i, j)
-  final def sliceStringInto(i: Int, j: Int, builder: ujson.util.CharBuilder): Unit = {
-    builder.extend(cs)
-  }
   final def atEof(i: Int) = i == cs.length
   final def close() = ()
 }

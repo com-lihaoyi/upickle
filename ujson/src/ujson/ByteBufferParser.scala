@@ -36,9 +36,6 @@ final class ByteBufferParser[J](src: ByteBuffer) extends Parser[J] with ByteBase
     src.position(start)
     new String(arr, utf8)
   }
-  protected[this] final def sliceStringInto(i: Int, k: Int, builder: ujson.util.CharBuilder): Unit = {
-    builder.extend(sliceString(i, k))
-  }
 
   protected[this] final def atEof(i: Int) = i >= limit
 }

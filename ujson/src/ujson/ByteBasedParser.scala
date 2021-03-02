@@ -1,5 +1,7 @@
 package ujson
 
+import ujson.util.FastByteArrayOutputStream
+
 import scala.annotation.{switch, tailrec}
 
 /**
@@ -17,7 +19,7 @@ import scala.annotation.{switch, tailrec}
  */
 trait ByteBasedParser[J] extends Parser[J] {
   protected[this] def byte(i: Int): Byte
-
+  var boas = new FastByteArrayOutputStream()
   /**
    * See if the string has any escape sequences. If not, return the end of the
    * string. If so, bail out and return -1.
@@ -28,77 +30,53 @@ trait ByteBasedParser[J] extends Parser[J] {
   protected[this] final def parseStringSimple(i: Int): Int = {
     var j = i
     var c: Int = byte(j) & 0xff
-    while (c != 34) {
-      if (c < 32) return die(j, s"control char ($c) in string")
-      if (c == 92) return -j - 1
+    while (c != '"') {
+      if (c >= 0 && c  < ' ') die(j, s"control char ($c) in string")
+      if (c == '\\') return -j - 1
       j += 1
+      boas.write(c.toByte)
       c = byte(j) & 0xff
     }
     j + 1
   }
 
-  protected[this] final def parseStringComplex(i: Int, simpleEnd: Int) = {
+  protected[this] final def parseStringComplex(i0: Int) = {
 
+    var i = i0
 
-    // TODO: we might be able to do better by identifying where
-    // escapes occur, and then translating the intermediate strings in
-    // one go.
+    var c: Int = byte(i) & 0xff
+    while (c != '"') {
+      if (c == '\\') {
+        (byte(i + 1): @switch) match {
+          case 'b' => { boas.write('\b'); i += 2 }
+          case 'f' => { boas.write('\f'); i += 2 }
+          case 'n' => { boas.write('\n'); i += 2 }
+          case 'r' => { boas.write('\r'); i += 2 }
+          case 't' => { boas.write('\t'); i += 2 }
 
-//    var j = i + 1
-    val sb = new ujson.util.CharBuilder
-    this.sliceStringInto(i + 1, simpleEnd, sb)
-    var j = simpleEnd
-//    while(j < simpleEnd){
-//      sb.append(byte(j).toChar)
-//      j += 1
-//    }
-
-
-    var c: Int = byte(j) & 0xff
-    while (c != 34) { // "
-      if (c == 92) { // \
-        (byte(j + 1): @switch) match {
-          case 98 => { sb.append('\b'); j += 2 }
-          case 102 => { sb.append('\f'); j += 2 }
-          case 110 => { sb.append('\n'); j += 2 }
-          case 114 => { sb.append('\r'); j += 2 }
-          case 116 => { sb.append('\t'); j += 2 }
-
-          case 34 => { sb.append('"'); j += 2 }
-          case 47 => { sb.append('/'); j += 2 }
-          case 92 => { sb.append('\\'); j += 2 }
+          case '"' => { boas.write('"'); i += 2 }
+          case '/' => { boas.write('/'); i += 2 }
+          case '\\' => { boas.write('\\'); i += 2 }
 
           // if there's a problem then descape will explode
-          case 117 => { sb.append(descape(sliceString(j + 2, j + 6))); j += 6 }
+          case 'u' =>
+            val char = descape(sliceString(i + 2, i + 6))
+            boas.write((char & 0xff).toByte)
+            boas.write((char >> 8).toByte)
+            i += 6
 
-          case c => die(j, s"invalid escape sequence (\\${c.toChar})")
+          case c => die(i, s"invalid escape sequence (\\${c.toChar})")
         }
-      } else if (c < 32) {
-        die(j, s"control char ($c) in string")
-      } else if (c < 128) {
-        // 1-byte UTF-8 sequence
-        sb.append(c.toChar)
-        j += 1
-      } else if ((c & 224) == 192) {
-        // 2-byte UTF-8 sequence
-        sb.extend(sliceString(j, j + 2))
-        j += 2
-      } else if ((c & 240) == 224) {
-        // 3-byte UTF-8 sequence
-        sb.extend(sliceString(j, j + 3))
-        j += 3
-      } else if ((c & 248) == 240) {
-        // 4-byte UTF-8 sequence
-        sb.extend(sliceString(j, j + 4))
-        j += 4
-      } else {
-        die(j, "invalid UTF-8 encoding")
       }
-      c = byte(j) & 0xff
+      else if (c >= 0 && c < ' ') die(i, s"control char ($c) in string")
+      else {
+        boas.write(c.toByte)
+        i = i + 1
+      }
+      c = byte(i) & 0xff
     }
-    val s = sb.makeString
 
-    (s, j + 1)
+    (boas.makeString(), i + 1)
   }
   /**
    * Parse the string according to JSON rules, and add to the given context.
@@ -106,13 +84,9 @@ trait ByteBasedParser[J] extends Parser[J] {
    * This method expects the data to be in UTF-8 and accesses it as bytes.
    */
   protected[this] final def parseString(i: Int, key: Boolean): (CharSequence, Int) = {
+    boas.reset()
     val k = parseStringSimple(i + 1)
-    if (k >= 0) {
-      val s = sliceString(i + 1, k - 1)
-      (s, k)
-    }else{
-      parseStringComplex(i, -k - 1)
-
-    }
+    if (k >= 0) (boas.makeString(), k)
+    else parseStringComplex(-k - 1)
   }
 }

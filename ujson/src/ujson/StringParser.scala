@@ -22,10 +22,6 @@ private[ujson] final class StringParser[J](s: String) extends Parser[J] with Cha
   final def char(i: Int): Char = upickle.core.Platform.charAt(s, i)
   final def sliceString(i: Int, j: Int): CharSequence = s.substring(i, j)
 
-  def sliceStringInto(i: Int, k: Int, builder: ujson.util.CharBuilder): Unit  = {
-    builder.extend(sliceString(i, k))
-  }
-
   final def atEof(i: Int) = i == s.length
   final def close() = ()
 }
