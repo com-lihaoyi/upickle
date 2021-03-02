@@ -45,6 +45,11 @@ extends Parser[J] with ByteBasedParser[J] with upickle.core.BufferingInputStream
     if (done) eof = getLastIdx
     done
   }
+
+  def sliceStringInto(i: Int, k: Int, builder: ujson.util.CharBuilder): Unit  = {
+    builder.extend(sliceString(i, k))
+  }
+
 }
 
 object InputStreamParser extends Transformer[java.io.InputStream]{

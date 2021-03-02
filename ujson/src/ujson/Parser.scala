@@ -49,6 +49,8 @@ abstract class Parser[J] {
    */
   protected[this] def sliceString(i: Int, j: Int): CharSequence
 
+  protected[this] def sliceStringInto(i: Int, j: Int, builder: ujson.util.CharBuilder): Unit
+
   /**
    * Return true iff 'i' is at or beyond the end of the input (EOF).
    */

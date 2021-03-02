@@ -30,22 +30,29 @@ trait ByteBasedParser[J] extends Parser[J] {
     var c: Int = byte(j) & 0xff
     while (c != 34) {
       if (c < 32) return die(j, s"control char ($c) in string")
-      if (c == 92) return -1
+      if (c == 92) return -j - 1
       j += 1
       c = byte(j) & 0xff
     }
     j + 1
   }
 
-  protected[this] final def parseStringComplex(i: Int) = {
+  protected[this] final def parseStringComplex(i: Int, simpleEnd: Int) = {
 
 
     // TODO: we might be able to do better by identifying where
     // escapes occur, and then translating the intermediate strings in
     // one go.
 
-    var j = i + 1
+//    var j = i + 1
     val sb = new ujson.util.CharBuilder
+    this.sliceStringInto(i + 1, simpleEnd, sb)
+    var j = simpleEnd
+//    while(j < simpleEnd){
+//      sb.append(byte(j).toChar)
+//      j += 1
+//    }
+
 
     var c: Int = byte(j) & 0xff
     while (c != 34) { // "
@@ -100,11 +107,11 @@ trait ByteBasedParser[J] extends Parser[J] {
    */
   protected[this] final def parseString(i: Int, key: Boolean): (CharSequence, Int) = {
     val k = parseStringSimple(i + 1)
-    if (k != -1) {
+    if (k >= 0) {
       val s = sliceString(i + 1, k - 1)
       (s, k)
     }else{
-      parseStringComplex(i)
+      parseStringComplex(i, -k - 1)
 
     }
   }
