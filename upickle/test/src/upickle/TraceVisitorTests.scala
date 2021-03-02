@@ -44,7 +44,7 @@ object TraceVisitorTests extends TestSuite {
         test - assertPathFailure("""{"foo": ["a"], "s":}""", "$['s']")
         test - assertPathFailure("""{"foo": [], "s": "", "i"""", "$['i']")
         test - assertPathFailure("""{"foo": [], "s": "", "i": """, "$['i']")
-        test - assertPathFailure("""{"foo": [], "s": "", "i": 5""", "$['i']")
+        test - assertPathFailure("""{"foo": [], "s": "", "i": 5""", "$")
       }
       test("upickleFailures") - {
         test - assertPathFailure("""666""", "$") // yes, empty string. https://tools.ietf.org/html/rfc6901#section-5

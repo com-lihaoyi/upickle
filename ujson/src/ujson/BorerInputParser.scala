@@ -75,8 +75,16 @@ object BorerInputParser {
       def onEndOfInput(): Unit = {}
     }
 
-    while(parser.pull(MyReceiver) != ujson.borer.DataItem.EndOfInput)()
-    lastResult
+    try{
+
+      while(parser.pull(MyReceiver) != ujson.borer.DataItem.EndOfInput)()
+      lastResult
+    }catch{
+      case e: ujson.borer.Error.InvalidInputData[_] if e.getMessage.contains("but got end of input") =>
+        throw new IncompleteParseException(e.getMessage, e)
+      case e: ujson.borer.Error.InvalidInputData[_] =>
+        throw new ParseException(e.getMessage, cursorInt, -1, -1)
+    }
   }
 
   def transform[Bytes: borer.ByteAccess, T](input: ujson.borer.Input[Bytes], f: Visitor[_, T]) = {

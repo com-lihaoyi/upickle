@@ -39,57 +39,47 @@ object FailureTests extends TestSuite {
       // Run through the test cases from the json.org validation suite,
       // skipping the ones which we don't support yet (e.g. leading zeroes,
       // extra commas) or will never support (e.g. too deep)
+      def ensureFailure(failureCase: String) = {
+        intercept[ParseException] { read[ujson.Value](failureCase.trim) }
+      }
 
-      val failureCases = Seq(
-//        """ "A JSON payload should be an object or array, not a string." """,
-        """ {"Extra value after close": true} "misplaced quoted value" """,
-        """ {"Illegal expression": 1 + 2} """,
-        """ {"Illegal invocation": alert()} """,
-        """ {"Numbers cannot have leading zeroes": 013} """,
-        """ {"Numbers cannot be hex": 0x14} """,
-        """ ["Illegal backslash escape: \x15"] """,
-        """ [\naked] """,
-        """ ["Illegal backslash escape: \017"] """,
-//        """ [[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]] """,
-        """ {"Missing colon" null} """,
+//        test - ensureFailure(""" "A JSON payload should be an object or array, not a string." """)
+      test - ensureFailure(""" {"Extra value after close": true} "misplaced quoted value" """)
+      test - ensureFailure(""" {"Illegal expression": 1 + 2} """)
+      test - ensureFailure(""" {"Illegal invocation": alert()} """)
+      test - ensureFailure(""" {"Numbers cannot have leading zeroes": 013} """)
+      test - ensureFailure(""" {"Numbers cannot be hex": 0x14} """)
+      test - ensureFailure(""" ["Illegal backslash escape: \x15"] """)
+      test - ensureFailure(""" [\naked] """)
+      test - ensureFailure(""" ["Illegal backslash escape: \017"] """)
+//        test - ensureFailure(""" [[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]] """)
+      test - ensureFailure(""" {"Missing colon" null} """)
 
-        """ {"Double colon":: null} """,
-        """ {"Comma instead of colon", null} """,
-        """ ["Colon instead of comma": false] """,
-        """ ["Bad value", truth] """,
-        """ ['single quote'] """,
-        """ ["	tab	character	in	string	"] """,
-        """ ["tab\   character\   in\  string\  "] """,
-        """ ["line
-          break"] """,
-        """ ["line\
-          break"] """,
-        """ [0e] """,
-        """ {unquoted_key: "keys must be quoted"} """,
-        """ [0e+-1] """,
+      test - ensureFailure(""" {"Double colon":: null} """)
+      test - ensureFailure(""" {"Comma instead of colon", null} """)
+      test - ensureFailure(""" ["Colon instead of comma": false] """)
+      test - ensureFailure(""" ["Bad value", truth] """)
+      test - ensureFailure(""" ['single quote'] """)
+      test - ensureFailure(""" ["	tab	character	in	string	"] """)
+      test - ensureFailure(""" ["tab\   character\   in\  string\  "] """)
+      test - ensureFailure(""" ["line
+        break"] """)
+      test - ensureFailure(""" ["line\
+        break"] """)
+      test - ensureFailure(""" [0e] """)
+      test - ensureFailure(""" {unquoted_key: "keys must be quoted"} """)
+      test - ensureFailure(""" [0e+-1] """)
 
-        """ ["mismatch"} """,
-        """ ["extra comma",] """,
-        """ ["double extra comma",,] """,
-        """ [   , "<-- missing value"] """,
-        """ ["Comma after the close"], """,
-        """ ["Extra close"]] """,
-        """ {"Extra comma": true,} """
-      ).map(_.trim())
-      val res =
-        for(failureCase <- failureCases)
-        yield try {
-          intercept[ParseException] { read[ujson.Value](failureCase) }
-          None
-        }catch{
-          case _:Throwable =>
-          Some(failureCase)
-        }
+      test - ensureFailure(""" ["mismatch"} """)
+      test - ensureFailure(""" ["extra comma",] """)
+      test - ensureFailure(""" ["double extra comma",,] """)
+      test - ensureFailure(""" [   , "<-- missing value"] """)
+      test - ensureFailure(""" ["Comma after the close"], """)
+      test - ensureFailure(""" ["Extra close"]] """)
+      test - ensureFailure(""" {"Extra comma": true,} """)
 
-      val nonFailures = res.flatten
-      assert(nonFailures.isEmpty)
-      intercept[IncompleteParseException]{read[ujson.Value](""" {"Comma instead if closing brace": true, """)}
-      intercept[IncompleteParseException]{read[ujson.Value](""" ["Unclosed array" """)}
+      test - intercept[IncompleteParseException]{read[ujson.Value](""" {"Comma instead if closing brace": true, """)}
+      test - intercept[IncompleteParseException]{read[ujson.Value](""" ["Unclosed array" """)}
     }
 
     test("facadeFailures"){
