@@ -202,7 +202,7 @@ object Renderer {
         case '\t' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafe('\\'); sb.appendUnsafe('t')
         case c =>
           if (c < ' ' || (c > '~' && unicode)) {
-            sb.ensureLength(naiveOutLen - i + 4);
+            sb.ensureLength(naiveOutLen - i + 5);
             sb.appendUnsafe('\\')
             sb.appendUnsafe('u')
             sb.appendUnsafe(toHex((c >> 12) & 15))
