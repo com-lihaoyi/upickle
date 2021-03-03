@@ -13,12 +13,4 @@ class CharBuilderSpec extends AnyPropSpec with Matchers with ScalaCheckPropertyC
       builder.makeString shouldBe xs.mkString
     }
   }
-
-  property("extend") {
-    forAll { (xs: List[String]) =>
-      val builder = new ujson.util.CharBuilder
-      xs.foreach(builder.extend)
-      builder.makeString shouldBe xs.mkString
-    }
-  }
 }
