@@ -26,12 +26,13 @@ private[ujson] final class CharBuilder {
     len = len + 1
   }
 
-  def incrementLength(increment: Int) = {
+  def ensureLength(increment: Int) = {
     var multiple = cs.length
     val targetLength = len + increment
     while (multiple < targetLength) multiple = multiple * 2
     if (multiple != cs.length) cs = java.util.Arrays.copyOf(cs, multiple)
   }
+
   def appendUnsafe(c: Char): Unit = {
     cs(len) = c
     len = len + 1
