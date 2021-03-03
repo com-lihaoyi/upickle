@@ -44,16 +44,45 @@ object Main{
 //      Common.playJsonCached(duration)
 //      Common.circeCached(duration)
 //      Common.upickleDefaultCached(duration)
-      Common.upickleDefaultCached(duration)
+//      Common.upickleDefaultCached(duration)
 //      Common.upickleDefaultCachedReadable(duration)
 //      Common.upickleDefaultCachedReadablePath(duration)
-      Common.upickleDefaultCachedByteArray(duration)
+//      Common.upickleDefaultCachedByteArray(duration)
 //      Common.upickleLegacyCached(duration)
 //      Common.upickleDefaultBinaryCached(duration)
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
+      benchParsingRendering("github-events.json", duration)
+      benchParsingRendering("meteorites.json", duration)
+      benchParsingRendering("turkish.json", duration)
+      benchParsingRendering("eu-lobby-repr.json", duration)
       println()
+    }
+  }
+  def benchParsingRendering(name: String, duration: Int) = {
+    import java.nio.file.{Files, Paths}
+    val inputBytes = Files.readAllBytes(Paths.get("bench/resources/" + name))
+    val inputString = new String(inputBytes)
+
+    {
+      var n = 0
+      val start = System.currentTimeMillis()
+      while(System.currentTimeMillis() < start + duration){
+        ujson.reformatTo(inputString, new java.io.StringWriter)
+        n += 1
+      }
+      println(name + " String Parsing Rendering  " + n)
+    }
+
+    {
+      var n = 0
+      val start = System.currentTimeMillis()
+      while(System.currentTimeMillis() < start + duration){
+        ujson.reformatTo(inputBytes, new java.io.StringWriter)
+        n += 1
+      }
+      println(name + " Byte Array Parsing Rendering " + n)
     }
   }
   def ujsonAst(duration: Int) = {
