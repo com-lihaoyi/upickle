@@ -36,7 +36,7 @@ class BaseRenderer[T <: java.io.Writer]
                    escapeUnicode: Boolean = false) extends JsVisitor[T, T]{
   private[this] val charBuilder = new CharBuilder
 
-  def flushIfEnd() = {
+  def flushCharBuilder() = {
     charBuilder.writeOutToIfLongerThan(out, if (depth == 0) 0 else 1000)
   }
 
@@ -68,7 +68,7 @@ class BaseRenderer[T <: java.io.Writer]
       depth -= 1
       renderIndent()
       charBuilder.append(']')
-      flushIfEnd()
+      flushCharBuilder()
       out
     }
   }
@@ -92,7 +92,7 @@ class BaseRenderer[T <: java.io.Writer]
       depth -= 1
       renderIndent()
       charBuilder.append('}')
-      flushIfEnd()
+      flushCharBuilder()
       out
     }
   }
@@ -104,7 +104,7 @@ class BaseRenderer[T <: java.io.Writer]
     charBuilder.appendUnsafe('u')
     charBuilder.appendUnsafe('l')
     charBuilder.appendUnsafe('l')
-    flushIfEnd()
+    flushCharBuilder()
     out
   }
 
@@ -116,7 +116,7 @@ class BaseRenderer[T <: java.io.Writer]
     charBuilder.appendUnsafe('l')
     charBuilder.appendUnsafe('s')
     charBuilder.appendUnsafe('e')
-    flushIfEnd()
+    flushCharBuilder()
     out
   }
 
@@ -127,7 +127,7 @@ class BaseRenderer[T <: java.io.Writer]
     charBuilder.appendUnsafe('r')
     charBuilder.appendUnsafe('u')
     charBuilder.appendUnsafe('e')
-    flushIfEnd()
+    flushCharBuilder()
     out
   }
 
@@ -140,7 +140,7 @@ class BaseRenderer[T <: java.io.Writer]
       charBuilder.appendUnsafe(s.charAt(i))
       i += 1
     }
-    flushIfEnd()
+    flushCharBuilder()
     out
   }
 
@@ -155,7 +155,7 @@ class BaseRenderer[T <: java.io.Writer]
         else super.visitFloat64(d, index)
         flushBuffer()
     }
-    flushIfEnd()
+    flushCharBuilder()
     out
   }
 
@@ -166,7 +166,7 @@ class BaseRenderer[T <: java.io.Writer]
     else {
       flushBuffer()
       Renderer.escape(charBuilder, s, escapeUnicode)
-      flushIfEnd()
+      flushCharBuilder()
       out
     }
   }
