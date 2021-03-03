@@ -96,7 +96,7 @@ abstract class Parser[J] {
     * multiple top-level objects are not allowed.
     */
   final def parse(facade: Visitor[_, J]): J = {
-    val (value, i) = parse(0, facade)
+    val (value, i) = parseTopLevel(0, facade)
     var j = i
     while (!atEof(j)) {
       (char(j): @switch) match {
@@ -327,19 +327,27 @@ abstract class Parser[J] {
       die(i, "expected null")
     }
 
+  protected[this] final def parseTopLevel(i: Int, facade: Visitor[_, J]): (J, Int) = {
+    try parseTopLevel0(i, facade)
+    catch reject(i).orElse[Throwable, Nothing] {
+      case e: IndexOutOfBoundsException =>
+        throw IncompleteParseException("exhausted input", e)
+    }
+  }
   /**
    * Parse and return the next JSON value and the position beyond it.
    */
-  protected[this] final def parse(i: Int, facade: Visitor[_, J]): (J, Int) = try {
+  @tailrec
+  protected[this] final def parseTopLevel0(i: Int, facade: Visitor[_, J]): (J, Int) = {
     (char(i): @switch) match {
       // ignore whitespace
-      case ' ' | '\t' | 'r' => parse(i + 1, facade)
-      case '\n' => newline(i); parse(i + 1, facade)
+      case ' ' | '\t' | 'r' => parseTopLevel0(i + 1, facade)
+      case '\n' => newline(i); parseTopLevel0(i + 1, facade)
 
       // if we have a recursive top-level structure, we'll delegate the parsing
       // duties to our good friend rparse().
-      case '[' => rparse(ARRBEG, i + 1, facade.visitArray(-1, i) :: Nil)
-      case '{' => rparse(OBJBEG, i + 1, facade.visitObject(-1, i) :: Nil)
+      case '[' => parseNested(ARRBEG, i + 1, facade.visitArray(-1, i), Nil)
+      case '{' => parseNested(OBJBEG, i + 1, facade.visitObject(-1, i), Nil)
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
@@ -361,9 +369,6 @@ abstract class Parser[J] {
       // invalid
       case _ => die(i, "expected json value")
     }
-  } catch reject(i).orElse[Throwable, Nothing] {
-    case e: IndexOutOfBoundsException =>
-      throw IncompleteParseException("exhausted input", e)
   }
 
   def reject(j: Int): PartialFunction[Throwable, Nothing] = {
@@ -390,42 +395,38 @@ abstract class Parser[J] {
    * @param path the json path in the tree
    */
   @tailrec
-  protected[this] final def rparse(state: Int,
-                                   j: Int,
-                                   stack: List[ObjArrVisitor[_, J]]) : (J, Int) = {
-    val i = j
-    dropBufferUntil(j)
-    def facade: Visitor[_, J] = stack.head.subVisitor.asInstanceOf[Visitor[_, J]]
-    lazy val ctxt = stack.head.narrow
-    val currentChar = char(i)
-    (currentChar: @switch) match{
+  protected[this] final def parseNested(state: Int,
+                                        i: Int,
+                                        stackHead: ObjArrVisitor[_, J],
+                                        stackTail: List[ObjArrVisitor[_, J]]) : (J, Int) = {
+    (char(i): @switch) match{
       case '\n' =>
         newline(i)
-        rparse(state, i + 1, stack)
+        parseNested(state, i + 1, stackHead, stackTail)
 
       case ' ' | '\t' | '\r' =>
-        rparse(state, i + 1, stack)
+        parseNested(state, i + 1, stackHead, stackTail)
 
       case '"' =>
         state match{
           case KEY | OBJBEG =>
-            val obj = stack.head.asInstanceOf[ObjVisitor[Any, _]]
+            val obj = stackHead.asInstanceOf[ObjVisitor[Any, _]]
             val nextJ = try {
-              val keyVisitor = obj.visitKey(j)
+              val keyVisitor = obj.visitKey(i)
               val (s, nextJ) = parseString(i, true)
-              obj.visitKeyValue(keyVisitor.visitString(s, j))
+              obj.visitKeyValue(keyVisitor.visitString(s, i))
               nextJ
             } catch reject(i)
-            rparse(COLON, nextJ, stack)
+            parseNested(COLON, nextJ, stackHead, stackTail)
 
           case DATA | ARRBEG =>
             val nextJ = try {
               val (s, j) = parseString(i, false)
-              val v = facade.visitString(s, i)
-              ctxt.visitValue(v, i)
+              val v = stackHead.subVisitor.visitString(s, i)
+              stackHead.narrow.visitValue(v, i)
               j
             } catch reject(i)
-            rparse(collectionEndFor(stack), nextJ, stack)
+            parseNested(collectionEndFor(stackHead), nextJ, stackHead, stackTail)
 
           case _ => dieWithFailureMessage(i, state)
         }
@@ -433,53 +434,74 @@ abstract class Parser[J] {
       case ':' =>
         // we are in an object just after a key, expecting to see a colon.
         state match{
-          case COLON => rparse(DATA, i + 1, stack)
+          case COLON => parseNested(DATA, i + 1, stackHead, stackTail)
           case _ => dieWithFailureMessage(i, state)
         }
 
       case '[' =>
         failIfNotData(state, i)
-        val ctx = try facade.visitArray(-1, i) catch reject(j)
-        rparse(ARRBEG, i + 1, ctx :: stack)
+        val ctx =
+          try stackHead.subVisitor.asInstanceOf[Visitor[_, J]].visitArray(-1, i)
+          catch reject(i)
+        parseNested(ARRBEG, i + 1, ctx, stackHead :: stackTail)
 
       case '{' =>
         failIfNotData(state, i)
-        val ctx = try facade.visitObject(-1, i) catch reject(j)
-        rparse(OBJBEG, i + 1, ctx :: stack)
+        val ctx =
+          try stackHead.subVisitor.asInstanceOf[Visitor[_, J]].visitObject(-1, i)
+          catch reject(i)
+        parseNested(OBJBEG, i + 1, ctx, stackHead :: stackTail)
 
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
         failIfNotData(state, i)
-        val j = try parseNum(i, ctxt, facade) catch reject(i)
-        rparse(collectionEndFor(stack), j, stack)
+        val ctx =
+          try parseNum(i, stackHead.narrow, stackHead.subVisitor.asInstanceOf[Visitor[_, J]])
+          catch reject(i)
+        parseNested(collectionEndFor(stackHead), ctx, stackHead, stackTail)
 
       case 't' =>
         failIfNotData(state, i)
-        ctxt.visitValue(try parseTrue(i, facade) catch reject(i), i)
-        rparse(collectionEndFor(stack), i + 4, stack)
+        try stackHead.narrow.visitValue(
+          parseTrue(i, stackHead.subVisitor.asInstanceOf[Visitor[_, J]]),
+          i
+        )
+        catch reject(i)
+        parseNested(collectionEndFor(stackHead), i + 4, stackHead, stackTail)
 
       case 'f' =>
         failIfNotData(state, i)
-        ctxt.visitValue(try parseFalse(i, facade) catch reject(i), i)
-        rparse(collectionEndFor(stack), i + 5, stack)
+        try stackHead.narrow.visitValue(
+          parseFalse(i, stackHead.subVisitor.asInstanceOf[Visitor[_, J]]),
+          i
+        )
+        catch reject(i)
+        parseNested(collectionEndFor(stackHead), i + 5, stackHead, stackTail)
 
       case 'n' =>
         failIfNotData(state, i)
-        ctxt.visitValue(try parseNull(i, facade) catch reject(i), i)
-        rparse(collectionEndFor(stack), i + 4, stack)
+        try stackHead.narrow.visitValue(
+          parseNull(i, stackHead.subVisitor.asInstanceOf[Visitor[_, J]]),
+          i
+        )
+        catch reject(i)
+        parseNested(collectionEndFor(stackHead), i + 4, stackHead, stackTail)
 
       case ',' =>
+        dropBufferUntil(i)
         (state: @switch) match{
-          case ARREND => rparse(DATA, i + 1, stack)
-          case OBJEND => rparse(KEY, i + 1, stack)
+          case ARREND => parseNested(DATA, i + 1, stackHead, stackTail)
+          case OBJEND => parseNested(KEY, i + 1, stackHead, stackTail)
           case _ => dieWithFailureMessage(i, state)
         }
 
       case ']' =>
         (state: @switch) match{
           case ARREND | ARRBEG =>
-            tryCloseCollection(stack, i) match{
+            tryCloseCollection(stackHead, stackTail, i) match{
               case Some(t) => t
-              case None => rparse(collectionEndFor(stack.tail), i + 1, stack.tail)
+              case None =>
+                val stackTailHead = stackTail.head
+                parseNested(collectionEndFor(stackTailHead), i + 1, stackTailHead, stackTail.tail)
             }
           case _ => dieWithFailureMessage(i, state)
         }
@@ -487,9 +509,11 @@ abstract class Parser[J] {
       case '}' =>
         (state: @switch) match{
           case OBJEND | OBJBEG =>
-            tryCloseCollection(stack, i) match{
+            tryCloseCollection(stackHead, stackTail, i) match{
               case Some(t) => t
-              case None => rparse(collectionEndFor(stack.tail), i + 1, stack.tail)
+              case None =>
+                val stackTailHead = stackTail.head
+                parseNested(collectionEndFor(stackTailHead), i + 1, stackTailHead, stackTail.tail)
             }
           case _ => dieWithFailureMessage(i, state)
         }
@@ -516,20 +540,18 @@ abstract class Parser[J] {
     case _ => dieWithFailureMessage(i, state)
   }
 
-  def tryCloseCollection(stack: List[ObjArrVisitor[_, J]], i: Int) = {
-    val ctxt1 = stack.head
-    val tail = stack.tail
-    if (tail.isEmpty) {
-      Some(try ctxt1.visitEnd(i) catch reject(i), i + 1)
+  def tryCloseCollection(stackHead: ObjArrVisitor[_, J], stackTail: List[ObjArrVisitor[_, J]], i: Int) = {
+    if (stackTail.isEmpty) {
+      Some(try stackHead.visitEnd(i) catch reject(i), i + 1)
     } else {
-      val ctxt2 = tail.head.narrow
-      try ctxt2.visitValue(ctxt1.visitEnd(i), i) catch reject(i)
+      val ctxt2 = stackTail.head.narrow
+      try ctxt2.visitValue(stackHead.visitEnd(i), i) catch reject(i)
       None
 
     }
   }
-  def collectionEndFor(stack: List[ObjArrVisitor[_, _]]) = {
-    if (stack.head.isObj) OBJEND
+  def collectionEndFor(stackHead: ObjArrVisitor[_, _]) = {
+    if (stackHead.isObj) OBJEND
     else ARREND
   }
 }
