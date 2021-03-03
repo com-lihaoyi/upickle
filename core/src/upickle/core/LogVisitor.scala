@@ -2,8 +2,8 @@ package upickle.core
 
 
 /**
-  * A visitor that throws an error for all the visit methods which it does not define,
-  * letting you only define the handlers you care about.
+  * A visitor that wraps another but prints out what methods get called,
+  * useful for debugging
   */
 class LogVisitor[-T, +V](downstream: Visitor[T, V], log: String => Unit = println, indent: String = "    ") extends Visitor[T, V] {
   def visitNull(index: Int): V = {
