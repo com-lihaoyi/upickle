@@ -1,5 +1,7 @@
 package ujson
-import upickle.core.{Visitor, ObjArrVisitor, Abort, AbortException, ObjVisitor}
+import java.io.StringWriter
+
+import upickle.core.{Abort, AbortException, ObjArrVisitor, ObjVisitor, Visitor}
 import java.nio.charset.Charset
 
 import scala.annotation.{switch, tailrec}
@@ -71,27 +73,18 @@ abstract class Parser[J] {
   /**
    * Valid parser states.
    */
-  @inline protected[this] final val ARRBEG = 6
-  @inline protected[this] final val OBJBEG = 7
-  @inline protected[this] final val DATA = 1
-  @inline protected[this] final val KEY = 2
-  @inline protected[this] final val SEP = 3
-  @inline protected[this] final val ARREND = 4
-  @inline protected[this] final val OBJEND = 5
-  @inline protected[this] final val KEYVALUE = 2
+  @inline private[this] final val ARRBEG = 6
+  @inline private[this] final val OBJBEG = 7
+  @inline private[this] final val DATA = 1
+  @inline private[this] final val KEY = 2
+  @inline private[this] final val COLON = 3
+  @inline private[this] final val ARREND = 4
+  @inline private[this] final val OBJEND = 5
 
   protected[this] def newline(i: Int): Unit
   protected[this] def line: Int
   protected[this] def column(i: Int): Int
 
-  protected[this] final val HexChars: Array[Int] = {
-    val arr = new Array[Int](128)
-    var i = 0
-    while (i < 10) { arr(i + '0') = i; i += 1 }
-    i = 0
-    while (i < 16) { arr(i + 'a') = 10 + i; arr(i + 'A') = 10 + i; i += 1 }
-    arr
-  }
 
   /**
     * Parse the JSON document into a single JSON value.
@@ -121,7 +114,9 @@ abstract class Parser[J] {
   protected[this] def die(i: Int, msg: String): Nothing = {
     val y = line + 1
     val x = column(i) + 1
-    val s = "%s got %s (line %d, column %d)" format (msg, char(i), y, x)
+    val out = new StringWriter()
+    Renderer.escape(out, new ArrayCharSequence(Array(char(i))), unicode = false)
+    val s = "%s got %s (line %d, column %d)" format (msg, out.toString, y, x)
     throw ParseException(s, i, y, x)
   }
 
@@ -279,7 +274,7 @@ abstract class Parser[J] {
    * This is why it can only return Char instead of Int.
    */
   protected[this] final def descape(s: CharSequence): Char = {
-    val hc = HexChars
+    val hc = Parser.HexChars
     var i = 0
     var x = 0
     while (i < 4) {
@@ -334,7 +329,6 @@ abstract class Parser[J] {
    * Parse and return the next JSON value and the position beyond it.
    */
   protected[this] final def parse(i: Int, facade: Visitor[_, J]): (J, Int) = try {
-//    rparse(DATA, i, Nil)
     (char(i): @switch) match {
       // ignore whitespace
       case ' ' | '\t' | 'r' => parse(i + 1, facade)
@@ -365,10 +359,10 @@ abstract class Parser[J] {
       // invalid
       case _ => die(i, "expected json value")
     }
-  } catch (reject(i).orElse[Throwable, Nothing] {
+  } catch reject(i).orElse[Throwable, Nothing] {
     case e: IndexOutOfBoundsException =>
       throw IncompleteParseException("exhausted input", e)
-  })
+  }
 
   def reject(j: Int): PartialFunction[Throwable, Nothing] = {
     case e: Abort =>
@@ -401,7 +395,8 @@ abstract class Parser[J] {
     dropBufferUntil(j)
     def facade: Visitor[_, J] = stack.head.subVisitor.asInstanceOf[Visitor[_, J]]
     lazy val ctxt = stack.head.narrow
-    (char(i): @switch) match{
+    val currentChar = char(i)
+    (currentChar: @switch) match{
       case '\n' =>
         newline(i)
         rparse(state, i + 1, stack)
@@ -419,7 +414,7 @@ abstract class Parser[J] {
               obj.visitKeyValue(keyVisitor.visitString(s, j))
               nextJ
             } catch reject(i)
-            rparse(SEP, nextJ, stack)
+            rparse(COLON, nextJ, stack)
 
           case DATA | ARRBEG =>
             val nextJ = try {
@@ -430,15 +425,14 @@ abstract class Parser[J] {
             } catch reject(i)
             rparse(collectionEndFor(stack), nextJ, stack)
 
-          case _ =>
-            die(i, "boom " + state)
+          case _ => dieWithFailureMessage(i, state)
         }
 
       case ':' =>
         // we are in an object just after a key, expecting to see a colon.
         state match{
-          case SEP | OBJEND => rparse(DATA, i + 1, stack)
-          case _ => die(i, "expected : " + state)
+          case COLON => rparse(DATA, i + 1, stack)
+          case _ => dieWithFailureMessage(i, state)
         }
 
       case '[' =>
@@ -475,7 +469,7 @@ abstract class Parser[J] {
         (state: @switch) match{
           case ARREND => rparse(DATA, i + 1, stack)
           case OBJEND => rparse(KEY, i + 1, stack)
-          case _ => die(i, "boom")
+          case _ => dieWithFailureMessage(i, state)
         }
 
       case ']' =>
@@ -485,7 +479,7 @@ abstract class Parser[J] {
               case Some(t) => t
               case None => rparse(collectionEndFor(stack.tail), i + 1, stack.tail)
             }
-          case _ => die(i, "boom")
+          case _ => dieWithFailureMessage(i, state)
         }
 
       case '}' =>
@@ -495,16 +489,29 @@ abstract class Parser[J] {
               case Some(t) => t
               case None => rparse(collectionEndFor(stack.tail), i + 1, stack.tail)
             }
-          case _ => die(i, "boom")
+          case _ => dieWithFailureMessage(i, state)
         }
-      case _ => die(i, "boom")
+      case _ => dieWithFailureMessage(i, state)
 
     }
+  }
+  
+  def dieWithFailureMessage(i: Int, state: Int) = {
+    val expected = state match{
+      case ARRBEG => "json value or ]"
+      case OBJBEG => "json value or }"
+      case DATA => "json value"
+      case KEY => "json string key"
+      case COLON => ":"
+      case ARREND => ", or ]"
+      case OBJEND => ", or }"
+    }
+    die(i, s"expected $expected")
   }
 
   def failIfNotData(state: Int, i: Int) = (state: @switch) match{
     case DATA | ARRBEG => // do nothing
-    case _ => die(i, "didn't expect json value")
+    case _ => dieWithFailureMessage(i, state)
   }
 
   def tryCloseCollection(stack: List[ObjArrVisitor[_, J]], i: Int) = {
@@ -522,5 +529,15 @@ abstract class Parser[J] {
   def collectionEndFor(stack: List[ObjArrVisitor[_, _]]) = {
     if (stack.head.isObj) OBJEND
     else ARREND
+  }
+}
+object Parser{
+  private final val HexChars: Array[Int] = {
+    val arr = new Array[Int](128)
+    var i = 0
+    while (i < 10) { arr(i + '0') = i; i += 1 }
+    i = 0
+    while (i < 16) { arr(i + 'a') = 10 + i; arr(i + 'A') = 10 + i; i += 1 }
+    arr
   }
 }

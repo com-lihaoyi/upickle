@@ -60,7 +60,7 @@ trait CharBasedParser[J] extends Parser[J] {
           // if there's a problem then descape will explode
           case 'u' => { charBuilder.append(descape(sliceString(i + 2, i + 6))); i += 6 }
 
-          case c => die(i, s"illegal escape sequence (\\$c)")
+          case c => die(i + 1, s"illegal escape sequence after \\")
         }
       } else {
         // this case is for "normal" code points that are just one Char.

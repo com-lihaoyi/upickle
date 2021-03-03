@@ -39,57 +39,130 @@ object FailureTests extends TestSuite {
       // Run through the test cases from the json.org validation suite,
       // skipping the ones which we don't support yet (e.g. leading zeroes,
       // extra commas) or will never support (e.g. too deep)
-
-      val failureCases = Seq(
+      def check(failureCase: String, expectedMessage: String) = {
+        val ex = intercept[ParseException] { read[ujson.Value](failureCase) }
+        assert(ex.getMessage == expectedMessage)
+      }
 //        """ "A JSON payload should be an object or array, not a string." """,
+      test - check(
         """ {"Extra value after close": true} "misplaced quoted value" """,
+        """expected whitespace or eof got "\"" (line 1, column 36) at index 35"""
+      )
+      test - check(
         """ {"Illegal expression": 1 + 2} """,
+        """expected , or } got "+" (line 1, column 27) at index 26"""
+      )
+      test - check(
         """ {"Illegal invocation": alert()} """,
+       """expected json value got "a" (line 1, column 25) at index 24"""
+      )
+      test - check(
         """ {"Numbers cannot have leading zeroes": 013} """,
+        """expected , or } got "1" (line 1, column 42) at index 41"""
+      )
+      test - check(
         """ {"Numbers cannot be hex": 0x14} """,
+        """expected , or } got "x" (line 1, column 29) at index 28"""
+      )
+      test - check(
         """ ["Illegal backslash escape: \x15"] """,
+        """illegal escape sequence after \ got "x" (line 1, column 31) at index 30"""
+      )
+      test - check(
         """ [\naked] """,
+        """expected json value or ] got "\\" (line 1, column 3) at index 2"""
+      )
+      test - check(
         """ ["Illegal backslash escape: \017"] """,
+        """illegal escape sequence after \ got "0" (line 1, column 31) at index 30"""
+      )
 //        """ [[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]] """,
+      test - check(
         """ {"Missing colon" null} """,
+        """expected : got "n" (line 1, column 19) at index 18"""
+      )
 
+      test - check(
         """ {"Double colon":: null} """,
+        """expected json value got ":" (line 1, column 18) at index 17"""
+      )
+      test - check(
         """ {"Comma instead of colon", null} """,
+        """expected : got "," (line 1, column 27) at index 26"""
+      )
+      test - check(
         """ ["Colon instead of comma": false] """,
+        """expected , or ] got ":" (line 1, column 27) at index 26"""
+      )
+      test - check(
         """ ["Bad value", truth] """,
+        """expected true got "t" (line 1, column 16) at index 15"""
+      )
+      test - check(
         """ ['single quote'] """,
+        """expected json value or ] got "'" (line 1, column 3) at index 2"""
+      )
+      test - check(
         """ ["	tab	character	in	string	"] """,
+        """control char (9) in string got "\t" (line 1, column 4) at index 3"""
+      )
+      test - check(
         """ ["tab\   character\   in\  string\  "] """,
+        """illegal escape sequence after \ got " " (line 1, column 8) at index 7"""
+      )
+      test - check(
         """ ["line
           break"] """,
+        """control char (10) in string got "\n" (line 1, column 8) at index 7"""
+      )
+      test - check(
         """ ["line\
           break"] """,
+        """illegal escape sequence after \ got "\n" (line 1, column 9) at index 8"""
+      )
+      test - check(
         """ [0e] """,
+        """expected digit got "0" (line 1, column 3) at index 2"""
+      )
+      test - check(
         """ {unquoted_key: "keys must be quoted"} """,
+        """expected json value or } got "u" (line 1, column 3) at index 2"""
+      )
+      test - check(
         """ [0e+-1] """,
+        """expected digit got "0" (line 1, column 3) at index 2"""
+      )
 
+      test - check(
         """ ["mismatch"} """,
+        """expected , or ] got "}" (line 1, column 13) at index 12"""
+      )
+      test - check(
         """ ["extra comma",] """,
+        """expected json value got "]" (line 1, column 17) at index 16"""
+      )
+      test - check(
         """ ["double extra comma",,] """,
+        """expected json value got "," (line 1, column 24) at index 23"""
+      )
+      test - check(
         """ [   , "<-- missing value"] """,
+        """expected json value or ] got "," (line 1, column 6) at index 5"""
+      )
+      test - check(
         """ ["Comma after the close"], """,
+        """expected whitespace or eof got "," (line 1, column 27) at index 26"""
+      )
+      test - check(
         """ ["Extra close"]] """,
-        """ {"Extra comma": true,} """
-      ).map(_.trim())
-      val res =
-        for(failureCase <- failureCases)
-        yield try {
-          intercept[ParseException] { read[ujson.Value](failureCase) }
-          None
-        }catch{
-          case _:Throwable =>
-          Some(failureCase)
-        }
-
-      val nonFailures = res.flatten
-      assert(nonFailures.isEmpty)
-      intercept[IncompleteParseException]{read[ujson.Value](""" {"Comma instead if closing brace": true, """)}
-      intercept[IncompleteParseException]{read[ujson.Value](""" ["Unclosed array" """)}
+        """expected whitespace or eof got "]" (line 1, column 17) at index 16"""
+      )
+      test - check(
+      """ {"Extra comma": true,} """,
+        """expected json string key got "}" (line 1, column 23) at index 22"""
+      )
+      test{ intercept[IncompleteParseException]{read[ujson.Value](""" {"Comma instead if closing brace": true, """)} }
+      test{ intercept[IncompleteParseException]{read[ujson.Value](""" ["Unclosed array" """)} }
     }
 
     test("facadeFailures"){
