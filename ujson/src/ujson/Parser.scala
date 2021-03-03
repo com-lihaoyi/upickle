@@ -4,6 +4,8 @@ import java.io.StringWriter
 import upickle.core.{Abort, AbortException, ObjArrVisitor, ObjVisitor, Visitor}
 import java.nio.charset.Charset
 
+import ujson.util.CharBuilder
+
 import scala.annotation.{switch, tailrec}
 
 sealed trait ParsingFailedException extends Exception
@@ -114,9 +116,9 @@ abstract class Parser[J] {
   protected[this] def die(i: Int, msg: String): Nothing = {
     val y = line + 1
     val x = column(i) + 1
-    val out = new StringWriter()
+    val out = new CharBuilder()
     Renderer.escape(out, new ArrayCharSequence(Array(char(i))), unicode = false)
-    val s = "%s got %s (line %d, column %d)" format (msg, out.toString, y, x)
+    val s = "%s got %s (line %d, column %d)" format (msg, out.makeString, y, x)
     throw ParseException(s, i, y, x)
   }
 

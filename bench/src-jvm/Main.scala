@@ -53,37 +53,38 @@ object Main{
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-      benchParsingRendering("github-events.json", duration)
-      benchParsingRendering("meteorites.json", duration)
-      benchParsingRendering("turkish.json", duration)
-      benchParsingRendering("eu-lobby-repr.json", duration)
+      benchParsingRendering(duration, bytes = true)
+      benchParsingRendering(duration, bytes = false)
       println()
     }
   }
-  def benchParsingRendering(name: String, duration: Int) = {
+  def benchParsingRendering(duration: Int, bytes: Boolean) = {
+    val names = Array(
+      "github-events.json",
+      "meteorites.json",
+      "turkish.json",
+      "eu-lobby-repr.json"
+    )
     import java.nio.file.{Files, Paths}
-    val inputBytes = Files.readAllBytes(Paths.get("bench/resources/" + name))
-    val inputString = new String(inputBytes)
+    val inputByteArrays = for(name <- names) yield Files.readAllBytes(Paths.get("bench/resources/" + name))
+    val inputStrings = for(inputByteArray <- inputByteArrays) yield new String(inputByteArray)
 
     {
       var n = 0
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
-        ujson.reformatTo(inputString, new java.io.StringWriter)
+        if (bytes) {
+          for (inputByteArray <- inputByteArrays) ujson.reformatTo(inputByteArray, new java.io.StringWriter)
+        }else {
+          for(inputString <- inputStrings) ujson.reformatTo(inputString, new java.io.StringWriter)
+        }
+
         n += 1
       }
-      println(name + " String Parsing Rendering  " + n)
+      if (bytes) println("String Parsing Rendering  " + n)
+      else println("Bytes Parsing Rendering  " + n)
     }
 
-    {
-      var n = 0
-      val start = System.currentTimeMillis()
-      while(System.currentTimeMillis() < start + duration){
-        ujson.reformatTo(inputBytes, new java.io.StringWriter)
-        n += 1
-      }
-      println(name + " Byte Array Parsing Rendering " + n)
-    }
   }
   def ujsonAst(duration: Int) = {
     Common.bench0[String, ujson.Value](duration, Common.benchmarkSampleJson)(

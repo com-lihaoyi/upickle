@@ -19,7 +19,7 @@ import scala.annotation.{switch, tailrec}
  */
 trait ByteBasedParser[J] extends Parser[J] {
   protected[this] def byte(i: Int): Byte
-  val boas = new FastByteArrayOutputStream()
+  private[this] val boas = new FastByteArrayOutputStream()
   /**
    * See if the string has any escape sequences. If not, return the end of the
    * string. If so, bail out and return -1.
