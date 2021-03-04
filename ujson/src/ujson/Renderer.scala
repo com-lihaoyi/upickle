@@ -2,7 +2,8 @@ package ujson
 
 import java.io.ByteArrayOutputStream
 
-import upickle.core.{Visitor, ArrVisitor, ObjVisitor}
+import ujson.util.CharBuilder
+import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 
 import scala.annotation.switch
 
@@ -33,21 +34,27 @@ class BaseRenderer[T <: java.io.Writer]
                   (out: T,
                    indent: Int = -1,
                    escapeUnicode: Boolean = false) extends JsVisitor[T, T]{
-  var depth: Int = 0
-  val colonSnippet = if (indent == -1) ":" else ": "
+  private[this] val charBuilder = new CharBuilder
 
-  var commaBuffered = false
+  def flushCharBuilder() = {
+    charBuilder.writeOutToIfLongerThan(out, if (depth == 0) 0 else 1000)
+  }
+
+  private[this] var depth: Int = 0
+
+
+  private[this] var commaBuffered = false
 
   def flushBuffer() = {
     if (commaBuffered) {
       commaBuffered = false
-      out.append(',')
+      charBuilder.append(',')
       renderIndent()
     }
   }
   def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
     flushBuffer()
-    out.append('[')
+    charBuilder.append('[')
 
     depth += 1
     renderIndent()
@@ -60,19 +67,23 @@ class BaseRenderer[T <: java.io.Writer]
       commaBuffered = false
       depth -= 1
       renderIndent()
-      out.append(']')
+      charBuilder.append(']')
+      flushCharBuilder()
       out
     }
   }
 
   def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
     flushBuffer()
-    out.append('{')
+    charBuilder.append('{')
     depth += 1
     renderIndent()
     def subVisitor = BaseRenderer.this
     def visitKey(index: Int) = BaseRenderer.this
-    def visitKeyValue(s: Any): Unit = out.append(colonSnippet)
+    def visitKeyValue(s: Any): Unit = {
+      charBuilder.append(':')
+      if (indent != -1) charBuilder.append(' ')
+    }
     def visitValue(v: T, index: Int): Unit = {
       commaBuffered = true
     }
@@ -80,32 +91,56 @@ class BaseRenderer[T <: java.io.Writer]
       commaBuffered = false
       depth -= 1
       renderIndent()
-      out.append('}')
+      charBuilder.append('}')
+      flushCharBuilder()
       out
     }
   }
 
   def visitNull(index: Int) = {
     flushBuffer()
-    out.append("null")
+    charBuilder.ensureLength(4)
+    charBuilder.appendUnsafe('n')
+    charBuilder.appendUnsafe('u')
+    charBuilder.appendUnsafe('l')
+    charBuilder.appendUnsafe('l')
+    flushCharBuilder()
     out
   }
 
   def visitFalse(index: Int) = {
     flushBuffer()
-    out.append("false")
+    charBuilder.ensureLength(5)
+    charBuilder.appendUnsafe('f')
+    charBuilder.appendUnsafe('a')
+    charBuilder.appendUnsafe('l')
+    charBuilder.appendUnsafe('s')
+    charBuilder.appendUnsafe('e')
+    flushCharBuilder()
     out
   }
 
   def visitTrue(index: Int) = {
     flushBuffer()
-    out.append("true")
+    charBuilder.ensureLength(4)
+    charBuilder.appendUnsafe('t')
+    charBuilder.appendUnsafe('r')
+    charBuilder.appendUnsafe('u')
+    charBuilder.appendUnsafe('e')
+    flushCharBuilder()
     out
   }
 
   def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     flushBuffer()
-    out.append(s)
+    charBuilder.ensureLength(s.length())
+    var i = 0
+    val sLength = s.length
+    while(i < sLength){
+      charBuilder.appendUnsafe(s.charAt(i))
+      i += 1
+    }
+    flushCharBuilder()
     out
   }
 
@@ -120,53 +155,65 @@ class BaseRenderer[T <: java.io.Writer]
         else super.visitFloat64(d, index)
         flushBuffer()
     }
-
+    flushCharBuilder()
     out
   }
 
-  def visitString(s: CharSequence, index: Int) = {
-    flushBuffer()
-    if (s == null) out.append("null")
-    else Renderer.escape(out, s, escapeUnicode)
 
-    out
+  def visitString(s: CharSequence, index: Int) = {
+
+    if (s eq null) visitNull(index)
+    else {
+      flushBuffer()
+      Renderer.escape(charBuilder, s, escapeUnicode)
+      flushCharBuilder()
+      out
+    }
   }
 
   final def renderIndent() = {
     if (indent == -1) ()
     else {
-      out.append('\n')
       var i = indent * depth
+      charBuilder.ensureLength(i + 1)
+      charBuilder.appendUnsafe('\n')
       while(i > 0) {
-        out.append(' ')
+        charBuilder.appendUnsafe(' ')
         i -= 1
       }
     }
   }
 }
 object Renderer {
-  final def escape(sb: java.io.Writer, s: CharSequence, unicode: Boolean): Unit = {
-    sb.append('"')
+  final def escape(sb: ujson.util.CharBuilder, s: CharSequence, unicode: Boolean): Unit = {
     var i = 0
     val len = s.length
+    val naiveOutLen = len + 2 // +2 for the start and end quotes
+    sb.ensureLength(naiveOutLen)
+    sb.appendUnsafe('"')
     while (i < len) {
       (s.charAt(i): @switch) match {
-        case '"' => sb.append("\\\"")
-        case '\\' => sb.append("\\\\")
-        case '\b' => sb.append("\\b")
-        case '\f' => sb.append("\\f")
-        case '\n' => sb.append("\\n")
-        case '\r' => sb.append("\\r")
-        case '\t' => sb.append("\\t")
+        case '"' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafe('\\'); sb.appendUnsafe('\"')
+        case '\\' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafe('\\'); sb.appendUnsafe('\\')
+        case '\b' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafe('\\'); sb.appendUnsafe('b')
+        case '\f' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafe('\\'); sb.appendUnsafe('f')
+        case '\n' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafe('\\'); sb.appendUnsafe('n')
+        case '\r' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafe('\\'); sb.appendUnsafe('r')
+        case '\t' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafe('\\'); sb.appendUnsafe('t')
         case c =>
           if (c < ' ' || (c > '~' && unicode)) {
-            sb.append("\\u").append(toHex((c >> 12) & 15)).append(toHex((c >> 8) & 15))
-              .append(toHex((c >> 4) & 15)).append(toHex(c & 15))
+            sb.ensureLength(naiveOutLen - i + 5);
+            sb.appendUnsafe('\\')
+            sb.appendUnsafe('u')
+            sb.appendUnsafe(toHex((c >> 12) & 15))
+            sb.appendUnsafe(toHex((c >> 8) & 15))
+            sb.appendUnsafe(toHex((c >> 4) & 15))
+            sb.appendUnsafe(toHex(c & 15))
           } else sb.append(c)
       }
       i += 1
     }
-    sb.append('"')
+    sb.appendUnsafe('"')
   }
 
   private def toHex(nibble: Int): Char = (nibble + (if (nibble >= 10) 87 else 48)).toChar

@@ -45,6 +45,7 @@ extends Parser[J] with ByteBasedParser[J] with upickle.core.BufferingInputStream
     if (done) eof = getLastIdx
     done
   }
+
 }
 
 object InputStreamParser extends Transformer[java.io.InputStream]{

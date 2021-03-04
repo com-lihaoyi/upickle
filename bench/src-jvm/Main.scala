@@ -18,7 +18,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(1)){
+    for(duration <- Seq(500, 5000, 10000)){
       println("RUN JVM: " + duration)
       println()
 
@@ -46,15 +46,46 @@ object Main{
 //      Common.upickleDefaultCached(duration)
 //      Common.upickleDefaultCached(duration)
 //      Common.upickleDefaultCachedReadable(duration)
-      Common.upickleDefaultCachedReadablePath(duration)
+//      Common.upickleDefaultCachedReadablePath(duration)
 //      Common.upickleDefaultCachedByteArray(duration)
 //      Common.upickleLegacyCached(duration)
 //      Common.upickleDefaultBinaryCached(duration)
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
+      benchParsingRendering(duration, bytes = true, strings = true)
+//      benchParsingRendering(duration, bytes = false, strings = true)
       println()
     }
+  }
+  def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean) = {
+    val names = Array(
+      "github-events.json",
+      "meteorites.json",
+      "turkish.json",
+      "eu-lobby-repr.json"
+    )
+    import java.nio.file.{Files, Paths}
+    val inputByteArrays = for(name <- names) yield Files.readAllBytes(Paths.get("bench/resources/" + name))
+    val inputStrings = for(inputByteArray <- inputByteArrays) yield new String(inputByteArray)
+
+    {
+      var n = 0
+      val start = System.currentTimeMillis()
+      while(System.currentTimeMillis() < start + duration){
+        if (bytes) {
+          for (inputByteArray <- inputByteArrays) ujson.reformatTo(inputByteArray, new java.io.StringWriter)
+        }
+        if(strings){
+          for(inputString <- inputStrings) ujson.reformatTo(inputString, new java.io.StringWriter)
+        }
+
+        n += 1
+      }
+      if (bytes) println("String Parsing Rendering  " + n)
+      else println("Bytes Parsing Rendering  " + n)
+    }
+
   }
   def ujsonAst(duration: Int) = {
     Common.bench0[String, ujson.Value](duration, Common.benchmarkSampleJson)(
