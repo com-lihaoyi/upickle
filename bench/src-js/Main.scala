@@ -8,28 +8,28 @@ import upickle.Recursive.{End, LL, Node}
 import scala.scalajs.js
 object Main{
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(500, 5000, 5000)){
+    for(duration <- Seq(500, 5000, 10000)){
       println("RUN JS: " + duration)
       println()
 //      rawJsonParseSerialize(duration)
 //      Common.playJson(duration)
 //      Common.circe(duration)
-      Common.upickleDefault(duration)
-      Common.upickleLegacy(duration)
-      Common.upickleBinaryDefault(duration)
-      Common.upickleBinaryLegacy(duration)
+//      Common.upickleDefault(duration)
+//      Common.upickleLegacy(duration)
+//      Common.upickleBinaryDefault(duration)
+//      Common.upickleBinaryLegacy(duration)
 //      Common.genCodec(duration)
-      upickleWebDefault(duration)
-      upickleWebLegacy(duration)
+//      upickleWebDefault(duration)
+//      upickleWebLegacy(duration)
 //      Common.playJsonCached(duration)
 //      Common.circeCached(duration)
       Common.upickleDefaultCached(duration)
       Common.upickleLegacyCached(duration)
-      Common.upickleDefaultBinaryCached(duration)
-      Common.upickleLegacyBinaryCached(duration)
+//      Common.upickleDefaultBinaryCached(duration)
+//      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-      upickleWebDefaultCached(duration)
-      upickleWebLegacyCached(duration)
+//      upickleWebDefaultCached(duration)
+//      upickleWebLegacyCached(duration)
       println()
     }
   }
