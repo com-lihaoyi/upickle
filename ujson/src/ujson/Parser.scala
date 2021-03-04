@@ -410,22 +410,11 @@ abstract class Parser[J] {
       case '"' =>
         state match{
           case KEY | OBJBEG =>
-            val obj = stackHead.asInstanceOf[ObjVisitor[Any, _]]
-            val nextJ = try {
-              val keyVisitor = obj.visitKey(i)
-              val (s, nextJ) = parseString(i, true)
-              obj.visitKeyValue(keyVisitor.visitString(s, i))
-              nextJ
-            } catch reject(i)
+            val nextJ = try parseObjectKey(i, stackHead) catch reject(i)
             parseNested(COLON, nextJ, stackHead, stackTail)
 
           case DATA | ARRBEG =>
-            val nextJ = try {
-              val (s, j) = parseString(i, false)
-              val v = stackHead.subVisitor.visitString(s, i)
-              stackHead.narrow.visitValue(v, i)
-              j
-            } catch reject(i)
+            val nextJ = try parseStringValue(i, stackHead) catch reject(i)
             parseNested(collectionEndFor(stackHead), nextJ, stackHead, stackTail)
 
           case _ => dieWithFailureMessage(i, state)
@@ -521,7 +510,22 @@ abstract class Parser[J] {
 
     }
   }
-  
+
+  private def parseStringValue(i: Int, stackHead: ObjArrVisitor[_, J]) = {
+    val (s, nextJ) = parseString(i, false)
+    val v = stackHead.subVisitor.visitString(s, i)
+    stackHead.narrow.visitValue(v, i)
+    nextJ
+  }
+
+  private def parseObjectKey(i: Int, stackHead: ObjArrVisitor[_, J]) = {
+    val obj = stackHead.asInstanceOf[ObjVisitor[Any, _]]
+    val keyVisitor = obj.visitKey(i)
+    val (s, nextJ) = parseString(i, true)
+    obj.visitKeyValue(keyVisitor.visitString(s, i))
+    nextJ
+  }
+
   def dieWithFailureMessage(i: Int, state: Int) = {
     val expected = state match{
       case ARRBEG => "json value or ]"

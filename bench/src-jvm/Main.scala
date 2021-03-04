@@ -53,12 +53,12 @@ object Main{
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-      benchParsingRendering(duration, bytes = true)
-      benchParsingRendering(duration, bytes = false)
+      benchParsingRendering(duration, bytes = true, strings = true)
+//      benchParsingRendering(duration, bytes = false, strings = true)
       println()
     }
   }
-  def benchParsingRendering(duration: Int, bytes: Boolean) = {
+  def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean) = {
     val names = Array(
       "github-events.json",
       "meteorites.json",
@@ -75,7 +75,8 @@ object Main{
       while(System.currentTimeMillis() < start + duration){
         if (bytes) {
           for (inputByteArray <- inputByteArrays) ujson.reformatTo(inputByteArray, new java.io.StringWriter)
-        }else {
+        }
+        if(strings){
           for(inputString <- inputStrings) ujson.reformatTo(inputString, new java.io.StringWriter)
         }
 

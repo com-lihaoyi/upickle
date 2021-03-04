@@ -396,10 +396,10 @@ trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.13.0",
-    ivy"io.circe::circe-generic::0.13.0",
-    ivy"io.circe::circe-parser::0.13.0",
-    ivy"com.typesafe.play::play-json::2.9.2",
+    ivy"io.circe::circe-core::0.12.1",
+    ivy"io.circe::circe-generic::0.12.1",
+    ivy"io.circe::circe-parser::0.12.1",
+    ivy"com.typesafe.play::play-json::2.7.4",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.7",
     ivy"com.lihaoyi::sourcecode::0.2.1",
@@ -408,7 +408,7 @@ trait BenchModule extends CommonModule{
 
 object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
-    def scalaJSVersion = scalaJSVersions.last._2
+    def scalaJSVersion = scalaJSVersions.head._2
     def platformSegment = "js"
     def moduleDeps = Seq(upickle.js(scala213, scalaJS1).test)
     def run(args: String*) = T.command {
