@@ -73,6 +73,12 @@ trait Api
                          escapeUnicode: Boolean = false): Unit = {
     transform(t).to(new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
+  def writeToOutputStream[T: Writer](t: T,
+                                     out: java.io.OutputStream,
+                                     indent: Int = -1,
+                                     escapeUnicode: Boolean = false): Unit = {
+    transform(t).to(new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
+  }
   /**
     * Write the given Scala value as a JSON string via a `geny.Writable`
     */

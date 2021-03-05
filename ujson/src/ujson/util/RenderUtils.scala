@@ -76,6 +76,7 @@ object RenderUtils{
     var i = i0
     val len = s.length
     val naiveOutLen = len + 2 // +2 for the start and end quotes
+    sb.ensureLength(naiveOutLen)
     while (i < len) {
       (s.charAt(i): @switch) match {
         case '"' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('\"')

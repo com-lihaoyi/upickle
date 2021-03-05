@@ -18,7 +18,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(500, 5000, 10000)){
+    for(duration <- Seq(500, 5000, 10000, 10000000)){
       println("RUN JVM: " + duration)
       println()
 
@@ -74,10 +74,10 @@ object Main{
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
         if (bytes) {
-          for (inputByteArray <- inputByteArrays) ujson.reformatTo(inputByteArray, new java.io.StringWriter)
+          for (inputByteArray <- inputByteArrays) ujson.reformatToOutputStream(inputByteArray, new java.io.ByteArrayOutputStream())
         }
         if(strings){
-          for(inputString <- inputStrings) ujson.reformatTo(inputString, new java.io.StringWriter)
+          for(inputString <- inputStrings) ujson.reformatTo(inputString, new java.io.StringWriter())
         }
 
         n += 1

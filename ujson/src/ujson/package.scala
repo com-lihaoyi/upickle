@@ -29,6 +29,12 @@ package object ujson{
               escapeUnicode: Boolean = false): Unit = {
     transform(t, Renderer(out, indent, escapeUnicode))
   }
+  def writeToOutputStream(t: Value.Value,
+                          out: java.io.OutputStream,
+                          indent: Int = -1,
+                          escapeUnicode: Boolean = false): Unit = {
+    transform(t, new BaseByteRenderer(out, indent, escapeUnicode))
+  }
 
   /**
     * Parse the given JSON input, failing if it is invalid
@@ -46,7 +52,17 @@ package object ujson{
     * the configured formatting to the given Writer
     */
   def reformatTo(s: Readable, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
-    transform(s, Renderer(out, indent, escapeUnicode)).toString
+    transform(s, Renderer(out, indent, escapeUnicode))
+  }
+  /**
+    * Parse the given JSON input and write it to a string with
+    * the configured formatting to the given Writer
+    */
+  def reformatToOutputStream(s: Readable,
+                             out: java.io.OutputStream,
+                             indent: Int = -1,
+                             escapeUnicode: Boolean = false): Unit = {
+    transform(s, new BaseByteRenderer(out, indent, escapeUnicode))
   }
   // End ujson
   @deprecated("use ujson.Value")
