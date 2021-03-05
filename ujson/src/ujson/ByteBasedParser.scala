@@ -31,7 +31,7 @@ trait ByteBasedParser[J] extends Parser[J] {
     var j = i
     var c: Int = byte(j) & 0xff
     while (c != '"') {
-      if (c >= 0 && c  < ' ') die(j, s"control char ($c) in string")
+      if (c  < ' ') die(j, s"control char ($c) in string")
       if (c == '\\') return -j - 1
       j += 1
       boas.write(c.toByte)
@@ -68,7 +68,7 @@ trait ByteBasedParser[J] extends Parser[J] {
           case c => die(i, s"invalid escape sequence (\\${c.toChar})")
         }
       }
-      else if (c >= 0 && c < ' ') die(i, s"control char ($c) in string")
+      else if (c < ' ') die(i, s"control char ($c) in string")
       else {
         boas.write(c.toByte)
         i = i + 1
