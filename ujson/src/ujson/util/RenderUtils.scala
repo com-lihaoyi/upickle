@@ -16,7 +16,8 @@ object RenderUtils{
 
   private def toHex(nibble: Int): Char = (nibble + (if (nibble >= 10) 87 else 48)).toChar
 
-  final def escapeByte(sb: ujson.util.ByteBuilder,
+  final def escapeByte(unicodeCharBuilder: ujson.util.CharBuilder,
+                       sb: ujson.util.ByteBuilder,
                        s: CharSequence,
                        unicode: Boolean): Unit = {
 
@@ -46,10 +47,10 @@ object RenderUtils{
           } else {
             if (c <= 127) sb.append(c)
             else{
-              val cb = new ujson.util.CharBuilder()
-              escapeChar0(i, cb, s, unicode)
+              unicodeCharBuilder.reset()
+              escapeChar0(i, naiveOutLen, len, unicodeCharBuilder, s, unicode)
 
-              val bytes = cb.makeString().getBytes(StandardCharsets.UTF_8)
+              val bytes = unicodeCharBuilder.makeString().getBytes(StandardCharsets.UTF_8)
               sb.appendAll(bytes, bytes.length)
               return
             }
@@ -60,22 +61,23 @@ object RenderUtils{
     sb.appendUnsafe('"')
   }
 
-  final def escapeChar(sb: ujson.util.CharBuilder,
+  final def escapeChar(unicodeCharBuilder: ujson.util.CharBuilder,
+                       sb: ujson.util.CharBuilder,
                        s: CharSequence,
                        unicode: Boolean) = {
     val len = s.length
     val naiveOutLen = len + 2 // +2 for the start and end quotes
     sb.ensureLength(naiveOutLen)
     sb.appendUnsafe('"')
-    escapeChar0(0, sb, s, unicode)
+    escapeChar0(0, naiveOutLen, len, sb, s, unicode)
   }
   final def escapeChar0(i0: Int,
+                        naiveOutLen: Int,
+                        len: Int,
                         sb: ujson.util.CharBuilder,
                         s: CharSequence,
                         unicode: Boolean) = {
     var i = i0
-    val len = s.length
-    val naiveOutLen = len + 2 // +2 for the start and end quotes
     sb.ensureLength(naiveOutLen)
     while (i < len) {
       (s.charAt(i): @switch) match {

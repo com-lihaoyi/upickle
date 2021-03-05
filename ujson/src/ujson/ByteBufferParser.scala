@@ -3,6 +3,7 @@ import upickle.core.{ObjArrVisitor, Visitor}
 
 import scala.annotation.{switch, tailrec}
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 
 import ujson.util.ByteBuilder
 
@@ -36,7 +37,7 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
     src.position(i + start)
     src.get(arr, 0, len)
     src.position(start)
-    new String(arr, utf8)
+    new String(arr, StandardCharsets.UTF_8)
   }
 
   protected[this] final def atEof(i: Int) = i >= limit

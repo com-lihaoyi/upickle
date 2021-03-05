@@ -6,7 +6,7 @@ class BaseElemRenderer[T <: ujson.util.ElemOps.Output]
                        indent: Int = -1,
                        escapeUnicode: Boolean = false) extends JsVisitor[T, T]{
   private[this] val elemBuilder = new ujson.util.ElemBuilder
-
+  private[this] val unicodeCharBuilder = new ujson.util.CharBuilder()
   def flushElemBuilder() = {
     elemBuilder.writeOutToIfLongerThan(out, if (depth == 0) 0 else 1000)
   }
@@ -136,7 +136,7 @@ class BaseElemRenderer[T <: ujson.util.ElemOps.Output]
     if (s eq null) visitNull(index)
     else {
       flushBuffer()
-      ujson.util.RenderUtils.escapeElem(elemBuilder, s, escapeUnicode)
+      ujson.util.RenderUtils.escapeElem(unicodeCharBuilder, elemBuilder, s, escapeUnicode)
       flushElemBuilder()
       out
     }

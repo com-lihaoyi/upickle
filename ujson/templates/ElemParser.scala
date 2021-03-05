@@ -28,9 +28,9 @@ import scala.annotation.{switch, tailrec}
  * may eventually be relaxed.
  */
 abstract class ElemParser[J]{
-  val elemOps = ujson.util.ElemOps
-  val outputBuilder = new ujson.util.ElemBuilder()
-  protected[this] final val utf8 = Charset.forName("UTF-8")
+  private[this] val elemOps = ujson.util.ElemOps
+  private[this] val outputBuilder = new ujson.util.ElemBuilder()
+  private[this] val unicodeCharBuilder = new ujson.util.CharBuilder()
 
   /**
    * Read the byte/char at 'i' as a Char.
@@ -110,6 +110,7 @@ abstract class ElemParser[J]{
     val x = column(i) + 1
     val out = new ujson.util.ElemBuilder()
     ujson.util.RenderUtils.escapeElem(
+      unicodeCharBuilder,
       out,
       new ArrayCharSequence(Array(elemOps.toInt(elem(i)).toChar)),
       unicode = false
