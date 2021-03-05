@@ -117,9 +117,9 @@ class BaseElemRenderer[T <: ujson.util.ElemOps.Output]
 
   override def visitFloat64(d: Double, index: Int) = {
     d match{
-      case Double.PositiveInfinity => visitString("Infinity", -1)
-      case Double.NegativeInfinity => visitString("-Infinity", -1)
-      case d if java.lang.Double.isNaN(d) => visitString("NaN", -1)
+      case Double.PositiveInfinity => visitNonNullString("Infinity", -1)
+      case Double.NegativeInfinity => visitNonNullString("-Infinity", -1)
+      case d if java.lang.Double.isNaN(d) => visitNonNullString("NaN", -1)
       case d =>
         val i = d.toInt
         if (d == i) visitFloat64StringParts(i.toString, -1, -1, index)
@@ -134,12 +134,14 @@ class BaseElemRenderer[T <: ujson.util.ElemOps.Output]
   def visitString(s: CharSequence, index: Int) = {
 
     if (s eq null) visitNull(index)
-    else {
-      flushBuffer()
-      ujson.util.RenderUtils.escapeElem(unicodeCharBuilder, elemBuilder, s, escapeUnicode)
-      flushElemBuilder()
-      out
-    }
+    else visitNonNullString(s, index)
+  }
+
+  def visitNonNullString(s: CharSequence, index: Int) = {
+    flushBuffer()
+    ujson.util.RenderUtils.escapeElem(unicodeCharBuilder, elemBuilder, s, escapeUnicode)
+    flushElemBuilder()
+    out
   }
 
   final def renderIndent() = {
