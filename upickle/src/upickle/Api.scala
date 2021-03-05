@@ -81,9 +81,7 @@ trait Api
                         escapeUnicode: Boolean = false): geny.Writable = new geny.Writable{
     override def httpContentType = Some("application/json")
     def writeBytesTo(out: java.io.OutputStream) = {
-      val w = new java.io.OutputStreamWriter(out, java.nio.charset.StandardCharsets.UTF_8)
-      transform(t).to(new ujson.BaseRenderer(w, indent = indent, escapeUnicode))
-      w.flush()
+      transform(t).to(new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
     }
   }
   /**

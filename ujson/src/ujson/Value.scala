@@ -115,9 +115,7 @@ sealed trait Value extends Readable with geny.Writable{
   def render(indent: Int = -1, escapeUnicode: Boolean = false) = this.transform(StringRenderer(indent, escapeUnicode)).toString
 
   def writeBytesTo(out: java.io.OutputStream, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
-    val w = new java.io.OutputStreamWriter(out, java.nio.charset.StandardCharsets.UTF_8)
-    this.transform(new ujson.BaseRenderer(w, indent, escapeUnicode))
-    w.flush()
+    this.transform(new ujson.BaseByteRenderer(out, indent, escapeUnicode))
   }
   def writeBytesTo(out: java.io.OutputStream): Unit = writeBytesTo(out, -1, false)
 }

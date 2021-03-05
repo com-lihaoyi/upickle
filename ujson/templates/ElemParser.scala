@@ -4,17 +4,8 @@ import java.io.StringWriter
 import upickle.core.{Abort, AbortException, ObjArrVisitor, ObjVisitor, Visitor}
 import java.nio.charset.Charset
 
-import ujson.util.CharBuilder
 
 import scala.annotation.{switch, tailrec}
-
-sealed trait ParsingFailedException extends Exception
-
-case class ParseException(clue: String, index: Int, line: Int, col: Int)
-  extends Exception(clue + " at index " + index) with ParsingFailedException
-
-case class IncompleteParseException(msg: String, cause: Throwable)
-  extends Exception(msg, cause) with ParsingFailedException
 
 /**
  * Parser implements a state machine for correctly parsing JSON data.
@@ -36,8 +27,9 @@ case class IncompleteParseException(msg: String, cause: Throwable)
  * For now the parser requires input to be in UTF-8. This requirement
  * may eventually be relaxed.
  */
-abstract class Parser[J] {
-
+abstract class ElemParser[J]{
+  val elemOps = ujson.util.ElemOps
+  val outputBuilder = new ujson.util.ElemBuilder()
   protected[this] final val utf8 = Charset.forName("UTF-8")
 
   /**
@@ -46,7 +38,7 @@ abstract class Parser[J] {
    * Note that this should not be used on potential multi-byte
    * sequences.
    */
-  protected[this] def char(i: Int): Char
+  protected[this] def elem(i: Int): Elem
 
   /**
    * Read the bytes/chars from 'i' until 'j' as a String.
@@ -99,7 +91,7 @@ abstract class Parser[J] {
     val (value, i) = parseTopLevel(0, facade)
     var j = i
     while (!atEof(j)) {
-      (char(j): @switch) match {
+      (elem(j): @switch) match {
         case '\n' => newline(j); j += 1
         case ' ' | '\t' | '\r' => j += 1
         case _ => die(j, "expected whitespace or eof")
@@ -116,8 +108,12 @@ abstract class Parser[J] {
   protected[this] def die(i: Int, msg: String): Nothing = {
     val y = line + 1
     val x = column(i) + 1
-    val out = new CharBuilder()
-    Renderer.escape(out, new ArrayCharSequence(Array(char(i))), unicode = false)
+    val out = new ujson.util.ElemBuilder()
+    ujson.util.RenderUtils.escapeElem(
+      out,
+      new ArrayCharSequence(Array(elemOps.toInt(elem(i)).toChar)),
+      unicode = false
+    )
     val s = "%s got %s (line %d, column %d)" format (msg, out.makeString, y, x)
     throw ParseException(s, i, y, x)
   }
@@ -143,42 +139,42 @@ abstract class Parser[J] {
    */
   protected[this] final def parseNum(i: Int, ctxt: ObjArrVisitor[Any, J], facade: Visitor[_, J]): Int = {
     var j = i
-    var c = char(j)
+    var c = elem(j)
     var decIndex = -1
     var expIndex = -1
 
     if (c == '-') {
       j += 1
-      c = char(j)
+      c = elem(j)
     }
     if (c == '0') {
       j += 1
-      c = char(j)
+      c = elem(j)
     } else {
       val j0 = j
-      while ('0' <= c && c <= '9') { j += 1; c = char(j) }
+      while (elemOps.within('0', c, '9')) { j += 1; c = elem(j) }
       if (j == j0) die(i, "expected digit")
     }
 
     if (c == '.') {
       decIndex = j - i
       j += 1
-      c = char(j)
+      c = elem(j)
       val j0 = j
-      while ('0' <= c && c <= '9') { j += 1; c = char(j) }
+      while (elemOps.within('0', c, '9')) { j += 1; c = elem(j) }
       if (j0 == j) die(i, "expected digit")
     }
 
     if (c == 'e' || c == 'E') {
       expIndex = j - i
       j += 1
-      c = char(j)
+      c = elem(j)
       if (c == '+' || c == '-') {
         j += 1
-        c = char(j)
+        c = elem(j)
       }
       val j0 = j
-      while ('0' <= c && c <= '9') { j += 1; c = char(j) }
+      while (elemOps.within('0', c, '9')) { j += 1; c = elem(j) }
       if (j0 == j)  die(i, "expected digit")
     }
 
@@ -202,29 +198,29 @@ abstract class Parser[J] {
    */
   protected[this] final def parseNumSlow(i: Int, facade: Visitor[_, J]): (J, Int) = {
     var j = i
-    var c = char(j)
+    var c = elem(j)
     var decIndex = -1
     var expIndex = -1
 
     if (c == '-') {
       // any valid input will require at least one digit after -
       j += 1
-      c = char(j)
+      c = elem(j)
     }
     if (c == '0') {
       j += 1
       if (atEof(j)) {
         return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
       }
-      c = char(j)
+      c = elem(j)
     } else {
       val j0 = j
-      while ('0' <= c && c <= '9') {
+      while (elemOps.within('0', c, '9')) {
         j += 1
         if (atEof(j)) {
           return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
         }
-        c = char(j)
+        c = elem(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
@@ -233,14 +229,14 @@ abstract class Parser[J] {
       // any valid input will require at least one digit after .
       decIndex = j - i
       j += 1
-      c = char(j)
+      c = elem(j)
       val j0 = j
-      while ('0' <= c && c <= '9') {
+      while (elemOps.within('0', c, '9')) {
         j += 1
         if (atEof(j)) {
           return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
         }
-        c = char(j)
+        c = elem(j)
       }
       if(j0 == j) die(i, "expected digit")
     }
@@ -249,19 +245,19 @@ abstract class Parser[J] {
       // any valid input will require at least one digit after e, e+, etc
       expIndex = j - i
       j += 1
-      c = char(j)
+      c = elem(j)
       if (c == '+' || c == '-') {
         j += 1
-        c = char(j)
+        c = elem(j)
       }
       val j0 = j
-      while ('0' <= c && c <= '9') {
+      while (elemOps.within('0', c, '9')) {
         j += 1
         if (atEof(j)) {
 
           return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
         }
-        c = char(j)
+        c = elem(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
@@ -276,7 +272,7 @@ abstract class Parser[J] {
    * This is why it can only return Char instead of Int.
    */
   protected[this] final def descape(s: CharSequence): Char = {
-    val hc = Parser.HexChars
+    val hc = ujson.util.RenderUtils.hexChars
     var i = 0
     var x = 0
     while (i < 4) {
@@ -286,10 +282,6 @@ abstract class Parser[J] {
     x.toChar
   }
 
-  /**
-   * Parse the JSON string starting at 'i' and save it into 'ctxt'.
-   */
-  protected[this] def parseString(i: Int, key: Boolean): (CharSequence, Int)
 
   /**
    * Parse the JSON constant "true".
@@ -297,7 +289,7 @@ abstract class Parser[J] {
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseTrue(i: Int, facade: Visitor[_, J]): J =
-    if (char(i + 1) == 'r' && char(i + 2) == 'u' && char(i + 3) == 'e') {
+    if (elem(i + 1) == 'r' && elem(i + 2) == 'u' && elem(i + 3) == 'e') {
       facade.visitTrue(i)
     } else {
       die(i, "expected true")
@@ -309,7 +301,7 @@ abstract class Parser[J] {
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseFalse(i: Int, facade: Visitor[_, J]): J =
-    if (char(i + 1) == 'a' && char(i + 2) == 'l' && char(i + 3) == 's' && char(i + 4) == 'e') {
+    if (elem(i + 1) == 'a' && elem(i + 2) == 'l' && elem(i + 3) == 's' && elem(i + 4) == 'e') {
       facade.visitFalse(i)
     } else {
       die(i, "expected false")
@@ -321,7 +313,7 @@ abstract class Parser[J] {
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseNull(i: Int, facade: Visitor[_, J]): J =
-    if (char(i + 1) == 'u' && char(i + 2) == 'l' && char(i + 3) == 'l') {
+    if (elem(i + 1) == 'u' && elem(i + 2) == 'l' && elem(i + 3) == 'l') {
       facade.visitNull(i)
     } else {
       die(i, "expected null")
@@ -339,7 +331,7 @@ abstract class Parser[J] {
    */
   @tailrec
   protected[this] final def parseTopLevel0(i: Int, facade: Visitor[_, J]): (J, Int) = {
-    (char(i): @switch) match {
+    (elem(i): @switch) match {
       // ignore whitespace
       case ' ' | '\t' | 'r' => parseTopLevel0(i + 1, facade)
       case '\n' => newline(i); parseTopLevel0(i + 1, facade)
@@ -399,7 +391,7 @@ abstract class Parser[J] {
                                         i: Int,
                                         stackHead: ObjArrVisitor[_, J],
                                         stackTail: List[ObjArrVisitor[_, J]]) : (J, Int) = {
-    (char(i): @switch) match{
+    (elem(i): @switch) match{
       case '\n' =>
         newline(i)
         parseNested(state, i + 1, stackHead, stackTail)
@@ -558,14 +550,81 @@ abstract class Parser[J] {
     if (stackHead.isObj) OBJEND
     else ARREND
   }
-}
-object Parser{
-  private final val HexChars: Array[Int] = {
-    val arr = new Array[Int](128)
-    var i = 0
-    while (i < 10) { arr(i + '0') = i; i += 1 }
-    i = 0
-    while (i < 16) { arr(i + 'a') = 10 + i; arr(i + 'A') = 10 + i; i += 1 }
-    arr
+
+  /**
+    * See if the string has any escape sequences. If not, return the
+    * end of the string. If so, bail out and return -1.
+    *
+    * This method expects the data to be in UTF-16 and accesses it as
+    * chars.
+    */
+  protected[this] final def parseStringSimple(i: Int): Int = {
+    var j = i
+    var c = elemOps.toUnsignedInt(elem(j))
+    while (c != '"') {
+      if (c < ' ') die(j, s"control char (${c}) in string")
+      if (c == '\\') return -1 - j
+      j += 1
+      outputBuilder.append(c)
+      c = elemOps.toUnsignedInt(elem(j))
+    }
+    j + 1
+  }
+
+  /**
+    * Parse a string that is known to have escape sequences.
+    */
+  protected[this] final def parseStringComplex(i0: Int): (CharSequence, Int) = {
+
+    var i = i0
+    var c = elemOps.toUnsignedInt(elem(i))
+    while (c != '"') {
+      if (c < ' ') {
+        die(i, s"control char (${c}) in string")
+      } else if (c == '\\') {
+        (elem(i + 1): @switch) match {
+          case 'b' => { outputBuilder.append('\b'); i += 2 }
+          case 'f' => { outputBuilder.append('\f'); i += 2 }
+          case 'n' => { outputBuilder.append('\n'); i += 2 }
+          case 'r' => { outputBuilder.append('\r'); i += 2 }
+          case 't' => { outputBuilder.append('\t'); i += 2 }
+
+          case '"' => { outputBuilder.append('"'); i += 2 }
+          case '/' => { outputBuilder.append('/'); i += 2 }
+          case '\\' => { outputBuilder.append('\\'); i += 2 }
+
+          // if there's a problem then descape will explode
+          case 'u' => { outputBuilder.append(descape(sliceString(i + 2, i + 6))); i += 6 }
+
+          case c => die(i + 1, s"illegal escape sequence after \\")
+        }
+      } else {
+        // this case is for "normal" code points that are just one Char.
+        //
+        // we don't have to worry about surrogate pairs, since those
+        // will all be in the ranges D800–DBFF (high surrogates) or
+        // DC00–DFFF (low surrogates).
+        outputBuilder.append(c)
+        i += 1
+      }
+      c = elemOps.toUnsignedInt(elem(i))
+    }
+
+    (outputBuilder.makeString, i + 1)
+  }
+
+  /**
+    * Parse the string according to JSON rules, and add to the given
+    * context.
+    *
+    * This method expects the data to be in UTF-16, and access it as
+    * Char. It performs the correct checks to make sure that we don't
+    * interpret a multi-char code point incorrectly.
+    */
+  protected[this] final def parseString(i: Int,  key: Boolean): (CharSequence, Int) = {
+    outputBuilder.reset()
+    val k = parseStringSimple(i + 1)
+    if (k >= 0) (outputBuilder.makeString, k)
+    else parseStringComplex(-k - 1)
   }
 }

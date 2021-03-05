@@ -1,7 +1,10 @@
 package ujson
-import upickle.core.{Visitor, ObjArrVisitor}
+import upickle.core.{ObjArrVisitor, Visitor}
+
 import scala.annotation.{switch, tailrec}
 import java.nio.ByteBuffer
+
+import ujson.util.ByteBuilder
 
 /**
  * Basic ByteBuffer parser.
@@ -13,7 +16,7 @@ import java.nio.ByteBuffer
  * The parser makes absolute calls to the ByteBuffer, which will not
  * update its own mutable position fields.
  */
-final class ByteBufferParser[J](src: ByteBuffer) extends Parser[J] with ByteBasedParser[J] {
+final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
   private[this] final val start = src.position()
   private[this] final val limit = src.limit() - start
 
@@ -25,8 +28,7 @@ final class ByteBufferParser[J](src: ByteBuffer) extends Parser[J] with ByteBase
 
   protected[this] final def close() = { src.position(src.limit) }
   protected[this] final def dropBufferUntil(i: Int): Unit = ()
-  protected[this] final def byte(i: Int): Byte = src.get(i + start)
-  protected[this] final def char(i: Int): Char = src.get(i + start).toChar
+  protected[this] final def elem(i: Int): Byte = src.get(i + start)
 
   protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
     val len = k - i

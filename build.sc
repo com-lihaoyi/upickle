@@ -250,6 +250,19 @@ object upack extends Module {
 object ujson extends Module{
   trait JsonModule extends CommonPublishModule{
     def artifactName = "ujson"
+    def templates = T.source(millSourcePath / "templates")
+    def generatedSources = T{
+      for{
+        p <- os.list(templates().path)
+        rename <- Seq("Char", "Byte")
+      }{
+        os.write(
+          T.dest / p.last.replace("Elem", rename),
+          os.read(p).replace("Elem", rename)
+        )
+      }
+      Seq(PathRef(T.dest))
+    }
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = T{
         if (!isDotty) Agg(

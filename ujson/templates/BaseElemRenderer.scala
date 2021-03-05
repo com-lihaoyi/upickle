@@ -1,0 +1,157 @@
+package ujson
+import scala.annotation.switch
+import upickle.core.{ArrVisitor, ObjVisitor}
+class BaseElemRenderer[T <: ujson.util.ElemOps.Output]
+                      (out: T,
+                       indent: Int = -1,
+                       escapeUnicode: Boolean = false) extends JsVisitor[T, T]{
+  private[this] val elemBuilder = new ujson.util.ElemBuilder
+
+  def flushElemBuilder() = {
+    elemBuilder.writeOutToIfLongerThan(out, if (depth == 0) 0 else 1000)
+  }
+
+  private[this] var depth: Int = 0
+
+
+  private[this] var commaBuffered = false
+
+  def flushBuffer() = {
+    if (commaBuffered) {
+      commaBuffered = false
+      elemBuilder.append(',')
+      renderIndent()
+    }
+  }
+  def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
+    flushBuffer()
+    elemBuilder.append('[')
+
+    depth += 1
+    renderIndent()
+    def subVisitor = BaseElemRenderer.this
+    def visitValue(v: T, index: Int): Unit = {
+      flushBuffer()
+      commaBuffered = true
+    }
+    def visitEnd(index: Int) = {
+      commaBuffered = false
+      depth -= 1
+      renderIndent()
+      elemBuilder.append(']')
+      flushElemBuilder()
+      out
+    }
+  }
+
+  def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
+    flushBuffer()
+    elemBuilder.append('{')
+    depth += 1
+    renderIndent()
+    def subVisitor = BaseElemRenderer.this
+    def visitKey(index: Int) = BaseElemRenderer.this
+    def visitKeyValue(s: Any): Unit = {
+      elemBuilder.append(':')
+      if (indent != -1) elemBuilder.append(' ')
+    }
+    def visitValue(v: T, index: Int): Unit = {
+      commaBuffered = true
+    }
+    def visitEnd(index: Int) = {
+      commaBuffered = false
+      depth -= 1
+      renderIndent()
+      elemBuilder.append('}')
+      flushElemBuilder()
+      out
+    }
+  }
+
+  def visitNull(index: Int) = {
+    flushBuffer()
+    elemBuilder.ensureLength(4)
+    elemBuilder.appendUnsafe('n')
+    elemBuilder.appendUnsafe('u')
+    elemBuilder.appendUnsafe('l')
+    elemBuilder.appendUnsafe('l')
+    flushElemBuilder()
+    out
+  }
+
+  def visitFalse(index: Int) = {
+    flushBuffer()
+    elemBuilder.ensureLength(5)
+    elemBuilder.appendUnsafe('f')
+    elemBuilder.appendUnsafe('a')
+    elemBuilder.appendUnsafe('l')
+    elemBuilder.appendUnsafe('s')
+    elemBuilder.appendUnsafe('e')
+    flushElemBuilder()
+    out
+  }
+
+  def visitTrue(index: Int) = {
+    flushBuffer()
+    elemBuilder.ensureLength(4)
+    elemBuilder.appendUnsafe('t')
+    elemBuilder.appendUnsafe('r')
+    elemBuilder.appendUnsafe('u')
+    elemBuilder.appendUnsafe('e')
+    flushElemBuilder()
+    out
+  }
+
+  def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
+    flushBuffer()
+    elemBuilder.ensureLength(s.length())
+    var i = 0
+    val sLength = s.length
+    while(i < sLength){
+      elemBuilder.appendUnsafeC(s.charAt(i))
+      i += 1
+    }
+    flushElemBuilder()
+    out
+  }
+
+  override def visitFloat64(d: Double, index: Int) = {
+    d match{
+      case Double.PositiveInfinity => visitString("Infinity", -1)
+      case Double.NegativeInfinity => visitString("-Infinity", -1)
+      case d if java.lang.Double.isNaN(d) => visitString("NaN", -1)
+      case d =>
+        val i = d.toInt
+        if (d == i) visitFloat64StringParts(i.toString, -1, -1, index)
+        else super.visitFloat64(d, index)
+        flushBuffer()
+    }
+    flushElemBuilder()
+    out
+  }
+
+
+  def visitString(s: CharSequence, index: Int) = {
+
+    if (s eq null) visitNull(index)
+    else {
+      flushBuffer()
+      ujson.util.RenderUtils.escapeElem(elemBuilder, s, escapeUnicode)
+      flushElemBuilder()
+      out
+    }
+  }
+
+  final def renderIndent() = {
+    if (indent == -1) ()
+    else {
+      var i = indent * depth
+      elemBuilder.ensureLength(i + 1)
+      elemBuilder.appendUnsafe('\n')
+      while(i > 0) {
+        elemBuilder.appendUnsafe(' ')
+        i -= 1
+      }
+    }
+  }
+}

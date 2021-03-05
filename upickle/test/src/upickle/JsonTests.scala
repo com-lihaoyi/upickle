@@ -110,5 +110,13 @@ object JsonTests extends TestSuite {
       val parsedAgain = ujson.read(s)
       assert(parsed == parsedAgain)
     }
+    test("writeBytesToSmall"){
+      val out = new java.io.ByteArrayOutputStream()
+      val parsed = ujson.Str("쫾")
+      parsed.writeBytesTo(out)
+      val s = new String(out.toByteArray)
+      val parsedAgain = ujson.read(s)
+      assert(parsed == parsedAgain)
+    }
   }
 }
