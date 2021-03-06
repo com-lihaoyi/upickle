@@ -21,15 +21,14 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
   private[this] final val start = src.position()
   private[this] final val limit = src.limit() - start
 
-  private[this] var lineState = 0
-  protected[this] def line: Int = lineState
-
-  protected[this] final def newline(i: Int) = { lineState += 1 }
-  protected[this] final def column(i: Int) = i
 
   protected[this] final def close() = { src.position(src.limit) }
   protected[this] final def dropBufferUntil(i: Int): Unit = ()
-  protected[this] final def elem(i: Int): Byte = src.get(i + start)
+  protected[this] def loadChunk(inputArray: Array[Byte], i: Int) = {
+    assert(i == 0)
+//    src.
+    ???
+  }
 
   protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
     val len = k - i

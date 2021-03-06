@@ -8,11 +8,24 @@ import upickle.core.{ObjArrVisitor, Visitor}
  * This is similar to StringParser, but acts on character sequences.
  */
 private[ujson] final class CharSequenceParser[J](cs: CharSequence) extends CharParser[J]{
-  var line = 0
-  final def column(i: Int) = i
-  final def newline(i: Int) = { line += 1 }
+
   final def dropBufferUntil(i: Int): Unit = ()
-  final def elem(i: Int): Char = upickle.core.Platform.charAt(cs, i)
+  def loadChunk(inputArray: Array[Char], i: Int) = {
+    if (i == cs.length()) (null, -1)
+    else {
+      val arr = inputArray match {
+        case null => new Array[Char](inputArrayChunkSize)
+        case a => a
+      }
+      var j = i
+      val max = math.min(i + inputArrayChunkSize, cs.length)
+      while (j < max) {
+        arr(j - i) = cs.charAt(j)
+        j += 1
+      }
+      (arr, max - i)
+    }
+  }
   final def sliceString(i: Int, j: Int): CharSequence = cs.subSequence(i, j)
   final def atEof(i: Int) = i == cs.length
   final def close() = ()

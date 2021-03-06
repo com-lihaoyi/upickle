@@ -16,11 +16,24 @@ import upickle.core.{ObjArrVisitor, Visitor}
  * practice.
  */
 private[ujson] final class StringParser[J](s: String) extends CharParser[J]{
-  var line = 0
-  final def column(i: Int) = i
-  final def newline(i: Int) = { line += 1 }
   final def dropBufferUntil(i: Int): Unit = ()
-  final def elem(i: Int): Char = upickle.core.Platform.charAt(s, i)
+  def loadChunk(inputArray: Array[Char], i: Int) = {
+//    println(s"loadChunk($i)")
+    if (i == s.length()) (null, -1)
+    else {
+      val arr = inputArray match {
+        case null => new Array[Char](inputArrayChunkSize)
+        case a => a
+      }
+      var j = i
+      val max = math.min(i + inputArrayChunkSize, s.length)
+      while (j < max) {
+        arr(j - i) = s.charAt(j)
+        j += 1
+      }
+      (arr, max - i)
+    }
+  }
   final def sliceString(i: Int, j: Int): CharSequence = s.substring(i, j)
 
   final def atEof(i: Int) = i == s.length

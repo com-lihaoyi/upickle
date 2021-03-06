@@ -64,7 +64,7 @@ object JsonTests extends TestSuite {
         |1e00,2e+00,2e-00
         |,"rosebud"]
       """.stripMargin
-    val parsed = ujson.read(ugly)
+    lazy val parsed = ujson.read(ugly)
 
     test("correctness"){
       val unparsed = ujson.write(parsed)
@@ -79,6 +79,16 @@ object JsonTests extends TestSuite {
         )
       }
       (parsed(19), reparsed(19))
+    }
+    test("inputsSmall"){
+      val unparsed = """true"""
+//      val unparsed = ujson.write(parsed)
+//      val fromString = ujson.read(unparsed)
+//      val fromBytes = ujson.read(unparsed.getBytes)
+      val fromInputStream = ujson.read(new java.io.ByteArrayInputStream(unparsed.getBytes))
+
+//      assert(fromString == fromBytes)
+//      assert(fromBytes == fromInputStream)
     }
     test("inputs"){
       val unparsed = ujson.write(parsed)

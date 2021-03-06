@@ -17,16 +17,15 @@ import upickle.core.{ObjArrVisitor, Visitor}
   * update its own mutable position fields.
   */
 final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0) extends ByteParser[J]{
-  private[this] var lineState = 0
-  protected[this] def line: Int = lineState
-
-  protected[this] final def newline(i: Int) = { lineState += 1 }
-  protected[this] final def column(i: Int) = i
 
   protected[this] final def close() = {}
   protected[this] final def dropBufferUntil(i: Int): Unit = ()
-  protected[this] final def elem(i: Int): Byte = upickle.core.Platform.byteAt(src, i + start)
 
+  def loadChunk(inputArray: Array[Byte], i: Int): (Array[Byte], Int) = {
+
+    if(i == 0) (src, src.length)
+    else (src, -1)
+  }
   protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
     new String(src, i, k - i, StandardCharsets.UTF_8)
   }
