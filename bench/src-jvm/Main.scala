@@ -18,7 +18,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(500/*, 5000, 10000*/)){
+    for(duration <- Seq(500, 5000, 10000)){
       println("RUN JVM: " + duration)
       println()
 
@@ -53,17 +53,17 @@ object Main{
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-//      benchParsingRendering(duration, bytes = true, strings = false)
-      benchParsingRendering(duration, bytes = false, strings = true)
+      benchParsingRendering(duration, bytes = true, strings = false)
+//      benchParsingRendering(duration, bytes = false, strings = true)
 //      benchParsingRendering(duration, bytes = false, strings = true)
       println()
     }
   }
   def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean) = {
     val names = Array(
-//      "github-events.json",
-//      "meteorites.json",
-//      "turkish.json",
+      "github-events.json",
+      "meteorites.json",
+      "turkish.json",
       "eu-lobby-repr.json"
     )
     import java.nio.file.{Files, Paths}
@@ -79,7 +79,6 @@ object Main{
         }
         if(strings){
           for((inputString, i) <- inputStrings.zipWithIndex) {
-            println(names(i))
             ujson.reformatTo(inputString, new java.io.StringWriter())
           }
         }

@@ -610,9 +610,8 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     var i = i0
     var c = elemOps.toUnsignedInt(elemSafe(i))
     while (c != '"') {
-      if (c < ' ') {
-        die(i, s"control char (${c}) in string")
-      } else if (c == '\\') {
+      if (c < ' ') die(i, s"control char (${c}) in string")
+      else if (c == '\\') {
         (elemSafe(i + 1): @switch) match {
           case 'b' => { outputBuilder.append('\b'); i += 2 }
           case 'f' => { outputBuilder.append('\f'); i += 2 }

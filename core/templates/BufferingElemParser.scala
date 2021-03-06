@@ -47,24 +47,25 @@ trait BufferingElemParser{
     (arr, 0, arr.length)
   }
 
+  def growBuffer(until: Int) = {
+    var newSize = buffer.length
+
+    // Bump growGoalSiz by 50%. This helps ensure the utilization of the buffer
+    // ranges from 33% to 66%, rather than from 50% to 100%. We want to avoid being
+    // near 100% because we could end up doing large numbers of huge System.arraycopy
+    // calls even when processing tiny amounts of data
+    val growGoalSize = (until - dropped + 1) * 3 / 2
+    while (newSize <= growGoalSize) newSize *= 2
+
+    val arr = if (newSize > buffer.length / 2) new Array[Elem](newSize) else buffer
+
+    System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
+    firstIdx = dropped
+    buffer = arr
+  }
   protected def requestUntil(until: Int): Boolean = {
     val untilBufferOffset = bumpBufferSize(until - firstIdx)
-    if (buffer != null && untilBufferOffset >= buffer.length){
-      var newSize = buffer.length
-
-      // Bump growGoalSiz by 50%. This helps ensure the utilization of the buffer
-      // ranges from 33% to 66%, rather than from 50% to 100%. We want to avoid being
-      // near 100% because we could end up doing large numbers of huge System.arraycopy
-      // calls even when processing tiny amounts of data
-      val growGoalSize = (until - dropped + 1) * 3 / 2
-      while (newSize <= growGoalSize) newSize *= 2
-
-      val arr = if (newSize > buffer.length / 2) new Array[Elem](newSize) else buffer
-
-      System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
-      firstIdx = dropped
-      buffer = arr
-    }
+    if (buffer != null && untilBufferOffset >= buffer.length) growBuffer(until)
 
     var done = false
     while (lastIdx <= until && !done) {
