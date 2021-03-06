@@ -98,15 +98,6 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     throw ParseException(s, i)
   }
 
-  /**
-   * Used to generate messages for internal errors.
-   *
-   * This should only be used in situations where a possible bug in
-   * the parser was detected. For errors in user-provided JSON, use
-   * die().
-   */
-  protected[this] def error(msg: String) =
-    sys.error(msg)
 
   /**
    * Parse the given number, and add it to the given context.
