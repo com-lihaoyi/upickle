@@ -545,6 +545,9 @@ object ExampleTests extends TestSuite {
         }
 
         test{
+          intercept[IncompleteParseException](ujson.transform("[", NoOpVisitor))
+        }
+        test{
           intercept[IncompleteParseException](ujson.transform("[1, 2, 3", NoOpVisitor))
         }
         test{
