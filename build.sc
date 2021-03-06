@@ -38,6 +38,7 @@ trait CommonModule extends ScalaModule {
   }
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
+
   def publishVersion = "1.2.3"
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
@@ -53,6 +54,19 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
   )
+  def templates = T.source(millSourcePath / "templates")
+  def generatedSources = T{1
+    for{
+      p <- if (os.exists(templates().path)) os.list(templates().path) else Nil
+      rename <- Seq("Char", "Byte")
+    }{
+      os.write(
+        T.dest / p.last.replace("Elem", rename),
+        os.read(p).replace("Elem", rename)
+      )
+    }
+    Seq(PathRef(T.dest))
+  }
   trait CommonTestModule extends CommonModule with TestModule{
     def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.7") ++ (
       if (isDotty) Agg.empty[mill.scalalib.Dep]
@@ -250,19 +264,7 @@ object upack extends Module {
 object ujson extends Module{
   trait JsonModule extends CommonPublishModule{
     def artifactName = "ujson"
-    def templates = T.source(millSourcePath / "templates")
-    def generatedSources = T{
-      for{
-        p <- os.list(templates().path)
-        rename <- Seq("Char", "Byte")
-      }{
-        os.write(
-          T.dest / p.last.replace("Elem", rename),
-          os.read(p).replace("Elem", rename)
-        )
-      }
-      Seq(PathRef(T.dest))
-    }
+
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = T{
         if (!isDotty) Agg(

@@ -15,19 +15,9 @@ import upickle.core.{ObjArrVisitor, Visitor}
   * Generally not meant to be used directly, but via [[ujson.Readable.fromReadable]]
   */
 final class InputStreamParser[J](val data: java.io.InputStream)
-extends ByteParser[J] {
-
+extends ByteParser[J] with upickle.core.BufferingInputStreamParser{
+  override def defaultStartBufferSize: Int = 1024
   protected[this] final def close() = {}
-  def loadChunk(inputArray: Array[Byte], i: Int): (Array[Byte], Int) = {
-//    println(s"loadChunk($i)")
-    val arr = inputArray match{
-      case null => new Array[Byte](inputArrayChunkSize)
-      case a => a
-    }
-    val n = data.readNBytes(arr, 0, arr.length)
-//    println(s"n $n")
-    (arr, if (n == 0) -1 else n)
-  }
 }
 
 object InputStreamParser extends Transformer[java.io.InputStream]{

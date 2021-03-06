@@ -16,6 +16,7 @@ class InputStreamMsgPackReader(val data: java.io.InputStream,
                                val maxStartBufferSize: Int)
 extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
   def startIndex = 0
+  def byte(i: Int): Byte = getByteSafe(i)
 }
 
 abstract class BaseMsgPackReader{

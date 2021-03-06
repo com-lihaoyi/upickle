@@ -23,8 +23,8 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
 
 
   protected[this] final def close() = { src.position(src.limit) }
-  protected[this] def loadChunk(inputArray: Array[Byte], i: Int) = {
-    assert(i == 0)
+  def readDataIntoBuffer(buffer: Array[Byte], firstIdx: Int, lastIdx: Int) = {
+//    assert(i == 0)
 //    src.
     ???
   }

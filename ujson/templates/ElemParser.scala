@@ -27,37 +27,51 @@ import scala.annotation.{switch, tailrec}
  * For now the parser requires input to be in UTF-8. This requirement
  * may eventually be relaxed.
  */
-abstract class ElemParser[J]{
+abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   private[this] val elemOps = ujson.util.ElemOps
   private[this] val outputBuilder = new ujson.util.ElemBuilder()
-  private[this] val unicodeCharBuilder = new ujson.util.CharBuilder()
 
+  private[this] var eof = -1
+
+  val inputArrayChunkSize = 1000
   /**
    * Read the byte/char at 'i' as a Char.
    *
    * Note that this should not be used on potential multi-byte
    * sequences.
    */
-  protected[this] def elem(i: Int): Elem
+  protected[this] def elemUnsafe(i: Int): Elem = getElemUnsafe(i)
 
-  /**
-   * Read the bytes/chars from 'i' until 'j' as a String.
-   */
-  protected[this] def sliceString(i: Int, j: Int): CharSequence
+  final def ensureLength0(i: Int): Boolean = requestUntil(i)
+  def ensureLength(i: Int): Boolean = {
+    if (eof != -1) throw new IncompleteParseException("exhausted input")
+    else{
+      val res = ensureLength0(i)
+      if (res) throw new IncompleteParseException("exhausted input")
+      res
+    }
+  }
+
+  protected[this] def elemSafe(i: Int): Elem = getElemSafe(i)
+
+  def maxStartBufferSize: Int = upickle.core.BufferingInputStreamParser.defaultMaxBufferStartSize
+  def minStartBufferSize: Int = upickle.core.BufferingInputStreamParser.defaultMinBufferStartSize
+  def defaultStartBufferSize: Int = 1024
+
+
 
   /**
    * Return true iff 'i' is at or beyond the end of the input (EOF).
    */
-  protected[this] def atEof(i: Int): Boolean
+  protected[this] def atEof(i: Int): Boolean = {
+    if (eof != -1) eof == i
+    else{
+      val res = ensureLength0(i)
+      if (res) eof = i
+      res
+    }
+  }
 
-  /**
-   * The reset() method is used to signal that we're working from the
-   * given position, and any previous data can be released. Some
-   * parsers (e.g.  StringParser) will ignore release, while others
-   * (e.g. PathParser) will need to use this information to release
-   * and allocate different areas.
-   */
-  protected[this] def dropBufferUntil(i: Int): Unit
 
   /**
    * Should be called when parsing is finished.
@@ -75,11 +89,6 @@ abstract class ElemParser[J]{
   @inline private[this] final val ARREND = 4
   @inline private[this] final val OBJEND = 5
 
-  protected[this] def newline(i: Int): Unit
-  protected[this] def line: Int
-  protected[this] def column(i: Int): Int
-
-
   /**
     * Parse the JSON document into a single JSON value.
     *
@@ -91,9 +100,8 @@ abstract class ElemParser[J]{
     val (value, i) = parseTopLevel(0, facade)
     var j = i
     while (!atEof(j)) {
-      (elem(j): @switch) match {
-        case '\n' => newline(j); j += 1
-        case ' ' | '\t' | '\r' => j += 1
+      (elemSafe(j): @switch) match {
+        case '\n' | ' ' | '\t' | '\r' => j += 1
         case _ => die(j, "expected whitespace or eof")
       }
     }
@@ -106,17 +114,15 @@ abstract class ElemParser[J]{
    * Used to generate error messages with character info and offsets.
    */
   protected[this] def die(i: Int, msg: String): Nothing = {
-    val y = line + 1
-    val x = column(i) + 1
     val out = new ujson.util.ElemBuilder()
     ujson.util.RenderUtils.escapeElem(
-      unicodeCharBuilder,
+      new ujson.util.CharBuilder(),
       out,
-      new ArrayCharSequence(Array(elemOps.toInt(elem(i)).toChar)),
+      new ArrayCharSequence(Array(elemOps.toInt(elemSafe(i)).toChar)),
       unicode = false
     )
-    val s = "%s got %s (line %d, column %d)" format (msg, out.makeString, y, x)
-    throw ParseException(s, i, y, x)
+    val s = "%s got %s (line %d, column %d)" format (msg, out.makeString, -1, -1)
+    throw ParseException(s, i, -1, -1)
   }
 
   /**
@@ -139,47 +145,65 @@ abstract class ElemParser[J]{
    * number.
    */
   protected[this] final def parseNum(i: Int, ctxt: ObjArrVisitor[Any, J], facade: Visitor[_, J]): Int = {
+    outputBuilder.reset()
     var j = i
-    var c = elem(j)
+    var c = elemSafe(j)
     var decIndex = -1
     var expIndex = -1
 
     if (c == '-') {
+      outputBuilder.append(c)
       j += 1
-      c = elem(j)
+      c = elemSafe(j)
     }
     if (c == '0') {
+      outputBuilder.append(c)
       j += 1
-      c = elem(j)
+      c = elemSafe(j)
     } else {
       val j0 = j
-      while (elemOps.within('0', c, '9')) { j += 1; c = elem(j) }
+      while (elemOps.within('0', c, '9')) {
+        outputBuilder.append(c)
+        j += 1;
+        c = elemSafe(j)
+      }
       if (j == j0) die(i, "expected digit")
     }
 
     if (c == '.') {
+      outputBuilder.append(c)
       decIndex = j - i
       j += 1
-      c = elem(j)
+      c = elemSafe(j)
       val j0 = j
-      while (elemOps.within('0', c, '9')) { j += 1; c = elem(j) }
+      while (elemOps.within('0', c, '9')) {
+        outputBuilder.append(c)
+        j += 1
+        c = elemSafe(j)
+      }
       if (j0 == j) die(i, "expected digit")
     }
 
     if (c == 'e' || c == 'E') {
       expIndex = j - i
       j += 1
-      c = elem(j)
+      outputBuilder.append(c)
+      c = elemSafe(j)
       if (c == '+' || c == '-') {
         j += 1
-        c = elem(j)
+        outputBuilder.append(c)
+        c = elemSafe(j)
       }
       val j0 = j
-      while (elemOps.within('0', c, '9')) { j += 1; c = elem(j) }
+      while (elemOps.within('0', c, '9')) {
+        outputBuilder.append(c)
+        j += 1
+        c = elemSafe(j)
+      }
       if (j0 == j)  die(i, "expected digit")
     }
 
-    ctxt.visitValue(facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), i)
+    ctxt.visitValue(facade.visitFloat64StringParts(outputBuilder.makeString, decIndex, expIndex, i), i)
     j
   }
 
@@ -198,30 +222,34 @@ abstract class ElemParser[J]{
    * This method has all the same caveats as the previous method.
    */
   protected[this] final def parseNumSlow(i: Int, facade: Visitor[_, J]): (J, Int) = {
+    outputBuilder.reset()
     var j = i
-    var c = elem(j)
+    var c = elemSafe(j)
     var decIndex = -1
     var expIndex = -1
 
     if (c == '-') {
       // any valid input will require at least one digit after -
       j += 1
-      c = elem(j)
+      outputBuilder.append(c)
+      c = elemSafe(j)
     }
     if (c == '0') {
       j += 1
+      outputBuilder.append(c)
       if (atEof(j)) {
-        return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
+        return (facade.visitFloat64StringParts(outputBuilder.makeString(), decIndex, expIndex, i), j)
       }
-      c = elem(j)
+      c = elemSafe(j)
     } else {
       val j0 = j
       while (elemOps.within('0', c, '9')) {
+        outputBuilder.append(c)
         j += 1
         if (atEof(j)) {
-          return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(outputBuilder.makeString(), decIndex, expIndex, i), j)
         }
-        c = elem(j)
+        c = elemSafe(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
@@ -230,14 +258,16 @@ abstract class ElemParser[J]{
       // any valid input will require at least one digit after .
       decIndex = j - i
       j += 1
-      c = elem(j)
+      outputBuilder.append(c)
+      c = elemSafe(j)
       val j0 = j
       while (elemOps.within('0', c, '9')) {
         j += 1
+        outputBuilder.append(c)
         if (atEof(j)) {
-          return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(outputBuilder.makeString(), decIndex, expIndex, i), j)
         }
-        c = elem(j)
+        c = elemSafe(j)
       }
       if(j0 == j) die(i, "expected digit")
     }
@@ -245,25 +275,28 @@ abstract class ElemParser[J]{
     if (c == 'e' || c == 'E') {
       // any valid input will require at least one digit after e, e+, etc
       expIndex = j - i
+      outputBuilder.append(c)
       j += 1
-      c = elem(j)
+      c = elemSafe(j)
       if (c == '+' || c == '-') {
+        outputBuilder.append(c)
         j += 1
-        c = elem(j)
+        c = elemSafe(j)
       }
       val j0 = j
       while (elemOps.within('0', c, '9')) {
         j += 1
+        outputBuilder.append(c)
         if (atEof(j)) {
 
-          return (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
+          return (facade.visitFloat64StringParts(outputBuilder.makeString(), decIndex, expIndex, i), j)
         }
-        c = elem(j)
+        c = elemSafe(j)
       }
       if (j0 == j) die(i, "expected digit")
     }
 
-    (facade.visitFloat64StringParts(sliceString(i, j), decIndex, expIndex, i), j)
+    (facade.visitFloat64StringParts(outputBuilder.makeString(), decIndex, expIndex, i), j)
   }
 
   /**
@@ -272,14 +305,13 @@ abstract class ElemParser[J]{
    * NOTE: This is only capable of generating characters from the basic plane.
    * This is why it can only return Char instead of Int.
    */
-  protected[this] final def descape(s: CharSequence): Char = {
+  protected[this] final def descape(i: Int): Char = {
     val hc = ujson.util.RenderUtils.hexChars
-    var i = 0
     var x = 0
-    while (i < 4) {
-      x = (x << 4) | hc(s.charAt(i).toInt)
-      i += 1
-    }
+    x = (x << 4) | hc(elemSafe(i+2).toInt)
+    x = (x << 4) | hc(elemSafe(i+3).toInt)
+    x = (x << 4) | hc(elemSafe(i+4).toInt)
+    x = (x << 4) | hc(elemSafe(i+5).toInt)
     x.toChar
   }
 
@@ -289,53 +321,57 @@ abstract class ElemParser[J]{
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseTrue(i: Int, facade: Visitor[_, J]): J =
-    if (elem(i + 1) == 'r' && elem(i + 2) == 'u' && elem(i + 3) == 'e') {
+  protected[this] final def parseTrue(i: Int, facade: Visitor[_, J]): J = {
+    ensureLength(i + 3)
+    if (elemUnsafe(i + 1) == 'r' && elemUnsafe(i + 2) == 'u' && elemUnsafe(i + 3) == 'e') {
       facade.visitTrue(i)
     } else {
       die(i, "expected true")
     }
+  }
 
   /**
    * Parse the JSON constant "false".
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseFalse(i: Int, facade: Visitor[_, J]): J =
-    if (elem(i + 1) == 'a' && elem(i + 2) == 'l' && elem(i + 3) == 's' && elem(i + 4) == 'e') {
+  protected[this] final def parseFalse(i: Int, facade: Visitor[_, J]): J = {
+    ensureLength(i + 4)
+
+    if (elemUnsafe(i + 1) == 'a' && elemUnsafe(i + 2) == 'l' && elemUnsafe(i + 3) == 's' && elemUnsafe(i + 4) == 'e') {
       facade.visitFalse(i)
     } else {
       die(i, "expected false")
     }
+  }
 
   /**
    * Parse the JSON constant "null".
    *
    * Note that this method assumes that the first character has already been checked.
    */
-  protected[this] final def parseNull(i: Int, facade: Visitor[_, J]): J =
-    if (elem(i + 1) == 'u' && elem(i + 2) == 'l' && elem(i + 3) == 'l') {
+  protected[this] final def parseNull(i: Int, facade: Visitor[_, J]): J = {
+    ensureLength(i + 3)
+    if (elemUnsafe(i + 1) == 'u' && elemUnsafe(i + 2) == 'l' && elemUnsafe(i + 3) == 'l') {
       facade.visitNull(i)
     } else {
       die(i, "expected null")
     }
+  }
 
   protected[this] final def parseTopLevel(i: Int, facade: Visitor[_, J]): (J, Int) = {
     try parseTopLevel0(i, facade)
-    catch reject(i).orElse[Throwable, Nothing] {
-      case e: IndexOutOfBoundsException =>
-        throw IncompleteParseException("exhausted input", e)
-    }
+    catch reject(i)
   }
   /**
    * Parse and return the next JSON value and the position beyond it.
    */
   @tailrec
   protected[this] final def parseTopLevel0(i: Int, facade: Visitor[_, J]): (J, Int) = {
-    (elem(i): @switch) match {
+    (elemSafe(i): @switch) match {
       // ignore whitespace
       case ' ' | '\t' | 'r' => parseTopLevel0(i + 1, facade)
-      case '\n' => newline(i); parseTopLevel0(i + 1, facade)
+      case '\n' => parseTopLevel0(i + 1, facade)
 
       // if we have a recursive top-level structure, we'll delegate the parsing
       // duties to our good friend rparse().
@@ -366,9 +402,7 @@ abstract class ElemParser[J]{
 
   def reject(j: Int): PartialFunction[Throwable, Nothing] = {
     case e: Abort =>
-      val y = line + 1
-      val x = column(j) + 1
-      throw new AbortException(e.msg, j, y, x, e)
+      throw new AbortException(e.msg, j, -1, -1, e)
   }
   /**
    * Tail-recursive parsing method to do the bulk of JSON parsing.
@@ -392,12 +426,8 @@ abstract class ElemParser[J]{
                                         i: Int,
                                         stackHead: ObjArrVisitor[_, J],
                                         stackTail: List[ObjArrVisitor[_, J]]) : (J, Int) = {
-    (elem(i): @switch) match{
-      case '\n' =>
-        newline(i)
-        parseNested(state, i + 1, stackHead, stackTail)
-
-      case ' ' | '\t' | '\r' =>
+    (elemSafe(i): @switch) match{
+      case ' ' | '\t' | '\r' | '\n' =>
         parseNested(state, i + 1, stackHead, stackTail)
 
       case '"' =>
@@ -561,13 +591,13 @@ abstract class ElemParser[J]{
     */
   protected[this] final def parseStringSimple(i: Int): Int = {
     var j = i
-    var c = elemOps.toUnsignedInt(elem(j))
+    var c = elemOps.toUnsignedInt(elemSafe(j))
     while (c != '"') {
       if (c < ' ') die(j, s"control char (${c}) in string")
       if (c == '\\') return -1 - j
       j += 1
       outputBuilder.append(c)
-      c = elemOps.toUnsignedInt(elem(j))
+      c = elemOps.toUnsignedInt(elemSafe(j))
     }
     j + 1
   }
@@ -578,12 +608,12 @@ abstract class ElemParser[J]{
   protected[this] final def parseStringComplex(i0: Int): (CharSequence, Int) = {
 
     var i = i0
-    var c = elemOps.toUnsignedInt(elem(i))
+    var c = elemOps.toUnsignedInt(elemSafe(i))
     while (c != '"') {
       if (c < ' ') {
         die(i, s"control char (${c}) in string")
       } else if (c == '\\') {
-        (elem(i + 1): @switch) match {
+        (elemSafe(i + 1): @switch) match {
           case 'b' => { outputBuilder.append('\b'); i += 2 }
           case 'f' => { outputBuilder.append('\f'); i += 2 }
           case 'n' => { outputBuilder.append('\n'); i += 2 }
@@ -595,7 +625,9 @@ abstract class ElemParser[J]{
           case '\\' => { outputBuilder.append('\\'); i += 2 }
 
           // if there's a problem then descape will explode
-          case 'u' => { outputBuilder.append(descape(sliceString(i + 2, i + 6))); i += 6 }
+          case 'u' =>
+            outputBuilder.append(descape(i))
+            i += 6
 
           case c => die(i + 1, s"illegal escape sequence after \\")
         }
@@ -608,7 +640,7 @@ abstract class ElemParser[J]{
         outputBuilder.append(c)
         i += 1
       }
-      c = elemOps.toUnsignedInt(elem(i))
+      c = elemOps.toUnsignedInt(elemSafe(i))
     }
 
     (outputBuilder.makeString, i + 1)

@@ -20,13 +20,11 @@ final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0)
 
   protected[this] final def close() = {}
 
-  def loadChunk(inputArray: Array[Byte], i: Int): (Array[Byte], Int) = {
-
-    if(i == 0) (src, src.length)
-    else (src, -1)
+  def readDataIntoBuffer(buffer: Array[Byte], firstIdx: Int, lastIdx: Int) = {
+    if(buffer == null) (src, false, src.length)
+    else (src, true, -1)
   }
 
-  override def atEof(i: Int) = i >= limit
 }
 
 object ByteArrayParser extends Transformer[Array[Byte]]{
