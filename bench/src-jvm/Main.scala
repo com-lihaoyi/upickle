@@ -54,7 +54,7 @@ object Main{
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
       benchParsingRendering(duration, bytes = true, strings = false)
-//      benchParsingRendering(duration, bytes = false, strings = true)
+      benchParsingRendering(duration, bytes = false, strings = true)
 //      benchParsingRendering(duration, bytes = false, strings = true)
       println()
     }

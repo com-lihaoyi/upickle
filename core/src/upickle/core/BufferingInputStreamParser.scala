@@ -20,13 +20,10 @@ package upickle.core
   */
 trait BufferingInputStreamParser extends BufferingByteParser{
   def data: java.io.InputStream
-  def readDataIntoBuffer(buffer: Array[Byte], firstIdx: Int, lastIdx: Int) = {
+  def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
     val newBuffer = if (buffer == null) instantiateBuffer() else buffer
-    val bufferOffset = lastIdx - firstIdx
-    data.read(newBuffer, bufferOffset, newBuffer.length - bufferOffset)  match{
-      case -1 => (newBuffer, true, lastIdx)
-      case n => (newBuffer, false, lastIdx + n)
-    }
+    val n = data.readNBytes(newBuffer, bufferOffset, newBuffer.length - bufferOffset)
+    (newBuffer, n == 0, n)
   }
   def sliceBytes(i: Int, n: Int) = sliceArr(i, n)
 

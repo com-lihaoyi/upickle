@@ -16,10 +16,11 @@ import upickle.core.{ObjArrVisitor, Visitor}
  * practice.
  */
 private[ujson] final class StringParser[J](s: String) extends CharParser[J]{
-  def readDataIntoBuffer(buffer: Array[Char], firstIdx: Int, lastIdx: Int) = {
+  def readDataIntoBuffer(buffer: Array[Char], bufferOffset: Int) = {
     if(buffer == null) (s.toCharArray, false, s.length)
     else (buffer, true, -1)
   }
+  override def atEof(i: Int) = i >= s.length
   final def close() = ()
 }
 

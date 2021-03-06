@@ -33,26 +33,31 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
 
   private[this] var eof = -1
 
-  val inputArrayChunkSize = 1000
   /**
    * Read the byte/char at 'i' as a Char.
    *
    * Note that this should not be used on potential multi-byte
    * sequences.
    */
-  protected[this] def elemUnsafe(i: Int): Elem = getElemUnsafe(i)
+  protected[this] def elemUnsafe(i: Int): Elem = {
+    getElemUnsafe(i)
+  }
 
   final def ensureLength0(i: Int): Boolean = requestUntil(i)
   def ensureLength(i: Int): Boolean = {
-    if (eof != -1) throw new IncompleteParseException("exhausted input")
+    if (eof == i) true
     else{
       val res = ensureLength0(i)
-      if (res) throw new IncompleteParseException("exhausted input")
+      if (res) eof = i
       res
     }
   }
 
-  protected[this] def elemSafe(i: Int): Elem = getElemSafe(i)
+  protected[this] def elemSafe(i: Int): Elem = {
+    ensureLength(i)
+    getElemUnsafe(i)
+
+  }
 
   def maxStartBufferSize: Int = upickle.core.BufferingInputStreamParser.defaultMaxBufferStartSize
   def minStartBufferSize: Int = upickle.core.BufferingInputStreamParser.defaultMinBufferStartSize
@@ -64,7 +69,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
    * Return true iff 'i' is at or beyond the end of the input (EOF).
    */
   protected[this] def atEof(i: Int): Boolean = {
-    if (eof != -1) eof == i
+    if (eof != -1 && i >= eof) true
     else{
       val res = ensureLength0(i)
       if (res) eof = i

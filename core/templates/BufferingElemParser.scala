@@ -9,7 +9,7 @@ trait BufferingElemParser{
 
   def instantiateBuffer() = {
     new Array[Elem]({
-      val available = bumpBufferSize(defaultStartBufferSize)
+      val available = defaultStartBufferSize
       if (available < minStartBufferSize) minStartBufferSize
       else if (available > maxStartBufferSize) maxStartBufferSize
       else available
@@ -18,13 +18,6 @@ trait BufferingElemParser{
   private[this] var firstIdx = 0
   private[this] var lastIdx = 0
   private[this] var dropped = 0
-
-  // + 1 to make sure we always have just a bit more space than is necessary to
-  // store the entire stream contents. This is necessary to avoid trying to
-  // check for EOF when the entire buffer is full, which fails on Scala.js due to
-  //
-  // - https://github.com/scala-js/scala-js/issues/3913
-  private[this] def bumpBufferSize(n: Int) = n + 1
 
   def getLastIdx = lastIdx
 
@@ -64,19 +57,22 @@ trait BufferingElemParser{
     buffer = arr
   }
   protected def requestUntil(until: Int): Boolean = {
-    val untilBufferOffset = bumpBufferSize(until - firstIdx)
-    if (buffer != null && untilBufferOffset >= buffer.length) growBuffer(until)
 
-    var done = false
-    while (lastIdx <= until && !done) {
-      val (newBuffer, newDone, newLastIdx) = readDataIntoBuffer(buffer, firstIdx, lastIdx)
+    if (until < lastIdx) false
+    else {
+      val untilBufferOffset = until - firstIdx
+      if (buffer != null && untilBufferOffset >= buffer.length) growBuffer(until)
+
+
+      val bufferOffset = lastIdx - firstIdx
+      val (newBuffer, newDone, n) = readDataIntoBuffer(buffer, bufferOffset)
       buffer = newBuffer
-      done = newDone
-      lastIdx = newLastIdx
+
+      lastIdx = lastIdx + n
+      newDone
     }
-    done
   }
-  def readDataIntoBuffer(buffer: Array[Elem], firstIdx: Int, lastIdx: Int): (Array[Elem], Boolean, Int)
+  def readDataIntoBuffer(buffer: Array[Elem], bufferOffset: Int): (Array[Elem], Boolean, Int)
 
   def dropBufferUntil(i: Int): Unit = {
     dropped = i

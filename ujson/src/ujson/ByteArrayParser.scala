@@ -20,11 +20,11 @@ final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0)
 
   protected[this] final def close() = {}
 
-  def readDataIntoBuffer(buffer: Array[Byte], firstIdx: Int, lastIdx: Int) = {
+  def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
     if(buffer == null) (src, false, src.length)
     else (src, true, -1)
   }
-
+  override def atEof(i: Int) = i >= src.length
 }
 
 object ByteArrayParser extends Transformer[Array[Byte]]{

@@ -23,7 +23,7 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
 
 
   protected[this] final def close() = { src.position(src.limit) }
-  def readDataIntoBuffer(buffer: Array[Byte], firstIdx: Int, lastIdx: Int) = {
+  def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
 //    assert(i == 0)
 //    src.
     ???
