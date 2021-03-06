@@ -22,7 +22,18 @@ trait BufferingInputStreamParser extends BufferingByteParser{
   def data: java.io.InputStream
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
     val newBuffer = if (buffer == null) instantiateBuffer() else buffer
-    val n = data.readNBytes(newBuffer, bufferOffset, newBuffer.length - bufferOffset)
+    var n = 0
+    val len = newBuffer.length - bufferOffset
+    while ( {
+      if (n < len){
+        val count = data.read(newBuffer, bufferOffset + n, len - n)
+        if (count < 0) false
+        else {
+          n += count
+          true
+        }
+      }else false
+    }) ()
     (newBuffer, n == 0, n)
   }
   def sliceBytes(i: Int, n: Int) = sliceArr(i, n)
