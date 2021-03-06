@@ -1,6 +1,5 @@
 package ujson
 
-import ujson.util.CharBuilder
 import upickle.core.{ObjArrVisitor, Visitor}
 
 /**
@@ -16,11 +15,12 @@ import upickle.core.{ObjArrVisitor, Visitor}
  * practice.
  */
 private[ujson] final class StringParser[J](s: String) extends CharParser[J]{
+  private[this] val sLength = s.length
   def readDataIntoBuffer(buffer: Array[Char], bufferOffset: Int) = {
-    if(buffer == null) (s.toCharArray, false, s.length)
+    if(buffer == null) (s.toCharArray, false, sLength)
     else (buffer, true, -1)
   }
-  override def atEof(i: Int) = i >= s.length
+  override def atEof(i: Int) = i >= sLength
   final def close() = ()
 }
 

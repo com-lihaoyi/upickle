@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.util.TokenBuffer
 import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
-import ujson.StringRenderer
 
 
 object Main{
@@ -60,14 +59,10 @@ object Main{
     }
   }
   def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean, streams: Boolean) = {
-    val names = Array(
-      "github-events.json",
-      "meteorites.json",
-      "turkish.json",
-      "eu-lobby-repr.json"
-    )
     import java.nio.file.{Files, Paths}
-    val inputByteArrays = for(name <- names) yield Files.readAllBytes(Paths.get("bench/resources/" + name))
+    import collection.JavaConverters._
+    val names = Files.list(Paths.get("exampleJson")).iterator().asScala.toArray
+    val inputByteArrays = for(name <- names) yield Files.readAllBytes(name)
     val inputStrings = for(inputByteArray <- inputByteArrays) yield new String(inputByteArray)
 
     {

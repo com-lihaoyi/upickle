@@ -1,6 +1,5 @@
 package ujson
 
-import ujson.util.CharBuilder
 import upickle.core.{ObjArrVisitor, Visitor}
 /**
  * Lazy character sequence parsing.

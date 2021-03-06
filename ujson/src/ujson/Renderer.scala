@@ -2,7 +2,6 @@ package ujson
 
 import java.io.ByteArrayOutputStream
 
-import ujson.util.CharBuilder
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 
 import scala.annotation.switch

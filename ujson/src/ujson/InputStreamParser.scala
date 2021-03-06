@@ -3,7 +3,6 @@ package ujson
 import scala.annotation.{switch, tailrec}
 import java.nio.ByteBuffer
 
-import ujson.util.ByteBuilder
 import upickle.core.{ObjArrVisitor, Visitor}
 /**
   * Parser that reads in bytes from an InputStream, buffering them in memory

@@ -5,8 +5,6 @@ import scala.annotation.{switch, tailrec}
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
-import ujson.util.ByteBuilder
-
 /**
  * Basic ByteBuffer parser.
  *

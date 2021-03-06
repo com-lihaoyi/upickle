@@ -1,9 +1,11 @@
 package ujson.util
+
+
 /**
   * A version of `java.util.ByteArrayOutputStream` which lets you use the internal
   * Array directly for constructing `String`s
   */
-class ElemBuilder(startSize: Int = 32){
+class ElemBuilder(startSize: Int = 32) extends ujson.util.ElemAppendC{
   private[this] var arr: Array[Elem] = new Array(startSize)
   private[this] var length: Int = 0
   def reset(): Unit = length = 0
@@ -13,8 +15,6 @@ class ElemBuilder(startSize: Int = 32){
     while (multiple < targetLength) multiple = multiple * 2
     if (multiple != arr.length) arr = java.util.Arrays.copyOf(arr, multiple)
   }
-
-  def appendC(x: Char): Unit = append(x.toElem)
   def append(x: Int): Unit = append(x.toElem)
   def append(x: Elem): Unit = {
     if (length == arr.length) arr = java.util.Arrays.copyOf(arr, arr.length * 2)

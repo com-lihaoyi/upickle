@@ -568,10 +568,10 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     * Parse a string that is known to have escape sequences.
     */
   protected[this] final def parseStringComplex(i0: Int): (CharSequence, Int) = {
-
     var i = i0
     var c = elemOps.toUnsignedInt(getElemSafe(i))
     while (c != '"') {
+
       if (c < ' ') die(i, s"control char (${c}) in string")
       else if (c == '\\') {
         (getElemSafe(i + 1): @switch) match {
@@ -587,7 +587,9 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
 
           // if there's a problem then descape will explode
           case 'u' =>
-            outputBuilder.append(descape(i))
+            val d = descape(i)
+            outputBuilder.appendC(d)
+
             i += 6
 
           case c => die(i + 1, s"illegal escape sequence after \\")

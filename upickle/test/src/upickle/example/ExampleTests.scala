@@ -405,7 +405,6 @@ object ExampleTests extends TestSuite {
     }
     test("json"){
       test("construction"){
-        import ujson.Value
 
         val json0 = ujson.Arr(
           ujson.Obj("myFieldA" -> ujson.Num(1), "myFieldB" -> ujson.Str("g")),

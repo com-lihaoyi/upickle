@@ -406,7 +406,7 @@ object upickle extends Module{
 //    }
   }
 }
-
+def exampleJson = T.source(millSourcePath / "exampleJson")
 trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"

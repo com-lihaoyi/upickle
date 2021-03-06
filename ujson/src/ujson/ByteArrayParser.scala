@@ -4,7 +4,6 @@ import scala.annotation.{switch, tailrec}
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
-import ujson.util.ByteBuilder
 import upickle.core.{ObjArrVisitor, Visitor}
 /**
   * Basic ByteBuffer parser.
@@ -16,17 +15,18 @@ import upickle.core.{ObjArrVisitor, Visitor}
   * The parser makes absolute calls to the ByteBuffer, which will not
   * update its own mutable position fields.
   */
-final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0) extends ByteParser[J]{
+final class ByteArrayParser[J](src: Array[Byte]) extends ByteParser[J]{
 
+  val srcLength = src.length
   protected[this] final def close() = {}
 
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
-    if(buffer == null) (src, false, src.length)
+    if(buffer == null) (src, false, srcLength)
     else (src, true, -1)
   }
-  override def atEof(i: Int) = i >= src.length
+  override def atEof(i: Int) = i >= srcLength
 }
 
 object ByteArrayParser extends Transformer[Array[Byte]]{
-  def transform[T](j: Array[Byte], f: Visitor[_, T]) = new ByteArrayParser(j, 0, j.length).parse(f)
+  def transform[T](j: Array[Byte], f: Visitor[_, T]) = new ByteArrayParser(j).parse(f)
 }
