@@ -53,13 +53,13 @@ object Main{
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-      benchParsingRendering(duration, bytes = true, strings = false)
-      benchParsingRendering(duration, bytes = false, strings = true)
-//      benchParsingRendering(duration, bytes = false, strings = true)
+      benchParsingRendering(duration, bytes = true, strings = false, streams = false)
+      benchParsingRendering(duration, bytes = false, strings = true, streams = false)
+      benchParsingRendering(duration, bytes = false, strings = false, streams = true)
       println()
     }
   }
-  def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean) = {
+  def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean, streams: Boolean) = {
     val names = Array(
       "github-events.json",
       "meteorites.json",
@@ -75,11 +75,21 @@ object Main{
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
         if (bytes) {
-          for (inputByteArray <- inputByteArrays) ujson.reformatToOutputStream(inputByteArray, new java.io.ByteArrayOutputStream())
+          for (inputByteArray <- inputByteArrays) {
+            ujson.reformatToOutputStream(inputByteArray, new java.io.ByteArrayOutputStream())
+          }
         }
         if(strings){
           for((inputString, i) <- inputStrings.zipWithIndex) {
             ujson.reformatTo(inputString, new java.io.StringWriter())
+          }
+        }
+        if(streams){
+          for (inputByteArray <- inputByteArrays) {
+            ujson.reformatToOutputStream(
+              new java.io.ByteArrayInputStream(inputByteArray),
+              new java.io.ByteArrayOutputStream()
+            )
           }
         }
 
@@ -87,7 +97,8 @@ object Main{
       }
       val bytesPrefix = if (bytes) "Bytes " else ""
       val stringPrefix = if (strings) "String " else ""
-      println(bytesPrefix + stringPrefix + "Parsing Rendering  " + n)
+      val streamPrefix = if (streams) "Stream " else ""
+      println(streamPrefix + bytesPrefix + stringPrefix + "Parsing Rendering  " + n)
     }
 
   }
