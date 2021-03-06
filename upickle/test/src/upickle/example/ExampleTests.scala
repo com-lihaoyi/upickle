@@ -540,14 +540,16 @@ object ExampleTests extends TestSuite {
 
       }
       test("validate"){
-        ujson.transform("[1, 2, 3]", NoOpVisitor)
+        test {
+          ujson.transform("[1, 2, 3]", NoOpVisitor)
+        }
 
-        intercept[IncompleteParseException](
-          ujson.transform("[1, 2, 3", NoOpVisitor)
-        )
-        intercept[ParseException](
-          ujson.transform("[1, 2, 3]]", NoOpVisitor)
-        )
+        test{
+          intercept[IncompleteParseException](ujson.transform("[1, 2, 3", NoOpVisitor))
+        }
+        test{
+          intercept[ParseException](ujson.transform("[1, 2, 3]]", NoOpVisitor))
+        }
       }
       test("upickleDefault"){
         ujson.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>
