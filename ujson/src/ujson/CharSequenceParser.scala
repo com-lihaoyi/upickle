@@ -9,7 +9,6 @@ import upickle.core.{ObjArrVisitor, Visitor}
  */
 private[ujson] final class CharSequenceParser[J](cs: CharSequence) extends CharParser[J]{
 
-  final def dropBufferUntil(i: Int): Unit = ()
   def loadChunk(inputArray: Array[Char], i: Int) = {
     if (i == cs.length()) (null, -1)
     else {
@@ -26,8 +25,7 @@ private[ujson] final class CharSequenceParser[J](cs: CharSequence) extends CharP
       (arr, max - i)
     }
   }
-  final def sliceString(i: Int, j: Int): CharSequence = cs.subSequence(i, j)
-  final def atEof(i: Int) = i == cs.length
+  override def atEof(i: Int) = i == cs.length
   final def close() = ()
 }
 

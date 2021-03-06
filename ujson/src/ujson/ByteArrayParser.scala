@@ -19,18 +19,14 @@ import upickle.core.{ObjArrVisitor, Visitor}
 final class ByteArrayParser[J](src: Array[Byte], start: Int = 0, limit: Int = 0) extends ByteParser[J]{
 
   protected[this] final def close() = {}
-  protected[this] final def dropBufferUntil(i: Int): Unit = ()
 
   def loadChunk(inputArray: Array[Byte], i: Int): (Array[Byte], Int) = {
 
     if(i == 0) (src, src.length)
     else (src, -1)
   }
-  protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
-    new String(src, i, k - i, StandardCharsets.UTF_8)
-  }
 
-  protected[this] final def atEof(i: Int) = i >= limit
+  override def atEof(i: Int) = i >= limit
 }
 
 object ByteArrayParser extends Transformer[Array[Byte]]{

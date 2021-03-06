@@ -23,23 +23,14 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
 
 
   protected[this] final def close() = { src.position(src.limit) }
-  protected[this] final def dropBufferUntil(i: Int): Unit = ()
   protected[this] def loadChunk(inputArray: Array[Byte], i: Int) = {
     assert(i == 0)
 //    src.
     ???
   }
 
-  protected[this] final def sliceString(i: Int, k: Int): CharSequence = {
-    val len = k - i
-    val arr = new Array[Byte](len)
-    src.position(i + start)
-    src.get(arr, 0, len)
-    src.position(start)
-    new String(arr, StandardCharsets.UTF_8)
-  }
 
-  protected[this] final def atEof(i: Int) = i >= limit
+  override def atEof(i: Int) = i >= limit
 }
 
 object ByteBufferParser extends Transformer[ByteBuffer]{

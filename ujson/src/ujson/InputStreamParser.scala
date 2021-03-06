@@ -14,12 +14,8 @@ import upickle.core.{ObjArrVisitor, Visitor}
   *
   * Generally not meant to be used directly, but via [[ujson.Readable.fromReadable]]
   */
-final class InputStreamParser[J](val data: java.io.InputStream,
-                                 val minStartBufferSize: Int,
-                                 val maxStartBufferSize: Int)
-extends ByteParser[J] with upickle.core.BufferingInputStreamParser{
-
-  private[this] var eof = -1
+final class InputStreamParser[J](val data: java.io.InputStream)
+extends ByteParser[J] {
 
   protected[this] final def close() = {}
   def loadChunk(inputArray: Array[Byte], i: Int): (Array[Byte], Int) = {
@@ -32,30 +28,11 @@ extends ByteParser[J] with upickle.core.BufferingInputStreamParser{
 //    println(s"n $n")
     (arr, if (n == 0) -1 else n)
   }
-  protected[this] final def atEof(i: Int) = {
-    if (eof != -1) i == eof
-    else{
-      val done = readDataIntoBuffer()
-      if (done) eof = getLastIdx
-      i == eof
-    }
-  }
-
-  override protected def requestUntil(until: Int): Boolean = {
-    val done = super.requestUntil(until)
-    if (done) eof = getLastIdx
-    done
-  }
-
 }
 
 object InputStreamParser extends Transformer[java.io.InputStream]{
   def transform[T](j: java.io.InputStream, f: Visitor[_, T]) = {
-    val p = new InputStreamParser[T](
-      j,
-      upickle.core.BufferingInputStreamParser.defaultMinBufferStartSize,
-      upickle.core.BufferingInputStreamParser.defaultMaxBufferStartSize
-    )
+    val p = new InputStreamParser[T](j)
     p.parse(f)
   }
 }
