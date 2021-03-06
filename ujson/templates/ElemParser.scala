@@ -344,15 +344,13 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-        try parseNumSlow(i, facade) catch reject(i)
+        parseNumSlow(i, facade)
 
       // we have a single top-level string
       case '"' =>
-        try {
-          val (s, j) = parseString(i, false)
-          val v = facade.visitString(s, i)
-          (v, j)
-        } catch reject(i)
+        val (s, j) = parseString(i, false)
+        val v = facade.visitString(s, i)
+        (v, j)
 
       // we have a single top-level constant
       case 't' => (parseTrue(i, facade), i + 4)
