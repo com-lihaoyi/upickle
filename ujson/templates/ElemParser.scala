@@ -28,8 +28,8 @@ import scala.annotation.{switch, tailrec}
  * may eventually be relaxed.
  */
 abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
-  private[this] val elemOps = ujson.util.ElemOps
-  private[this] val outputBuilder = new ujson.util.ElemBuilder()
+  private[this] val elemOps = upickle.core.ElemOps
+  private[this] val outputBuilder = new upickle.core.ElemBuilder()
 
   def requestUntilOrThrow(i: Int) = {
     if (requestUntil(i)) throw new IncompleteParseException("exhausted input")
@@ -85,9 +85,9 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
    * Used to generate error messages with character info and offsets.
    */
   protected[this] def die(i: Int, msg: String): Nothing = {
-    val out = new ujson.util.ElemBuilder()
+    val out = new upickle.core.ElemBuilder()
     ujson.util.RenderUtils.escapeElem(
-      new ujson.util.CharBuilder(),
+      new upickle.core.CharBuilder(),
       out,
       new ArrayCharSequence(Array(elemOps.toInt(getElemSafe(i)).toChar)),
       unicode = false
@@ -548,9 +548,8 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     var c = elemOps.toUnsignedInt(getElemSafe(j))
     while (c != '"') {
       if (c < ' ') die(j, s"control char (${c}) in string")
-      if (c == '\\') return -1 - j
+      if (c == '\\' || c > 127) return -1 - j
       j += 1
-      outputBuilder.append(c)
       c = elemOps.toUnsignedInt(getElemSafe(j))
     }
     j + 1
@@ -610,9 +609,13 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     * interpret a multi-char code point incorrectly.
     */
   protected[this] final def parseString(i: Int,  key: Boolean): (CharSequence, Int) = {
-    outputBuilder.reset()
+
     val k = parseStringSimple(i + 1)
-    if (k >= 0) (outputBuilder.makeString(), k)
-    else parseStringComplex(-k - 1)
+    if (k >= 0) (unsafeCharSeqForRange(i + 1, k - i - 2), k)
+    else {
+      outputBuilder.reset()
+      appendElemsToBuilder(outputBuilder, i + 1, -k - 2 - i)
+      parseStringComplex(-k - 1)
+    }
   }
 }

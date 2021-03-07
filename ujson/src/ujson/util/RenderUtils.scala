@@ -16,8 +16,8 @@ object RenderUtils{
 
   private def toHex(nibble: Int): Char = (nibble + (if (nibble >= 10) 87 else 48)).toChar
 
-  final def escapeByte(unicodeCharBuilder: ujson.util.CharBuilder,
-                       sb: ujson.util.ByteBuilder,
+  final def escapeByte(unicodeCharBuilder: upickle.core.CharBuilder,
+                       sb: upickle.core.ByteBuilder,
                        s: CharSequence,
                        unicode: Boolean): Unit = {
 
@@ -61,8 +61,8 @@ object RenderUtils{
     sb.appendUnsafe('"')
   }
 
-  final def escapeChar(unicodeCharBuilder: ujson.util.CharBuilder,
-                       sb: ujson.util.CharBuilder,
+  final def escapeChar(unicodeCharBuilder: upickle.core.CharBuilder,
+                       sb: upickle.core.CharBuilder,
                        s: CharSequence,
                        unicode: Boolean) = {
     val len = s.length
@@ -74,7 +74,7 @@ object RenderUtils{
   final def escapeChar0(i0: Int,
                         naiveOutLen: Int,
                         len: Int,
-                        sb: ujson.util.CharBuilder,
+                        sb: upickle.core.CharBuilder,
                         s: CharSequence,
                         unicode: Boolean) = {
     var i = i0

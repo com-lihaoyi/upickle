@@ -1,5 +1,7 @@
-package ujson
+package upickle.core
+
 import utest._
+
 object CharBuilderTests extends TestSuite{
   def tests = Tests{
 
@@ -8,8 +10,8 @@ object CharBuilderTests extends TestSuite{
         c0 <- Range.inclusive(Char.MinValue, Char.MaxValue)
         if !Character.isHighSurrogate(c0.toChar) && !Character.isLowSurrogate(c0.toChar)
       } {
-        val charBuilder = new ujson.util.CharBuilder
-        val byteBuilder = new ujson.util.ByteBuilder
+        val charBuilder = new upickle.core.CharBuilder
+        val byteBuilder = new upickle.core.ByteBuilder
         val stringBuilder = new StringBuilder
         val c = c0.toChar
         charBuilder.appendC(c)
@@ -35,8 +37,8 @@ object CharBuilderTests extends TestSuite{
         if Character.isSurrogatePair(high.toChar, low.toChar)
       } {
 //        println(s"$high $low")
-        val charBuilder = new ujson.util.CharBuilder
-        val byteBuilder = new ujson.util.ByteBuilder
+        val charBuilder = new upickle.core.CharBuilder
+        val byteBuilder = new upickle.core.ByteBuilder
         val stringBuilder = new StringBuilder
         charBuilder.appendC(high.toChar)
         charBuilder.appendC(low.toChar)
@@ -58,7 +60,7 @@ object CharBuilderTests extends TestSuite{
       }
     }
     test("invalidSurrogate"){
-      val byteBuilder = new ujson.util.ByteBuilder
+      val byteBuilder = new upickle.core.ByteBuilder
       val ex1 = intercept[Exception]{byteBuilder.appendC(Character.MIN_LOW_SURROGATE)}
       assert(ex1.getMessage == "Un-paired low surrogate 56320")
 

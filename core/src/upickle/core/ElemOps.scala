@@ -1,4 +1,5 @@
-package ujson.util
+
+package upickle.core
 
 object CharOps {
   def toInt(c: Char) = c.toInt

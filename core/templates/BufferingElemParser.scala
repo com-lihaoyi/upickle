@@ -70,4 +70,8 @@ trait BufferingElemParser{
   def unsafeCharSeqForRange(start: Int, length: Int) = {
     new WrapElemArrayCharSeq(buffer, start - firstIdx, length)
   }
+
+  def appendElemsToBuilder(elems: ElemBuilder, elemsStart: Int, elemsLength: Int) = {
+    elems.appendAll(buffer, elemsStart - firstIdx, elemsLength)
+  }
 }

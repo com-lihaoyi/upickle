@@ -1,4 +1,4 @@
-package ujson.util
+package upickle.core
 
 abstract class CharAppendC {
   def append(x: Char): Unit

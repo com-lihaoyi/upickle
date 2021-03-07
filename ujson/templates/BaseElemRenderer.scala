@@ -1,12 +1,12 @@
 package ujson
 import scala.annotation.switch
 import upickle.core.{ArrVisitor, ObjVisitor}
-class BaseElemRenderer[T <: ujson.util.ElemOps.Output]
+class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
                       (out: T,
                        indent: Int = -1,
                        escapeUnicode: Boolean = false) extends JsVisitor[T, T]{
-  private[this] val elemBuilder = new ujson.util.ElemBuilder
-  private[this] val unicodeCharBuilder = new ujson.util.CharBuilder()
+  private[this] val elemBuilder = new upickle.core.ElemBuilder
+  private[this] val unicodeCharBuilder = new upickle.core.CharBuilder()
   def flushElemBuilder() = {
     elemBuilder.writeOutToIfLongerThan(out, if (depth == 0) 0 else 1000)
   }
