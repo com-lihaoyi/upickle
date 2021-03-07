@@ -274,9 +274,7 @@ object ujson extends Module{
         )
         else Agg(ivy"com.lihaoyi::utest::0.7.7")
       }
-      def testFrameworks =
-        if (!isDotty) Seq("upickle.core.UTestFramework", "org.scalatest.tools.Framework")
-        else Seq("upickle.core.UTestFramework")
+      def testFrameworks =  Seq("upickle.core.UTestFramework")
     }
   }
 
