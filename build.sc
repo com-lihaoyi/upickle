@@ -24,7 +24,8 @@ val scalaJSVersions = Seq(
   (scala212, scalaJS06),
   (scala213, scalaJS06),
   (scala212, scalaJS1),
-  (scala213, scalaJS1)
+  (scala213, scalaJS1),
+  (scala3, scalaJS1)
 )
 
 val scalaNativeVersions = Seq(
@@ -89,18 +90,6 @@ trait CommonJvmModule extends CommonPublishModule{
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "jvm"
   }
-
-  // FIXME: scaladoc 3 is not supported by mill yet. Remove the override
-  // once it is.
-  override def docJar =
-    if (crossScalaVersion.startsWith("2")) super.docJar
-    else T {
-      val outDir = T.ctx().dest
-      val javadocDir = outDir / 'javadoc
-      os.makeDir.all(javadocDir)
-      mill.api.Result.Success(mill.modules.Jvm.createJar(Agg(javadocDir))(outDir))
-    }
-
 }
 trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
@@ -126,7 +115,7 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
 
 trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.5")
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.6")
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
