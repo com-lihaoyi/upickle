@@ -22,18 +22,15 @@ extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
 
 abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
 
-  private[this] var index0 = 0
-  def incrementIndex(i: Int): Unit = index0 += i
-  def setIndex(i: Int): Unit = index0 = i
-  def index = index0
+  private[this] var index = 0
 
   def parse[T](visitor: Visitor[_, T]): T = {
 
     val n = getByteSafe(index)
     (n & 0xFF: @switch) match{
-      case MPK.Nil => incrementIndex(1); visitor.visitNull(index)
-      case MPK.False => incrementIndex(1); visitor.visitFalse(index)
-      case MPK.True => incrementIndex(1); visitor.visitTrue(index)
+      case MPK.Nil => index += 1; visitor.visitNull(index)
+      case MPK.False => index += 1; visitor.visitFalse(index)
+      case MPK.True => index += 1; visitor.visitTrue(index)
 
       case MPK.Bin8 => parseBin(parseUInt8(index + 1), visitor)
       case MPK.Bin16 => parseBin(parseUInt16(index + 1), visitor)
@@ -56,11 +53,11 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
       case MPK.Int32 => visitor.visitInt32(parseUInt32(index + 1), index)
       case MPK.Int64 => visitor.visitInt64(parseUInt64(index + 1), index)
 
-      case MPK.FixExt1 => incrementIndex(1); parseExt(1, visitor)
-      case MPK.FixExt2 => incrementIndex(1); parseExt(2, visitor)
-      case MPK.FixExt4 => incrementIndex(1); parseExt(4, visitor)
-      case MPK.FixExt8 => incrementIndex(1); parseExt(8, visitor)
-      case MPK.FixExt16 => incrementIndex(1); parseExt(16, visitor)
+      case MPK.FixExt1 => index += 1; parseExt(1, visitor)
+      case MPK.FixExt2 => index += 1; parseExt(2, visitor)
+      case MPK.FixExt4 => index += 1; parseExt(4, visitor)
+      case MPK.FixExt8 => index += 1; parseExt(8, visitor)
+      case MPK.FixExt16 => index += 1; parseExt(16, visitor)
 
       case MPK.Str8 => parseStr(parseUInt8(index + 1), visitor)
       case MPK.Str16 => parseStr(parseUInt16(index + 1), visitor)
@@ -74,23 +71,23 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
       case x =>
         if (x <= MPK.PositiveFixInt) {
           // positive fixint
-          incrementIndex(1)
+          index += 1
           visitor.visitInt32(x & 0x7f, index)
         } else if (x <= MPK.FixMap) {
           val n = x & 0x0f
-          incrementIndex(1)
+          index += 1
           parseMap (n, visitor)
         } else if (x <= MPK.FixArray) {
           val n = x & 0x0f
-          incrementIndex(1)
+          index += 1
           parseArray (n, visitor)
         }
           else if (x <= MPK.FixStr ) {
           val n = x & 0x1f
-          incrementIndex(1)
+          index += 1
           parseStr (n, visitor)
         } else if (x >= 0xe0) { // negative fixint
-          incrementIndex(1)
+          index += 1
           visitor.visitInt32 (x | 0xffffffe0, index)
         } else ???
     }
@@ -102,13 +99,13 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
 
   def parseStr[T](n: Int, visitor: Visitor[_, T]) = {
     val res = visitor.visitString(sliceString(index, index + n), index)
-    incrementIndex(n)
+    index += n
     res
   }
   def parseBin[T](n: Int, visitor: Visitor[_, T]) = {
     val (arr, i, j) = sliceArr(index, n)
     val res = visitor.visitBinary(arr, i, j, index)
-    incrementIndex(n)
+    index += n
     res
   }
   def parseMap[T](n: Int, visitor: Visitor[_, T]) = {
@@ -138,22 +135,22 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
     arr.visitEnd(index)
   }
   def parseUInt8(i: Int) = {
-    setIndex(i + 1)
+    index = i + 1
     getByteSafe(i) & 0xff
   }
   def parseUInt16(i: Int) = {
-    setIndex(i + 2)
+    index = i + 2
     requestUntil(i + 2)
     (getByteUnsafe(i) & 0xff) << 8 | getByteUnsafe(i + 1) & 0xff
   }
   def parseUInt32(i: Int) = {
-    setIndex(i + 4)
+    index = i + 4
     requestUntil(i + 4)
     (getByteUnsafe(i) & 0xff) << 24 | (getByteUnsafe(i + 1) & 0xff) << 16 |
     (getByteUnsafe(i + 2) & 0xff) << 8 | getByteUnsafe(i + 3) & 0xff
   }
   def parseUInt64(i: Int) = {
-    setIndex(i + 8)
+    index = i + 8
     requestUntil(i + 8)
     (getByteUnsafe(i + 0).toLong & 0xff) << 56 | (getByteUnsafe(i + 1).toLong & 0xff) << 48 |
     (getByteUnsafe(i + 2).toLong & 0xff) << 40 | (getByteUnsafe(i + 3).toLong & 0xff) << 32 |
