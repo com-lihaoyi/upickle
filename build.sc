@@ -1,4 +1,3 @@
-
 import mill._
 import mill.scalalib._
 import mill.scalalib.publish._
@@ -6,30 +5,28 @@ import mill.scalajslib._
 import mill.scalanativelib._
 import mill.modules._
 import mill.scalanativelib.api.{LTO, ReleaseMode}
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
+import de.tobiasroeser.mill.vcs.version.VcsVersion
 
-val scala212  = "2.12.13"
-val scala213  = "2.13.4"
-val scala3    = "3.0.0-RC1"
-val scalaJS06 = "0.6.33"
-val scalaJS1  = "1.4.0"
-val scalaNative = "0.4.0"
+val dottyCustomVersion = sys.props.get("dottyVersion")
 
-val dottyCustomVersion = Option(sys.props("dottyVersion"))
+val scala213 = "2.13.4"
+val scala212 = "2.12.13"
 
-val scala2JVMVersions = Seq(scala212, scala213)
-val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
+val scalaVersions = scala213 :: scala212 :: "3.0.0-RC1" :: dottyCustomVersion.toList
+val scala2Versions = scalaVersions.filter(_.startsWith("2."))
 
-val scalaJSVersions = Seq(
-  (scala212, scalaJS06),
-  (scala213, scalaJS06),
-  (scala212, scalaJS1),
-  (scala213, scalaJS1)
-)
+val scalaJS1 = "1.4.0"
 
-val scalaNativeVersions = Seq(
-  (scala212, scalaNative),
-  (scala213, scalaNative)
-)
+val scalaJSVersions = for {
+  scalaV <- scala2Versions
+  scalaJSV <- Seq("0.6.33", scalaJS1)
+} yield (scalaV, scalaJSV)
+
+val scalaNativeVersions = for {
+  scalaV <- scala2Versions
+  scalaNativeV <- Seq("0.4.0")
+} yield (scalaV, scalaNativeV)
 
 trait CommonModule extends ScalaModule {
   def scalacOptions = T{ if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil }
@@ -45,7 +42,7 @@ trait CommonModule extends ScalaModule {
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
 
-  def publishVersion = "1.2.3"
+  def publishVersion = VcsVersion.vcsState().format()
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -134,7 +131,7 @@ object core extends Module {
     object test extends Tests
   }
 
-  object jvm extends Cross[CoreJvmModule](scalaJVMVersions:_*)
+  object jvm extends Cross[CoreJvmModule](scalaVersions:_*)
   class CoreJvmModule(val crossScalaVersion: String) extends CommonJvmModule with CommonCoreModule{
     object test extends Tests
   }
@@ -202,7 +199,7 @@ object implicits extends Module {
     }
   }
 
-  object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
+  object jvm extends Cross[JvmModule](scalaVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends ImplicitsModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
     def artifactName = "upickle-implicits"
@@ -239,7 +236,7 @@ object upack extends Module {
     }
   }
 
-  object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
+  object jvm extends Cross[JvmModule](scalaVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends CommonJvmModule {
     def moduleDeps = Seq(core.jvm())
     def artifactName = "upack"
@@ -278,7 +275,7 @@ object ujson extends Module{
     }
   }
 
-  object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
+  object jvm extends Cross[JvmModule](scalaVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends JsonModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
     object test extends Tests with CommonTestModule{
@@ -295,14 +292,14 @@ object ujson extends Module{
     }
   }
 
-  object argonaut extends Cross[ArgonautModule](scala2JVMVersions:_*)
+  object argonaut extends Cross[ArgonautModule](scala2Versions:_*)
   class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.3")
   }
-  object json4s extends Cross[Json4sModule](scala2JVMVersions:_*)
+  object json4s extends Cross[Json4sModule](scala2Versions:_*)
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
@@ -313,7 +310,7 @@ object ujson extends Module{
     )
   }
 
-  object circe extends Cross[CirceModule](scala2JVMVersions:_*)
+  object circe extends Cross[CirceModule](scala2Versions:_*)
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
@@ -321,7 +318,7 @@ object ujson extends Module{
     def ivyDeps = Agg(ivy"io.circe::circe-parser:0.13.0")
   }
 
-  object play extends Cross[PlayModule](scala2JVMVersions:_*)
+  object play extends Cross[PlayModule](scala2Versions:_*)
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
     def artifactName = "ujson-play"
     def platformSegment = "jvm"
@@ -350,7 +347,7 @@ trait UpickleModule extends CommonPublishModule{
 
 
 object upickle extends Module{
-  object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
+  object jvm extends Cross[JvmModule](scalaVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends UpickleModule with CommonJvmModule{
     def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
 
