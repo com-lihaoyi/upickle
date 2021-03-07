@@ -67,4 +67,7 @@ trait BufferingElemParser{
   def dropBufferUntil(i: Int): Unit = {
     dropped = i
   }
+  def unsafeCharSeqForRange(start: Int, length: Int) = {
+    new WrapElemArrayCharSeq(buffer, start - firstIdx, length)
+  }
 }
