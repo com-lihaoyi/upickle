@@ -28,11 +28,11 @@ object TestUtil {
     val r3c = Try(ujson.validate(new ByteArrayInputStream(s.getBytes)))
     val r4c = Try(ujson.validate(s.getBytes))
 
-    val r0d = Try(ujson.reformatToByteArray(cs))
-    val r1d = Try(ujson.reformatToByteArray(s))
-    val r2d = Try(ujson.reformatToByteArray(bb))
-    val r3d = Try(ujson.reformatToByteArray(new ByteArrayInputStream(s.getBytes)))
-    val r4d = Try(ujson.reformatToByteArray(s.getBytes))
+    val r0d = Try(ujson.reformatToByteArray(cs).toList)
+    val r1d = Try(ujson.reformatToByteArray(s).toList)
+    val r2d = Try(ujson.reformatToByteArray(bb).toList)
+    val r3d = Try(ujson.reformatToByteArray(new ByteArrayInputStream(s.getBytes)).toList)
+    val r4d = Try(ujson.reformatToByteArray(s.getBytes).toList)
 
     if (success){
       if (r0a != r1a) sys.error(s"CharSequence/String parsing disagree($r0a, $r1a): $s")

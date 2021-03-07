@@ -45,7 +45,6 @@ trait BufferingInputStreamParser extends BufferingByteParser{
     }) ()
     (newBuffer, n == 0, n)
   }
-  def sliceBytes(i: Int, n: Int) = sliceArr(i, n)
 
 }
 object BufferingInputStreamParser{

@@ -102,7 +102,6 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
 
   def parseStr[T](n: Int, visitor: Visitor[_, T]) = {
     val res = visitor.visitString(sliceString(index, index + n), index)
-    println("<<<" + res + ">>>")
     incrementIndex(n)
     res
   }
