@@ -5,53 +5,71 @@ import upack.{MsgPackKeys => MPK}
 import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
 class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStream())
     extends MsgVisitor[T, T] {
+  private[this] val byteBuilder = new upickle.core.ByteBuilder()
+  def flushElemBuilder() = {
+    byteBuilder.writeOutToIfLongerThan(out, if (depth == 0) 0 else 1000)
+  }
+  private[this] var depth = 0
   override def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
     require(length != -1, "Length of upack array must be known up front")
+    depth += 1
     if (length <= 15){
-      out.write(MPK.FixArrMask | length)
+      byteBuilder.append(MPK.FixArrMask | length)
     }else if (length <= 65535){
-      out.write(MPK.Array16)
+      byteBuilder.append(MPK.Array16)
       writeUInt16(length)
     }else {
-      out.write(MPK.Array32)
+      byteBuilder.append(MPK.Array32)
       writeUInt32(length)
     }
     def subVisitor = MsgPackWriter.this
     def visitValue(v: T, index: Int): Unit = () // do nothing
-    def visitEnd(index: Int) = out // do nothing
+    def visitEnd(index: Int) = {
+      depth -= 1
+      flushElemBuilder()
+      out
+    }
   }
 
   override def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
     require(length != -1, "Length of upack object must be known up front")
+    depth += 1
     if (length <= 15){
-      out.write(MPK.FixMapMask | length)
+      byteBuilder.append(MPK.FixMapMask | length)
     }else if (length <= 65535){
-      out.write(MPK.Map16)
+      byteBuilder.append(MPK.Map16)
       writeUInt16(length)
     }else {
-      out.write(MPK.Map32)
+      byteBuilder.append(MPK.Map32)
       writeUInt32(length)
     }
     def subVisitor = MsgPackWriter.this
     def visitKey(index: Int)= MsgPackWriter.this
     def visitKeyValue(s: Any): Unit = () // do nothing
     def visitValue(v: T, index: Int): Unit = () // do nothing
-    def visitEnd(index: Int) = out // do nothing
+    def visitEnd(index: Int) = {
+      depth -= 1
+      flushElemBuilder()
+      out
+    }
   }
 
 
   override def visitNull(index: Int) = {
-    out.write(MPK.Nil)
+    byteBuilder.append(MPK.Nil)
+    flushElemBuilder()
     out
   }
 
   override def visitFalse(index: Int) = {
-    out.write(MPK.False)
+    byteBuilder.append(MPK.False)
+    flushElemBuilder()
     out
   }
 
   override def visitTrue(index: Int) = {
-    out.write(MPK.True)
+    byteBuilder.append(MPK.True)
+    flushElemBuilder()
     out
   }
 
@@ -60,45 +78,47 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
   }
 
   override def visitFloat64(d: Double, index: Int) = {
-    out.write(MPK.Float64)
+    byteBuilder.append(MPK.Float64)
     writeUInt64(java.lang.Double.doubleToLongBits(d))
+    flushElemBuilder()
     out
   }
   override def visitFloat32(d: Float, index: Int) = {
-    out.write(MPK.Float32)
+    byteBuilder.append(MPK.Float32)
     writeUInt32(java.lang.Float.floatToIntBits(d))
+    flushElemBuilder()
     out
   }
   override def visitInt32(i: Int, index: Int) = {
     if (i >= 0){
-      if (i <= 127) out.write(i)
+      if (i <= 127) byteBuilder.append(i)
       else if (i <= 255){
-        out.write(MPK.UInt8)
-        out.write(i)
+        byteBuilder.append(MPK.UInt8)
+        byteBuilder.append(i)
       } else if(i <= Short.MaxValue){
-        out.write(MPK.Int16)
+        byteBuilder.append(MPK.Int16)
         writeUInt16(i)
       } else if (i <= 0xffff){
-        out.write(MPK.UInt16)
+        byteBuilder.append(MPK.UInt16)
         writeUInt16(i)
       } else{
-        out.write(MPK.Int32)
+        byteBuilder.append(MPK.Int32)
         writeUInt32(i)
       }
     }else{
-      if (i >= -32) out.write(i | 0xe0)
+      if (i >= -32) byteBuilder.append(i | 0xe0)
       else if(i >= -128){
-        out.write(MPK.Int8)
-        out.write(i)
+        byteBuilder.append(MPK.Int8)
+        byteBuilder.append(i)
       }else if (i >= Short.MinValue) {
-        out.write(MPK.Int16)
+        byteBuilder.append(MPK.Int16)
         writeUInt16(i)
       } else{
-        out.write(MPK.Int32)
+        byteBuilder.append(MPK.Int32)
         writeUInt32(i)
       }
     }
-
+    flushElemBuilder()
     out
   }
 
@@ -106,21 +126,23 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     if (i >= Int.MinValue && i <= Int.MaxValue){
       visitInt32(i.toInt, index)
     }else if (i >= 0 && i <= 0xffffffffL){
-      out.write(MPK.UInt32)
+      byteBuilder.append(MPK.UInt32)
       writeUInt32(i.toInt)
     }else{
-      out.write(MPK.Int64)
+      byteBuilder.append(MPK.Int64)
       writeUInt64(i)
     }
+    flushElemBuilder()
     out
   }
 
   override def visitUInt64(i: Long, index: Int) = {
     if (i >= 0) visitInt64(i, index)
     else{
-      out.write(MPK.UInt64)
+      byteBuilder.append(MPK.UInt64)
       writeUInt64(i)
     }
+    flushElemBuilder()
     out
   }
 
@@ -128,85 +150,89 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     val bytes = s.toString.getBytes("UTF-8")
     val length = bytes.length
     if (length <= 31){
-      out.write(MPK.FixStrMask | length)
+      byteBuilder.append(MPK.FixStrMask | length)
     } else if (length <= 255){
-      out.write(MPK.Str8)
+      byteBuilder.append(MPK.Str8)
       writeUInt8(length)
     }else if (length <= 65535){
-      out.write(MPK.Str16)
+      byteBuilder.append(MPK.Str16)
       writeUInt16(length)
     }else {
-      out.write(MPK.Str32)
+      byteBuilder.append(MPK.Str32)
       writeUInt32(length)
     }
 
-    out.write(bytes, 0, length)
+    byteBuilder.appendAll(bytes, 0, length)
+    flushElemBuilder()
     out
   }
   override def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
     if (len <= 255) {
-      out.write(MPK.Bin8)
+      byteBuilder.append(MPK.Bin8)
       writeUInt8(len)
     } else if (len <= 65535) {
-      out.write(MPK.Bin16)
+      byteBuilder.append(MPK.Bin16)
       writeUInt16(len)
     } else {
-      out.write(MPK.Bin32)
+      byteBuilder.append(MPK.Bin32)
       writeUInt32(len)
     }
 
-    out.write(bytes, offset, len)
+    byteBuilder.appendAll(bytes, offset, len)
+    flushElemBuilder()
     out
   }
-  def writeUInt8(i: Int) = out.write(i)
+  def writeUInt8(i: Int) = byteBuilder.append(i)
   def writeUInt16(i: Int) = {
-    out.write((i >> 8) & 0xff)
-    out.write((i >> 0) & 0xff)
+    byteBuilder.append((i >> 8) & 0xff)
+    byteBuilder.append((i >> 0) & 0xff)
   }
   def writeUInt32(i: Int) = {
-    out.write((i >> 24) & 0xff)
-    out.write((i >> 16) & 0xff)
-    out.write((i >> 8) & 0xff)
-    out.write((i >> 0) & 0xff)
+    byteBuilder.append((i >> 24) & 0xff)
+    byteBuilder.append((i >> 16) & 0xff)
+    byteBuilder.append((i >> 8) & 0xff)
+    byteBuilder.append((i >> 0) & 0xff)
   }
   def writeUInt64(i: Long) = {
-    out.write(((i >> 56) & 0xff).toInt)
-    out.write(((i >> 48) & 0xff).toInt)
-    out.write(((i >> 40) & 0xff).toInt)
-    out.write(((i >> 32) & 0xff).toInt)
-    out.write(((i >> 24) & 0xff).toInt)
-    out.write(((i >> 16) & 0xff).toInt)
-    out.write(((i >> 8) & 0xff).toInt)
-    out.write(((i >> 0) & 0xff).toInt)
+    byteBuilder.append(((i >> 56) & 0xff).toInt)
+    byteBuilder.append(((i >> 48) & 0xff).toInt)
+    byteBuilder.append(((i >> 40) & 0xff).toInt)
+    byteBuilder.append(((i >> 32) & 0xff).toInt)
+    byteBuilder.append(((i >> 24) & 0xff).toInt)
+    byteBuilder.append(((i >> 16) & 0xff).toInt)
+    byteBuilder.append(((i >> 8) & 0xff).toInt)
+    byteBuilder.append(((i >> 0) & 0xff).toInt)
   }
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
     len match{
-      case 1 => out.write(MPK.FixExt1)
-      case 2 => out.write(MPK.FixExt2)
-      case 4 => out.write(MPK.FixExt4)
-      case 8 => out.write(MPK.FixExt8)
-      case 16 => out.write(MPK.FixExt16)
+      case 1 => byteBuilder.append(MPK.FixExt1)
+      case 2 => byteBuilder.append(MPK.FixExt2)
+      case 4 => byteBuilder.append(MPK.FixExt4)
+      case 8 => byteBuilder.append(MPK.FixExt8)
+      case 16 => byteBuilder.append(MPK.FixExt16)
       case _ =>
         if (len <= 255){
-          out.write(MPK.Ext8)
+          byteBuilder.append(MPK.Ext8)
           writeUInt8(len)
         }else if (len <= 65535){
-          out.write(MPK.Ext16)
+          byteBuilder.append(MPK.Ext16)
           writeUInt16(len)
         }else{
           writeUInt32(len)
-          out.write(MPK.Ext32)
+          byteBuilder.append(MPK.Ext32)
         }
     }
-    out.write(tag)
-    out.write(bytes, offset, len)
+    byteBuilder.append(tag)
+    byteBuilder.appendAll(bytes, offset, len)
+    flushElemBuilder()
     out
   }
 
   def visitChar(s: Char, index: Int) = {
-    out.write(MPK.UInt16)
+    byteBuilder.append(MPK.UInt16)
     writeUInt16(s)
+    flushElemBuilder()
     out
   }
 }
