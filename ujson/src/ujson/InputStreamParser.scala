@@ -13,9 +13,8 @@ import upickle.core.{ObjArrVisitor, Visitor}
   *
   * Generally not meant to be used directly, but via [[ujson.Readable.fromReadable]]
   */
-final class InputStreamParser[J](val data: java.io.InputStream)
+final class InputStreamParser[J](val inputStream: java.io.InputStream)
 extends ByteParser[J] with upickle.core.BufferingInputStreamParser{
-  override def defaultStartBufferSize: Int = 1024
   protected[this] final def close() = {}
 
   var knownEof = Int.MaxValue

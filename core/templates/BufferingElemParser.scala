@@ -2,19 +2,9 @@ package upickle.core
 
 
 trait BufferingElemParser{
-  def maxStartBufferSize: Int
-  def minStartBufferSize: Int
-  def defaultStartBufferSize: Int
+
   private[this] var buffer: Array[Elem] = null
 
-  def instantiateBuffer() = {
-    new Array[Elem]({
-      val available = defaultStartBufferSize
-      if (available < minStartBufferSize) minStartBufferSize
-      else if (available > maxStartBufferSize) maxStartBufferSize
-      else available
-    })
-  }
   private[this] var firstIdx = 0
   private[this] var lastIdx = 0
   private[this] var dropped = 0

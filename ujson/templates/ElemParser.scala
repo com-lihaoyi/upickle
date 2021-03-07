@@ -39,11 +39,6 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     getElemUnsafe(i)
   }
 
-  def maxStartBufferSize: Int = upickle.core.BufferingInputStreamParser.defaultMaxBufferStartSize
-  def minStartBufferSize: Int = upickle.core.BufferingInputStreamParser.defaultMinBufferStartSize
-  def defaultStartBufferSize: Int = 1024
-
-
   /**
    * Return true iff 'i' is at or beyond the end of the input (EOF).
    */

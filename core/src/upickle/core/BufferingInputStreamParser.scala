@@ -19,14 +19,23 @@ package upickle.core
   * .
   */
 trait BufferingInputStreamParser extends BufferingByteParser{
-  def data: java.io.InputStream
+  def inputStream: java.io.InputStream
+
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
-    val newBuffer = if (buffer == null) instantiateBuffer() else buffer
+    val newBuffer =
+      if (buffer != null) buffer
+      else new Array[Byte]({
+        val available = inputStream.available()
+        if (available < BufferingInputStreamParser.defaultMinBufferStartSize) BufferingInputStreamParser.defaultMinBufferStartSize
+        else if (available > BufferingInputStreamParser.defaultMaxBufferStartSize) BufferingInputStreamParser.defaultMaxBufferStartSize
+        else available
+      })
+
     var n = 0
     val len = newBuffer.length - bufferOffset
     while ( {
       if (n < len){
-        val count = data.read(newBuffer, bufferOffset + n, len - n)
+        val count = inputStream.read(newBuffer, bufferOffset + n, len - n)
         if (count < 0) false
         else {
           n += count
@@ -38,7 +47,6 @@ trait BufferingInputStreamParser extends BufferingByteParser{
   }
   def sliceBytes(i: Int, n: Int) = sliceArr(i, n)
 
-  def defaultStartBufferSize = data.available()
 }
 object BufferingInputStreamParser{
   val defaultMaxBufferStartSize: Int = 64 * 1024
