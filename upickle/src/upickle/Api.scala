@@ -73,6 +73,12 @@ trait Api
                          escapeUnicode: Boolean = false): Unit = {
     transform(t).to(new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
+  def writeToOutputStream[T: Writer](t: T,
+                                     out: java.io.OutputStream,
+                                     indent: Int = -1,
+                                     escapeUnicode: Boolean = false): Unit = {
+    transform(t).to(new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
+  }
   /**
     * Write the given Scala value as a JSON string via a `geny.Writable`
     */
@@ -81,9 +87,7 @@ trait Api
                         escapeUnicode: Boolean = false): geny.Writable = new geny.Writable{
     override def httpContentType = Some("application/json")
     def writeBytesTo(out: java.io.OutputStream) = {
-      val w = new java.io.OutputStreamWriter(out, java.nio.charset.StandardCharsets.UTF_8)
-      transform(t).to(new ujson.BaseRenderer(w, indent = indent, escapeUnicode))
-      w.flush()
+      transform(t).to(new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
     }
   }
   /**

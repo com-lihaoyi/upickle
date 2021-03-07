@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.util.TokenBuffer
 import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
-import ujson.StringRenderer
 
 
 object Main{
@@ -43,30 +42,27 @@ object Main{
 //      Common.genCodec(duration)
 //      Common.playJsonCached(duration)
 //      Common.circeCached(duration)
-//      Common.upickleDefaultCached(duration)
+      Common.upickleDefaultCached(duration)
 //      Common.upickleDefaultCached(duration)
 //      Common.upickleDefaultCachedReadable(duration)
 //      Common.upickleDefaultCachedReadablePath(duration)
-//      Common.upickleDefaultCachedByteArray(duration)
+      Common.upickleDefaultCachedByteArray(duration)
 //      Common.upickleLegacyCached(duration)
 //      Common.upickleDefaultBinaryCached(duration)
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-      benchParsingRendering(duration, bytes = true, strings = true)
-//      benchParsingRendering(duration, bytes = false, strings = true)
+      benchParsingRendering(duration, bytes = true, strings = false, streams = false)
+      benchParsingRendering(duration, bytes = false, strings = true, streams = false)
+      benchParsingRendering(duration, bytes = false, strings = false, streams = true)
       println()
     }
   }
-  def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean) = {
-    val names = Array(
-      "github-events.json",
-      "meteorites.json",
-      "turkish.json",
-      "eu-lobby-repr.json"
-    )
+  def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean, streams: Boolean) = {
     import java.nio.file.{Files, Paths}
-    val inputByteArrays = for(name <- names) yield Files.readAllBytes(Paths.get("bench/resources/" + name))
+    import collection.JavaConverters._
+    val names = Files.list(Paths.get("exampleJson")).iterator().asScala.toArray
+    val inputByteArrays = for(name <- names) yield Files.readAllBytes(name)
     val inputStrings = for(inputByteArray <- inputByteArrays) yield new String(inputByteArray)
 
     {
@@ -74,16 +70,30 @@ object Main{
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
         if (bytes) {
-          for (inputByteArray <- inputByteArrays) ujson.reformatTo(inputByteArray, new java.io.StringWriter)
+          for (inputByteArray <- inputByteArrays) {
+            ujson.reformatToOutputStream(inputByteArray, new java.io.ByteArrayOutputStream())
+          }
         }
         if(strings){
-          for(inputString <- inputStrings) ujson.reformatTo(inputString, new java.io.StringWriter)
+          for((inputString, i) <- inputStrings.zipWithIndex) {
+            ujson.reformatTo(inputString, new java.io.StringWriter())
+          }
+        }
+        if(streams){
+          for (inputByteArray <- inputByteArrays) {
+            ujson.reformatToOutputStream(
+              new java.io.ByteArrayInputStream(inputByteArray),
+              new java.io.ByteArrayOutputStream()
+            )
+          }
         }
 
         n += 1
       }
-      if (bytes) println("String Parsing Rendering  " + n)
-      else println("Bytes Parsing Rendering  " + n)
+      val bytesPrefix = if (bytes) "Bytes " else ""
+      val stringPrefix = if (strings) "String " else ""
+      val streamPrefix = if (streams) "Stream " else ""
+      println(streamPrefix + bytesPrefix + stringPrefix + "Parsing Rendering  " + n)
     }
 
   }
@@ -108,7 +118,7 @@ object Main{
   def uJsonPlayJsonAst(duration: Int) = {
     Common.bench0[String, play.api.libs.json.JsValue](duration, Common.benchmarkSampleJson)(
       ujson.play.PlayJson(_),
-      ujson.play.PlayJson.transform(_, StringRenderer()).toString
+      ujson.play.PlayJson.transform(_, ujson.StringRenderer()).toString
     )
   }
 
@@ -121,7 +131,7 @@ object Main{
   def uJsonCirceJsonAst(duration: Int) = {
     Common.bench0[String, io.circe.Json](duration, Common.benchmarkSampleJson)(
       ujson.circe.CirceJson(_),
-      ujson.circe.CirceJson.transform(_, StringRenderer()).toString
+      ujson.circe.CirceJson.transform(_, ujson.StringRenderer()).toString
     )
   }
 
@@ -134,7 +144,7 @@ object Main{
   def uJsonArgonautJsonAst(duration: Int) = {
     Common.bench0[String, argonaut.Json](duration, Common.benchmarkSampleJson)(
       ujson.argonaut.ArgonautJson(_),
-      ujson.argonaut.ArgonautJson.transform(_, StringRenderer()).toString
+      ujson.argonaut.ArgonautJson.transform(_, ujson.StringRenderer()).toString
     )
   }
   def json4sJsonAst(duration: Int) = {
@@ -146,7 +156,7 @@ object Main{
   def uJsonJson4sJsonAst(duration: Int) = {
     Common.bench0[String, org.json4s.JsonAST.JValue](duration, Common.benchmarkSampleJson)(
       ujson.json4s.Json4sJson(_),
-      ujson.json4s.Json4sJson.transform(_, StringRenderer()).toString
+      ujson.json4s.Json4sJson.transform(_, ujson.StringRenderer()).toString
     )
   }
   def jacksonModuleScala(duration: Int) = {

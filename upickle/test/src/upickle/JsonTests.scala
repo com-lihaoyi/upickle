@@ -3,6 +3,7 @@ import utest._
 
 object JsonTests extends TestSuite {
   val tests = Tests {
+
     val ugly =
       """
         |[
@@ -64,7 +65,7 @@ object JsonTests extends TestSuite {
         |1e00,2e+00,2e-00
         |,"rosebud"]
       """.stripMargin
-    val parsed = ujson.read(ugly)
+    lazy val parsed = ujson.read(ugly)
 
     test("correctness"){
       val unparsed = ujson.write(parsed)
@@ -79,6 +80,16 @@ object JsonTests extends TestSuite {
         )
       }
       (parsed(19), reparsed(19))
+    }
+    test("inputsSmall"){
+      val unparsed = """true"""
+//      val unparsed = ujson.write(parsed)
+//      val fromString = ujson.read(unparsed)
+//      val fromBytes = ujson.read(unparsed.getBytes)
+      val fromInputStream = ujson.read(new java.io.ByteArrayInputStream(unparsed.getBytes))
+
+//      assert(fromString == fromBytes)
+//      assert(fromBytes == fromInputStream)
     }
     test("inputs"){
       val unparsed = ujson.write(parsed)
@@ -110,5 +121,54 @@ object JsonTests extends TestSuite {
       val parsedAgain = ujson.read(s)
       assert(parsed == parsedAgain)
     }
+    test("writeBytesToSmall"){
+      val out = new java.io.ByteArrayOutputStream()
+      val parsed = ujson.Str("쫾")
+      parsed.writeBytesTo(out)
+      val s = new String(out.toByteArray)
+      val parsedAgain = ujson.read(s)
+      assert(parsed == parsedAgain)
+    }
+    test("inputsEu"){
+      val eu =
+        """{
+          |  "count": 12129,
+          |  "facets": {},
+          |  "results": [
+          |    {
+          |      "activity_consult_committees": null,
+          |      "activity_high_level_groups": null,
+          |      "head_office_lat": null,
+          |      "updated_at": "2019-02-26T00:53:13.297966",
+          |      "entity": "f68eebed3ca14d66aeb9be6e5680cdcd",
+          |      "number_of_natural_persons": null,
+          |      "legal": "8e8b73cc70d241e5bb32c8907cd042ba",
+          |      "native_name": null,
+          |      "head_office_country": "Denmark",
+          |      "id": "fffebd3272294bb0a38d0347b0e0c4df",
+          |      "activity_industry_forums": "None",
+          |      "contact_country": 59,
+          |      "head_office_postbox": null,
+          |      "networking": "The European Federation of Building and Woodworkers (EFBWW) is the European Industry Federation for the construction industry, the building materials industry, the wood and furniture industry and the forestry industry. The EFBWW has 76 affiliated unions in 34 countries and represents a total of 2,000,000 members, see\r\nhttp://www.efbww.org/default.asp?Language=EN",
+          |      "members_75": null,
+          |      "main_category": 2,
+          |      "members_50": 4,
+          |      "activity_expert_groups": "none",
+          |      "other_code_of_conduct": null,
+          |      "head_office_town": "K\u00f8benhavn V"
+          |    }
+          |
+          |
+          |  ]
+          |}""".stripMargin
+      new java.io.StringWriter()
+      val fromString = ujson.read(eu)
+      val fromBytes = ujson.read(eu.getBytes)
+      val fromInputStream = ujson.read(new java.io.ByteArrayInputStream(eu.getBytes))
+
+      assert(fromString == fromBytes)
+      assert(fromBytes == fromInputStream)
+    }
+
   }
 }

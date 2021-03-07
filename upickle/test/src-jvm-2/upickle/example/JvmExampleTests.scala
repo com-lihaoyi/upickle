@@ -5,7 +5,6 @@ import java.io.StringWriter
 // import ujson.json4s.Json4sJson
 import upickle.TestUtil
 import utest._
-import ujson.StringRenderer
 
 import Simple._
 
@@ -26,7 +25,6 @@ object JvmExampleTests extends TestSuite {
     }
     test("other"){
       test("argonaut"){
-        import ujson.argonaut.ArgonautJson
         val argJson: argonaut.Json = ArgonautJson(
           """["hello", "world"]"""
         )
@@ -47,7 +45,6 @@ object JvmExampleTests extends TestSuite {
         stringified ==> """["HELLO","WORLD"]"""
       }
       test("circe"){
-        import ujson.circe.CirceJson
         val circeJson: io.circe.Json = CirceJson(
           """["hello", "world"]"""
         )
@@ -93,7 +90,6 @@ object JvmExampleTests extends TestSuite {
         stringified ==> """["HELLO","WORLD"]"""
       }
       test("playJson"){
-        import ujson.play.PlayJson
         import play.api.libs.json._
         val playJson: play.api.libs.json.JsValue = PlayJson(
           """["hello", "world"]"""
@@ -118,7 +114,6 @@ object JvmExampleTests extends TestSuite {
         stringified ==> """["HELLO","WORLD"]"""
       }
       test("crossAst"){
-        import ujson.circe.CirceJson
         val circeJson: io.circe.Json = CirceJson(
           """["hello", "world"]"""
         )
@@ -126,7 +121,6 @@ object JvmExampleTests extends TestSuite {
         val updatedCirceJson =
           circeJson.mapArray(_.map(x => x.mapString(_.toUpperCase)))
 
-        import ujson.play.PlayJson
         import play.api.libs.json._
 
         val playJson: play.api.libs.json.JsValue = CirceJson.transform(

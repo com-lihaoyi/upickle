@@ -11,11 +11,12 @@ class MsgPackReader(val startIndex: Int = 0, input0: Array[Byte]) extends BaseMs
   def dropBufferUntil(i: Int): Unit = ()//donothing
 }
 
-class InputStreamMsgPackReader(val data: java.io.InputStream,
+class InputStreamMsgPackReader(val inputStream: java.io.InputStream,
                                val minStartBufferSize: Int,
                                val maxStartBufferSize: Int)
 extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
   def startIndex = 0
+  def byte(i: Int): Byte = getByteSafe(i)
 }
 
 abstract class BaseMsgPackReader{

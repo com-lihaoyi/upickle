@@ -17,7 +17,9 @@ package object ujson{
   def write(t: Value.Value,
             indent: Int = -1,
             escapeUnicode: Boolean = false): String = {
-    transform(t, StringRenderer(indent, escapeUnicode)).toString
+    val writer = new java.io.StringWriter
+    writeTo(t, writer, indent, escapeUnicode)
+    writer.toString
   }
 
   /**
@@ -29,6 +31,20 @@ package object ujson{
               escapeUnicode: Boolean = false): Unit = {
     transform(t, Renderer(out, indent, escapeUnicode))
   }
+  def writeToOutputStream(t: Value.Value,
+                          out: java.io.OutputStream,
+                          indent: Int = -1,
+                          escapeUnicode: Boolean = false): Unit = {
+    transform(t, new BaseByteRenderer(out, indent, escapeUnicode))
+  }
+
+  def writeToByteArray(t: Value.Value,
+                       indent: Int = -1,
+                       escapeUnicode: Boolean = false): Unit = {
+    val baos = new java.io.ByteArrayOutputStream
+    writeToOutputStream(t, baos, indent, escapeUnicode)
+    baos.toByteArray
+  }
 
   /**
     * Parse the given JSON input, failing if it is invalid
@@ -39,14 +55,33 @@ package object ujson{
     * the configured formatting
     */
   def reformat(s: Readable, indent: Int = -1, escapeUnicode: Boolean = false): String = {
-    transform(s, StringRenderer(indent, escapeUnicode)).toString
+    val writer = new java.io.StringWriter()
+    reformatTo(s, writer, indent, escapeUnicode)
+    writer.toString
   }
   /**
     * Parse the given JSON input and write it to a string with
     * the configured formatting to the given Writer
     */
   def reformatTo(s: Readable, out: java.io.Writer, indent: Int = -1, escapeUnicode: Boolean = false): Unit = {
-    transform(s, Renderer(out, indent, escapeUnicode)).toString
+    transform(s, Renderer(out, indent, escapeUnicode))
+  }
+  /**
+    * Parse the given JSON input and write it to a string with
+    * the configured formatting to the given Writer
+    */
+  def reformatToOutputStream(s: Readable,
+                             out: java.io.OutputStream,
+                             indent: Int = -1,
+                             escapeUnicode: Boolean = false): Unit = {
+    transform(s, new BaseByteRenderer(out, indent, escapeUnicode))
+  }
+  def reformatToByteArray(s: Readable,
+                          indent: Int = -1,
+                          escapeUnicode: Boolean = false): Unit = {
+    val baos = new java.io.ByteArrayOutputStream
+    reformatToOutputStream(s, baos, indent, escapeUnicode)
+    baos.toByteArray
   }
   // End ujson
   @deprecated("use ujson.Value")

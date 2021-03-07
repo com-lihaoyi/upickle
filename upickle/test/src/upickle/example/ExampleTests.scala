@@ -405,7 +405,6 @@ object ExampleTests extends TestSuite {
     }
     test("json"){
       test("construction"){
-        import ujson.Value
 
         val json0 = ujson.Arr(
           ujson.Obj("myFieldA" -> ujson.Num(1), "myFieldB" -> ujson.Str("g")),
@@ -522,7 +521,7 @@ object ExampleTests extends TestSuite {
         ujson.transform(exampleAst, StringRenderer()).toString ==> "[1,2,3]"
 
         // Or to a byte array
-        ujson.transform(exampleAst, BytesRenderer()).toBytes ==> "[1,2,3]".getBytes
+        ujson.transform(exampleAst, BytesRenderer()).toByteArray ==> "[1,2,3]".getBytes
 
         // Re-formatting JSON, either compacting it
         ujson.transform("[1, 2, 3]", StringRenderer()).toString ==> "[1,2,3]"
@@ -540,14 +539,19 @@ object ExampleTests extends TestSuite {
 
       }
       test("validate"){
-        ujson.transform("[1, 2, 3]", NoOpVisitor)
+        test {
+          ujson.transform("[1, 2, 3]", NoOpVisitor)
+        }
 
-        intercept[IncompleteParseException](
-          ujson.transform("[1, 2, 3", NoOpVisitor)
-        )
-        intercept[ParseException](
-          ujson.transform("[1, 2, 3]]", NoOpVisitor)
-        )
+        test{
+          intercept[IncompleteParseException](ujson.transform("[", NoOpVisitor))
+        }
+        test{
+          intercept[IncompleteParseException](ujson.transform("[1, 2, 3", NoOpVisitor))
+        }
+        test{
+          intercept[ParseException](ujson.transform("[1, 2, 3]]", NoOpVisitor))
+        }
       }
       test("upickleDefault"){
         ujson.transform("[1, 2, 3]", upickle.default.reader[Seq[Int]]) ==>

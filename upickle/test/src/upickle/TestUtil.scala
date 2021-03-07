@@ -32,12 +32,12 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       val readS = api.read[T](s)
       val normalizedReadString = normalize(readS)
       val normalizedValue = normalize(t)
-      assert(normalizedReadString == normalizedValue)
+      utest.assert(normalizedReadString == normalizedValue)
     }
 
     val normalizedReadWrittenT = normalize(api.read[T](writtenT))
     val normalizedT = normalize(t)
-    assert(normalizedReadWrittenT == normalizedT)
+    utest.assert(normalizedReadWrittenT == normalizedT)
 
     // Test binary round tripping
     val writtenBinary = api.writeBinary(t)
@@ -45,7 +45,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
     val roundTrippedBinary = api.readBinary[T](writtenBinary)
     (roundTrippedBinary, t) match{
       case (lhs: Array[_], rhs: Array[_]) => assert(lhs.toSeq == rhs.toSeq)
-      case _ => assert(roundTrippedBinary == t)
+      case _ => utest.assert(roundTrippedBinary == t)
     }
 
 
@@ -55,7 +55,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
 
       val writtenBinaryStr = upickle.core.Util.bytesToString(writtenBinary)
       val rewrittenBinaryStr = upickle.core.Util.bytesToString(rewrittenBinary)
-      assert(writtenBinaryStr == rewrittenBinaryStr)
+      utest.assert(writtenBinaryStr == rewrittenBinaryStr)
     }
   }
 }

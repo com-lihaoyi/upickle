@@ -1,6 +1,5 @@
 package ujson
 
-import ujson._
 import upickle.core.{ArrVisitor, ObjVisitor}
 
 import scala.scalajs.js

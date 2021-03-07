@@ -38,6 +38,7 @@ trait CommonModule extends ScalaModule {
   }
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
+
   def publishVersion = "1.2.3"
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
@@ -53,6 +54,19 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
   )
+  def templates = T.source(millSourcePath / "templates")
+  def generatedSources = T{1
+    for{
+      p <- if (os.exists(templates().path)) os.list(templates().path) else Nil
+      rename <- Seq("Char", "Byte")
+    }{
+      os.write(
+        T.dest / p.last.replace("Elem", rename),
+        os.read(p).replace("Elem", rename)
+      )
+    }
+    Seq(PathRef(T.dest))
+  }
   trait CommonTestModule extends CommonModule with TestModule{
     def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.7") ++ (
       if (isDotty) Agg.empty[mill.scalalib.Dep]
@@ -250,29 +264,23 @@ object upack extends Module {
 object ujson extends Module{
   trait JsonModule extends CommonPublishModule{
     def artifactName = "ujson"
-    trait JawnTestModule extends CommonTestModule{
-      def ivyDeps = T{
-        if (!isDotty) Agg(
-          ivy"org.scalatest::scalatest::3.1.1",
-          ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
-        )
-        else Agg()
-      }
-      def testFrameworks = if (!isDotty) Seq("org.scalatest.tools.Framework") else Seq.empty[String]
-    }
   }
 
   object js extends Cross[JsModule](scalaJSVersions:_*)
   class JsModule(val crossScalaVersion: String, val crossScalaJSVersion: String) extends JsonModule with CommonJsModule{
     def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
 
-    object test extends Tests with JawnTestModule
+    object test extends Tests with CommonTestModule{
+      def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
+    }
   }
 
   object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends JsonModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
-    object test extends Tests with JawnTestModule
+    object test extends Tests with CommonTestModule{
+      def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
+    }
   }
 
   object native extends Cross[NativeModule](scalaNativeVersions:_*)
@@ -391,7 +399,7 @@ object upickle extends Module{
 //    }
   }
 }
-
+def exampleJson = T.source(millSourcePath / "exampleJson")
 trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"
