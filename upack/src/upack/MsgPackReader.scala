@@ -23,7 +23,7 @@ extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
 abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
 
   private[this] var index = 0
-
+  def getIndex = index
   def parse[T](visitor: Visitor[_, T]): T = {
 
     val n = getByteSafe(index)

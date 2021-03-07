@@ -30,7 +30,11 @@ class ElemBuilder(startSize: Int = 32) extends upickle.core.ElemAppendC{
     System.arraycopy(elems, elemsStart, arr, length, elemsLength)
     length += elemsLength
   }
-  def appendAll(other: ElemBuilder): Unit = appendAll(other.getArr, 0, other.getLength)
+  def appendAllUnsafe(other: ElemBuilder): Unit = {
+    val elemsLength = other.getLength
+    System.arraycopy(other.getArr, 0, arr, length, elemsLength)
+    length += elemsLength
+  }
 
   def appendUnsafeC(x: Char): Unit = appendUnsafe(x.toElem)
   def appendUnsafe(x: Elem): Unit = {

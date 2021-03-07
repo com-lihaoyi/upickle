@@ -16,10 +16,12 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     if (length <= 15){
       byteBuilder.append(MPK.FixArrMask | length)
     }else if (length <= 65535){
-      byteBuilder.append(MPK.Array16)
+      byteBuilder.ensureLength(3)
+      byteBuilder.appendUnsafe(MPK.Array16.toByte)
       writeUInt16(length)
     }else {
-      byteBuilder.append(MPK.Array32)
+      byteBuilder.ensureLength(5)
+      byteBuilder.appendUnsafe(MPK.Array32.toByte)
       writeUInt32(length)
     }
     def subVisitor = MsgPackWriter.this
@@ -37,10 +39,12 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     if (length <= 15){
       byteBuilder.append(MPK.FixMapMask | length)
     }else if (length <= 65535){
-      byteBuilder.append(MPK.Map16)
+      byteBuilder.ensureLength(3)
+      byteBuilder.appendUnsafe(MPK.Map16.toByte)
       writeUInt16(length)
     }else {
-      byteBuilder.append(MPK.Map32)
+      byteBuilder.ensureLength(5)
+      byteBuilder.appendUnsafe(MPK.Map32.toByte)
       writeUInt32(length)
     }
     def subVisitor = MsgPackWriter.this
@@ -78,12 +82,14 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
   }
 
   override def visitFloat64(d: Double, index: Int) = {
+    byteBuilder.ensureLength(9)
     byteBuilder.append(MPK.Float64)
     writeUInt64(java.lang.Double.doubleToLongBits(d))
     flushElemBuilder()
     out
   }
   override def visitFloat32(d: Float, index: Int) = {
+    byteBuilder.ensureLength(5)
     byteBuilder.append(MPK.Float32)
     writeUInt32(java.lang.Float.floatToIntBits(d))
     flushElemBuilder()
@@ -93,28 +99,35 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     if (i >= 0){
       if (i <= 127) byteBuilder.append(i)
       else if (i <= 255){
-        byteBuilder.append(MPK.UInt8)
-        byteBuilder.append(i)
+        byteBuilder.ensureLength(2)
+        byteBuilder.appendUnsafe(MPK.UInt8.toByte)
+        byteBuilder.appendUnsafe(i.toByte)
       } else if(i <= Short.MaxValue){
-        byteBuilder.append(MPK.Int16)
+        byteBuilder.ensureLength(3)
+        byteBuilder.appendUnsafe(MPK.Int16.toByte)
         writeUInt16(i)
       } else if (i <= 0xffff){
-        byteBuilder.append(MPK.UInt16)
+        byteBuilder.ensureLength(5)
+        byteBuilder.appendUnsafe(MPK.UInt16.toByte)
         writeUInt16(i)
       } else{
-        byteBuilder.append(MPK.Int32)
+        byteBuilder.ensureLength(5)
+        byteBuilder.appendUnsafe(MPK.Int32.toByte)
         writeUInt32(i)
       }
     }else{
       if (i >= -32) byteBuilder.append(i | 0xe0)
       else if(i >= -128){
-        byteBuilder.append(MPK.Int8)
-        byteBuilder.append(i)
+        byteBuilder.ensureLength(2)
+        byteBuilder.appendUnsafe(MPK.Int8.toByte)
+        byteBuilder.appendUnsafe(i.toByte)
       }else if (i >= Short.MinValue) {
-        byteBuilder.append(MPK.Int16)
+        byteBuilder.ensureLength(3)
+        byteBuilder.appendUnsafe(MPK.Int16.toByte)
         writeUInt16(i)
       } else{
-        byteBuilder.append(MPK.Int32)
+        byteBuilder.ensureLength(5)
+        byteBuilder.appendUnsafe(MPK.Int32.toByte)
         writeUInt32(i)
       }
     }
@@ -126,10 +139,12 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     if (i >= Int.MinValue && i <= Int.MaxValue){
       visitInt32(i.toInt, index)
     }else if (i >= 0 && i <= 0xffffffffL){
-      byteBuilder.append(MPK.UInt32)
+      byteBuilder.ensureLength(5)
+      byteBuilder.appendUnsafe(MPK.UInt32.toByte)
       writeUInt32(i.toInt)
     }else{
-      byteBuilder.append(MPK.Int64)
+      byteBuilder.ensureLength(9)
+      byteBuilder.appendUnsafe(MPK.Int64.toByte)
       writeUInt64(i)
     }
     flushElemBuilder()
@@ -139,7 +154,8 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
   override def visitUInt64(i: Long, index: Int) = {
     if (i >= 0) visitInt64(i, index)
     else{
-      byteBuilder.append(MPK.UInt64)
+      byteBuilder.ensureLength(9)
+      byteBuilder.appendUnsafe(MPK.UInt64.toByte)
       writeUInt64(i)
     }
     flushElemBuilder()
@@ -157,31 +173,38 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     )
     val length = stringTempByteBuilder.getLength
     if (length <= 31){
-      byteBuilder.append(MPK.FixStrMask | length)
+      byteBuilder.ensureLength(1 + length)
+      byteBuilder.appendUnsafe((MPK.FixStrMask | length).toByte)
     } else if (length <= 255){
-      byteBuilder.append(MPK.Str8)
+      byteBuilder.ensureLength(2 + length)
+      byteBuilder.appendUnsafe(MPK.Str8.toByte)
       writeUInt8(length)
     }else if (length <= 65535){
-      byteBuilder.append(MPK.Str16)
+      byteBuilder.ensureLength(3 + length)
+      byteBuilder.appendUnsafe(MPK.Str16.toByte)
       writeUInt16(length)
     }else {
-      byteBuilder.append(MPK.Str32)
+      byteBuilder.ensureLength(5 + length)
+      byteBuilder.appendUnsafe(MPK.Str32.toByte)
       writeUInt32(length)
     }
 
-    byteBuilder.appendAll(stringTempByteBuilder)
+    byteBuilder.appendAllUnsafe(stringTempByteBuilder)
     flushElemBuilder()
     out
   }
   override def visitBinary(bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
     if (len <= 255) {
-      byteBuilder.append(MPK.Bin8)
+      byteBuilder.ensureLength(2)
+      byteBuilder.appendUnsafe(MPK.Bin8.toByte)
       writeUInt8(len)
     } else if (len <= 65535) {
-      byteBuilder.append(MPK.Bin16)
+      byteBuilder.ensureLength(3)
+      byteBuilder.appendUnsafe(MPK.Bin16.toByte)
       writeUInt16(len)
     } else {
-      byteBuilder.append(MPK.Bin32)
+      byteBuilder.ensureLength(5)
+      byteBuilder.appendUnsafe(MPK.Bin32.toByte)
       writeUInt32(len)
     }
 
@@ -189,26 +212,26 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     flushElemBuilder()
     out
   }
-  def writeUInt8(i: Int) = byteBuilder.append(i)
+  def writeUInt8(i: Int) = byteBuilder.appendUnsafe(i.toByte)
   def writeUInt16(i: Int) = {
-    byteBuilder.append((i >> 8) & 0xff)
-    byteBuilder.append((i >> 0) & 0xff)
+    byteBuilder.appendUnsafe(((i >> 8) & 0xff).toByte)
+    byteBuilder.appendUnsafe(((i >> 0) & 0xff).toByte)
   }
   def writeUInt32(i: Int) = {
-    byteBuilder.append((i >> 24) & 0xff)
-    byteBuilder.append((i >> 16) & 0xff)
-    byteBuilder.append((i >> 8) & 0xff)
-    byteBuilder.append((i >> 0) & 0xff)
+    byteBuilder.appendUnsafe(((i >> 24) & 0xff).toByte)
+    byteBuilder.appendUnsafe(((i >> 16) & 0xff).toByte)
+    byteBuilder.appendUnsafe(((i >> 8) & 0xff).toByte)
+    byteBuilder.appendUnsafe(((i >> 0) & 0xff).toByte)
   }
   def writeUInt64(i: Long) = {
-    byteBuilder.append(((i >> 56) & 0xff).toInt)
-    byteBuilder.append(((i >> 48) & 0xff).toInt)
-    byteBuilder.append(((i >> 40) & 0xff).toInt)
-    byteBuilder.append(((i >> 32) & 0xff).toInt)
-    byteBuilder.append(((i >> 24) & 0xff).toInt)
-    byteBuilder.append(((i >> 16) & 0xff).toInt)
-    byteBuilder.append(((i >> 8) & 0xff).toInt)
-    byteBuilder.append(((i >> 0) & 0xff).toInt)
+    byteBuilder.appendUnsafe(((i >> 56) & 0xff).toByte )
+    byteBuilder.appendUnsafe(((i >> 48) & 0xff).toByte )
+    byteBuilder.appendUnsafe(((i >> 40) & 0xff).toByte )
+    byteBuilder.appendUnsafe(((i >> 32) & 0xff).toByte )
+    byteBuilder.appendUnsafe(((i >> 24) & 0xff).toByte )
+    byteBuilder.appendUnsafe(((i >> 16) & 0xff).toByte )
+    byteBuilder.appendUnsafe(((i >> 8) & 0xff).toByte )
+    byteBuilder.appendUnsafe(((i >> 0) & 0xff).toByte )
   }
 
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int, index: Int) = {
@@ -220,14 +243,17 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
       case 16 => byteBuilder.append(MPK.FixExt16)
       case _ =>
         if (len <= 255){
-          byteBuilder.append(MPK.Ext8)
+          byteBuilder.ensureLength(2)
+          byteBuilder.appendUnsafe(MPK.Ext8.toByte)
           writeUInt8(len)
         }else if (len <= 65535){
-          byteBuilder.append(MPK.Ext16)
+          byteBuilder.ensureLength(3)
+          byteBuilder.appendUnsafe(MPK.Ext16.toByte)
           writeUInt16(len)
         }else{
+          byteBuilder.ensureLength(5)
           writeUInt32(len)
-          byteBuilder.append(MPK.Ext32)
+          byteBuilder.appendUnsafe(MPK.Ext32.toByte)
         }
     }
     byteBuilder.append(tag)
@@ -237,7 +263,8 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
   }
 
   def visitChar(s: Char, index: Int) = {
-    byteBuilder.append(MPK.UInt16)
+    byteBuilder.ensureLength(3)
+    byteBuilder.appendUnsafe(MPK.UInt16.toByte)
     writeUInt16(s)
     flushElemBuilder()
     out
