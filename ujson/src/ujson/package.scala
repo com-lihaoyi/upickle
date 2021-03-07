@@ -40,7 +40,7 @@ package object ujson{
 
   def writeToByteArray(t: Value.Value,
                        indent: Int = -1,
-                       escapeUnicode: Boolean = false): Unit = {
+                       escapeUnicode: Boolean = false) = {
     val baos = new java.io.ByteArrayOutputStream
     writeToOutputStream(t, baos, indent, escapeUnicode)
     baos.toByteArray
@@ -78,7 +78,7 @@ package object ujson{
   }
   def reformatToByteArray(s: Readable,
                           indent: Int = -1,
-                          escapeUnicode: Boolean = false): Unit = {
+                          escapeUnicode: Boolean = false) = {
     val baos = new java.io.ByteArrayOutputStream
     reformatToOutputStream(s, baos, indent, escapeUnicode)
     baos.toByteArray

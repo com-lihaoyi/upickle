@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 import upickle.core.NoOpVisitor
 
 package object upack{
@@ -20,6 +22,11 @@ package object upack{
     */
   def writeTo(t: Msg, out: java.io.OutputStream): Unit = {
     transform(t, new MsgPackWriter(out))
+  }
+  def writeToByteArray(t: Msg) = {
+    val out = new ByteArrayOutputStream()
+    transform(t, new MsgPackWriter(out))
+    out.toByteArray
   }
   /**
     * Parse the given MessagePack input, failing if it is invalid

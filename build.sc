@@ -1,5 +1,11 @@
 
-import mill._, mill.scalalib._, mill.scalalib.publish._, mill.scalajslib._, mill.scalanativelib._, mill.modules._
+import mill._
+import mill.scalalib._
+import mill.scalalib.publish._
+import mill.scalajslib._
+import mill.scalanativelib._
+import mill.modules._
+import mill.scalanativelib.api.{LTO, ReleaseMode}
 
 val scala212  = "2.12.13"
 val scala213  = "2.13.4"
@@ -396,19 +402,19 @@ trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.12.1",
-    ivy"io.circe::circe-generic::0.12.1",
-    ivy"io.circe::circe-parser::0.12.1",
-    ivy"com.typesafe.play::play-json::2.7.4",
+    ivy"io.circe::circe-core::0.13.0",
+    ivy"io.circe::circe-generic::0.13.0",
+    ivy"io.circe::circe-parser::0.13.0",
+    ivy"com.typesafe.play::play-json::2.9.2",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.7",
-    ivy"com.lihaoyi::sourcecode::0.2.1",
+    ivy"com.lihaoyi::sourcecode::0.2.4",
   )
 }
 
 object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
-    def scalaJSVersion = scalaJSVersions.head._2
+    def scalaJSVersion = scalaJSVersions.last._2
     def platformSegment = "js"
     def moduleDeps = Seq(upickle.js(scala213, scalaJS1).test)
     def run(args: String*) = T.command {
@@ -428,9 +434,15 @@ object bench extends Module {
   object jvm extends BenchModule {
     def platformSegment = "jvm"
     def moduleDeps = Seq(upickle.jvm(scala213).test)
-    def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"com.fasterxml.jackson.module::jackson-module-scala:2.9.10",
-      ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
-    )
+  }
+
+  object native extends BenchModule with ScalaNativeModule {
+    def platformSegment = "native"
+    def scalaNativeVersion = "0.4.0"
+    def moduleDeps = Seq(upickle.native(scala213, "0.4.0").test)
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.4")
+    def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "NonNative.scala"))
+    def releaseMode = ReleaseMode.ReleaseFast
+    def nativeLTO = LTO.Thin
   }
 }

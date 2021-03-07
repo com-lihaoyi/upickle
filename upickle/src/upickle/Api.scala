@@ -79,6 +79,13 @@ trait Api
                                      escapeUnicode: Boolean = false): Unit = {
     transform(t).to(new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
   }
+  def writeToByteArray[T: Writer](t: T,
+                                  indent: Int = -1,
+                                  escapeUnicode: Boolean = false) = {
+    val out = new java.io.ByteArrayOutputStream()
+    writeToOutputStream(t, out, indent, escapeUnicode)
+    out.toByteArray
+  }
   /**
     * Write the given Scala value as a JSON string via a `geny.Writable`
     */
@@ -95,6 +102,11 @@ trait Api
     */
   def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
     streamBinary[T](t).writeBytesTo(out)
+  }
+  def writeBinaryToByteArray[T: Writer](t: T, out: java.io.OutputStream): Unit = {
+    val out = new java.io.ByteArrayOutputStream()
+    streamBinary[T](t).writeBytesTo(out)
+    out.toByteArray
   }
   /**
     * Write the given Scala value as a MessagePack binary via a `geny.Writable`

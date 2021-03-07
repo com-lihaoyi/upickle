@@ -1,14 +1,5 @@
 package upickle
 
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.core.`type`.TypeReference
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer
-import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.databind.util.TokenBuffer
-import com.fasterxml.jackson.databind.{DeserializationContext, JsonNode, ObjectMapper}
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
-
 
 object Main{
   import ADTs.ADT0
@@ -17,7 +8,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(500, 5000, 10000)){
+    for(duration <- Seq(2500, 5000, 10000, 10000, 10000)){
       println("RUN JVM: " + duration)
       println()
 
@@ -33,28 +24,30 @@ object Main{
 //      Main.uJsonJson4sJsonAst(duration)
 
 //      Main.jacksonModuleScala(duration)
-//      Common.playJson(duration)
-//      Common.circe(duration)
-//      Common.upickleDefault(duration)
-//      Common.upickleLegacy(duration)
-//      Common.upickleBinaryDefault(duration)
+      NonNative.playJson(duration)
+      NonNative.circe(duration)
+      Common.upickleDefault(duration)
+      Common.upickleDefaultByteArray(duration)
+      Common.upickleBinaryDefault(duration)
+      //      Common.upickleLegacy(duration)
 //      Common.upickleBinaryLegacy(duration)
 //      Common.genCodec(duration)
-//      Common.playJsonCached(duration)
-//      Common.circeCached(duration)
+      NonNative.playJsonCached(duration)
+      NonNative.circeCached(duration)
       Common.upickleDefaultCached(duration)
 //      Common.upickleDefaultCached(duration)
 //      Common.upickleDefaultCachedReadable(duration)
 //      Common.upickleDefaultCachedReadablePath(duration)
+
       Common.upickleDefaultCachedByteArray(duration)
-//      Common.upickleLegacyCached(duration)
-//      Common.upickleDefaultBinaryCached(duration)
+      Common.upickleDefaultBinaryCached(duration)
+      //      Common.upickleLegacyCached(duration)
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-      benchParsingRendering(duration, bytes = true, strings = false, streams = false)
-      benchParsingRendering(duration, bytes = false, strings = true, streams = false)
-      benchParsingRendering(duration, bytes = false, strings = false, streams = true)
+//      benchParsingRendering(duration, bytes = true, strings = false, streams = false)
+//      benchParsingRendering(duration, bytes = false, strings = true, streams = false)
+//      benchParsingRendering(duration, bytes = false, strings = false, streams = true)
       println()
     }
   }
@@ -159,57 +152,57 @@ object Main{
       ujson.json4s.Json4sJson.transform(_, ujson.StringRenderer()).toString
     )
   }
-  def jacksonModuleScala(duration: Int) = {
-    val mapper = new ObjectMapper() with ScalaObjectMapper
-    val m = new SimpleModule
-    mapper.registerModule(DefaultScalaModule)
-
-    // https://stackoverflow.com/questions/47955581/jackson-deserialize-json-to-scala-adt?rq=1
-    m.addDeserializer(
-      classOf[A],
-      new StdDeserializer[A](classOf[A]) {
-        def deserialize(jp: JsonParser, ctxt: DeserializationContext): A = {
-          val tb = new TokenBuffer(jp, ctxt)
-          tb.copyCurrentStructure(jp)
-          val firstParser = tb.asParser
-          firstParser.nextToken
-          val curNode = firstParser.getCodec.readTree[JsonNode](firstParser)
-          val objectParser = tb.asParser
-          objectParser.nextToken()
-          if (curNode.has("i")) {
-            objectParser.readValueAs[B](classOf[B])
-          } else if (curNode.has("s1")) {
-            objectParser.readValueAs[C](classOf[C])
-          } else ???
-        }
-      }
-    )
-    m.addDeserializer(
-      classOf[LL],
-      new StdDeserializer[LL](classOf[LL]) {
-        def deserialize(jp: JsonParser, ctxt: DeserializationContext): LL = {
-          val tb = new TokenBuffer(jp, ctxt)
-          tb.copyCurrentStructure(jp)
-          val firstParser = tb.asParser
-          firstParser.nextToken
-          val curNode = firstParser.getCodec.readTree[JsonNode](firstParser)
-          val objectParser = tb.asParser
-          objectParser.nextToken()
-          if (curNode.has("c")) {
-            objectParser.readValueAs[Node](classOf[Node])
-          } else{
-            End
-          }
-        }
-      }
-    )
-    mapper.registerModule(m)
-
-    val jacksonType = new TypeReference[Common.Data] {}
-
-    Common.bench[String](duration)(
-      mapper.readValue[Seq[Common.Data]](_, jacksonType),
-      mapper.writeValueAsString(_)
-    )
-  }
+//  def jacksonModuleScala(duration: Int) = {
+//    val mapper = new ObjectMapper() with ScalaObjectMapper
+//    val m = new SimpleModule
+//    mapper.registerModule(DefaultScalaModule)
+//
+//    // https://stackoverflow.com/questions/47955581/jackson-deserialize-json-to-scala-adt?rq=1
+//    m.addDeserializer(
+//      classOf[A],
+//      new StdDeserializer[A](classOf[A]) {
+//        def deserialize(jp: JsonParser, ctxt: DeserializationContext): A = {
+//          val tb = new TokenBuffer(jp, ctxt)
+//          tb.copyCurrentStructure(jp)
+//          val firstParser = tb.asParser
+//          firstParser.nextToken
+//          val curNode = firstParser.getCodec.readTree[JsonNode](firstParser)
+//          val objectParser = tb.asParser
+//          objectParser.nextToken()
+//          if (curNode.has("i")) {
+//            objectParser.readValueAs[B](classOf[B])
+//          } else if (curNode.has("s1")) {
+//            objectParser.readValueAs[C](classOf[C])
+//          } else ???
+//        }
+//      }
+//    )
+//    m.addDeserializer(
+//      classOf[LL],
+//      new StdDeserializer[LL](classOf[LL]) {
+//        def deserialize(jp: JsonParser, ctxt: DeserializationContext): LL = {
+//          val tb = new TokenBuffer(jp, ctxt)
+//          tb.copyCurrentStructure(jp)
+//          val firstParser = tb.asParser
+//          firstParser.nextToken
+//          val curNode = firstParser.getCodec.readTree[JsonNode](firstParser)
+//          val objectParser = tb.asParser
+//          objectParser.nextToken()
+//          if (curNode.has("c")) {
+//            objectParser.readValueAs[Node](classOf[Node])
+//          } else{
+//            End
+//          }
+//        }
+//      }
+//    )
+//    mapper.registerModule(m)
+//
+//    val jacksonType = new TypeReference[Common.Data] {}
+//
+//    Common.bench[String](duration)(
+//      mapper.readValue[Seq[Common.Data]](_, jacksonType),
+//      mapper.writeValueAsString(_)
+//    )
+//  }
 }

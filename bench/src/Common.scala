@@ -6,17 +6,57 @@ object Common{
   import Generic.ADT
   import Hierarchy._
   import Recursive._
-  type Data = ADT[Seq[(Int, Int)], String, A, LL, ADTc, ADT0]
+  type Data = ADT[Seq[(Boolean, String, Int, Double)], String, A, LL, ADTc, ADT0]
   val benchmarkSampleData: Seq[Data] = Seq.fill(1000)(ADT(
-    Vector((1, 2), (3, 4), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13)),
-    """
-      |I am cow, hear me moo
-      |I weigh twice as much as you
-      |And I look good on the barbecueeeee
-    """.stripMargin,
-    C("lol i am a noob", "haha you are a noob"): A,
-    Node(-11, Node(-22, Node(-33, Node(-44, End)))): LL,
-    ADTc(i = 1234567890, s = "i am a strange loop"),
+    Vector(
+      (true,  "zero",  0, 0),
+      (false, "one",   1, 1.1),
+      (true,  "two",   2, 22.22),
+      (false, "three", 3, 333.33),
+      (true,  "four",  4, 4444.4444),
+      (false, "five",  5, 55555.55555),
+      (true,  "six",   6, 666666.666666),
+      (false, "seven", 7, 7777777.7777777),
+      (true,  "eight", 8, 88888888.88888888),
+      (false, "nine",  9, 999999999.999999999)
+    ),
+    """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+      |do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      |Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+      |nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+      |reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+      |pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+      |culpa qui officia deserunt mollit anim id est laborum.""".stripMargin,
+    C("虾饺 烧卖 凤爪 糯米鸡 萝卜糕 小笼包 肠粉", "叉烧包 莲蓉包 流沙包 蛋挞 春卷 锅贴"),
+    Node(
+      -11111111,
+      Node(
+        222222222,
+        Node(
+          -33333333,
+          Node(
+            44444444,
+            Node(
+              -55555555,
+              Node(
+                66666666,
+                Node(
+                  -77777777,
+                  Node(
+                    88888888,
+                    End
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    ),
+    ADTc(
+      i = 1234567890,
+      s = "I am cow hear me moo I weigh twice as much as you and I look good on the barbecue"
+    ),
     ADT0()
   ))
   val benchmarkSampleJson = upickle.default.write(benchmarkSampleData)
@@ -24,64 +64,6 @@ object Common{
 
   println("benchmarkSampleJson " + benchmarkSampleJson.size + " bytes")
   println("benchmarkSampleMsgPack " + benchmarkSampleMsgPack.size + " bytes")
-  def circe(duration: Int) = {
-    import io.circe._
-    import io.circe.generic.semiauto._
-    import io.circe.parser._
-
-    implicit def _r1: Decoder[Data] = deriveDecoder
-    implicit def _r2: Decoder[A] = deriveDecoder
-    implicit def _r3: Decoder[B] = deriveDecoder
-    implicit def _r4: Decoder[C] = deriveDecoder
-    implicit def _r5: Decoder[LL] = deriveDecoder
-    implicit def _r6: Decoder[Node] = deriveDecoder
-    implicit def _r7: Decoder[End.type] = deriveDecoder
-    implicit def _r8: Decoder[ADTc] = deriveDecoder
-    implicit def _r9: Decoder[ADT0] = deriveDecoder
-
-    implicit def _w1: Encoder[Data] = deriveEncoder
-    implicit def _w2: Encoder[A] = deriveEncoder
-    implicit def _w3: Encoder[B] = deriveEncoder
-    implicit def _w4: Encoder[C] = deriveEncoder
-    implicit def _w5: Encoder[LL] = deriveEncoder
-    implicit def _w6: Encoder[Node] = deriveEncoder
-    implicit def _w7: Encoder[End.type] = deriveEncoder
-    implicit def _w8: Encoder[ADTc] = deriveEncoder
-    implicit def _w9: Encoder[ADT0] = deriveEncoder
-
-    bench[String](duration)(
-      decode[Seq[Data]](_).right.get,
-      implicitly[Encoder[Seq[Data]]].apply(_).toString()
-    )
-
-  }
-
-  def playJson(duration: Int) = {
-    import play.api.libs.json._
-    implicit def rw1: Format[Data] = play.api.libs.json.Json.format
-    implicit def rw2: Format[A] = play.api.libs.json.Json.format
-    implicit def rw3: Format[B] = play.api.libs.json.Json.format
-    implicit def rw4: Format[C] = play.api.libs.json.Json.format
-    implicit def rw5: Format[LL] = play.api.libs.json.Json.format
-    implicit def rw6: Format[Node] = play.api.libs.json.Json.format
-    implicit def rw7: Format[End.type] = new Format[End.type] {
-      def reads(json: JsValue) = JsSuccess(End)
-
-      def writes(o: Recursive.End.type) = JsObject(Nil)
-    }
-    implicit def rw8: Format[ADTc] = play.api.libs.json.Json.format
-    implicit def rw9: Format[ADT0] = new Format[ADT0] {
-      def reads(json: JsValue) = JsSuccess(ADT0())
-
-      def writes(o: ADT0) = JsObject(Nil)
-    }
-
-
-    bench[String](duration)(
-      s => Json.fromJson[Seq[Data]](Json.parse(s)).get,
-      d => Json.stringify(Json.toJson(d))
-    )
-  }
 
   def upickleLegacy(duration: Int) = {
     import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
@@ -160,65 +142,6 @@ object Common{
 //    )
 //  }
 
-  def circeCached(duration: Int) = {
-    import io.circe._
-    import io.circe.generic.semiauto._
-    import io.circe.parser._
-
-    implicit lazy val _r1: Decoder[Data] = deriveDecoder
-    implicit lazy val _r2: Decoder[A] = deriveDecoder
-    implicit lazy val _r3: Decoder[B] = deriveDecoder
-    implicit lazy val _r4: Decoder[C] = deriveDecoder
-    implicit lazy val _r5: Decoder[LL] = deriveDecoder
-    implicit lazy val _r6: Decoder[Node] = deriveDecoder
-    implicit lazy val _r7: Decoder[End.type] = deriveDecoder
-    implicit lazy val _r8: Decoder[ADTc] = deriveDecoder
-    implicit lazy val _r9: Decoder[ADT0] = deriveDecoder
-
-    implicit lazy val _w1: Encoder[Data] = deriveEncoder
-    implicit lazy val _w2: Encoder[A] = deriveEncoder
-    implicit lazy val _w3: Encoder[B] = deriveEncoder
-    implicit lazy val _w4: Encoder[C] = deriveEncoder
-    implicit lazy val _w5: Encoder[LL] = deriveEncoder
-    implicit lazy val _w6: Encoder[Node] = deriveEncoder
-    implicit lazy val _w7: Encoder[End.type] = deriveEncoder
-    implicit lazy val _w8: Encoder[ADTc] = deriveEncoder
-    implicit lazy val _w9: Encoder[ADT0] = deriveEncoder
-
-    bench[String](duration)(
-      decode[Seq[Data]](_).right.get,
-      implicitly[Encoder[Seq[Data]]].apply(_).toString()
-    )
-  }
-
-  def playJsonCached(duration: Int) = {
-    import play.api.libs.json._
-    implicit lazy val rw1: Format[Data] = play.api.libs.json.Json.format
-    implicit lazy val rw2: Format[A] = play.api.libs.json.Json.format
-    implicit lazy val rw3: Format[B] = play.api.libs.json.Json.format
-    implicit lazy val rw4: Format[C] = play.api.libs.json.Json.format
-    implicit lazy val rw5: Format[LL] = play.api.libs.json.Json.format
-    implicit lazy val rw6: Format[Node] = play.api.libs.json.Json.format
-    implicit lazy val rw7: Format[End.type] = new Format[End.type] {
-      def reads(json: JsValue) = JsSuccess(End)
-
-      def writes(o: Recursive.End.type) = JsObject(Nil)
-    }
-    implicit lazy val rw8: Format[ADTc] = play.api.libs.json.Json.format
-    implicit lazy val rw9: Format[ADT0] = new Format[ADT0] {
-      def reads(json: JsValue) = JsSuccess(ADT0())
-
-      def writes(o: ADT0) = JsObject(Nil)
-    }
-
-
-
-    bench[String](duration)(
-      s => Json.fromJson[Seq[Data]](Json.parse(s)).get,
-      d => Json.stringify(Json.toJson(d))
-    )
-
-  }
 
   def upickleLegacyCached(duration: Int) = {
     import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
@@ -255,6 +178,12 @@ object Common{
       upickle.default.write(_)
     )
   }
+  def upickleDefaultByteArray(duration: Int) = {
+    bench[Array[Byte]](duration)(
+      upickle.default.read[Seq[Data]](_),
+      upickle.default.writeToByteArray(_)
+    )
+  }
   def upickleDefaultCachedByteArray(duration: Int) = {
     implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
     implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
@@ -268,7 +197,7 @@ object Common{
 
     bench[Array[Byte]](duration)(
       upickle.default.read[Seq[Data]](_),
-      upickle.default.write(_).getBytes
+      upickle.default.writeToByteArray(_)
     )
   }
   def upickleDefaultCachedReadable(duration: Int) = {
