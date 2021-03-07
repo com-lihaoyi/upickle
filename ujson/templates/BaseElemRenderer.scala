@@ -139,7 +139,7 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
 
   def visitNonNullString(s: CharSequence, index: Int) = {
     flushBuffer()
-    ujson.util.RenderUtils.escapeElem(unicodeCharBuilder, elemBuilder, s, escapeUnicode)
+    upickle.core.RenderUtils.escapeElem(unicodeCharBuilder, elemBuilder, s, escapeUnicode)
     flushElemBuilder()
     out
   }

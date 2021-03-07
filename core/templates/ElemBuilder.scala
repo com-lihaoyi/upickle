@@ -8,6 +8,8 @@ package upickle.core
 class ElemBuilder(startSize: Int = 32) extends upickle.core.ElemAppendC{
   private[this] var arr: Array[Elem] = new Array(startSize)
   private[this] var length: Int = 0
+  private def getArr = arr
+  def getLength = length
   def reset(): Unit = length = 0
   def ensureLength(increment: Int): Unit = {
     var multiple = arr.length
@@ -28,6 +30,7 @@ class ElemBuilder(startSize: Int = 32) extends upickle.core.ElemAppendC{
     System.arraycopy(elems, elemsStart, arr, length, elemsLength)
     length += elemsLength
   }
+  def appendAll(other: ElemBuilder): Unit = appendAll(other.getArr, 0, other.getLength)
 
   def appendUnsafeC(x: Char): Unit = appendUnsafe(x.toElem)
   def appendUnsafe(x: Elem): Unit = {

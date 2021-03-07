@@ -1,11 +1,11 @@
-package ujson.util
+package upickle.core
 
 import java.nio.charset.StandardCharsets
 
 import scala.annotation.switch
 
 object RenderUtils{
-  private[ujson] final val hexChars: Array[Int] = {
+  final val hexChars: Array[Int] = {
     val arr = new Array[Int](128)
     var i = 0
     while (i < 10) { arr(i + '0') = i; i += 1 }
@@ -13,6 +13,7 @@ object RenderUtils{
     while (i < 16) { arr(i + 'a') = 10 + i; arr(i + 'A') = 10 + i; i += 1 }
     arr
   }
+  def hex(i: Int): Int = hexChars(i)
 
   private def toHex(nibble: Int): Char = (nibble + (if (nibble >= 10) 87 else 48)).toChar
 
@@ -59,6 +60,31 @@ object RenderUtils{
       i += 1
     }
     sb.appendUnsafe('"')
+  }
+  final def encodeCharSequenceToBytes(unicodeCharBuilder: upickle.core.CharBuilder,
+                                      sb: upickle.core.ByteBuilder,
+                                      s: CharSequence): Unit = {
+
+    var i = 0
+    val naiveOutLen = s.length
+    sb.ensureLength(naiveOutLen)
+    while (i < naiveOutLen) {
+      (s.charAt(i): @switch) match {
+        case c =>
+          if (c <= 127) sb.append(c)
+          else{
+            unicodeCharBuilder.reset()
+            while(i < naiveOutLen){
+              unicodeCharBuilder.append(s.charAt(i))
+              i += 1
+            }
+            val bytes = unicodeCharBuilder.makeString().getBytes(StandardCharsets.UTF_8)
+            sb.appendAll(bytes, bytes.length)
+            return
+          }
+      }
+      i += 1
+    }
   }
 
   final def escapeChar(unicodeCharBuilder: upickle.core.CharBuilder,
