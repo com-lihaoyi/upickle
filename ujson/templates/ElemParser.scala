@@ -268,12 +268,12 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
    * This is why it can only return Char instead of Int.
    */
   protected[this] final def descape(i: Int): Char = {
-    val hc = ujson.util.RenderUtils.hexChars
+    import upickle.core.Util.hexChar
     var x = 0
-    x = (x << 4) | hc(getElemSafe(i+2).toInt)
-    x = (x << 4) | hc(getElemSafe(i+3).toInt)
-    x = (x << 4) | hc(getElemSafe(i+4).toInt)
-    x = (x << 4) | hc(getElemSafe(i+5).toInt)
+    x = (x << 4) | hexChar(getElemSafe(i+2).toInt)
+    x = (x << 4) | hexChar(getElemSafe(i+3).toInt)
+    x = (x << 4) | hexChar(getElemSafe(i+4).toInt)
+    x = (x << 4) | hexChar(getElemSafe(i+5).toInt)
     x.toChar
   }
 

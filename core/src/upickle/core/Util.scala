@@ -1,8 +1,8 @@
 package upickle.core
 
 object Util {
-
-  val hexes = Array[String](
+  def hexString(i: Int) = hexStrings(i)
+  private[this] val hexStrings = Array[String](
     "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f",
     "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "1a", "1b", "1c", "1d", "1e", "1f",
     "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "2a", "2b", "2c", "2d", "2e", "2f",
@@ -20,8 +20,18 @@ object Util {
     "e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "ea", "eb", "ec", "ed", "ee", "ef",
     "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "fa", "fb", "fc", "fd", "fe", "ff"
   )
+  def hexChar(i: Int) = hexChars(i)
+  private[this] final val hexChars: Array[Int] = {
+    val arr = new Array[Int](128)
+    var i = 0
+    while (i < 10) { arr(i + '0') = i; i += 1 }
+    i = 0
+    while (i < 16) { arr(i + 'a') = 10 + i; arr(i + 'A') = 10 + i; i += 1 }
+    arr
+  }
 
-  def bytesToString(bs: Array[Byte]) = bs.map(b => hexes(b & 0xFF)).mkString("-")
+
+  def bytesToString(bs: Array[Byte]) = bs.map(b => hexString(b & 0xFF)).mkString("-")
   def stringToBytes(s: String) = s.split('-').map(Integer.parseInt(_, 16).toByte)
 
   def parseIntegralNum(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
@@ -78,8 +88,7 @@ object Util {
     }
 
     val size = len - i
-    if (i >= len) throw new NumberFormatException(cs.toString)
-    if (size > 19) throw new NumberFormatException(cs.toString)
+    if (i >= len || size > 19) throw new NumberFormatException(cs.toString)
 
     while (i < len) {
       val digit = cs.charAt(i).toInt - 48

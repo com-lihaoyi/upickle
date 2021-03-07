@@ -5,17 +5,7 @@ import java.nio.charset.StandardCharsets
 import scala.annotation.switch
 
 object RenderUtils{
-  private[ujson] final val hexChars: Array[Int] = {
-    val arr = new Array[Int](128)
-    var i = 0
-    while (i < 10) { arr(i + '0') = i; i += 1 }
-    i = 0
-    while (i < 16) { arr(i + 'a') = 10 + i; arr(i + 'A') = 10 + i; i += 1 }
-    arr
-  }
-
-  private def toHex(nibble: Int): Char = (nibble + (if (nibble >= 10) 87 else 48)).toChar
-
+  import upickle.core.Util.hexChar
   final def escapeByte(unicodeCharBuilder: ujson.util.CharBuilder,
                        sb: ujson.util.ByteBuilder,
                        s: CharSequence,
@@ -40,10 +30,10 @@ object RenderUtils{
             sb.ensureLength(naiveOutLen - i + 5);
             sb.appendUnsafeC('\\')
             sb.appendUnsafeC('u')
-            sb.appendUnsafeC(toHex((c >> 12) & 15))
-            sb.appendUnsafeC(toHex((c >> 8) & 15))
-            sb.appendUnsafeC(toHex((c >> 4) & 15))
-            sb.appendUnsafeC(toHex(c & 15))
+            sb.appendUnsafeC(hexChar((c >> 12) & 15).toChar)
+            sb.appendUnsafeC(hexChar((c >> 8) & 15).toChar)
+            sb.appendUnsafeC(hexChar((c >> 4) & 15).toChar)
+            sb.appendUnsafeC(hexChar(c & 15).toChar)
           } else {
             if (c <= 127) sb.append(c)
             else{
@@ -93,10 +83,10 @@ object RenderUtils{
             sb.ensureLength(naiveOutLen - i + 5);
             sb.appendUnsafeC('\\')
             sb.appendUnsafeC('u')
-            sb.appendUnsafeC(toHex((c >> 12) & 15))
-            sb.appendUnsafeC(toHex((c >> 8) & 15))
-            sb.appendUnsafeC(toHex((c >> 4) & 15))
-            sb.appendUnsafeC(toHex(c & 15))
+            sb.appendUnsafeC(hexChar((c >> 12) & 15).toChar)
+            sb.appendUnsafeC(hexChar((c >> 8) & 15).toChar)
+            sb.appendUnsafeC(hexChar((c >> 4) & 15).toChar)
+            sb.appendUnsafeC(hexChar(c & 15).toChar)
           } else {
             sb.append(c)
           }
