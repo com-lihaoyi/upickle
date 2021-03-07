@@ -118,7 +118,7 @@ object Main{
   def uJsonPlayJsonAst(duration: Int) = {
     Common.bench0[String, play.api.libs.json.JsValue](duration, Common.benchmarkSampleJson)(
       ujson.play.PlayJson(_),
-      ujson.play.PlayJson.transform(_, StringRenderer()).toString
+      ujson.play.PlayJson.transform(_, ujson.StringRenderer()).toString
     )
   }
 
@@ -131,7 +131,7 @@ object Main{
   def uJsonCirceJsonAst(duration: Int) = {
     Common.bench0[String, io.circe.Json](duration, Common.benchmarkSampleJson)(
       ujson.circe.CirceJson(_),
-      ujson.circe.CirceJson.transform(_, StringRenderer()).toString
+      ujson.circe.CirceJson.transform(_, ujson.StringRenderer()).toString
     )
   }
 
@@ -144,7 +144,7 @@ object Main{
   def uJsonArgonautJsonAst(duration: Int) = {
     Common.bench0[String, argonaut.Json](duration, Common.benchmarkSampleJson)(
       ujson.argonaut.ArgonautJson(_),
-      ujson.argonaut.ArgonautJson.transform(_, StringRenderer()).toString
+      ujson.argonaut.ArgonautJson.transform(_, ujson.StringRenderer()).toString
     )
   }
   def json4sJsonAst(duration: Int) = {
@@ -156,7 +156,7 @@ object Main{
   def uJsonJson4sJsonAst(duration: Int) = {
     Common.bench0[String, org.json4s.JsonAST.JValue](duration, Common.benchmarkSampleJson)(
       ujson.json4s.Json4sJson(_),
-      ujson.json4s.Json4sJson.transform(_, StringRenderer()).toString
+      ujson.json4s.Json4sJson.transform(_, ujson.StringRenderer()).toString
     )
   }
   def jacksonModuleScala(duration: Int) = {
