@@ -187,7 +187,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
    *
    * This method has all the same caveats as the previous method.
    */
-  protected[this] final def parseNumSlow(i: Int, facade: Visitor[_, J]): (J, Int) = {
+  protected[this] final def parseNumTopLevel(i: Int, facade: Visitor[_, J]): (J, Int) = {
     var j = i
     var c = getElemSafe(j)
     var decIndex = -1
@@ -335,14 +335,10 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       case '{' => parseNested(OBJBEG, i + 1, facade.visitObject(-1, i), Nil)
 
       // we have a single top-level number
-      case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-        parseNumSlow(i, facade)
+      case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => parseNumTopLevel(i, facade)
 
       // we have a single top-level string
-      case '"' =>
-        val (s, j) = parseString(i, false)
-        val v = facade.visitString(s, i)
-        (v, j)
+      case '"' => parseStringTopLevel(i, facade)
 
       // we have a single top-level constant
       case 't' => (parseTrue(i, facade), i + 4)
@@ -387,11 +383,11 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       case '"' =>
         state match{
           case KEY | OBJBEG =>
-            val nextJ = try parseObjectKey(i, stackHead) catch reject(i)
+            val nextJ = try parseString(i, stackHead, key = true) catch reject(i)
             parseNested(COLON, nextJ, stackHead, stackTail)
 
           case DATA | ARRBEG =>
-            val nextJ = try parseStringValue(i, stackHead) catch reject(i)
+            val nextJ = try parseString(i, stackHead, key = false) catch reject(i)
             parseNested(collectionEndFor(stackHead), nextJ, stackHead, stackTail)
 
           case _ => dieWithFailureMessage(i, state)
@@ -488,20 +484,6 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     }
   }
 
-  private def parseStringValue(i: Int, stackHead: ObjArrVisitor[_, J]) = {
-    val (s, nextJ) = parseString(i, false)
-    val v = stackHead.subVisitor.visitString(s, i)
-    stackHead.narrow.visitValue(v, i)
-    nextJ
-  }
-
-  private def parseObjectKey(i: Int, stackHead: ObjArrVisitor[_, J]) = {
-    val obj = stackHead.asInstanceOf[ObjVisitor[Any, _]]
-    val keyVisitor = obj.visitKey(i)
-    val (s, nextJ) = parseString(i, true)
-    obj.visitKeyValue(keyVisitor.visitString(s, i))
-    nextJ
-  }
 
   def dieWithFailureMessage(i: Int, state: Int) = {
     val expected = state match{
@@ -558,7 +540,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   /**
     * Parse a string that is known to have escape sequences.
     */
-  protected[this] final def parseStringComplex(i0: Int): (CharSequence, Int) = {
+  protected[this] final def parseStringComplex(i0: Int): Int = {
     var i = i0
     var c = elemOps.toUnsignedInt(getElemSafe(i))
     while (c != '"') {
@@ -597,7 +579,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       c = elemOps.toUnsignedInt(getElemSafe(i))
     }
 
-    (outputBuilder.makeString(), i + 1)
+    i + 1
   }
 
   /**
@@ -608,14 +590,45 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     * Char. It performs the correct checks to make sure that we don't
     * interpret a multi-char code point incorrectly.
     */
-  protected[this] final def parseString(i: Int,  key: Boolean): (CharSequence, Int) = {
+  protected[this] final def parseString(i: Int, stackHead: ObjArrVisitor[_, J], key: Boolean): Int = {
 
     val k = parseStringSimple(i + 1)
-    if (k >= 0) (unsafeCharSeqForRange(i + 1, k - i - 2), k)
-    else {
+    if (k >= 0) {
+      visitString(i, unsafeCharSeqForRange(i + 1, k - i - 2), stackHead, key)
+      k
+    } else {
       outputBuilder.reset()
       appendElemsToBuilder(outputBuilder, i + 1, -k - 2 - i)
-      parseStringComplex(-k - 1)
+      val k2 = parseStringComplex(-k - 1)
+      visitString(i, outputBuilder.makeString(), stackHead, key)
+      k2
+    }
+  }
+
+  def visitString(i: Int, s: CharSequence, stackHead: ObjArrVisitor[_, J], key: Boolean) = {
+    if (key){
+      val obj = stackHead.asInstanceOf[ObjVisitor[Any, _]]
+      val keyVisitor = obj.visitKey(i)
+      obj.visitKeyValue(keyVisitor.visitString(s, i))
+    }else{
+      val v = stackHead.subVisitor.visitString(s, i)
+      stackHead.narrow.visitValue(v, i)
+    }
+  }
+
+
+  protected[this] final def parseStringTopLevel(i: Int, facade: Visitor[_, J]): (J, Int) = {
+
+    val k = parseStringSimple(i + 1)
+    if (k >= 0) {
+      val res = facade.visitString(unsafeCharSeqForRange(i + 1, k - i - 2), i)
+      (res, k)
+    } else {
+      outputBuilder.reset()
+      appendElemsToBuilder(outputBuilder, i + 1, -k - 2 - i)
+      val k2 = parseStringComplex(-k - 1)
+      val res = facade.visitString(outputBuilder.makeString(), i)
+      (res, k2)
     }
   }
 }
