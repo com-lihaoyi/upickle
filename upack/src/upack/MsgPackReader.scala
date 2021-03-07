@@ -4,37 +4,32 @@ import upack.{MsgPackKeys => MPK}
 
 import scala.annotation.switch
 
-class MsgPackReader(val startIndex: Int = 0, input0: Array[Byte]) extends BaseMsgPackReader {
-  def sliceString(i: Int, k: Int): String = new String(input0, i, k - i)
-  def sliceBytes(i: Int, n: Int): (Array[Byte], Int, Int) = (input0, i, n)
-  def byte(i: Int): Byte = input0(i)
-  def dropBufferUntil(i: Int): Unit = ()//donothing
+class MsgPackReader(input0: Array[Byte]) extends BaseMsgPackReader {
+  val srcLength = input0.length
+  protected[this] final def close() = {}
+
+  def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
+    if(buffer == null) (input0, false, srcLength)
+    else (input0, true, -1)
+  }
 }
 
 class InputStreamMsgPackReader(val inputStream: java.io.InputStream,
                                val minStartBufferSize: Int,
                                val maxStartBufferSize: Int)
 extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
-  def startIndex = 0
-  def byte(i: Int): Byte = getByteSafe(i)
 }
 
-abstract class BaseMsgPackReader{
+abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
 
-  def startIndex: Int
-  def byte(i: Int): Byte
-  def sliceString(i: Int, k: Int): String
-  def sliceBytes(i: Int, j: Int): (Array[Byte], Int, Int)
-  def dropBufferUntil(i: Int): Unit
-
-  private[this] var index0 = startIndex
+  private[this] var index0 = 0
   def incrementIndex(i: Int): Unit = index0 += i
   def setIndex(i: Int): Unit = index0 = i
   def index = index0
 
   def parse[T](visitor: Visitor[_, T]): T = {
-    dropBufferUntil(index)
-    val n = byte(index)
+
+    val n = getByteSafe(index)
     (n & 0xFF: @switch) match{
       case MPK.Nil => incrementIndex(1); visitor.visitNull(index)
       case MPK.False => incrementIndex(1); visitor.visitFalse(index)
@@ -69,7 +64,7 @@ abstract class BaseMsgPackReader{
 
       case MPK.Str8 => parseStr(parseUInt8(index + 1), visitor)
       case MPK.Str16 => parseStr(parseUInt16(index + 1), visitor)
-      case MPK.Str32=> parseStr(parseUInt32(index + 1), visitor)
+      case MPK.Str32 => parseStr(parseUInt32(index + 1), visitor)
 
       case MPK.Array16 => parseArray(parseUInt16(index + 1), visitor)
       case MPK.Array32 => parseArray(parseUInt32(index + 1), visitor)
@@ -101,17 +96,18 @@ abstract class BaseMsgPackReader{
     }
   }
   def parseExt[T](n: Int, visitor: Visitor[_, T]) = {
-    val (arr, i, j) = sliceBytes(index + 1, n)
-    visitor.visitExt(byte(index), arr, i, j, index)
+    val (arr, i, j) = sliceArr(index + 1, n)
+    visitor.visitExt(getByteSafe(index), arr, i, j, index)
   }
 
   def parseStr[T](n: Int, visitor: Visitor[_, T]) = {
     val res = visitor.visitString(sliceString(index, index + n), index)
+    println("<<<" + res + ">>>")
     incrementIndex(n)
     res
   }
   def parseBin[T](n: Int, visitor: Visitor[_, T]) = {
-    val (arr, i, j) = sliceBytes(index, n)
+    val (arr, i, j) = sliceArr(index, n)
     val res = visitor.visitBinary(arr, i, j, index)
     incrementIndex(n)
     res
@@ -124,6 +120,7 @@ abstract class BaseMsgPackReader{
       val keyVisitor = obj.visitKey(index)
       obj.visitKeyValue(parse(keyVisitor.asInstanceOf[Visitor[_, T]]))
       obj.narrow.visitValue(parse(obj.subVisitor.asInstanceOf[Visitor[_, T]]), index)
+//      dropBufferUntil(index)
       i += 1
     }
     obj.visitEnd(index)
@@ -136,27 +133,32 @@ abstract class BaseMsgPackReader{
     while(i < n){
       val v = parse(arr.subVisitor.asInstanceOf[Visitor[_, T]])
       arr.narrow.visitValue(v, index)
+//      dropBufferUntil(index)
       i += 1
     }
     arr.visitEnd(index)
   }
   def parseUInt8(i: Int) = {
     setIndex(i + 1)
-    byte(i) & 0xff
+    getByteSafe(i) & 0xff
   }
   def parseUInt16(i: Int) = {
     setIndex(i + 2)
-    (byte(i) & 0xff) << 8 | byte(i + 1) & 0xff
+    requestUntil(i + 2)
+    (getByteUnsafe(i) & 0xff) << 8 | getByteUnsafe(i + 1) & 0xff
   }
   def parseUInt32(i: Int) = {
     setIndex(i + 4)
-    (byte(i) & 0xff) << 24 | (byte(i + 1) & 0xff) << 16 | (byte(i + 2) & 0xff) << 8 | byte(i + 3) & 0xff
+    requestUntil(i + 4)
+    (getByteUnsafe(i) & 0xff) << 24 | (getByteUnsafe(i + 1) & 0xff) << 16 |
+    (getByteUnsafe(i + 2) & 0xff) << 8 | getByteUnsafe(i + 3) & 0xff
   }
   def parseUInt64(i: Int) = {
     setIndex(i + 8)
-    (byte(i + 0).toLong & 0xff) << 56 | (byte(i + 1).toLong & 0xff) << 48 |
-    (byte(i + 2).toLong & 0xff) << 40 | (byte(i + 3).toLong & 0xff) << 32 |
-    (byte(i + 4).toLong & 0xff) << 24 | (byte(i + 5).toLong & 0xff) << 16 |
-    (byte(i + 6).toLong & 0xff) << 8 | (byte(i + 7).toLong & 0xff) << 0
+    requestUntil(i + 8)
+    (getByteUnsafe(i + 0).toLong & 0xff) << 56 | (getByteUnsafe(i + 1).toLong & 0xff) << 48 |
+    (getByteUnsafe(i + 2).toLong & 0xff) << 40 | (getByteUnsafe(i + 3).toLong & 0xff) << 32 |
+    (getByteUnsafe(i + 4).toLong & 0xff) << 24 | (getByteUnsafe(i + 5).toLong & 0xff) << 16 |
+    (getByteUnsafe(i + 6).toLong & 0xff) << 8 | (getByteUnsafe(i + 7).toLong & 0xff) << 0
   }
 }

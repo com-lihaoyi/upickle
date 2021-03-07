@@ -10,7 +10,7 @@ object MsgPackJvmTests extends TestSuite{
   def readMsgs(path: String) = {
     val bytes = readBytes(path)
     val output = mutable.ArrayBuffer.empty[Msg]
-    val p = new MsgPackReader(0, bytes)
+    val p = new MsgPackReader(bytes)
     while(p.index < bytes.length){
       output.append(p.parse(Msg))
     }

@@ -21,6 +21,11 @@ trait BufferingElemParser{
 
   def sliceString(i: Int, k: Int): String = {
     requestUntil(k)
+    println("buffer.toSeq " + buffer.toSeq)
+    println("i " + i)
+    println("k " + k)
+    println("firstIdx " + firstIdx)
+    println("buffer.slice(i - firstIdx, k - firstIdx) " + buffer.slice(i - firstIdx, k - firstIdx).toSeq)
     new String(buffer.slice(i - firstIdx, k - firstIdx))
   }
 
