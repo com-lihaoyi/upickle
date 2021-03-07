@@ -1,7 +1,5 @@
 package ujson
-
 import utest._
-
 object BoolTests extends TestSuite {
   def tests = Tests{
 

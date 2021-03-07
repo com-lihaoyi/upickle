@@ -264,25 +264,13 @@ object upack extends Module {
 object ujson extends Module{
   trait JsonModule extends CommonPublishModule{
     def artifactName = "ujson"
-
-    trait JawnTestModule extends CommonTestModule{
-      def ivyDeps = T{
-        if (!isDotty) Agg(
-          ivy"com.lihaoyi::utest::0.7.7",
-          ivy"org.scalatest::scalatest::3.1.1",
-          ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
-        )
-        else Agg(ivy"com.lihaoyi::utest::0.7.7")
-      }
-      def testFrameworks =  Seq("upickle.core.UTestFramework")
-    }
   }
 
   object js extends Cross[JsModule](scalaJSVersions:_*)
   class JsModule(val crossScalaVersion: String, val crossScalaJSVersion: String) extends JsonModule with CommonJsModule{
     def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
 
-    object test extends Tests with JawnTestModule{
+    object test extends Tests with CommonTestModule{
       def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
     }
   }
@@ -290,7 +278,7 @@ object ujson extends Module{
   object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends JsonModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
-    object test extends Tests with JawnTestModule{
+    object test extends Tests with CommonTestModule{
       def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
     }
   }

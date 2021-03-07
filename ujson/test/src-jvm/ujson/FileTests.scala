@@ -12,21 +12,21 @@ object FileTests extends TestSuite{
   def tests = Tests{
     test("large strings in files are ok"){
 
-      TestUtil.withTemp(big) { t =>
+      JvmTestUtil.withTemp(big) { t =>
         Readable.fromFile(t).transform(NoOpVisitor)
       }
 
-      TestUtil.withTemp(bigEscaped) { t =>
+      JvmTestUtil.withTemp(bigEscaped) { t =>
         Readable.fromFile(t).transform(NoOpVisitor)
       }
     }
     test("make sure geny.Readable and InputStreamParser works"){
-      TestUtil.withTemp(big) { t =>
+      JvmTestUtil.withTemp(big) { t =>
         val jsonBytes = java.nio.file.Files.readAllBytes(t.toPath)
         Readable.fromReadable(jsonBytes).transform(NoOpVisitor)
       }
 
-      TestUtil.withTemp(bigEscaped) { t =>
+      JvmTestUtil.withTemp(bigEscaped) { t =>
         val jsonBytes = java.nio.file.Files.readAllBytes(t.toPath)
         Readable.fromReadable(jsonBytes).transform(NoOpVisitor)
       }

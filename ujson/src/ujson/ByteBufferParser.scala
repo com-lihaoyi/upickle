@@ -20,7 +20,7 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
   private[this] final val limit = src.limit() - start
 
 
-  protected[this] final def close() = { src.position(src.limit) }
+  protected[this] final def close() = { src.position(start) }
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
 
     if(buffer == null) (java.util.Arrays.copyOfRange(src.array(), start, src.limit()), false, limit)

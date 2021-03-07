@@ -17,7 +17,9 @@ package object ujson{
   def write(t: Value.Value,
             indent: Int = -1,
             escapeUnicode: Boolean = false): String = {
-    transform(t, StringRenderer(indent, escapeUnicode)).toString
+    val writer = new java.io.StringWriter
+    writeTo(t, writer, indent, escapeUnicode)
+    writer.toString
   }
 
   /**
@@ -36,6 +38,14 @@ package object ujson{
     transform(t, new BaseByteRenderer(out, indent, escapeUnicode))
   }
 
+  def writeToByteArray(t: Value.Value,
+                       indent: Int = -1,
+                       escapeUnicode: Boolean = false): Unit = {
+    val baos = new java.io.ByteArrayOutputStream
+    writeToOutputStream(t, baos, indent, escapeUnicode)
+    baos.toByteArray
+  }
+
   /**
     * Parse the given JSON input, failing if it is invalid
     */
@@ -45,7 +55,9 @@ package object ujson{
     * the configured formatting
     */
   def reformat(s: Readable, indent: Int = -1, escapeUnicode: Boolean = false): String = {
-    transform(s, StringRenderer(indent, escapeUnicode)).toString
+    val writer = new java.io.StringWriter()
+    reformatTo(s, writer, indent, escapeUnicode)
+    writer.toString
   }
   /**
     * Parse the given JSON input and write it to a string with
@@ -63,6 +75,13 @@ package object ujson{
                              indent: Int = -1,
                              escapeUnicode: Boolean = false): Unit = {
     transform(s, new BaseByteRenderer(out, indent, escapeUnicode))
+  }
+  def reformatToByteArray(s: Readable,
+                          indent: Int = -1,
+                          escapeUnicode: Boolean = false): Unit = {
+    val baos = new java.io.ByteArrayOutputStream
+    reformatToOutputStream(s, baos, indent, escapeUnicode)
+    baos.toByteArray
   }
   // End ujson
   @deprecated("use ujson.Value")

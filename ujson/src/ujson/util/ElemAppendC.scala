@@ -1,12 +1,12 @@
 package ujson.util
 
 abstract class CharAppendC {
-  def append(x: Char)
+  def append(x: Char): Unit
   def appendC(x: Char): Unit = append(x)
 
 }
 abstract class ByteAppendC {
-  def append(x: Byte)
+  def append(x: Byte): Unit
   private[this] var surrogate = -1
   def appendC(x: Char): Unit = {
 

@@ -31,8 +31,11 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   private[this] val elemOps = ujson.util.ElemOps
   private[this] val outputBuilder = new ujson.util.ElemBuilder()
 
-  override def getElemSafe(i: Int): Elem = {
+  def requestUntilOrThrow(i: Int) = {
     if (requestUntil(i)) throw new IncompleteParseException("exhausted input")
+  }
+  override def getElemSafe(i: Int): Elem = {
+    requestUntilOrThrow(i)
     getElemUnsafe(i)
   }
 
@@ -94,7 +97,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       new ArrayCharSequence(Array(elemOps.toInt(getElemSafe(i)).toChar)),
       unicode = false
     )
-    val s = "%s got %s" format (msg, out.makeString)
+    val s = "%s got %s" format (msg, out.makeString())
     throw ParseException(s, i)
   }
 
@@ -167,7 +170,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       if (j0 == j)  die(i, "expected digit")
     }
 
-    ctxt.visitValue(facade.visitFloat64StringParts(outputBuilder.makeString, decIndex, expIndex, i), i)
+    ctxt.visitValue(facade.visitFloat64StringParts(outputBuilder.makeString(), decIndex, expIndex, i), i)
     j
   }
 
@@ -286,7 +289,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseTrue(i: Int, facade: Visitor[_, J]): J = {
-    requestUntil(i + 3)
+    requestUntilOrThrow(i + 3)
     if (getElemUnsafe(i + 1) == 'r' && getElemUnsafe(i + 2) == 'u' && getElemUnsafe(i + 3) == 'e') {
       facade.visitTrue(i)
     } else {
@@ -300,7 +303,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseFalse(i: Int, facade: Visitor[_, J]): J = {
-    requestUntil(i + 4)
+    requestUntilOrThrow(i + 4)
 
     if (getElemUnsafe(i + 1) == 'a' && getElemUnsafe(i + 2) == 'l' && getElemUnsafe(i + 3) == 's' && getElemUnsafe(i + 4) == 'e') {
       facade.visitFalse(i)
@@ -315,7 +318,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
    * Note that this method assumes that the first character has already been checked.
    */
   protected[this] final def parseNull(i: Int, facade: Visitor[_, J]): J = {
-    requestUntil(i + 3)
+    requestUntilOrThrow(i + 3)
     if (getElemUnsafe(i + 1) == 'u' && getElemUnsafe(i + 2) == 'l' && getElemUnsafe(i + 3) == 'l') {
       facade.visitNull(i)
     } else {
@@ -606,7 +609,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       c = elemOps.toUnsignedInt(getElemSafe(i))
     }
 
-    (outputBuilder.makeString, i + 1)
+    (outputBuilder.makeString(), i + 1)
   }
 
   /**
@@ -620,7 +623,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   protected[this] final def parseString(i: Int,  key: Boolean): (CharSequence, Int) = {
     outputBuilder.reset()
     val k = parseStringSimple(i + 1)
-    if (k >= 0) (outputBuilder.makeString, k)
+    if (k >= 0) (outputBuilder.makeString(), k)
     else parseStringComplex(-k - 1)
   }
 }
