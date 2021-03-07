@@ -1,4 +1,4 @@
-package upickle
+package ujson
 
 import java.nio.charset.StandardCharsets
 
@@ -13,7 +13,7 @@ object SmallJsonTests extends TestSuite {
       assert(fromString == fromBytes)
     }
     test {
-      val unparsed =  "\"\\u00a0\""
+      val unparsed = "\"\\u00a0\""
       val fromString = ujson.read(unparsed).render(indent = 4)
       val fromBytes = ujson.read(unparsed.getBytes(StandardCharsets.UTF_8)).render(indent = 4)
       assert(fromString == fromBytes)

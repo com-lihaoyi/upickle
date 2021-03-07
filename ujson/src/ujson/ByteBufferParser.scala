@@ -22,9 +22,9 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
 
   protected[this] final def close() = { src.position(src.limit) }
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
-//    assert(i == 0)
-//    src.
-    ???
+
+    if(buffer == null) (java.util.Arrays.copyOfRange(src.array(), start, src.limit()), false, limit)
+    else (src.array(), true, -1)
   }
 
 

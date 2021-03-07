@@ -1,5 +1,4 @@
-package upickle
-
+package ujson
 
 import utest._
 

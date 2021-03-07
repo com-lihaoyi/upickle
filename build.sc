@@ -268,12 +268,15 @@ object ujson extends Module{
     trait JawnTestModule extends CommonTestModule{
       def ivyDeps = T{
         if (!isDotty) Agg(
+          ivy"com.lihaoyi::utest::0.7.7",
           ivy"org.scalatest::scalatest::3.1.1",
           ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
         )
-        else Agg()
+        else Agg(ivy"com.lihaoyi::utest::0.7.7")
       }
-      def testFrameworks = if (!isDotty) Seq("org.scalatest.tools.Framework") else Seq.empty[String]
+      def testFrameworks =
+        if (!isDotty) Seq("upickle.core.UTestFramework", "org.scalatest.tools.Framework")
+        else Seq("upickle.core.UTestFramework")
     }
   }
 
@@ -281,13 +284,17 @@ object ujson extends Module{
   class JsModule(val crossScalaVersion: String, val crossScalaJSVersion: String) extends JsonModule with CommonJsModule{
     def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
 
-    object test extends Tests with JawnTestModule
+    object test extends Tests with JawnTestModule{
+      def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
+    }
   }
 
   object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends JsonModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
-    object test extends Tests with JawnTestModule
+    object test extends Tests with JawnTestModule{
+      def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
+    }
   }
 
   object native extends Cross[NativeModule](scalaNativeVersions:_*)
