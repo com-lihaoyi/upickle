@@ -1,11 +1,11 @@
 package upickle.core
 
-class WrapElemArrayCharSeq(arr: Array[Elem], start: Int, length: Int) extends CharSequence{
-  assert(
-    start < arr.length && start + length <= arr.length && start >= 0 && length >= 0,
-    s"WrapElemArrayCharSeq(${arr.length}, $start, $length)"
-  )
-  def length() = WrapElemArrayCharSeq.this.length
+class WrapElemArrayCharSeq(arr: Array[Elem], start: Int, length0: Int) extends CharSequence{
+//  assert(
+//    start < arr.length && start + length0 <= arr.length && start >= 0 && length0 >= 0,
+//    s"WrapElemArrayCharSeq(${arr.length}, $start, $length0)"
+//  )
+  def length() = length0
 
   def charAt(index: Int) = {
     arr(index + start).toChar
@@ -19,7 +19,7 @@ class WrapElemArrayCharSeq(arr: Array[Elem], start: Int, length: Int) extends Ch
   override def toString = {
     if (toString0 != null) toString0
     else {
-      val res = new String(arr, start, length)
+      val res = new String(arr, start, length0)
       toString0 = res
       res
     }
