@@ -211,12 +211,9 @@ object implicits extends Module {
     def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
     def artifactName = "upickle-implicits"
 
-//    object test extends Tests {
-//      def moduleDeps = super.moduleDeps ++ Seq(
-//        ujson.native(crossScalaVersion, crossScalaNativeVersion).test,
-//        core.native(crossScalaVersion, crossScalaNativeVersion).test
-//      )
-//    }
+    object test extends Tests {
+      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
+    }
   }
 }
 
@@ -240,7 +237,7 @@ object upack extends Module {
   class JvmModule(val crossScalaVersion: String) extends CommonJvmModule {
     def moduleDeps = Seq(core.jvm())
     def artifactName = "upack"
-    object test extends Tests with CommonModule  {
+    object test extends Tests {
       def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test, core.jvm().test)
     }
   }
@@ -251,12 +248,12 @@ object upack extends Module {
     def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
     def artifactName = "upack"
 
-//    object test extends Tests {
-//      def moduleDeps = super.moduleDeps ++ Seq(
-//        ujson.native(crossScalaVersion, crossScalaNativeVersion).test,
-//        core.native(crossScalaVersion, crossScalaNativeVersion).test
-//      )
-//    }
+    object test extends Tests {
+      def moduleDeps = super.moduleDeps ++ Seq(
+        ujson.native(crossScalaVersion, crossScalaNativeVersion).test,
+        core.native(crossScalaVersion, crossScalaNativeVersion).test
+      )
+    }
   }
 }
 
@@ -287,11 +284,9 @@ object ujson extends Module{
   class NativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends JsonModule with CommonNativeModule{
     def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
 
-//    object test extends Tests with JawnTestModule {
-//      def ivyDeps = if(crossScalaNativeVersion == "0.3.9") T(Agg.empty) else super.ivyDeps()
-//      def testFrameworks = if(crossScalaNativeVersion == "0.3.9") T(Seq.empty[String]) else super.testFrameworks()
-//      def sources = if(crossScalaNativeVersion == "0.3.9") T.sources(Seq.empty) else super.sources
-//    }
+    object test extends Tests with CommonTestModule{
+      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
+    }
   }
 
   object argonaut extends Cross[ArgonautModule](scala2JVMVersions:_*)
@@ -390,13 +385,10 @@ object upickle extends Module{
       upack.native(crossScalaVersion, crossScalaNativeVersion),
       implicits.native(crossScalaVersion, crossScalaNativeVersion)
     )
-
-//    object test extends Tests with CommonModule{
-//      def testFrameworks = if(crossScalaNativeVersion == "0.3.9") T(Seq.empty[String]) else super.testFrameworks()
-//      def sources = if(crossScalaNativeVersion == "0.3.9") T.sources(Seq.empty) else super.sources
-//      def allSourceFiles = T(super.allSourceFiles().filterNot(pr => Seq("Primitive", "Durations", "Legacy").map(s => s"${s}Tests.scala").contains(pr.path.last)))
-//      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
-//    }
+    object test extends Tests with CommonTestModule{
+      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
+      def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "DurationsTests.scala"))
+    }
   }
 }
 def exampleJson = T.source(millSourcePath / "exampleJson")
