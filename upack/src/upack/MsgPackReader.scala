@@ -116,7 +116,7 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
       val keyVisitor = obj.visitKey(index)
       obj.visitKeyValue(parse(keyVisitor.asInstanceOf[Visitor[_, T]]))
       obj.narrow.visitValue(parse(obj.subVisitor.asInstanceOf[Visitor[_, T]]), index)
-//      dropBufferUntil(index)
+      dropBufferUntil(index)
       i += 1
     }
     obj.visitEnd(index)
@@ -129,7 +129,7 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
     while(i < n){
       val v = parse(arr.subVisitor.asInstanceOf[Visitor[_, T]])
       arr.narrow.visitValue(v, index)
-//      dropBufferUntil(index)
+      dropBufferUntil(index)
       i += 1
     }
     arr.visitEnd(index)

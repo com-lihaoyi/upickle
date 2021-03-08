@@ -1,4 +1,7 @@
 package ujson
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+
 import utest._
 object JsonTests extends TestSuite {
   val tests = Tests {
@@ -82,6 +85,31 @@ object JsonTests extends TestSuite {
     }
     test("inputs"){
       TestUtil.checkParse(ugly, true)
+    }
+    test("streaming"){
+      val reader = new InputStreamParser[ujson.Value](
+        new ByteArrayInputStream(ugly.getBytes(StandardCharsets.UTF_8)),
+        2,
+        2
+      )
+      val read = reader.parse(ujson.Value)
+
+      read ==> ujson.read(ugly)
+
+      reader.getBufferGrowCount ==> 5
+      reader.getBufferCopyCount ==> 30
+      reader.getBufferLength ==> 128
+    }
+    test("batch"){
+      val bytes = ugly.getBytes(StandardCharsets.UTF_8)
+      val reader = new ByteArrayParser[ujson.Value](bytes)
+      val read = reader.parse(ujson.Value)
+
+      read ==> ujson.read(ugly)
+
+      reader.getBufferGrowCount ==> 0
+      reader.getBufferCopyCount ==> 0
+      reader.getBufferLength ==> bytes.length
     }
   }
 }

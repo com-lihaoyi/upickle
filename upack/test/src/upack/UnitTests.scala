@@ -1,5 +1,5 @@
 package upack
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import utest._
 
@@ -11,10 +11,38 @@ object UnitTests extends TestSuite{
       val written = upack.write(msg)
       upack.read(written: geny.Readable) ==> msg
     }
+    test("array"){
+      val msg = Arr(
+        Str("a"), Str("bb"), Str("ccc"), Str("dddd"), Str("eeeee"), Str("ffffff"),
+        Str("g"), Str("hh"), Str("iii"), Str("jjjj"), Str("kkkkk"), Str("llllll"),
+        Str("m"), Str("nn"), Str("ooo"), Str("pppp"), Str("qqqqq"), Str("rrrrrr"),
+      )
+      val written = upack.write(msg)
+      val reader = new InputStreamMsgPackReader(new ByteArrayInputStream(written), 2, 2)
+      val read = reader.parse(upack.Msg)
+
+      read ==> msg
+      reader.getBufferGrowCount ==> 2
+      reader.getBufferCopyCount ==> 8
+      reader.getBufferLength ==> 16
+    }
     test("map"){
-      val msg = Arr(Str("a"))
-      val written = transform(msg, new MsgPackWriter().map(_.toByteArray)) // does map preserve array lengths?
-      upack.read(written: geny.Readable) ==> msg
+      val msg = Obj(
+        Str("a") -> Int32(123), Str("c") -> Int32(456), Str("d") -> Int32(789),
+        Str("e") -> Int32(123), Str("f") -> Int32(456), Str("g") -> Int32(789),
+        Str("h") -> Int32(123), Str("i") -> Int32(456), Str("j") -> Int32(789),
+        Str("k") -> Int32(123), Str("l") -> Int32(456), Str("m") -> Int32(789),
+        Str("n") -> Int32(123), Str("o") -> Int32(456), Str("p") -> Int32(789),
+        Str("q") -> Int32(123), Str("r") -> Int32(456), Str("s") -> Int32(789),
+      )
+      val written = upack.write(msg)
+      val reader = new InputStreamMsgPackReader(new ByteArrayInputStream(written), 2, 2)
+      val read = reader.parse(upack.Msg)
+
+      read ==> msg
+      reader.getBufferGrowCount ==> 2
+      reader.getBufferCopyCount ==> 8
+      reader.getBufferLength ==> 16
     }
     test("compositeKeys"){
       val msg = Obj(Arr(Int32(1), Int32(2)) -> Int32(1))

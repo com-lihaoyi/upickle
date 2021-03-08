@@ -4,7 +4,11 @@ package upickle.core
 trait BufferingElemParser{
 
   private[this] var buffer: Array[Elem] = null
-
+  private[this] var bufferGrowCount = 0
+  private[this] var bufferCopyCount = 0
+  def getBufferGrowCount() = bufferGrowCount
+  def getBufferCopyCount() = bufferCopyCount
+  def getBufferLength() = if (buffer == null) -1 else buffer.length
   private[this] var firstIdx = 0
   private[this] var lastIdx = 0
   private[this] var dropped = 0
@@ -30,7 +34,6 @@ trait BufferingElemParser{
   }
 
   def growBuffer(until: Int) = {
-//    println(s"growBuffer($until) buffer.length:${buffer.length} dropped:$dropped")
     var newSize = buffer.length
 
     // Bump growGoalSiz by 50%. This helps ensure the utilization of the buffer
@@ -40,12 +43,17 @@ trait BufferingElemParser{
     val growGoalSize = (until - dropped + 1) * 3 / 2
     while (newSize <= growGoalSize) newSize *= 2
 
-    val arr = if (newSize > buffer.length / 2) new Array[Elem](newSize) else buffer
+    bufferCopyCount += 1
+    val arr = if (newSize > buffer.length) {
+      bufferGrowCount += 1
+      new Array[Elem](newSize)
+    } else {
+      buffer
+    }
 
     System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
     firstIdx = dropped
     buffer = arr
-//    println(s"growBuffer($until) buffer.length:${buffer.length}")
   }
   protected def requestUntil(until: Int): Boolean = {
 //    println(s"requestUntil($until) lastIdx:$lastIdx")
