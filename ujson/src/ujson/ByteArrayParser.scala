@@ -20,6 +20,10 @@ final class ByteArrayParser[J](src: Array[Byte]) extends ByteParser[J]{
   val srcLength = src.length
   protected[this] final def close() = {}
 
+  // Make sure we never call this method, since it will mutate the original array,
+  // and it should not be necessary to call it if our implementation is correct.
+  override def growBuffer(until: Int): Unit = ???
+
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
     if(buffer == null) (src, false, srcLength)
     else (src, true, -1)

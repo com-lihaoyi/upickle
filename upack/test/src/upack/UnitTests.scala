@@ -40,9 +40,9 @@ object UnitTests extends TestSuite{
       val read = reader.parse(upack.Msg)
 
       read ==> msg
-      reader.getBufferGrowCount ==> 2
-      reader.getBufferCopyCount ==> 8
-      reader.getBufferLength ==> 16
+      reader.getBufferGrowCount ==> 1
+      reader.getBufferCopyCount ==> 13
+      reader.getBufferLength ==> 8
     }
     test("compositeKeys"){
       val msg = Obj(Arr(Int32(1), Int32(2)) -> Int32(1))

@@ -24,12 +24,12 @@ trait BufferingElemParser{
   }
 
   def sliceString(i: Int, k: Int): String = {
-    requestUntil(k)
+    requestUntil(k - 1)
     new String(buffer, i - firstIdx, k - i)
   }
 
   def sliceArr(i: Int, n: Int): (Array[Elem], Int, Int) = {
-    requestUntil(i + n)
+    requestUntil(i + n - 1)
     (buffer, i - firstIdx, n)
   }
 

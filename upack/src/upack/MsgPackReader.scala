@@ -8,6 +8,10 @@ class MsgPackReader(input0: Array[Byte]) extends BaseMsgPackReader {
   val srcLength = input0.length
   protected[this] final def close() = {}
 
+  // Make sure we never call this method, since it will mutate the original array,
+  // and it should not be necessary to call it if our implementation is correct.
+  override def growBuffer(until: Int): Unit = ???
+
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
     if(buffer == null) (input0, false, srcLength)
     else (input0, true, -1)
@@ -140,18 +144,18 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
   }
   def parseUInt16(i: Int) = {
     index = i + 2
-    requestUntil(i + 2)
+    requestUntil(i + 1)
     (getByteUnsafe(i) & 0xff) << 8 | getByteUnsafe(i + 1) & 0xff
   }
   def parseUInt32(i: Int) = {
     index = i + 4
-    requestUntil(i + 4)
+    requestUntil(i + 3)
     (getByteUnsafe(i) & 0xff) << 24 | (getByteUnsafe(i + 1) & 0xff) << 16 |
     (getByteUnsafe(i + 2) & 0xff) << 8 | getByteUnsafe(i + 3) & 0xff
   }
   def parseUInt64(i: Int) = {
     index = i + 8
-    requestUntil(i + 8)
+    requestUntil(i + 7)
     (getByteUnsafe(i + 0).toLong & 0xff) << 56 | (getByteUnsafe(i + 1).toLong & 0xff) << 48 |
     (getByteUnsafe(i + 2).toLong & 0xff) << 40 | (getByteUnsafe(i + 3).toLong & 0xff) << 32 |
     (getByteUnsafe(i + 4).toLong & 0xff) << 24 | (getByteUnsafe(i + 5).toLong & 0xff) << 16 |
