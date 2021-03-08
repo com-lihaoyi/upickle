@@ -61,31 +61,6 @@ object RenderUtils{
     }
     sb.appendUnsafe('"')
   }
-  final def encodeCharSequenceToBytes(unicodeCharBuilder: upickle.core.CharBuilder,
-                                      sb: upickle.core.ByteBuilder,
-                                      s: CharSequence): Unit = {
-
-    var i = 0
-    val naiveOutLen = s.length
-    sb.ensureLength(naiveOutLen)
-    while (i < naiveOutLen) {
-      (s.charAt(i): @switch) match {
-        case c =>
-          if (c <= 127) sb.append(c)
-          else{
-            unicodeCharBuilder.reset()
-            while(i < naiveOutLen){
-              unicodeCharBuilder.append(s.charAt(i))
-              i += 1
-            }
-            val bytes = unicodeCharBuilder.makeString().getBytes(StandardCharsets.UTF_8)
-            sb.appendAll(bytes, bytes.length)
-            return
-          }
-      }
-      i += 1
-    }
-  }
 
   final def escapeChar(unicodeCharBuilder: upickle.core.CharBuilder,
                        sb: upickle.core.CharBuilder,

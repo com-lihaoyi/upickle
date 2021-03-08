@@ -162,16 +162,9 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     out
   }
 
-  val stringTempByteBuilder = new upickle.core.ByteBuilder()
-  val stringTempCharBuilder = new upickle.core.CharBuilder()
   override def visitString(s: CharSequence, index: Int) = {
-    stringTempByteBuilder.reset()
-    upickle.core.RenderUtils.encodeCharSequenceToBytes(
-      stringTempCharBuilder,
-      stringTempByteBuilder,
-      s
-    )
-    val length = stringTempByteBuilder.getLength
+    val strBytes = s.toString.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+    val length = strBytes.length
     if (length <= 31){
       byteBuilder.ensureLength(1 + length)
       byteBuilder.appendUnsafe((MPK.FixStrMask | length).toByte)
@@ -189,7 +182,7 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
       writeUInt32(length)
     }
 
-    byteBuilder.appendAllUnsafe(stringTempByteBuilder)
+    byteBuilder.appendAll(strBytes, length)
     flushElemBuilder()
     out
   }

@@ -94,7 +94,8 @@ object Main{
       val bytesPrefix = if (bytes) "Bytes " else ""
       val stringPrefix = if (strings) "String " else ""
       val streamPrefix = if (streams) "Stream " else ""
-      println(streamPrefix + bytesPrefix + stringPrefix + "Parsing Rendering  " + n)
+      val msgpackPrefix = if (msgpack) "MsgPack " else ""
+      println(streamPrefix + bytesPrefix + stringPrefix + msgpackPrefix + "Parsing Rendering  " + n)
     }
 
   }

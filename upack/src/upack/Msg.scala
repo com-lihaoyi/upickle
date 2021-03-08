@@ -185,25 +185,39 @@ object Msg extends MsgVisitor[Msg, Msg]{
       case Str(value) => f.visitString(value, -1)
       case Binary(value) => f.visitBinary(value, 0, value.length, -1)
 
-      case Arr(items) =>
-        val arr = f.visitArray(items.length, -1)
-        for(i <- items){
-          arr.narrow.visitValue(transform(i, arr.subVisitor), -1)
-        }
-        arr.visitEnd(-1)
+      case Arr(items) => visitArrContents(f, items)
 
-      case Obj(items) =>
-        val obj = f.visitObject(items.size, -1)
-        for((k, v) <- items){
-          val keyVisitor = obj.visitKey(-1)
-          obj.visitKeyValue(k.transform(keyVisitor))
-          obj.narrow.visitValue(transform(v, obj.subVisitor), -1)
-        }
-        obj.visitEnd(-1)
+      case Obj(items) => visitObjContents(f, items)
       case Ext(tag, data) => f.visitExt(tag, data, 0, data.length, -1)
 
     }
   }
+
+  private def visitObjContents[T](f: Visitor[_, T], items: mutable.LinkedHashMap[Msg, Msg]) = {
+    val obj = f.visitObject(items.size, -1)
+    val kvs = items.iterator
+    while(kvs.hasNext){
+      val kv = kvs.next()
+      val k = kv._1
+      val v = kv._2
+      val keyVisitor = obj.visitKey(-1)
+      obj.visitKeyValue(k.transform(keyVisitor))
+      obj.narrow.visitValue(transform(v, obj.subVisitor), -1)
+    }
+    obj.visitEnd(-1)
+  }
+
+  private def visitArrContents[T](f: Visitor[_, T], items: ArrayBuffer[Msg]) = {
+    val arr = f.visitArray(items.length, -1)
+    var i = 0
+    val itemsLength = items.length
+    while (i < itemsLength) {
+      arr.narrow.visitValue(transform(items(i), arr.subVisitor), -1)
+      i += 1
+    }
+    arr.visitEnd(-1)
+  }
+
   def visitArray(length: Int, index: Int) = new ArrVisitor[Msg, Msg] {
     val arr = ArrayBuffer[Msg]()
     def subVisitor = Msg
