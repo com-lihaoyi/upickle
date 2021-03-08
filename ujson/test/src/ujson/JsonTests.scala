@@ -96,9 +96,9 @@ object JsonTests extends TestSuite {
 
       read ==> ujson.read(ugly)
 
-      reader.getBufferGrowCount ==> 5
-      reader.getBufferCopyCount ==> 30
-      reader.getBufferLength ==> 128
+      reader.getBufferGrowCount() ==> 5
+      reader.getBufferCopyCount() ==> 30
+      reader.getBufferLength() ==> 128
     }
     test("batch"){
       val bytes = ugly.getBytes(StandardCharsets.UTF_8)
@@ -107,9 +107,9 @@ object JsonTests extends TestSuite {
 
       read ==> ujson.read(ugly)
 
-      reader.getBufferGrowCount ==> 0
-      reader.getBufferCopyCount ==> 0
-      reader.getBufferLength ==> bytes.length
+      reader.getBufferGrowCount() ==> 0
+      reader.getBufferCopyCount() ==> 0
+      reader.getBufferLength() ==> bytes.length
     }
   }
 }

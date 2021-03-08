@@ -4,7 +4,7 @@
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
 @val exampleTests = wd/'upickle/'test/"src"/'upickle/'example/"ExampleTests.scala"
-@val jvmExampleTests = wd/'upickle/'test/"src-jvm"/'upickle/'example/"JvmExampleTests.scala"
+@val jvmExampleTests = wd/'upickle/'test/"src-jvm-2"/'upickle/'example/"JvmExampleTests.scala"
 @val macroTests = wd/'upickle/'test/'src/'upickle/"MacroTests.scala"
 
 @val optionsAsNullTests =  wd/'upickle/'test/"src"/'upickle/'example/"OptionsAsNullTests.scala"
@@ -21,8 +21,9 @@
     alt := "Fork me on GitHub",
     data.`canonical-src` := "https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"
   )
+)
 
-@sect("µPickle 0.9.6")
+@sect("µPickle 1.3.0")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -699,45 +700,43 @@
             @th{Write (Cached)}
         @tbody
           @tr
-            @td{Jackson-Scala}
-            @td{2,080,682}
-            @td{8,905,996}
-            @td
-            @td
+            @td{Play Json 2.9.2}
+            @td{331}
+            @td{296}
+            @td{361}
+            @td{309}
           @tr
-            @td{Play Json}
-            @td{1,123,923}
-            @td{1,518,832}
-            @td{1,360,201}
-            @td{1,763,854}
+            @td{Circe 0.13.0}
+            @td{517}
+            @td{504}
+            @td{526}
+            @td{502}
           @tr
-            @td{Circe}
-            @td{2,172,638}
-            @td{2,057,883}
-            @td{2,519,163}
-            @td{2,416,923}
+            @td{upickle.default 1.3.0 (JSON Strings)}
+            @td{809}
+            @td{728}
+            @td{822}
+            @td{864}
           @tr
-            @td{upickle.default}
-            @td{3,078,442}
-            @td{4,018,176}
-            @td{3,564,215}
-            @td{4,749,887}
+            @td{upickle.default 1.3.0 (JSON Array[Byte])}
+            @td{761}
+            @td{706}
+            @td{774}
+            @td{830}
           @tr
-            @td{upickle.default binary}
-            @td{4,907,232}
-            @td{6,812,322}
-            @td{6,332,698}
-            @td{9,367,948}
+            @td{upickle.default 1.3.0 (MsgPack Array[Byte])}
+            @td{1652}
+            @td{1264}
+            @td{1743}
+            @td{1753}
 
       @p
         As you can see, uPickle's JSON serialization is pretty consistently
-        ~30% faster than Circe for reads and ~50% faster for writes. It is also
-        faster than Jackson-Scala on reads by a similar margin, although somehow
-        Jackson-Scala has write performance that far outstrips everyone else.
-        uPickle JSON is 100-200% faster than Play-Json, depending on workload.
+        ~50% faster than Circe for reads and writes, and 100-200% faster than
+        Play-Json, depending on workload.
 
       @p
-        uPickle's binary MessagePack backend is then another 50-100% than
+        uPickle's binary MessagePack backend is then another 100% faster than
         uPickle JSON.
 
       @p
@@ -748,50 +747,6 @@
         you can use to manipulate arbitrary JSON, but @code{ujson.Js} plays no
         part in parsing things to case-classes and is purely for users who want
         to manipulate JSON.
-
-    @sect{JVM AST Serialization Performance}
-      @p
-        If you benchmark the various libraries parsing from @code{String -> AST},
-        instead of @code{String -> CaseClass}, uPickle's numbers are in line with
-        everyone else's:
-
-      @table(cls := "pure-table", textAlign.right)
-        @thead
-          @tr
-            @th{Library}
-            @th{AST Reads}
-            @th{AST Writes}
-        @tbody
-          @tr
-            @td{uJson}
-            @td{2,809,313}
-            @td{4,846,925}
-          @tr
-            @td{uPack (binary)}
-            @td{5,927,786}
-            @td{13,218,990}
-          @tr
-            @td{Play Json}
-            @td{3,372,847}
-            @td{3,291,835}
-          @tr
-            @td{Circe}
-            @td{5,744,314}
-            @td{5,669,830}
-          @tr
-            @td{Argonaut}
-            @td{2,189,890}
-            @td{2,699,175}
-          @tr
-            @td{Json4s Native}
-            @td{3,459,126}
-            @td{1,302,335}
-      @p
-        One thing to note is that uPickle's AST-serialization performance isn't
-        any better than uPickle's CaseClass-serialization performance. This may
-        seem surprising, but it makes sense when you realize that when serializing
-        case classes, uPickle goes straight from the case class to the output
-        string without converting to the AST in between
 
     @sect{JS Case Class Serialization Performance}
       @p
@@ -808,42 +763,49 @@
             @th{Write (Cached)}
         @tbody
           @tr
-            @td{Play Json}
-            @td{117,808}
-            @td{201,701}
-            @td{148,964}
-            @td{268,816}
+            @td{Play Json 2.9.2}
+            @td{64}
+            @td{81}
+            @td{66}
+            @td{86}
           @tr
-            @td{Circe}
-            @td{136,181}
-            @td{461,873}
-            @td{160,860}
-            @td{678,861}
+            @td{Circe 0.13.0}
+            @td{98}
+            @td{121}
+            @td{99}
+            @td{99}
           @tr
-            @td{upickle.default}
-            @td{666,626}
-            @td{970,840}
-            @td{931,945}
-            @td{1,462,505}
+            @td{upickle.default 1.3.0 (JSON String)}
+            @td{76}
+            @td{40}
+            @td{76}
+            @td{44}
           @tr
-            @td{upickle.default.web}
-            @td{581,024}
-            @td{970,332}
-            @td{931,505}
-            @td{1,734,548}
+            @td{upickle.default 1.3.0 (JSON Array[Byte]}
+            @td{68}
+            @td{107}
+            @td{69}
+            @td{112}
           @tr
-            @td{upickle.default binary}
-            @td{601,333}
-            @td{497,954}
-            @td{931,505}
-            @td{1,734,548}
+            @td{upickle.default.web 1.3.0 (JSON String)}
+            @td{349}
+            @td{327}
+            @td{353}
+            @td{465}
+          @tr
+            @td{upickle.default 1.3.0 (MsgPack Array[Byte])}
+            @td{85}
+            @td{104}
+            @td{85}
+            @td{110}
 
     @p
-      Apart from the huge difference between uPickle and it's alternatives,
-      this Scala.js/Node.js benchmark also shows a much larger effect for caching
-      the picklers: 80-100% speedup. It seems likely that Scala.js/Node.js just 
-      isn't as good at optimizing away the overhead of temporary/throwaway
-      data-structures, whether they're intermediate-ASTs or temporary-pickler-instances.
+      On Scala.js, uPickle's performance is comparable to othersl ike Play JSON or Circe.
+      However, uPickle also exposes the @code{upickle.default.web} API, allowing you to
+      use the JS runtime's built-in JSON parser to power serialization and deserialization.
+      This ends up being 4-6x faster than the Scala-based JSON parsers of all the libraries
+      compared (uPickle, Play-JSON, Circe)
+
     @p
       Another thing of note is the @code{.web} entries; these are benchmarking
       uPickle using the Node.js @code{JSON.parse} and @code{JSON.stringify} 
@@ -863,8 +825,9 @@
     @sect{1.3.0}
       @ul
         @li
-          Significant improvements (10-30%) to performance of reading and writing
-          large JSON files
+          Significant improvements (30-50%) to performance of reading and writing
+          large JSON files, especially working with binary data in byte arrays or
+          input streams.
     @sect{1.2.0}
       @ul
         @li
