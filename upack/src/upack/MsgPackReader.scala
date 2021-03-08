@@ -85,10 +85,10 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
           else if (x <= MPK.FixStr ) {
           val n = x & 0x1f
           index += 1
-          parseStr (n, visitor)
+          parseStr(n, visitor)
         } else if (x >= 0xe0) { // negative fixint
           index += 1
-          visitor.visitInt32 (x | 0xffffffe0, index)
+          visitor.visitInt32(x | 0xffffffe0, index)
         } else ???
     }
   }

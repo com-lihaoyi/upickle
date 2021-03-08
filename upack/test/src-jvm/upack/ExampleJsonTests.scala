@@ -1,4 +1,4 @@
-package ujson
+package upack
 
 import java.nio.file.{Files, Paths}
 
@@ -6,7 +6,11 @@ import utest._
 
 object ExampleJsonTests extends TestSuite {
   def check(name: String) = {
-    TestUtil.checkParse(new String(Files.readAllBytes(Paths.get("exampleJson", name))), true)
+    val msgPack = ujson
+      .read(Files.readAllBytes(Paths.get("exampleJson", name)))
+      .transform(new MsgPackWriter(new java.io.ByteArrayOutputStream))
+      .toByteArray
+    TestUtil.checkParse(msgPack, true)
   }
   val tests = Tests {
     test - check("australia-abc.json")
