@@ -14,7 +14,7 @@ object Main{
 
       Common.upickleDefault(duration)
       Common.upickleDefaultByteArray(duration)
-      Common.pickleDefaultBinary(duration)
+      Common.upickleDefaultBinary(duration)
 
       Common.upickleDefaultCached(duration)
       Common.upickleDefaultByteArrayCached(duration)

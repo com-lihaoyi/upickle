@@ -28,7 +28,7 @@ object Main{
       NonNative.circe(duration)
       Common.upickleDefault(duration)
       Common.upickleDefaultByteArray(duration)
-      Common.pickleDefaultBinary(duration)
+      Common.upickleDefaultBinary(duration)
       //      Common.upickleLegacy(duration)
 //      Common.upickleBinaryLegacy(duration)
 //      Common.genCodec(duration)
