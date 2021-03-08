@@ -115,7 +115,7 @@ object Common{
 
 
   }
-  def pickleDefaultBinary(duration: Int) = {
+  def upickleDefaultBinary(duration: Int) = {
 
     bench[Array[Byte]](duration)(
       upickle.default.readBinary[Seq[Data]](_),

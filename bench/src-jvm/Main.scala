@@ -1,5 +1,7 @@
 package upickle
 
+import upack.MsgPackWriter
+
 
 object Main{
   import ADTs.ADT0
@@ -24,19 +26,19 @@ object Main{
 //      Main.uJsonJson4sJsonAst(duration)
 
 //      Main.jacksonModuleScala(duration)
-      NonNative.playJson(duration)
-      NonNative.circe(duration)
-      Common.upickleDefault(duration)
-      Common.upickleDefaultByteArray(duration)
-      Common.upickleDefaultBinary(duration)
+//      NonNative.playJson(duration)
+//      NonNative.circe(duration)
+//      Common.upickleDefault(duration)
+//      Common.upickleDefaultByteArray(duration)
+//      Common.upickleDefaultBinary(duration)
       //      Common.upickleLegacy(duration)
 //      Common.upickleBinaryLegacy(duration)
 //      Common.genCodec(duration)
-      NonNative.playJsonCached(duration)
-      NonNative.circeCached(duration)
-      Common.upickleDefaultCached(duration)
-      Common.upickleDefaultByteArrayCached(duration)
-      Common.upickleDefaultBinaryCached(duration)
+//      NonNative.playJsonCached(duration)
+//      NonNative.circeCached(duration)
+//      Common.upickleDefaultCached(duration)
+//      Common.upickleDefaultByteArrayCached(duration)
+//      Common.upickleDefaultBinaryCached(duration)
       //      Common.upickleDefaultCachedReadable(duration)
       //      Common.upickleDefaultCachedReadablePath(duration)
 
@@ -44,18 +46,20 @@ object Main{
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-      benchParsingRendering(duration, bytes = true, strings = false, streams = false)
-      benchParsingRendering(duration, bytes = false, strings = true, streams = false)
-      benchParsingRendering(duration, bytes = false, strings = false, streams = true)
+//      benchParsingRendering(duration, bytes = true, strings = false, streams = false, msgpack = false)
+//      benchParsingRendering(duration, bytes = false, strings = true, streams = false, msgpack = false)
+//      benchParsingRendering(duration, bytes = false, strings = false, streams = true, msgpack = false)
+      benchParsingRendering(duration, bytes = false, strings = false, streams = false, msgpack = true)
       println()
     }
   }
-  def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean, streams: Boolean) = {
+  def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean, streams: Boolean, msgpack: Boolean) = {
     import java.nio.file.{Files, Paths}
     import collection.JavaConverters._
     val names = Files.list(Paths.get("exampleJson")).iterator().asScala.toArray
     val inputByteArrays = for(name <- names) yield Files.readAllBytes(name)
-    val inputStrings = for(inputByteArray <- inputByteArrays) yield new String(inputByteArray)
+    lazy val inputStrings = for(inputByteArray <- inputByteArrays) yield new String(inputByteArray)
+    lazy val inputMsgPacks = for(inputByteArray <- inputByteArrays) yield ujson.transform(new String(inputByteArray), upack.Msg)
 
     {
       var n = 0
@@ -77,6 +81,11 @@ object Main{
               new java.io.ByteArrayInputStream(inputByteArray),
               new java.io.ByteArrayOutputStream()
             )
+          }
+        }
+        if(msgpack){
+          for (inputMsgPack <- inputMsgPacks) {
+            upack.transform(inputMsgPack, new MsgPackWriter())
           }
         }
 
