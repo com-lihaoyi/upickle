@@ -21,10 +21,6 @@ trait BufferingElemParser{
 
   def sliceString(i: Int, k: Int): String = {
     requestUntil(k)
-//    println(s"sliceString($i, $k)")
-//    println(s"sliceString($i, $k) firstIdx " + firstIdx)
-//    println(s"sliceString($i, $k) buffer.slice " + buffer.slice(i - firstIdx, k - firstIdx).toList)
-//    println(s"sliceString($i, $k) buffer " + buffer.zipWithIndex.toList)
     new String(buffer, i - firstIdx, k - i)
   }
 
@@ -34,6 +30,7 @@ trait BufferingElemParser{
   }
 
   def growBuffer(until: Int) = {
+//    println(s"growBuffer($until) buffer.length:${buffer.length} dropped:$dropped")
     var newSize = buffer.length
 
     // Bump growGoalSiz by 50%. This helps ensure the utilization of the buffer
@@ -48,9 +45,10 @@ trait BufferingElemParser{
     System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
     firstIdx = dropped
     buffer = arr
+//    println(s"growBuffer($until) buffer.length:${buffer.length}")
   }
   protected def requestUntil(until: Int): Boolean = {
-
+//    println(s"requestUntil($until) lastIdx:$lastIdx")
     if (until < lastIdx) false
     else {
       val untilBufferOffset = until - firstIdx

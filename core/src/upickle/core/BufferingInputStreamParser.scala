@@ -20,14 +20,16 @@ package upickle.core
   */
 trait BufferingInputStreamParser extends BufferingByteParser{
   def inputStream: java.io.InputStream
-
+  def minBufferStartSize: Int
+  def maxBufferStartSize: Int
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
+
     val newBuffer =
       if (buffer != null) buffer
       else new Array[Byte]({
         val available = inputStream.available()
-        if (available < BufferingInputStreamParser.defaultMinBufferStartSize) BufferingInputStreamParser.defaultMinBufferStartSize
-        else if (available > BufferingInputStreamParser.defaultMaxBufferStartSize) BufferingInputStreamParser.defaultMaxBufferStartSize
+        if (available < minBufferStartSize) minBufferStartSize
+        else if (available > maxBufferStartSize) maxBufferStartSize
         else available
       })
 

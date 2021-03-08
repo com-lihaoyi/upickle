@@ -1,5 +1,5 @@
 package upack
-import upickle.core.Visitor
+import upickle.core.{BufferingInputStreamParser, Visitor}
 import upack.{MsgPackKeys => MPK}
 
 import scala.annotation.switch
@@ -15,8 +15,8 @@ class MsgPackReader(input0: Array[Byte]) extends BaseMsgPackReader {
 }
 
 class InputStreamMsgPackReader(val inputStream: java.io.InputStream,
-                               val minStartBufferSize: Int,
-                               val maxStartBufferSize: Int)
+                               val minBufferStartSize: Int = BufferingInputStreamParser.defaultMinBufferStartSize,
+                               val maxBufferStartSize: Int = BufferingInputStreamParser.defaultMaxBufferStartSize)
 extends BaseMsgPackReader with upickle.core.BufferingInputStreamParser{
 }
 
