@@ -4,44 +4,7 @@ import java.io.ByteArrayOutputStream
 import upickle.core.Util
 import utest._
 object MsgPackTests extends TestSuite{
-  val tests = Tests{
-    test("hello"){
-      for{
-        (k, v) <- unitCases.obj
-        if k != "50.timestamp.yaml"
 
-        testCase <- v.arr
-        packed0 <- testCase("msgpack").arr
-      }{
-        val (tag, expectedJson) = testCase.obj.find{_._1 != "msgpack"}.get
-        val packedStr = packed0.str
-        println(k + " " + tag + " " + expectedJson + " " + packedStr)
-        val packed = Util.stringToBytes(packedStr)
-
-        val jsonified0 = upack.transform(packed, ujson.Value)
-
-        val jsonified = tag match{
-          case "binary" => ujson.Str(Util.bytesToString(jsonified0.arr.map(_.num.toByte).toArray))
-          case "ext" => ujson.Arr(jsonified0(0), ujson.Str(Util.bytesToString(jsonified0(1).arr.map(_.num.toByte).toArray)))
-          case _ => jsonified0
-        }
-        assert(jsonified == expectedJson)
-
-        val msg = upack.read(packed)
-        val msg2 = upack.read(packed: geny.Readable)
-
-
-        val rewrittenBytes = upack.write(msg)
-        val rewrittenBytes2 = upack.write(msg2)
-        val rewritten = Util.bytesToString(rewrittenBytes)
-        val rewritten2 = Util.bytesToString(rewrittenBytes2)
-        val possibilities = testCase("msgpack").arr.map(_.str)
-
-        assert(possibilities.contains(rewritten))
-        assert(possibilities.contains(rewritten2))
-      }
-    }
-  }
 
   // Taken from:
   // https://github.com/kawanet/msgpack-test-suite/tree/e04f6edeaae589c768d6b70fcce80aa786b7800e
@@ -769,4 +732,175 @@ object MsgPackTests extends TestSuite{
       ]
     }
   """)
+  def check(k: String, i: Int, end: Boolean = false) = {
+    if (end) assert(unitCases(k).arr.size == i)
+    else{
+      val testCase = unitCases(k)(i)
+      for(packed0 <- testCase("msgpack").arr){
+        val (tag, expectedJson) = testCase.obj.find{_._1 != "msgpack"}.get
+        val packedStr = packed0.str
+        println(k + " " + tag + " " + expectedJson + " " + packedStr)
+        val packed = Util.stringToBytes(packedStr)
+
+        val jsonified0 = upack.transform(packed, ujson.Value)
+
+        val jsonified = tag match{
+          case "binary" => ujson.Str(Util.bytesToString(jsonified0.arr.map(_.num.toByte).toArray))
+          case "ext" => ujson.Arr(jsonified0(0), ujson.Str(Util.bytesToString(jsonified0(1).arr.map(_.num.toByte).toArray)))
+          case _ => jsonified0
+        }
+        assert(jsonified == expectedJson)
+
+        val msg = upack.read(packed)
+        val msg2 = upack.read(packed: geny.Readable)
+
+
+        val rewrittenBytes = upack.write(msg)
+        val rewrittenBytes2 = upack.write(msg2)
+        val rewritten = Util.bytesToString(rewrittenBytes)
+        val rewritten2 = Util.bytesToString(rewrittenBytes2)
+        val possibilities = testCase("msgpack").arr.map(_.str)
+
+        assert(possibilities.contains(rewritten))
+        assert(possibilities.contains(rewritten2))
+      }
+    }
+  }
+
+
+
+
+  val tests = Tests{
+
+    test - {
+      test - check("10.nil.yaml", 0)
+      test - check("10.nil.yaml", 1, end = true)
+    }
+    test - {
+      test - check("11.bool.yaml", 0)
+      test - check("11.bool.yaml", 1)
+      test - check("11.bool.yaml", 2, end = true)
+    }
+    test - {
+      test - check("12.binary.yaml", 0)
+      test - check("12.binary.yaml", 1)
+      test - check("12.binary.yaml", 2)
+      test - check("12.binary.yaml", 3, end = true)
+    }
+    test - {
+      test - check("20.number-positive.yaml", 0)
+      test - check("20.number-positive.yaml", 1)
+      test - check("20.number-positive.yaml", 2)
+      test - check("20.number-positive.yaml", 3)
+      test - check("20.number-positive.yaml", 4)
+      test - check("20.number-positive.yaml", 5)
+      test - check("20.number-positive.yaml", 6)
+      test - check("20.number-positive.yaml", 7)
+      test - check("20.number-positive.yaml", 8)
+      test - check("20.number-positive.yaml", 9)
+      test - check("20.number-positive.yaml", 10)
+      test - check("20.number-positive.yaml", 11, end = true)
+    }
+    test - {
+      test - check("21.number-negative.yaml", 0)
+      test - check("21.number-negative.yaml", 1)
+      test - check("21.number-negative.yaml", 2)
+      test - check("21.number-negative.yaml", 3)
+      test - check("21.number-negative.yaml", 4)
+      test - check("21.number-negative.yaml", 5)
+      test - check("21.number-negative.yaml", 6)
+      test - check("21.number-negative.yaml", 7)
+      test - check("21.number-negative.yaml", 8, end = true)
+    }
+    test - {
+      test - check("22.number-float.yaml", 0)
+      test - check("22.number-float.yaml", 1)
+      test - check("22.number-float.yaml", 2, end = true)
+    }
+    test - {
+      test - check("23.number-bignum.yaml", 0)
+      test - check("23.number-bignum.yaml", 1)
+      test - check("23.number-bignum.yaml", 2)
+      test - check("23.number-bignum.yaml", 3)
+      test - check("23.number-bignum.yaml", 4)
+      test - check("23.number-bignum.yaml", 5)
+      test - check("23.number-bignum.yaml", 6)
+      test - check("23.number-bignum.yaml", 7)
+      test - check("23.number-bignum.yaml", 8)
+      test - check("23.number-bignum.yaml", 9, end = true)
+    }
+    test - {
+      test - check("30.string-ascii.yaml", 0)
+      test - check("30.string-ascii.yaml", 1)
+      test - check("30.string-ascii.yaml", 2)
+      test - check("30.string-ascii.yaml", 3)
+      test - check("30.string-ascii.yaml", 4, end = true)
+    }
+    test - {
+      test - check("31.string-utf8.yaml", 0)
+      test - check("31.string-utf8.yaml", 1)
+      test - check("31.string-utf8.yaml", 2)
+      test - check("31.string-utf8.yaml", 3)
+      test - check("31.string-utf8.yaml", 4)
+      test - check("31.string-utf8.yaml", 5, end = true)
+    }
+    test - {
+      test - check("32.string-emoji.yaml", 0)
+      test - check("32.string-emoji.yaml", 1)
+      test - check("32.string-emoji.yaml", 2, end = true)
+    }
+    test - {
+      test - check("40.array.yaml", 0)
+      test - check("40.array.yaml", 1)
+      test - check("40.array.yaml", 2)
+      test - check("40.array.yaml", 3)
+      test - check("40.array.yaml", 4)
+      test - check("40.array.yaml", 5, end = true)
+    }
+    test - {
+      test - check("41.map.yaml", 0)
+      test - check("41.map.yaml", 1)
+      test - check("41.map.yaml", 2)
+      test - check("41.map.yaml", 3, end = true)
+    }
+    test - {
+      test - check("42.nested.yaml", 0)
+      test - check("42.nested.yaml", 1)
+      test - check("42.nested.yaml", 2)
+      test - check("42.nested.yaml", 3)
+      test - check("42.nested.yaml", 4, end = true)
+    }
+//    test - {
+//      test - check("50.timestamp.yaml", 0)
+//      test - check("50.timestamp.yaml", 1)
+//      test - check("50.timestamp.yaml", 2)
+//      test - check("50.timestamp.yaml", 3)
+//      test - check("50.timestamp.yaml", 4)
+//      test - check("50.timestamp.yaml", 5)
+//      test - check("50.timestamp.yaml", 6)
+//      test - check("50.timestamp.yaml", 7)
+//      test - check("50.timestamp.yaml", 8)
+//      test - check("50.timestamp.yaml", 9)
+//      test - check("50.timestamp.yaml", 10)
+//      test - check("50.timestamp.yaml", 11)
+//      test - check("50.timestamp.yaml", 12)
+//      test - check("50.timestamp.yaml", 13)
+//      test - check("50.timestamp.yaml", 14)
+//      test - check("50.timestamp.yaml", 15)
+//      test - check("50.timestamp.yaml", 16)
+//      test - check("50.timestamp.yaml", 17)
+//      test - check("50.timestamp.yaml", 18)
+//      test - check("50.timestamp.yaml", 19, end = true)
+//    }
+    test - {
+      test - check("60.ext.yaml", 0)
+      test - check("60.ext.yaml", 1)
+      test - check("60.ext.yaml", 2)
+      test - check("60.ext.yaml", 3)
+      test - check("60.ext.yaml", 4)
+      test - check("60.ext.yaml", 5)
+      test - check("60.ext.yaml", 6)
+      test - check("60.ext.yaml", 7, end = true)
+    }
+  }
 }
