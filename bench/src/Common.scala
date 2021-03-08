@@ -115,7 +115,7 @@ object Common{
 
 
   }
-  def upickleBinaryDefault(duration: Int) = {
+  def pickleDefaultBinary(duration: Int) = {
 
     bench[Array[Byte]](duration)(
       upickle.default.readBinary[Seq[Data]](_),
@@ -184,7 +184,7 @@ object Common{
       upickle.default.writeToByteArray(_)
     )
   }
-  def upickleDefaultCachedByteArray(duration: Int) = {
+  def upickleDefaultByteArrayCached(duration: Int) = {
     implicit lazy val rw1: upickle.default.ReadWriter[Data] = upickle.default.macroRW
     implicit lazy val rw2: upickle.default.ReadWriter[A] = upickle.default.macroRW
     implicit lazy val rw3: upickle.default.ReadWriter[B] = upickle.default.macroRW

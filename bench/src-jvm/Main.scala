@@ -8,7 +8,7 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(2500, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000)){
+    for(duration <- Seq(2500, 5000, 10000, 10000, 10000, 10000)){
       println("RUN JVM: " + duration)
       println()
 
@@ -24,30 +24,29 @@ object Main{
 //      Main.uJsonJson4sJsonAst(duration)
 
 //      Main.jacksonModuleScala(duration)
-//      NonNative.playJson(duration)
-//      NonNative.circe(duration)
-//      Common.upickleDefault(duration)
-//      Common.upickleDefaultByteArray(duration)
-//      Common.upickleBinaryDefault(duration)
+      NonNative.playJson(duration)
+      NonNative.circe(duration)
+      Common.upickleDefault(duration)
+      Common.upickleDefaultByteArray(duration)
+      Common.pickleDefaultBinary(duration)
       //      Common.upickleLegacy(duration)
 //      Common.upickleBinaryLegacy(duration)
 //      Common.genCodec(duration)
-//      NonNative.playJsonCached(duration)
-//      NonNative.circeCached(duration)
-//      Common.upickleDefaultCached(duration)
-//      Common.upickleDefaultCached(duration)
-//      Common.upickleDefaultCachedReadable(duration)
-//      Common.upickleDefaultCachedReadablePath(duration)
-
-//      Common.upickleDefaultCachedByteArray(duration)
+      NonNative.playJsonCached(duration)
+      NonNative.circeCached(duration)
+      Common.upickleDefaultCached(duration)
+      Common.upickleDefaultByteArrayCached(duration)
       Common.upickleDefaultBinaryCached(duration)
+      //      Common.upickleDefaultCachedReadable(duration)
+      //      Common.upickleDefaultCachedReadablePath(duration)
+
       //      Common.upickleLegacyCached(duration)
 //      Common.upickleDefaultBinaryCachedReadable(duration)
 //      Common.upickleLegacyBinaryCached(duration)
 //      Common.genCodecCached(duration)
-//      benchParsingRendering(duration, bytes = true, strings = false, streams = false)
-//      benchParsingRendering(duration, bytes = false, strings = true, streams = false)
-//      benchParsingRendering(duration, bytes = false, strings = false, streams = true)
+      benchParsingRendering(duration, bytes = true, strings = false, streams = false)
+      benchParsingRendering(duration, bytes = false, strings = true, streams = false)
+      benchParsingRendering(duration, bytes = false, strings = false, streams = true)
       println()
     }
   }
