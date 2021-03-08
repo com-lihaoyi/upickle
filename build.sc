@@ -1,4 +1,3 @@
-
 import mill._
 import mill.scalalib._
 import mill.scalalib.publish._
@@ -6,6 +5,8 @@ import mill.scalajslib._
 import mill.scalanativelib._
 import mill.modules._
 import mill.scalanativelib.api.{LTO, ReleaseMode}
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
+import de.tobiasroeser.mill.vcs.version.VcsVersion
 
 val scala212  = "2.12.13"
 val scala213  = "2.13.4"
@@ -23,7 +24,8 @@ val scalaJSVersions = Seq(
   (scala212, scalaJS06),
   (scala213, scalaJS06),
   (scala212, scalaJS1),
-  (scala213, scalaJS1)
+  (scala213, scalaJS1),
+  (scala3, scalaJS1)
 )
 
 val scalaNativeVersions = Seq(
@@ -45,7 +47,7 @@ trait CommonModule extends ScalaModule {
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
 
-  def publishVersion = "1.2.3"
+  def publishVersion = VcsVersion.vcsState().format()
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -88,18 +90,6 @@ trait CommonJvmModule extends CommonPublishModule{
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "jvm"
   }
-
-  // FIXME: scaladoc 3 is not supported by mill yet. Remove the override
-  // once it is.
-  override def docJar =
-    if (crossScalaVersion.startsWith("2")) super.docJar
-    else T {
-      val outDir = T.ctx().dest
-      val javadocDir = outDir / 'javadoc
-      os.makeDir.all(javadocDir)
-      mill.api.Result.Success(mill.modules.Jvm.createJar(Agg(javadocDir))(outDir))
-    }
-
 }
 trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
@@ -125,7 +115,7 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
 
 trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.5")
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.6")
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
