@@ -2,6 +2,9 @@ package upickle
 // TODO: utest's assert throws a cyclic dependency error in the version currently
 // published for Dotty. Use utest's assert once the fix has been published in
 // a new version.
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+
 import utest.{assert => _, _}
 /**
 * Created by haoyi on 4/22/14.
@@ -24,6 +27,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
                                         escapeUnicode: Boolean = false,
                                         checkBinaryJson: Boolean = true) = {
     val writtenT = api.write(t)
+    val writtenBytesT = api.writeToByteArray(t)
 
     // Test JSON round tripping
     val strings = sIn.map(_.trim)
@@ -36,10 +40,43 @@ class TestUtil[Api <: upickle.Api](val api: Api){
     }
 
     val normalizedReadWrittenT = normalize(api.read[T](writtenT))
+    val normalizedReadByteArrayWrittenT = normalize(
+      api.read[T](writtenT.getBytes(StandardCharsets.UTF_8))
+    )
+    val normalizedReadStreamWrittenT = normalize(
+      api.read[T](
+        new ByteArrayInputStream(writtenT.getBytes(StandardCharsets.UTF_8))
+      )
+    )
+    val normalizedReadSmallStreamWrittenT = normalize(
+      new ujson.InputStreamParser(
+        new ByteArrayInputStream(writtenT.getBytes(StandardCharsets.UTF_8)),
+        2, 2
+      ).parse(api.reader[T])
+    )
+    val normalizedReadByteArrayWrittenBytesT = normalize(
+      api.read[T](writtenBytesT)
+    )
+    val normalizedReadStreamWrittenBytesT = normalize(
+      api.read[T](
+        new ByteArrayInputStream(writtenBytesT)
+      )
+    )
+    val normalizedReadSmallStreamWrittenBytesT = normalize(
+      new ujson.InputStreamParser(new ByteArrayInputStream(writtenBytesT), 2, 2)
+        .parse(api.reader[T])
+    )
     val normalizedT = normalize(t)
     utest.assert(normalizedReadWrittenT == normalizedT)
+    utest.assert(normalizedReadByteArrayWrittenT == normalizedT)
+    utest.assert(normalizedReadStreamWrittenT == normalizedT)
+    utest.assert(normalizedReadSmallStreamWrittenT == normalizedT)
+    utest.assert(normalizedReadByteArrayWrittenBytesT == normalizedT)
+    utest.assert(normalizedReadStreamWrittenBytesT == normalizedT)
+    utest.assert(normalizedReadSmallStreamWrittenBytesT == normalizedT)
 
-    // Test binary round tripping
+
+    // Test MessagePack round tripping
     val writtenBinary = api.writeBinary(t)
     // println(upickle.core.Util.bytesToString(writtenBinary))
     val roundTrippedBinary = api.readBinary[T](writtenBinary)
