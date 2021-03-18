@@ -12,6 +12,7 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
   }
 
   private[this] var depth: Int = 0
+  def getDepth = depth
 
 
   private[this] var commaBuffered = false
