@@ -1,6 +1,17 @@
 package upickle.core
 
 
+/**
+  * Models a growable [[buffer]] of Elems, which are Chars or Bytes. We maintain
+  * an Array[Elem] as a buffer, and read Elems into it using [[readDataIntoBuffer]]
+  * and drop old Elems using [[dropBufferUntil]].
+  *
+  * Note that [[dropBufferUntil]] only advances an [[dropped]] index and does not
+  * actually zero out the dropped Elems; instead, we wait until we need to call
+  * [[growBuffer]], and use that as a chance to copy the remaining un-dropped Elems
+  * to either the start of the current [[buffer]] or the start of a newly-allocated
+  * bigger [[buffer]] (if necessary)
+  */
 trait BufferingElemParser{
 
   private[this] var buffer: Array[Elem] = null
@@ -9,9 +20,27 @@ trait BufferingElemParser{
   def getBufferGrowCount() = bufferGrowCount
   def getBufferCopyCount() = bufferCopyCount
   def getBufferLength() = if (buffer == null) -1 else buffer.length
+
+  /**
+    * The logical offset of the buffer(0) Elem in the input being parsed
+    */
   private[this] var firstIdx = 0
+  /**
+    * The logical offset of the last Elem in [[buffer]] that contains meaningfully
+    * buffered data
+    */
   private[this] var lastIdx = 0
+  /**
+    * The logical offset of the last Elem that we no longer care about in the
+    * input being parsed; typically between [[firstIdx]] and [[lastIdx]]
+    */
   private[this] var dropped = 0
+  /**
+    * The earliest known value that is beyond the end of the input. Starts off unknown,
+    * and we may record known values when a call to [[requestUntil]] returns `true` to
+    * mark the end of input
+    */
+  private[this] var knownEof = Int.MaxValue
 
   def getLastIdx = lastIdx
 
@@ -33,6 +62,10 @@ trait BufferingElemParser{
     (buffer, i - firstIdx, n)
   }
 
+  /**
+    * Copies the non-dropped Elems in the current [[buffer]] to the start of either
+    * the current [[buffer]], or a newly-allocated larger [[buffer]] if necessary.
+    */
   def growBuffer(until: Int) = {
     var newSize = buffer.length
 
@@ -55,8 +88,25 @@ trait BufferingElemParser{
     firstIdx = dropped
     buffer = arr
   }
+
+  /**
+    * Used to ensure that elements up to [[until]] are available to read; returns
+    * whether or not we have read off the end of the input.
+    *
+    * In the fast path, when [[until]] is less than the [[lastIdx]] we have buffered,
+    * there is no work to do and we return false.
+    *
+    * In the slow path, when [[until]] is more than [[lastIdx]], we then run
+    * [[growBuffer]] to grow the buffer if necessary, and then [[readDataIntoBuffer]]
+    * to populate it. [[readDataIntoBuffer]] returns a `newDone` value to indicate
+    * whether we have read off the end of the input or not.
+    *
+    * Note that for some subclasses, [[growBuffer]] may be a no-op when we already know
+    * we have reached the end of input.
+    */
   protected def requestUntil(until: Int): Boolean = {
     if (until < lastIdx) false
+    else if (until >= knownEof) true
     else {
       val untilBufferOffset = until - firstIdx
       if (buffer != null && untilBufferOffset >= buffer.length) growBuffer(until)
@@ -67,6 +117,7 @@ trait BufferingElemParser{
       buffer = newBuffer
 
       lastIdx = lastIdx + n
+      if (newDone) knownEof = until
       newDone
     }
   }

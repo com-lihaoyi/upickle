@@ -18,16 +18,6 @@ final class InputStreamParser[J](val inputStream: java.io.InputStream,
                                  val maxBufferStartSize: Int = BufferingInputStreamParser.defaultMaxBufferStartSize)
 extends ByteParser[J] with upickle.core.BufferingInputStreamParser{
   protected[this] final def close() = {}
-
-  var knownEof = Int.MaxValue
-  def atEof(i: Int): Boolean = {
-    if (knownEof < i) true
-    else {
-      val res = requestUntil(i)
-      if(res) knownEof = i
-      res
-    }
-  }
 }
 
 object InputStreamParser extends Transformer[java.io.InputStream]{

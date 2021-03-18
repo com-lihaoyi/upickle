@@ -42,7 +42,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   /**
    * Return true iff 'i' is at or beyond the end of the input (EOF).
    */
-  protected[this] def atEof(i: Int): Boolean
+  protected[this] def atEof(i: Int) = requestUntil(i)
 
   /**
    * Should be called when parsing is finished.

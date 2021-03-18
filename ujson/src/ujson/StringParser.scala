@@ -21,7 +21,6 @@ private[ujson] final class StringParser[J](s: String) extends CharParser[J]{
     if(buffer == null) (s.toCharArray, sLength == 0, sLength)
     else (buffer, true, -1)
   }
-  override def atEof(i: Int) = i >= sLength
   final def close() = ()
 }
 

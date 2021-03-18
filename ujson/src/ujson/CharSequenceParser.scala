@@ -12,7 +12,6 @@ private[ujson] final class CharSequenceParser[J](cs: CharSequence) extends CharP
     if(buffer == null) (cs.toString.toCharArray, cs.length == 0, cs.length)
     else (buffer, true, -1)
   }
-  override def atEof(i: Int) = i >= cs.length
   final def close() = ()
 }
 

@@ -27,9 +27,6 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
     if(buffer == null) (java.util.Arrays.copyOfRange(src.array(), start, src.limit()), limit == 0, limit)
     else (src.array(), true, -1)
   }
-
-
-  override def atEof(i: Int) = i >= limit
 }
 
 object ByteBufferParser extends Transformer[ByteBuffer]{

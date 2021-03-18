@@ -27,7 +27,6 @@ final class ByteArrayParser[J](src: Array[Byte]) extends ByteParser[J]{
     if(buffer == null) (src, srcLength == 0, srcLength)
     else (src, true, -1)
   }
-  override def atEof(i: Int) = i >= srcLength
 }
 
 object ByteArrayParser extends Transformer[Array[Byte]]{
