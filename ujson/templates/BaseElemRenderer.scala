@@ -5,15 +5,15 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
                       (out: T,
                        indent: Int = -1,
                        escapeUnicode: Boolean = false) extends JsVisitor[T, T]{
-  private[this] val elemBuilder = new upickle.core.ElemBuilder
-  private[this] val unicodeCharBuilder = new upickle.core.CharBuilder()
+  protected[this] val elemBuilder = new upickle.core.ElemBuilder
+  protected[this] val unicodeCharBuilder = new upickle.core.CharBuilder()
   def flushElemBuilder() = {
     elemBuilder.writeOutToIfLongerThan(out, if (depth == 0) 0 else 1000)
   }
 
   protected[this] var depth: Int = 0
 
-  private[this] var commaBuffered = false
+  protected[this] var commaBuffered = false
 
   def flushBuffer() = {
     if (commaBuffered) {
