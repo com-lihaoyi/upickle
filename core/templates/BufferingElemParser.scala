@@ -107,20 +107,22 @@ trait BufferingElemParser{
   protected def requestUntil(until: Int): Boolean = {
     if (until < lastIdx) false
     else if (until >= knownEof) true
-    else {
-      val untilBufferOffset = until - firstIdx
-      if (buffer != null && untilBufferOffset >= buffer.length) growBuffer(until)
-
-
-      val bufferOffset = lastIdx - firstIdx
-      val (newBuffer, newDone, n) = readDataIntoBuffer(buffer, bufferOffset)
-      buffer = newBuffer
-
-      lastIdx = lastIdx + n
-      if (newDone) knownEof = until
-      newDone
-    }
+    else requestUntil0(until)
   }
+
+  private def requestUntil0(until: Int) = {
+    val untilBufferOffset = until - firstIdx
+    if (buffer != null && untilBufferOffset >= buffer.length) growBuffer(until)
+
+    val bufferOffset = lastIdx - firstIdx
+    val (newBuffer, newDone, n) = readDataIntoBuffer(buffer, bufferOffset)
+    buffer = newBuffer
+
+    lastIdx = lastIdx + n
+    if (newDone) knownEof = until
+    newDone
+  }
+
   def readDataIntoBuffer(buffer: Array[Elem], bufferOffset: Int): (Array[Elem], Boolean, Int)
 
   def dropBufferUntil(i: Int): Unit = {
