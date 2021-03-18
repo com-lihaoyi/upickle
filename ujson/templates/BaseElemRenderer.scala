@@ -11,9 +11,7 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     elemBuilder.writeOutToIfLongerThan(out, if (depth == 0) 0 else 1000)
   }
 
-  private[this] var depth: Int = 0
-  def getDepth = depth
-
+  protected[this] var depth: Int = 0
 
   private[this] var commaBuffered = false
 
