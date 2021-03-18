@@ -96,9 +96,12 @@ object JsonTests extends TestSuite {
 
       read ==> ujson.read(ugly)
 
-      reader.getBufferGrowCount() ==> 5
-      reader.getBufferCopyCount() ==> 30
-      reader.getBufferLength() ==> 128
+      // NOTE: there's a difference in the way Scala 2 and 3 handle unicode
+      // characters. Under Scala 2, the length of the decoded string is 1412
+      // bytes, whereas under Scala 3 it's 1454 bytes.
+      assert(reader.getBufferGrowCount() <= 6)
+      assert(reader.getBufferCopyCount() <= 31)
+      assert(reader.getBufferLength() <= 256)
     }
     test("batch"){
       val bytes = ugly.getBytes(StandardCharsets.UTF_8)
