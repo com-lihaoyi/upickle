@@ -8,6 +8,11 @@ object SyntaxTests extends TestSuite{
   def tests = Tests{
     def qs(s: String): String = "\"" + s + "\""
 
+
+    test("empty"){
+      test{ TestUtil.checkParse("", false) }
+      test{ TestUtil.checkParse(" ", false) }
+    }
     test("unicode is ok") {
       test{ TestUtil.checkParse(qs("ö"), true) }
       test{ TestUtil.checkParse(qs("ö\\\\"), true) }

@@ -56,7 +56,6 @@ trait BufferingElemParser{
     buffer = arr
   }
   protected def requestUntil(until: Int): Boolean = {
-//    println(s"requestUntil($until) lastIdx:$lastIdx")
     if (until < lastIdx) false
     else {
       val untilBufferOffset = until - firstIdx

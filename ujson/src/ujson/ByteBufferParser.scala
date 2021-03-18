@@ -21,9 +21,10 @@ final class ByteBufferParser[J](src: ByteBuffer) extends ByteParser[J]{
 
 
   protected[this] final def close() = { src.position(start) }
+  override def growBuffer(until: Int): Unit = ()
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
 
-    if(buffer == null) (java.util.Arrays.copyOfRange(src.array(), start, src.limit()), false, limit)
+    if(buffer == null) (java.util.Arrays.copyOfRange(src.array(), start, src.limit()), limit == 0, limit)
     else (src.array(), true, -1)
   }
 

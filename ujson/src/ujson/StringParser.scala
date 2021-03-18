@@ -16,8 +16,9 @@ import upickle.core.{ObjArrVisitor, Visitor}
  */
 private[ujson] final class StringParser[J](s: String) extends CharParser[J]{
   private[this] val sLength = s.length
+  override def growBuffer(until: Int): Unit = ()
   def readDataIntoBuffer(buffer: Array[Char], bufferOffset: Int) = {
-    if(buffer == null) (s.toCharArray, false, sLength)
+    if(buffer == null) (s.toCharArray, sLength == 0, sLength)
     else (buffer, true, -1)
   }
   override def atEof(i: Int) = i >= sLength
