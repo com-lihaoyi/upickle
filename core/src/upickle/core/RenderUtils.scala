@@ -17,6 +17,14 @@ object RenderUtils{
 
   private def toHex(nibble: Int): Char = (nibble + (if (nibble >= 10) 87 else 48)).toChar
 
+  /**
+    * Attempts to write the given [[CharSequence]] into the given [[ByteBuilder]].
+    *
+    * Optimistically treats the characters as ASCII characters, which can be
+    * directly converted to bytes and written. Only if we encounter a unicode
+    * character do we fall back to the slow path of constructing a
+    * [[java.lang.String]] which we UTF-8 encode before adding the to output.
+    */
   final def escapeByte(unicodeCharBuilder: upickle.core.CharBuilder,
                        sb: upickle.core.ByteBuilder,
                        s: CharSequence,

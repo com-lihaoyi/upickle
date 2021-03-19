@@ -8,25 +8,13 @@ import java.nio.charset.Charset
 import scala.annotation.{switch, tailrec}
 
 /**
- * Parser implements a state machine for correctly parsing JSON data.
- *
- * The trait relies on a small number of methods which are left
- * abstract, and which generalize parsing based on whether the input
- * is in Bytes or Chars, coming from Strings, files, or other input.
- * All methods provided here are protected, so different parsers can
- * choose which functionality to expose.
- *
- * Parser is parameterized on J, which is the type of the JSON AST it
- * will return. Jawn can produce any AST for which a Facade[J] is
- * available.
- *
- * The parser trait does not hold any state itself, but particular
- * implementations will usually hold state. Parser instances should
- * not be reused between parsing runs.
- *
- * For now the parser requires input to be in UTF-8. This requirement
- * may eventually be relaxed.
- */
+  * A specialized JSON parse that can parse Elems (Chars or Bytes), sending
+  * method calls to the given [[upickle.core.Visitor]].
+  *
+  * Generally has a lot of tricks for performance: e.g. having duplicate
+  * implementations for nested v.s. top-level parsing, using an `ElemBuilder`
+  * to construct the `CharSequences` that `visitString` requires, etc.
+  */
 abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   private[this] val elemOps = upickle.core.ElemOps
   private[this] val outputBuilder = new upickle.core.ElemBuilder()

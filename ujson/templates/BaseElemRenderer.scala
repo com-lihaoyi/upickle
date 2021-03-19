@@ -1,6 +1,18 @@
 package ujson
 import scala.annotation.switch
 import upickle.core.{ArrVisitor, ObjVisitor}
+
+/**
+  * A specialized JSON renderer that can render Elems (Chars or Bytes) directly
+  * to a [[java.io.Writer]] or [[java.io.OutputStream]]
+  *
+  * Note that we use an internal `ElemBuilder` to buffer the output internally
+  * before sending it to [[out]] in batches. This lets us benefit from the high
+  * performance and minimal overhead of `ElemBuilder` in the fast path of
+  * pushing characters, and avoid the synchronization/polymorphism overhead of
+  * [[out]] on the fast path. Most [[out]]s would also have performance
+  * benefits from receiving data in batches, rather than elem by elem.
+  */
 class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
                       (out: T,
                        indent: Int = -1,

@@ -2,8 +2,16 @@ package upickle.core
 
 
 /**
-  * A version of `java.util.ByteArrayOutputStream` which lets you use the internal
-  * Array directly for constructing `String`s
+  * A fast buffer that can be used to store Elems (Bytes or Chars).
+  *
+  * Generally faster than the equivalent [[StringBuilder]] or
+  * [[java.io.ByteArrayOutputStream]], since:
+  *
+  * - It is specialized and without the overhead of polymorphism or synchronization.
+  * - It allows the user to call `ensureLength` and `appendUnsafe` separately, e.g.
+  *   callign `ensureLength` once before `appendUnsafe`-ing multiple Elems
+  * - It provides fast methods like [[makeString]] or [[writeOutToIfLongerThan]], that
+  *   let you push the data elsewhere with minimal unnecessary copying
   */
 class ElemBuilder(startSize: Int = 32) extends upickle.core.ElemAppendC{
   private[this] var arr: Array[Elem] = new Array(startSize)

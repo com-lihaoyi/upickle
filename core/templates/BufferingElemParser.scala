@@ -6,7 +6,16 @@ package upickle.core
   * an Array[Elem] as a buffer, and read Elems into it using [[readDataIntoBuffer]]
   * and drop old Elems using [[dropBufferUntil]].
   *
-  * Note that [[dropBufferUntil]] only advances an [[dropped]] index and does not
+  * In general, [[BufferingElemParser]] allows us to keep the fast path fast:
+  *
+  * - Reading elem-by-elem from the buffer is a bounds check and direct Array
+  *   access, without any indirection or polymorphism.
+  * - We load Elems in batches into the buffer, which allows us to take advantage
+  *   of batching APIs like `InputStream.read`
+  * - We amortize the overhead of the indirect/polymorphic [[readDataIntoBuffer]]
+  *   call over the size of each batch
+  *
+  * Note that [[dropBufferUntil]] only advances a [[dropped]] index and does not
   * actually zero out the dropped Elems; instead, we wait until we need to call
   * [[growBuffer]], and use that as a chance to copy the remaining un-dropped Elems
   * to either the start of the current [[buffer]] or the start of a newly-allocated
