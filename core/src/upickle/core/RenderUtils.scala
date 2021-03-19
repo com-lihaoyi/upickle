@@ -37,14 +37,14 @@ object RenderUtils{
         case '\r' => escapeSingleByte(sb, i, naiveOutLen, 'r')
         case '\t' => escapeSingleByte(sb, i, naiveOutLen, 't')
         case c =>
-          if (c < ' ' || (c > '~' && unicode)) {
+          val notControlChar = c >= ' '
+          val notUnicodeChar = c <= '~'
+          if (notControlChar && notUnicodeChar) sb.append(c)
+          else if (!notControlChar || (!notUnicodeChar && unicode)) {
             escapeSingleByteUnicodeEscape(sb, i, naiveOutLen, c)
           } else {
-            if (c <= 127) sb.append(c)
-            else{
-              escapeSingleByteUnicodeRaw(unicodeCharBuilder, sb, s, unicode, i, len, naiveOutLen)
-              return
-            }
+            escapeSingleByteUnicodeRaw(unicodeCharBuilder, sb, s, unicode, i, len, naiveOutLen)
+            return
           }
       }
       i += 1
