@@ -383,11 +383,11 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       case '"' =>
         state match{
           case KEY | OBJBEG =>
-            val nextJ = try parseString(i, stackHead, key = true) catch reject(i)
+            val nextJ = try parseStringKey(i, stackHead) catch reject(i)
             parseNested(COLON, nextJ, stackHead, stackTail)
 
           case DATA | ARRBEG =>
-            val nextJ = try parseString(i, stackHead, key = false) catch reject(i)
+            val nextJ = try parseStringValue(i, stackHead) catch reject(i)
             parseNested(collectionEndFor(stackHead), nextJ, stackHead, stackTail)
 
           case _ => dieWithFailureMessage(i, state)
@@ -590,30 +590,48 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     * Char. It performs the correct checks to make sure that we don't
     * interpret a multi-char code point incorrectly.
     */
-  protected[this] final def parseString(i: Int, stackHead: ObjArrVisitor[_, J], key: Boolean): Int = {
+  protected[this] final def parseStringValue(i: Int, stackHead: ObjArrVisitor[_, J]): Int = {
 
     val k = parseStringSimple(i + 1)
     if (k >= 0) {
-      visitString(i, unsafeCharSeqForRange(i + 1, k - i - 2), stackHead, key)
+      visitString(i, unsafeCharSeqForRange(i + 1, k - i - 2), stackHead)
       k
     } else {
-      outputBuilder.reset()
-      appendElemsToBuilder(outputBuilder, i + 1, -k - 2 - i)
-      val k2 = parseStringComplex(-k - 1)
-      visitString(i, outputBuilder.makeString(), stackHead, key)
+      val k2 = parseStringToOutputBuilder(i, k)
+      visitString(i, outputBuilder.makeString(), stackHead)
       k2
     }
   }
 
-  def visitString(i: Int, s: CharSequence, stackHead: ObjArrVisitor[_, J], key: Boolean) = {
-    if (key){
-      val obj = stackHead.asInstanceOf[ObjVisitor[Any, _]]
-      val keyVisitor = obj.visitKey(i)
-      obj.visitKeyValue(keyVisitor.visitString(s, i))
-    }else{
-      val v = stackHead.subVisitor.visitString(s, i)
-      stackHead.narrow.visitValue(v, i)
+  protected[this] final def parseStringKey(i: Int, stackHead: ObjArrVisitor[_, J]): Int = {
+
+    val k = parseStringSimple(i + 1)
+    if (k >= 0) {
+      visitStringKey(i, unsafeCharSeqForRange(i + 1, k - i - 2), stackHead)
+      k
+    } else {
+      val k2 = parseStringToOutputBuilder(i, k)
+      visitStringKey(i, outputBuilder.makeString(), stackHead)
+      k2
     }
+  }
+
+
+  def parseStringToOutputBuilder(i: Int, k: Int) = {
+    outputBuilder.reset()
+    appendElemsToBuilder(outputBuilder, i + 1, -k - 2 - i)
+    val k2 = parseStringComplex(-k - 1)
+    k2
+  }
+
+  def visitString(i: Int, s: CharSequence, stackHead: ObjArrVisitor[_, J]) = {
+    val v = stackHead.subVisitor.visitString(s, i)
+    stackHead.narrow.visitValue(v, i)
+  }
+  def visitStringKey(i: Int, s: CharSequence, stackHead: ObjArrVisitor[_, J]) = {
+    val obj = stackHead.asInstanceOf[ObjVisitor[Any, _]]
+    val keyVisitor = obj.visitKey(i)
+    obj.visitKeyValue(keyVisitor.visitString(s, i))
   }
 
 
@@ -624,9 +642,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       val res = facade.visitString(unsafeCharSeqForRange(i + 1, k - i - 2), i)
       (res, k)
     } else {
-      outputBuilder.reset()
-      appendElemsToBuilder(outputBuilder, i + 1, -k - 2 - i)
-      val k2 = parseStringComplex(-k - 1)
+      val k2 = parseStringToOutputBuilder(i, k)
       val res = facade.visitString(outputBuilder.makeString(), i)
       (res, k2)
     }
