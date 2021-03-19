@@ -29,30 +29,20 @@ object RenderUtils{
     sb.appendUnsafe('"')
     while (i < len) {
       (s.charAt(i): @switch) match {
-        case '"' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('\"')
-        case '\\' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('\\')
-        case '\b' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('b')
-        case '\f' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('f')
-        case '\n' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('n')
-        case '\r' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('r')
-        case '\t' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('t')
+        case '"' => escapeSingleByte(sb, i, naiveOutLen, '"')
+        case '\\' => escapeSingleByte(sb, i, naiveOutLen, '\\')
+        case '\b' => escapeSingleByte(sb, i, naiveOutLen, 'b')
+        case '\f' => escapeSingleByte(sb, i, naiveOutLen, 'f')
+        case '\n' => escapeSingleByte(sb, i, naiveOutLen, 'n')
+        case '\r' => escapeSingleByte(sb, i, naiveOutLen, 'r')
+        case '\t' => escapeSingleByte(sb, i, naiveOutLen, 't')
         case c =>
           if (c < ' ' || (c > '~' && unicode)) {
-            sb.ensureLength(naiveOutLen - i + 5);
-            sb.appendUnsafeC('\\')
-            sb.appendUnsafeC('u')
-            sb.appendUnsafeC(toHex((c >> 12) & 15))
-            sb.appendUnsafeC(toHex((c >> 8) & 15))
-            sb.appendUnsafeC(toHex((c >> 4) & 15))
-            sb.appendUnsafeC(toHex(c & 15))
+            escapeSingleByteUnicodeEscape(sb, i, naiveOutLen, c)
           } else {
             if (c <= 127) sb.append(c)
             else{
-              unicodeCharBuilder.reset()
-              escapeChar0(i, naiveOutLen, len, unicodeCharBuilder, s, unicode)
-
-              val bytes = unicodeCharBuilder.makeString().getBytes(StandardCharsets.UTF_8)
-              sb.appendAll(bytes, bytes.length)
+              escapeSingleByteUnicodeRaw(unicodeCharBuilder, sb, s, unicode, i, len, naiveOutLen)
               return
             }
           }
@@ -62,7 +52,31 @@ object RenderUtils{
     sb.appendUnsafe('"')
   }
 
-  final def escapeChar(unicodeCharBuilder: upickle.core.CharBuilder,
+  def escapeSingleByteUnicodeRaw(unicodeCharBuilder: CharBuilder, sb: ByteBuilder, s: CharSequence, unicode: Boolean, i: Int, len: Int, naiveOutLen: Int) = {
+    unicodeCharBuilder.reset()
+    escapeChar0(i, naiveOutLen, len, unicodeCharBuilder, s, unicode)
+
+    val bytes = unicodeCharBuilder.makeString().getBytes(StandardCharsets.UTF_8)
+    sb.appendAll(bytes, bytes.length)
+  }
+
+  def escapeSingleByteUnicodeEscape(sb: ByteBuilder, i: Int, naiveOutLen: Int, c: Char) = {
+    sb.ensureLength(naiveOutLen - i + 5);
+    sb.appendUnsafeC('\\')
+    sb.appendUnsafeC('u')
+    sb.appendUnsafeC(toHex((c >> 12) & 15))
+    sb.appendUnsafeC(toHex((c >> 8) & 15))
+    sb.appendUnsafeC(toHex((c >> 4) & 15))
+    sb.appendUnsafeC(toHex(c & 15))
+  }
+
+  def escapeSingleByte(sb: ByteBuilder, i: Int, naiveOutLen: Int, c: Char) = {
+    sb.ensureLength(naiveOutLen - i + 1);
+    sb.appendUnsafeC('\\');
+    sb.appendUnsafeC(c)
+  }
+
+  def escapeChar(unicodeCharBuilder: upickle.core.CharBuilder,
                        sb: upickle.core.CharBuilder,
                        s: CharSequence,
                        unicode: Boolean) = {
@@ -82,30 +96,40 @@ object RenderUtils{
     sb.ensureLength(naiveOutLen)
     while (i < len) {
       (s.charAt(i): @switch) match {
-        case '"' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('\"')
-        case '\\' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('\\')
-        case '\b' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('b')
-        case '\f' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('f')
-        case '\n' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('n')
-        case '\r' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('r')
-        case '\t' => sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC('t')
+        case '"' => escapeSingleChar(sb, naiveOutLen, i, '"')
+        case '\\' => escapeSingleChar(sb, naiveOutLen, i, '\\')
+        case '\b' => escapeSingleChar(sb, naiveOutLen, i, 'b')
+        case '\f' => escapeSingleChar(sb, naiveOutLen, i, 'f')
+        case '\n' => escapeSingleChar(sb, naiveOutLen, i, 'n')
+        case '\r' => escapeSingleChar(sb, naiveOutLen, i, 'r')
+        case '\t' => escapeSingleChar(sb, naiveOutLen, i, 't')
         case c =>
           if (c < ' ' || (c > '~' && unicode)) {
-            sb.ensureLength(naiveOutLen - i + 5);
-            sb.appendUnsafeC('\\')
-            sb.appendUnsafeC('u')
-            sb.appendUnsafeC(toHex((c >> 12) & 15))
-            sb.appendUnsafeC(toHex((c >> 8) & 15))
-            sb.appendUnsafeC(toHex((c >> 4) & 15))
-            sb.appendUnsafeC(toHex(c & 15))
-          } else {
-            sb.append(c)
+            escapeSingleCharUnicodeEscape(naiveOutLen, sb, i, c)
           }
+          else sb.append(c)
       }
       i += 1
     }
     sb.appendUnsafe('"')
     sb
+  }
+
+  def escapeSingleCharUnicodeEscape(naiveOutLen: Int, sb: CharBuilder, i: Int, c: Char) = {
+    sb.ensureLength(naiveOutLen - i + 5);
+    sb.appendUnsafeC('\\')
+    sb.appendUnsafeC('u')
+    sb.appendUnsafeC(toHex((c >> 12) & 15))
+    sb.appendUnsafeC(toHex((c >> 8) & 15))
+    sb.appendUnsafeC(toHex((c >> 4) & 15))
+    sb.appendUnsafeC(toHex(c & 15))
+  }
+
+  def escapeSingleChar(sb: upickle.core.CharBuilder,
+                       naiveOutLen: Int,
+                       i: Int,
+                       c: Char) = {
+    sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC(c)
   }
 
 }
