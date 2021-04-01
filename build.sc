@@ -82,12 +82,29 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     }
     Seq(PathRef(T.dest))
   }
+  def docJar = if (isDotty)  T {
+    val outDir = T.ctx().dest
+    val javadocDir = outDir / 'javadoc
+    os.makeDir.all(javadocDir)
+    mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
+  } else T {
+    super.docJar()
+  }
+
   trait CommonTestModule extends CommonModule with TestModule{
     def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.8") ++ (
       if (isDotty) Agg.empty[mill.scalalib.Dep]
       else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
     )
     def testFrameworks = Seq("upickle.core.UTestFramework")
+    def docJar = if (isDotty)  T {
+      val outDir = T.ctx().dest
+      val javadocDir = outDir / 'javadoc
+      os.makeDir.all(javadocDir)
+      mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
+    } else T {
+      super.docJar()
+    }
   }
 }
 

@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 1.3.10")
+@sect("µPickle 1.3.11")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -811,7 +811,7 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
-    @sect{1.3.10}
+    @sect{1.3.11}
       @ul
         @li
           Publish for Scala 3.0.0-RC2
