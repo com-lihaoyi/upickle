@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 1.3.8")
+@sect("µPickle 1.3.10")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -437,7 +437,7 @@
         pickling can fail unpredictably. This can be worked around by instead
         using the @code{macroRW} and @code{merge} methods to manually specify
         which sub-types of a sealed trait to consider when pickling:
-    
+
       @hl.ref(macroTests, "sealed trait TypedFoo", "// End TypedFoo")
 
   @sect{uJson}
@@ -811,6 +811,10 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{1.3.10}
+      @ul
+        @li
+          Publish for Scala 3.0.0-RC2
     @sect{1.3.8}
       @ul
         @li
