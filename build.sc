@@ -11,7 +11,7 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 val scala211  = "2.11.12"
 val scala212  = "2.12.13"
 val scala213  = "2.13.4"
-val scala3    = "3.0.0-RC1"
+val scala3    = "3.0.0-RC2"
 val scalaJS06 = "0.6.33"
 val scalaJS1  = "1.4.0"
 val scalaNative = "0.4.0"
@@ -83,7 +83,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     Seq(PathRef(T.dest))
   }
   trait CommonTestModule extends CommonModule with TestModule{
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.7") ++ (
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.8") ++ (
       if (isDotty) Agg.empty[mill.scalalib.Dep]
       else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
     )
@@ -122,7 +122,7 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
 
 trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.7")
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.8")
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)

@@ -15,7 +15,7 @@ object UnitTests extends TestSuite{
       val msg = Arr(
         Str("a"), Str("bb"), Str("ccc"), Str("dddd"), Str("eeeee"), Str("ffffff"),
         Str("g"), Str("hh"), Str("iii"), Str("jjjj"), Str("kkkkk"), Str("llllll"),
-        Str("m"), Str("nn"), Str("ooo"), Str("pppp"), Str("qqqqq"), Str("rrrrrr"),
+        Str("m"), Str("nn"), Str("ooo"), Str("pppp"), Str("qqqqq"), Str("rrrrrr")
       )
       val written = upack.write(msg)
       val reader = new InputStreamMsgPackReader(new ByteArrayInputStream(written), 2, 2)
@@ -33,7 +33,7 @@ object UnitTests extends TestSuite{
         Str("h") -> Int32(123), Str("i") -> Int32(456), Str("j") -> Int32(789),
         Str("k") -> Int32(123), Str("l") -> Int32(456), Str("m") -> Int32(789),
         Str("n") -> Int32(123), Str("o") -> Int32(456), Str("p") -> Int32(789),
-        Str("q") -> Int32(123), Str("r") -> Int32(456), Str("s") -> Int32(789),
+        Str("q") -> Int32(123), Str("r") -> Int32(456), Str("s") -> Int32(789)
       )
       val written = upack.write(msg)
       val reader = new InputStreamMsgPackReader(new ByteArrayInputStream(written), 2, 2)
