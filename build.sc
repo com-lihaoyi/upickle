@@ -11,7 +11,7 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 val scala211  = "2.11.12"
 val scala212  = "2.12.13"
 val scala213  = "2.13.4"
-val scala3    = "3.0.0-RC2"
+val scala3    = "3.0.0-RC3"
 val scalaJS06 = "0.6.33"
 val scalaJS1  = "1.4.0"
 val scalaNative = "0.4.0"
@@ -92,7 +92,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
   }
 
   trait CommonTestModule extends CommonModule with TestModule{
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.8") ++ (
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.9") ++ (
       if (isDotty) Agg.empty[mill.scalalib.Dep]
       else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
     )
@@ -139,7 +139,7 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
 
 trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.8")
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.9")
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
@@ -423,7 +423,7 @@ trait BenchModule extends CommonModule{
     ivy"com.typesafe.play::play-json::2.9.2",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.7",
-    ivy"com.lihaoyi::sourcecode::0.2.4",
+    ivy"com.lihaoyi::sourcecode::0.2.6",
   )
 }
 
@@ -455,7 +455,7 @@ object bench extends Module {
     def platformSegment = "native"
     def scalaNativeVersion = "0.4.0"
     def moduleDeps = Seq(upickle.native(scala213, "0.4.0").test)
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.4")
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.6")
     def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "NonNative.scala"))
     def releaseMode = ReleaseMode.ReleaseFast
     def nativeLTO = LTO.Thin
