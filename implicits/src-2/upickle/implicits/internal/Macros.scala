@@ -240,9 +240,7 @@ object Macros {
                   targetType: c.Type,
                   varargs: Boolean) = {
       val defaults = deriveDefaults(companion, hasDefaults)
-      if (rawArgs.size > 64) {
-        c.abort(c.enclosingPosition, "uPickle does not support serializing case classes with >64 fields")
-      }
+
       val localReaders = for (i <- rawArgs.indices) yield TermName("localReader" + i)
       val aggregates = for (i <- rawArgs.indices) yield TermName("aggregated" + i)
       q"""
@@ -251,7 +249,7 @@ object Macros {
           yield q"private[this] lazy val ${localReaders(i)} = implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
         }
         new ${c.prefix}.CaseR[$targetType]{
-          override def visitObject(length: Int, index: Int) = new CaseObjectContext{
+          override def visitObject(length: Int, index: Int) = new ${if (rawArgs.size <= 64) tq"CaseObjectContext" else tq"HugeCaseObjectContext"}(${rawArgs.size}){
             ..${
               for (i <- rawArgs.indices)
               yield q"private[this] var ${aggregates(i)}: ${argTypes(i)} = _"
@@ -281,7 +279,10 @@ object Macros {
 
               // Special-case 64 because java bit shifting ignores any RHS values above 63
               // https://docs.oracle.com/javase/specs/jls/se7/html/jls-15.html#jls-15.19
-              if (found != ${if (rawArgs.length == 64) -1 else (1L << rawArgs.length) - 1}){
+              if (${
+                if (rawArgs.length <= 64) q"this.checkErrorMissingKeys(${if (rawArgs.length == 64) -1 else (1L << rawArgs.length) - 1})"
+                else q"this.checkErrorMissingKeys(${rawArgs.length})"
+              }){
                 this.errorMissingKeys(${rawArgs.length}, ${mappedArgs.toArray})
               }
               $companion.apply(
