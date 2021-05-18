@@ -229,8 +229,8 @@ trait Types{ types =>
       }
       def visitKey(index: Int) = _root_.upickle.core.StringVisitor
       protected def storeValueIfNotFound(i: Int, v: Any) = {
-        if ((found(currentIndex / 64) & (1L << i)) == 0) {
-          found(currentIndex / 64) |= (1L << i)
+        if ((found(i / 64) & (1L << i)) == 0) {
+          found(i / 64) |= (1L << i)
           storeAggregatedValue(i, v)
         }
       }

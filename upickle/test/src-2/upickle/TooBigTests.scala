@@ -91,12 +91,21 @@ object TooBigTests extends TestSuite {
           err.getMessage ==
             "missing keys in dictionary: _2, _52, _102, _142 at index 1392"
         )
-        val readWithDefault = upickle.default.read[Big150](
+
+        val readWithDefault1 = upickle.default.read[Big150](
           written150.replace(",\"_149\":149", "")
         )
-        assert(
-          readWithDefault == b150.copy(_149 = -1337)
+        assert(readWithDefault1 == b150.copy(_149 = -1337))
+
+        val readWithDefault2 = upickle.default.read[Big150](
+          written150.replace("\"_0\":0,", "")
         )
+        assert(readWithDefault2 == b150.copy(_0 = 31337))
+
+        val readWithDefault3 = upickle.default.read[Big150](
+          written150.replace("\"_0\":0,", "").replace(",\"_149\":149", "")
+        )
+        assert(readWithDefault3 == b150.copy(_0 = 31337, _149 = -1337))
       }
     }
 //    test("hugeFile"){
@@ -164,7 +173,7 @@ case class Big65(_0: Byte, _1: Byte, _2: Byte, _3: Byte, _4: Byte, _5: Byte, _6:
 object Big65{
   implicit val b65rw: upickle.default.ReadWriter[Big65] = upickle.default.macroRW
 }
-case class Big150(_0: Int, _1: Int, _2: Int, _3: Int, _4: Int, _5: Int, _6: Int, _7: Int,
+case class Big150(_0: Int = 31337, _1: Int, _2: Int, _3: Int, _4: Int, _5: Int, _6: Int, _7: Int,
                   _8: Int, _9: Int, _10: Int, _11: Int, _12: Int, _13: Int, _14: Int,
                   _15: Int, _16: Int, _17: Int, _18: Int, _19: Int, _20: Int, _21: Int,
                   _22: Int, _23: Int, _24: Int, _25: Int, _26: Int, _27: Int, _28: Int,
