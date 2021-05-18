@@ -91,6 +91,12 @@ object TooBigTests extends TestSuite {
           err.getMessage ==
             "missing keys in dictionary: _2, _52, _102, _142 at index 1392"
         )
+        val readWithDefault = upickle.default.read[Big150](
+          written150.replace(",\"_149\":149", "")
+        )
+        assert(
+          readWithDefault == b150.copy(_149 = -1337)
+        )
       }
     }
 //    test("hugeFile"){
@@ -180,7 +186,7 @@ case class Big150(_0: Int, _1: Int, _2: Int, _3: Int, _4: Int, _5: Int, _6: Int,
                   _129: Int, _130: Int, _131: Int, _132: Int, _133: Int, _134: Int,
                   _135: Int, _136: Int, _137: Int, _138: Int, _139: Int, _140: Int,
                   _141: Int, _142: Int, _143: Int, _144: Int, _145: Int, _146: Int,
-                  _147: Int, _148: Int, _149: Int){
+                  _147: Int, _148: Int, _149: Int = -1337 /*default*/){
 
   // Workaround for https://github.com/scala/scala/pull/9635
   override def equals(other: Any): Boolean = other match{
