@@ -42,7 +42,17 @@ trait Readers extends upickle.core.Types
     override def visitUInt64(d: Long, index: Int) = d
     override def visitFloat32(d: Float, index: Int) = d
     override def visitFloat64(d: Double, index: Int) = d
-
+    override def visitFloat64String(s: String, index: Int) = {
+      visitFloat64StringParts(
+        s,
+        s.indexOf('.'),
+        s.indexOf('E') match{
+          case -1 => s.indexOf('e')
+          case n => n
+        },
+        -1
+      )
+    }
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toDouble
     }
@@ -54,6 +64,17 @@ trait Readers extends upickle.core.Types
     override def visitUInt64(d: Long, index: Int) = d.toInt
     override def visitFloat32(d: Float, index: Int) = d.toInt
     override def visitFloat64(d: Double, index: Int) = d.toInt
+    override def visitFloat64String(s: String, index: Int) = {
+      visitFloat64StringParts(
+        s,
+        s.indexOf('.'),
+        s.indexOf('E') match{
+          case -1 => s.indexOf('e')
+          case n => n
+        },
+        -1
+      )
+    }
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Util.parseIntegralNum(s, decIndex, expIndex, index).toInt
     }
@@ -67,6 +88,17 @@ trait Readers extends upickle.core.Types
     override def visitUInt64(d: Long, index: Int) = d.toFloat
     override def visitFloat32(d: Float, index: Int) = d
     override def visitFloat64(d: Double, index: Int) = d.toFloat
+    override def visitFloat64String(s: String, index: Int) = {
+      visitFloat64StringParts(
+        s,
+        s.indexOf('.'),
+        s.indexOf('E') match{
+          case -1 => s.indexOf('e')
+          case n => n
+        },
+        -1
+      )
+    }
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toFloat
     }
@@ -78,6 +110,17 @@ trait Readers extends upickle.core.Types
     override def visitUInt64(d: Long, index: Int) = d.toShort
     override def visitFloat32(d: Float, index: Int) = d.toShort
     override def visitFloat64(d: Double, index: Int) = d.toShort
+    override def visitFloat64String(s: String, index: Int) = {
+      visitFloat64StringParts(
+        s,
+        s.indexOf('.'),
+        s.indexOf('E') match{
+          case -1 => s.indexOf('e')
+          case n => n
+        },
+        -1
+      )
+    }
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Util.parseIntegralNum(s, decIndex, expIndex, index).toShort
     }
@@ -89,6 +132,17 @@ trait Readers extends upickle.core.Types
     override def visitUInt64(d: Long, index: Int) = d.toByte
     override def visitFloat32(d: Float, index: Int) = d.toByte
     override def visitFloat64(d: Double, index: Int) = d.toByte
+    override def visitFloat64String(s: String, index: Int) = {
+      visitFloat64StringParts(
+        s,
+        s.indexOf('.'),
+        s.indexOf('E') match{
+          case -1 => s.indexOf('e')
+          case n => n
+        },
+        -1
+      )
+    }
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Util.parseIntegralNum(s, decIndex, expIndex, index).toByte
     }
@@ -110,7 +164,19 @@ trait Readers extends upickle.core.Types
     override def visitInt32(d: Int, index: Int) = d.toChar
     override def visitInt64(d: Long, index: Int) = d.toChar
     override def visitUInt64(d: Long, index: Int) = d.toChar
+    override def visitFloat32(d: Float, index: Int) = d.toChar
     override def visitFloat64(d: Double, index: Int) = d.toChar
+    override def visitFloat64String(s: String, index: Int) = {
+      visitFloat64StringParts(
+        s,
+        s.indexOf('.'),
+        s.indexOf('E') match{
+          case -1 => s.indexOf('e')
+          case n => n
+        },
+        -1
+      )
+    }
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Util.parseIntegralNum(s, decIndex, expIndex, index).toChar
     }
@@ -124,6 +190,17 @@ trait Readers extends upickle.core.Types
     override def visitUInt64(d: Long, index: Int) = d.toLong
     override def visitFloat32(d: Float, index: Int) = d.toLong
     override def visitFloat64(d: Double, index: Int) = d.toLong
+    override def visitFloat64String(s: String, index: Int) = {
+      visitFloat64StringParts(
+        s,
+        s.indexOf('.'),
+        s.indexOf('E') match{
+          case -1 => s.indexOf('e')
+          case n => n
+        },
+        -1
+      )
+    }
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       Util.parseIntegralNum(s, decIndex, expIndex, index).toLong
     }
