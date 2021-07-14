@@ -259,6 +259,7 @@ object Macros {
                 for (i <- rawArgs.indices)
                 yield cq"$i => ${aggregates(i)} = v.asInstanceOf[${argTypes(i)}]"
               }
+              case _ => throw new java.lang.IndexOutOfBoundsException(currentIndex.toString)
             }
 
             def visitKeyValue(s: Any) = {
@@ -301,6 +302,7 @@ object Macros {
                 for (i <- rawArgs.indices)
                 yield cq"$i => ${localReaders(i)} "
               }
+              case _ => throw new java.lang.IndexOutOfBoundsException(currentIndex.toString)
             }
           }
         }
