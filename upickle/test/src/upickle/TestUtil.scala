@@ -5,6 +5,8 @@ package upickle
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
+import scala.Numeric.Implicits._
+
 import utest.{assert => _, _}
 /**
 * Created by haoyi on 4/22/14.
@@ -94,5 +96,18 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       val rewrittenBinaryStr = upickle.core.Util.bytesToString(rewrittenBinary)
       utest.assert(writtenBinaryStr == rewrittenBinaryStr)
     }
+  }
+
+  def rwNum[T: Numeric: api.Reader: api.Writer](t: T, strings: String*) = {
+    rw(t, strings: _*)
+    num(t)
+  }
+
+  def num[T: Numeric : api.Reader](t: T) = {
+    api.reader[T].visitFloat32(t.toFloat, -1) ==> t.toFloat
+    api.reader[T].visitFloat64(t.toDouble, -1) ==> t.toDouble
+    api.reader[T].visitInt32(t.toInt, -1) ==> t.toInt
+    api.reader[T].visitInt64(t.toLong, -1) ==> t.toLong
+    api.reader[T].visitFloat64String(t.toLong.toString, -1) ==> t.toLong
   }
 }

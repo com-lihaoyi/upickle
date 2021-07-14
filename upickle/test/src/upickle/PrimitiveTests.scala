@@ -32,12 +32,12 @@ object PrimitiveTests extends TestSuite {
       }
     }
     test("Long"){
-      test("small") - rw(1: Long, """ "1" """)
-      test("med") - rw(125123: Long, """ "125123" """)
-      test("min") - rw(Int.MinValue.toLong - 1, """ "-2147483649" """)
-      test("max") - rw(Int.MaxValue.toLong + 1, """ "2147483648" """)
-      test("min") - rw(Long.MinValue, """ "-9223372036854775808" """)
-      test("max") - rw(Long.MaxValue, """ "9223372036854775807" """)
+      test("small") - rwNum(1: Long, """ "1" """)
+      test("med") - rwNum(125123: Long, """ "125123" """)
+      test("min") - rwNum(Int.MinValue.toLong - 1, """ "-2147483649" """)
+      test("max") - rwNum(Int.MaxValue.toLong + 1, """ "2147483648" """)
+      test("min") - rwNum(Long.MinValue, """ "-9223372036854775808" """)
+      test("max") - rwNum(Long.MaxValue, """ "9223372036854775807" """)
       test("null") - assert(read[Long]("null") == 0)
     }
     test("BigInt"){
@@ -60,18 +60,18 @@ object PrimitiveTests extends TestSuite {
     }
 
     test("Int"){
-      test("small") - rw(1, "1")
-      test("med") - rw(125123, "125123")
-      test("min") - rw(Int.MinValue, "-2147483648")
-      test("max") - rw(Int.MaxValue, "2147483647")
+      test("small") - rwNum(1, "1")
+      test("med") - rwNum(125123, "125123")
+      test("min") - rwNum(Int.MinValue, "-2147483648")
+      test("max") - rwNum(Int.MaxValue, "2147483647")
       test("null") - assert(read[Int]("null") == 0)
     }
 
     test("Double"){
-      test("whole") - rw(125123: Double, """125123.0""", """125123""")
-      test("wholeLarge") - rw(1475741505173L: Double, """1475741505173.0""", """1475741505173""")
-      test("fractional") - rw(125123.1542312, """125123.1542312""")
-      test("negative") - rw(-125123.1542312, """-125123.1542312""")
+      test("whole") - rwNum(125123: Double, """125123.0""", """125123""")
+      test("wholeLarge") - rwNum(1475741505173L: Double, """1475741505173.0""", """1475741505173""")
+      test("fractional") - rwNum(125123.1542312, """125123.1542312""")
+      test("negative") - rwNum(-125123.1542312, """-125123.1542312""")
       test("null") - assert(read[Double]("null") == 0.0)
       test("nan") - assert(
         java.lang.Double.isNaN(read[Double](""" "NaN" """)),
@@ -84,32 +84,32 @@ object PrimitiveTests extends TestSuite {
     }
 
     test("Short"){
-      test("simple") - rw(25123: Short, "25123")
-      test("min") - rw(Short.MinValue, "-32768")
-      test("max") - rw(Short.MaxValue, "32767")
+      test("simple") - rwNum(25123: Short, "25123")
+      test("min") - rwNum(Short.MinValue, "-32768")
+      test("max") - rwNum(Short.MaxValue, "32767")
       test("null") - assert(read[Short]("null") == 0)
       test("all"){
-        for (i <- Short.MinValue to Short.MaxValue) rw(i)
+        for (i <- Short.MinValue to Short.MaxValue) rwNum(i)
       }
     }
 
     test("Byte"){
-      test("simple") - rw(125: Byte, "125")
-      test("min") - rw(Byte.MinValue, "-128")
-      test("max") - rw(Byte.MaxValue, "127")
+      test("simple") - rwNum(125: Byte, "125")
+      test("min") - rwNum(Byte.MinValue, "-128")
+      test("max") - rwNum(Byte.MaxValue, "127")
       test("null") - assert(read[Byte]("null") == 0)
       test("all"){
-        for (i <- Byte.MinValue to Byte.MaxValue) rw(i)
+        for (i <- Byte.MinValue to Byte.MaxValue) rwNum(i)
       }
     }
 
     test("Float"){
-      test("simple") - rw(125.125f, """125.125""")
-      test("max") - rw(Float.MaxValue)
-      test("min") - rw(Float.MinValue)
-      test("minPos") - rw(Float.MinPositiveValue)
-      test("inf") - rw(Float.PositiveInfinity, """ "Infinity" """)
-      "neg-inf" - rw(Float.NegativeInfinity, """ "-Infinity" """)
+      test("simple") - rwNum(125.125f, """125.125""")
+      test("max") - rwNum(Float.MaxValue)
+      test("min") - rwNum(Float.MinValue)
+      test("minPos") - rwNum(Float.MinPositiveValue)
+      test("inf") - rwNum(Float.PositiveInfinity, """ "Infinity" """)
+      "neg-inf" - rwNum(Float.NegativeInfinity, """ "-Infinity" """)
       test("null") - assert(read[Float]("null") == 0.0)
       test("nan") - assert(
         java.lang.Float.isNaN(read[Float](""" "NaN" """)),
@@ -122,7 +122,10 @@ object PrimitiveTests extends TestSuite {
       test("plus") - rwNoBinaryJson('+', """ "+" """)
 
       test("all"){
-        for(i <- Char.MinValue until 55296/*Char.MaxValue*/) rwNoBinaryJson(i)
+        for(i <- Char.MinValue until 55296/*Char.MaxValue*/) {
+          rwNoBinaryJson(i)
+          num(i)
+        }
       }
     }
   }
