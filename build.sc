@@ -38,7 +38,11 @@ val scalaNativeVersions = Seq(
 )
 
 trait CommonModule extends ScalaModule {
-  def scalacOptions = T{ if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil }
+  def scalacOptions = T{
+    super.scalacOptions() ++ {
+      if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil
+    }
+  }
   def platformSegment: String
 
   def sources = T.sources{
@@ -96,7 +100,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
       if (isDotty) Agg.empty[mill.scalalib.Dep]
       else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
     )
-    def testFrameworks = Seq("upickle.core.UTestFramework")
+    def testFramework = "upickle.core.UTestFramework"
     def docJar = if (isDotty)  T {
       val outDir = T.ctx().dest
       val javadocDir = outDir / 'javadoc
@@ -355,7 +359,7 @@ trait UpickleModule extends CommonPublishModule{
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
   else Agg.empty[Dep]
-  def scalacOptions = Seq(
+  def scalacOptions = super.scalacOptions() ++ Seq(
     "-unchecked",
     "-deprecation",
     "-encoding", "utf8",
@@ -380,9 +384,10 @@ object upickle extends Module{
         ))
       }
 
-      def scalacOptions =
+      def scalacOptions = super.scalacOptions() ++ {
         if (isDotty) Seq("-Ximport-suggestion-timeout", "0")
         else Nil
+      }
     }
   }
 
@@ -395,7 +400,6 @@ object upickle extends Module{
     )
 
     object test extends Tests with CommonModule{
-      def testFrameworks = Seq("upickle.core.UTestFramework")
       def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
     }
   }
