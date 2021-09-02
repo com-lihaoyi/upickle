@@ -90,14 +90,14 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     }
     Seq(PathRef(T.dest))
   }
-  def docJar = T {
-    if (isScala3(scalaVersion())) {
+  def docJar = {
+    if (isScala3(crossScalaVersion)) T {
       val outDir = T.ctx().dest
       val javadocDir = outDir / 'javadoc
       os.makeDir.all(javadocDir)
       mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
     } else {
-      super.docJar()
+      super.docJar
     }
   }
 }
@@ -109,14 +109,10 @@ trait CommonTestModule extends CommonModule with TestModule{
   )
   def testFramework = "upickle.core.UTestFramework"
   def docJar = T {
-    if (isScala3(scalaVersion())) {
-      val outDir = T.ctx().dest
-      val javadocDir = outDir / 'javadoc
-      os.makeDir.all(javadocDir)
-      mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
-    } else {
-      super.docJar()
-    }
+    val outDir = T.ctx().dest
+    val javadocDir = outDir / 'javadoc
+    os.makeDir.all(javadocDir)
+    mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
   }
 }
 
