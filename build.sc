@@ -53,6 +53,9 @@ trait CommonModule extends ScalaModule {
     } else Seq()) ++
     (if (scalaVersion() != scala211) {
       Seq(PathRef(millSourcePath / "src-2.12+"))
+    } else Seq()) ++
+    (if (scalaVersion() == scala212 || scalaVersion() == scala213) {
+      Seq(PathRef(millSourcePath / "src-2.12-2.13"))
     } else Seq())
   }
 }
