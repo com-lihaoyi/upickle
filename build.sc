@@ -57,7 +57,11 @@ trait CommonModule extends ScalaModule {
     } else Seq()) ++
     (if (scalaVersion() == scala212 || scalaVersion() == scala213) {
       Seq(PathRef(millSourcePath / "src-2.12-2.13"))
-    } else Seq())
+    } else Seq()) ++
+    (platformSegment match {
+      case "jvm" | "native" => Seq(PathRef(millSourcePath / "src-jvm-native"))
+      case _ => Seq()
+    })
   }
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
