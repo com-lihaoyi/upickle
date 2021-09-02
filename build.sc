@@ -4,6 +4,7 @@ import mill.scalalib.publish._
 import mill.scalajslib._
 import mill.scalanativelib._
 import mill.modules._
+import mill.scalalib.api.Util.isScala3
 import mill.scalanativelib.api.{LTO, ReleaseMode}
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
@@ -89,27 +90,31 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     }
     Seq(PathRef(T.dest))
   }
-  def docJar = if (isDotty)  T {
-    val outDir = T.ctx().dest
-    val javadocDir = outDir / 'javadoc
-    os.makeDir.all(javadocDir)
-    mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
-  } else T {
-    super.docJar()
-  }
-
-  trait CommonTestModule extends CommonModule with TestModule{
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.10") ++ (
-      if (isDotty) Agg.empty[mill.scalalib.Dep]
-      else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
-    )
-    def testFramework = "upickle.core.UTestFramework"
-    def docJar = if (isDotty)  T {
+  def docJar = T {
+    if (isScala3(scalaVersion())) {
       val outDir = T.ctx().dest
       val javadocDir = outDir / 'javadoc
       os.makeDir.all(javadocDir)
       mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
-    } else T {
+    } else {
+      super.docJar()
+    }
+  }
+}
+
+trait CommonTestModule extends CommonModule with TestModule{
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.10") ++ (
+    if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
+    else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
+  )
+  def testFramework = "upickle.core.UTestFramework"
+  def docJar = T {
+    if (isScala3(scalaVersion())) {
+      val outDir = T.ctx().dest
+      val javadocDir = outDir / 'javadoc
+      os.makeDir.all(javadocDir)
+      mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
+    } else {
       super.docJar()
     }
   }
