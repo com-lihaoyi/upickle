@@ -7,7 +7,7 @@ on:
       - master
 
 jobs:
-  test:
+  test-js:
     runs-on: ubuntu-latest
     env:
       JAVA_OPTS: "-Xss10M"
@@ -16,8 +16,36 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: 8
-      - name: Run tests
-        run: ./mill -i all __.compile __.publishArtifacts __.test
+      - name: Run JS tests
+        run: |
+          ./mill -i __.resolvedIvyDeps
+          ./mill -i -j $(nproc) all __.js.__.compile __.js.__.publishArtifacts __.js.__.test
+  test-native:
+    runs-on: ubuntu-latest
+    env:
+      JAVA_OPTS: "-Xss10M"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Run Native tests
+        run: |
+          ./mill -i __.resolvedIvyDeps
+          ./mill -i -j $(nproc) all __.native.__.compile __.native.__.publishArtifacts __.native.__.test
+  test-jvm:
+    runs-on: ubuntu-latest
+    env:
+      JAVA_OPTS: "-Xss10M"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Run JVM tests
+        run: |
+          ./mill -i __.resolvedIvyDeps
+          ./mill -i -j $(nproc) all __.jvm.__.compile __.jvm.__.publishArtifacts __.jvm.__.test
 
   publish-sonatype:
     if: github.repository == 'com-lihaoyi/upickle' && contains(github.ref, 'refs/tags/')
