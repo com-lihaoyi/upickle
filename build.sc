@@ -22,7 +22,6 @@ val scala2JVMVersions = Seq(scala211, scala212, scala213)
 val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 val scalaJSVersions = Seq(
-  (scala211, scalaJS06),
   (scala212, scalaJS06),
   (scala213, scalaJS06),
   (scala211, scalaJS1),
