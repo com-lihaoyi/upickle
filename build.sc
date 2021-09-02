@@ -78,7 +78,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     )
   )
   def templates = T.source(millSourcePath / "templates")
-  def generatedSources = T{1
+  def generatedSources = T{
     for{
       p <- if (os.exists(templates().path)) os.list(templates().path) else Nil
       rename <- Seq("Char", "Byte")
@@ -127,6 +127,7 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
   def crossScalaJSVersion: String
   def scalaJSVersion = crossScalaJSVersion
+  def scalacOptions = super.scalacOptions()
   def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "js"
