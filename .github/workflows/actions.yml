@@ -15,7 +15,7 @@ jobs:
         with:
           java-version: 8
       - name: Run tests
-        run: ./mill -i all __.publishArtifacts __.test
+        run: ./mill -i all __.compile __.publishArtifacts __.test
 
   publish-sonatype:
     if: github.repository == 'com-lihaoyi/upickle' && contains(github.ref, 'refs/tags/')
