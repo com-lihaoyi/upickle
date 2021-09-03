@@ -33,13 +33,15 @@ object UtilTests extends TestSuite {
     }
 
     test("parseLong - bounds") {
+      val s = "123"
       for {
-        start <- -1 to 5
-          end <- -1 to 5
+        start <- -1 to (s.length + 1)
+          end <- -1 to (s.length + 1)
           if start != end // NumberFormatException, not IndexOutOfBoundsException
       } {
-        val s = "123"
-        if (Try(s.substring(start, end)).isSuccess) {
+        // Roundabout way to avoid scala.js differences: https://github.com/scala-js/scala-js/issues/3546
+        val isValidRange = Try(s.substring(start, end)).toOption.exists(_.length == end - start)
+        if (isValidRange) {
           Util.parseLong(s, start, end)
         } else {
           intercept[IndexOutOfBoundsException](Util.parseLong(s, start, end))

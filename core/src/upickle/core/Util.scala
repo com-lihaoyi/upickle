@@ -72,7 +72,7 @@ object Util {
     var inverseSign: Long = -1L
     var i: Int = start
 
-    if ((start | end | (cs.length - end)) < 0) throw new IndexOutOfBoundsException
+    if ((start | end | end - start | (cs.length - end)) < 0) throw new IndexOutOfBoundsException
 
     if (cs.charAt(start) == '-') {
       inverseSign = 1L
