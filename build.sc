@@ -4,6 +4,7 @@ import mill.scalalib.publish._
 import mill.scalajslib._
 import mill.scalanativelib._
 import mill.modules._
+import mill.scalalib.api.Util.isScala3
 import mill.scalanativelib.api.{LTO, ReleaseMode}
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
@@ -38,7 +39,11 @@ val scalaNativeVersions = Seq(
 )
 
 trait CommonModule extends ScalaModule {
-  def scalacOptions = T{ if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil }
+  def scalacOptions = T{
+    super.scalacOptions() ++ {
+      if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil
+    }
+  }
   def platformSegment: String
 
   def sources = T.sources{
@@ -49,7 +54,14 @@ trait CommonModule extends ScalaModule {
     } else Seq()) ++
     (if (scalaVersion() != scala211) {
       Seq(PathRef(millSourcePath / "src-2.12+"))
-    } else Seq())
+    } else Seq()) ++
+    (if (scalaVersion() == scala212 || scalaVersion() == scala213) {
+      Seq(PathRef(millSourcePath / "src-2.12-2.13"))
+    } else Seq()) ++
+    (platformSegment match {
+      case "jvm" | "native" => Seq(PathRef(millSourcePath / "src-jvm-native"))
+      case _ => Seq()
+    })
   }
 }
 trait CommonPublishModule extends CommonModule with PublishModule with CrossScalaModule{
@@ -70,7 +82,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     )
   )
   def templates = T.source(millSourcePath / "templates")
-  def generatedSources = T{1
+  def generatedSources = T{
     for{
       p <- if (os.exists(templates().path)) os.list(templates().path) else Nil
       rename <- Seq("Char", "Byte")
@@ -82,29 +94,29 @@ trait CommonPublishModule extends CommonModule with PublishModule with CrossScal
     }
     Seq(PathRef(T.dest))
   }
-  def docJar = if (isDotty)  T {
-    val outDir = T.ctx().dest
-    val javadocDir = outDir / 'javadoc
-    os.makeDir.all(javadocDir)
-    mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
-  } else T {
-    super.docJar()
-  }
-
-  trait CommonTestModule extends CommonModule with TestModule{
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.10") ++ (
-      if (isDotty) Agg.empty[mill.scalalib.Dep]
-      else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
-    )
-    def testFrameworks = Seq("upickle.core.UTestFramework")
-    def docJar = if (isDotty)  T {
+  def docJar = {
+    if (isScala3(crossScalaVersion)) T {
       val outDir = T.ctx().dest
       val javadocDir = outDir / 'javadoc
       os.makeDir.all(javadocDir)
       mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
-    } else T {
-      super.docJar()
+    } else {
+      super.docJar
     }
+  }
+}
+
+trait CommonTestModule extends CommonModule with TestModule{
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.10") ++ (
+    if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
+    else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
+  )
+  def testFramework = "upickle.core.UTestFramework"
+  def docJar = T {
+    val outDir = T.ctx().dest
+    val javadocDir = outDir / 'javadoc
+    os.makeDir.all(javadocDir)
+    mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
   }
 }
 
@@ -119,6 +131,7 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
   def crossScalaJSVersion: String
   def scalaJSVersion = crossScalaJSVersion
+  def scalacOptions = super.scalacOptions()
   def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "js"
@@ -355,7 +368,7 @@ trait UpickleModule extends CommonPublishModule{
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
   else Agg.empty[Dep]
-  def scalacOptions = Seq(
+  def scalacOptions = super.scalacOptions() ++ Seq(
     "-unchecked",
     "-deprecation",
     "-encoding", "utf8",
@@ -380,9 +393,10 @@ object upickle extends Module{
         ))
       }
 
-      def scalacOptions =
+      def scalacOptions = super.scalacOptions() ++ {
         if (isDotty) Seq("-Ximport-suggestion-timeout", "0")
         else Nil
+      }
     }
   }
 
@@ -395,7 +409,6 @@ object upickle extends Module{
     )
 
     object test extends Tests with CommonModule{
-      def testFrameworks = Seq("upickle.core.UTestFramework")
       def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
     }
   }
