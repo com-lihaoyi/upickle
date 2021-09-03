@@ -53,6 +53,10 @@ jobs:
 
   publish-sonatype:
     if: github.repository == 'com-lihaoyi/upickle' && contains(github.ref, 'refs/tags/')
+    needs:
+      - test-jvm
+      - test-js
+      - test-native
     runs-on: ubuntu-latest
     env:
       SONATYPE_PGP_PRIVATE_KEY: ${{ secrets.SONATYPE_PGP_PRIVATE_KEY }}
