@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 1.4.0")
+@sect("µPickle 1.4.1")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -811,6 +811,12 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{1.4.1}
+      @ul
+        @li
+          BugFix: Util.parseLong (@lnk("#361", "https://github.com/lihaoyi/upickle/pull/361"))
+        @li
+          Implement visitFloat32, visitFloat64String for Byte/Short/Int/Long/Float/Double/Char (@lnk("#358", "https://github.com/lihaoyi/upickle/pull/358"))
     @sect{1.4.0}
       @ul
         @li
