@@ -39,6 +39,7 @@ object PrimitiveTests extends TestSuite {
       test("min") - rwNum(Long.MinValue, """ "-9223372036854775808" """)
       test("max") - rwNum(Long.MaxValue, """ "9223372036854775807" """)
       test("null") - assert(read[Long]("null") == 0)
+      test("invalid") - intercept[NumberFormatException](upickle.default.transform("a").to[Long])
     }
     test("BigInt"){
       test("whole") - rw(BigInt("125123"), """ "125123" """)
