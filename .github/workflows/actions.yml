@@ -17,6 +17,8 @@ jobs:
       JAVA_OPTS: "-Xss10M"
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-java@v1
         with:
           java-version: 8
@@ -30,6 +32,8 @@ jobs:
       JAVA_OPTS: "-Xss10M"
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-java@v1
         with:
           java-version: 8
@@ -43,6 +47,8 @@ jobs:
       JAVA_OPTS: "-Xss10M"
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-java@v1
         with:
           java-version: 8
@@ -50,6 +56,17 @@ jobs:
         run: |
           ./mill -i __.resolvedIvyDeps
           ./mill -i -j $(nproc) all __.jvm.__.compile __.jvm.__.publishArtifacts __.jvm.__.test
+  check-binary-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Check Binary Compatibility
+        run: ./mill -i __.mimaReportBinaryIssues
 
   publish-sonatype:
     if: github.repository == 'com-lihaoyi/upickle' && contains(github.ref, 'refs/tags/')
