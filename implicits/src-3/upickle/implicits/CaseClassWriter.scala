@@ -14,8 +14,8 @@ trait CaseClassWriterPiece extends MacrosCommon:
       var n = 0
       for
         (name, _, value) <- elemsInfo(v)
-        defaultValue <- defaultParams.get(name)
-        if defaultValue != value || serializeDefaults
+        defaultValue = defaultParams.get(name)
+        if serializeDefaults || defaultValue.isEmpty || defaultValue.get != value
       do n += 1
       n
     end length

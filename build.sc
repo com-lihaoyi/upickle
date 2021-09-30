@@ -14,7 +14,7 @@ import com.github.lolgab.mill.mima._
 val scala211  = "2.11.12"
 val scala212  = "2.12.13"
 val scala213  = "2.13.4"
-val scala3    = "3.0.0"
+val scala3    = "3.0.2"
 val scalaJS06 = "0.6.33"
 val scalaJS1  = "1.5.1"
 val scalaNative = "0.4.0"

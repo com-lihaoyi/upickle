@@ -4,6 +4,14 @@ import upickle.TestUtil._
 
 import upickle.default.{read, write, ReadWriter => RW}
 
+case class Trivial(a: Int = 1)
+case class KeyedPerson(
+                   @upickle.implicits.key("first_name") firstName: String = "N/A",
+                   @upickle.implicits.key("last_name") lastName: String)
+object KeyedPerson {
+  implicit val rw: RW[KeyedPerson] = upickle.default.macroRW
+}
+
 object Custom {
   trait ThingBase{
     val i: Int
@@ -218,6 +226,18 @@ object MacroTests extends TestSuite {
     test("varargs"){
       rw(Varargs.Sentence("a", "b", "c"), """{"a":"a","bs":["b","c"]}""")
       rw(Varargs.Sentence("a"), """{"a":"a","bs":[]}""")
+    }
+    test("defaultregression"){
+      implicit val rw: upickle.default.ReadWriter[Trivial] = upickle.default.macroRW[Trivial]
+
+      upickle.default.read[Trivial]("{\"a\":2}") ==> Trivial(2)
+      upickle.default.read[Trivial]("{}") ==> Trivial(1)
+
+    }
+    test("defaultkeyregression"){
+
+      val json = """{"last_name": "Snow"}"""
+      upickle.default.read[KeyedPerson](json) ==> KeyedPerson("N/A", "Snow")
     }
 
   }
