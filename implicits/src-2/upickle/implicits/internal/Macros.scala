@@ -161,7 +161,7 @@ object Macros {
           //    println("argSyms " + argSyms.map(_.typeSignature))
           val rawArgs = argSyms.map(_.name.toString)
           val mappedArgs = argSyms.map { p =>
-            customKey(p).getOrElse(p.name.toString)
+            customKey(p).getOrElse(p.name.decodedName.toString)
           }
 
           def func(t: Type) = {
@@ -204,7 +204,9 @@ object Macros {
     def annotate(tpe: c.Type)(derived: c.universe.Tree) = {
       val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
       sealedParent.fold(derived) { parent =>
-        val index = customKey(tpe.typeSymbol).getOrElse(tpe.typeSymbol.fullName)
+
+        val index = customKey(tpe.typeSymbol).getOrElse(TypeName(tpe.typeSymbol.fullName).decodedName.toString)
+
         q"${c.prefix}.annotate($derived, $index)"
       }
     }
