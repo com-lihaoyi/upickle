@@ -10,9 +10,10 @@ def getDefaultParmasImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
 
   if (sym.isClassDef) {
     val comp = if (sym.isClassDef) sym.companionClass else sym
-    val names =
-      for p <- sym.caseFields if p.flags.is(Flags.HasDefault)
-      yield p.name
+    val hasDefaults =
+      for p <- sym.caseFields
+      yield p.flags.is(Flags.HasDefault)
+    val names = fieldLabelsImpl0[T].zip(hasDefaults).collect{case (n, true) => n}
     val namesExpr: Expr[List[String]] =
       Expr.ofList(names.map(Expr(_)))
 
@@ -45,21 +46,25 @@ def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
 end extractKey
 
 inline def fieldLabels[T] = ${fieldLabelsImpl[T]}
-def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[String]] =
+def fieldLabelsImpl0[T](using Quotes, Type[T]): List[String] =
   import quotes.reflect._
   val fields: List[Symbol] = TypeTree.of[T].symbol
     .primaryConstructor
     .paramSymss
     .flatten
 
-  val names = fields.map{ sym =>
+  fields.map{ sym =>
     extractKey(sym) match {
       case Some(name) => name
       case None => sym.name
     }
   }
-  Expr.ofList(names.map(Expr(_)))
+end fieldLabelsImpl0
+
+def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[String]] =
+Expr.ofList(fieldLabelsImpl0[T].map(Expr(_)))
 end fieldLabelsImpl
+
 
 inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
 def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =

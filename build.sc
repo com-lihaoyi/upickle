@@ -14,7 +14,7 @@ import com.github.lolgab.mill.mima._
 val scala211  = "2.11.12"
 val scala212  = "2.12.13"
 val scala213  = "2.13.4"
-val scala3    = "3.0.0"
+val scala3    = "3.0.2"
 val scalaJS06 = "0.6.33"
 val scalaJS1  = "1.5.1"
 val scalaNative = "0.4.0"
@@ -77,6 +77,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
 
     Seq("1.4.0", lastTag)
   }
+  def mimaPreviousArtifacts = T{ if (isDotty) Agg() else super.mimaPreviousArtifacts() }
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),

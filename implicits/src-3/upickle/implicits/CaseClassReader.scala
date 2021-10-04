@@ -11,9 +11,8 @@ trait CaseClassReaderPiece extends MacrosCommon:
 
     def visitorForKey(currentKey: String): Visitor[_, _]
 
-    private val builder = collection.mutable.Map.empty[String, Any]
-
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
+      private val builder = collection.mutable.Map.empty[String, Any]
       var currentKey: String = null
 
       def subVisitor: Visitor[_, _] = visitorForKey(currentKey)
