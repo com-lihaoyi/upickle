@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 1.4.1")
+@sect("µPickle 1.4.2")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -72,8 +72,8 @@
 
   @sect{Getting Started}
     @hl.scala
-      "com.lihaoyi" %% "upickle" % "1.3.8" // SBT
-      ivy"com.lihaoyi::upickle:1.3.8" // Mill
+      "com.lihaoyi" %% "upickle" % "1.4.2" // SBT
+      ivy"com.lihaoyi::upickle:1.4.2" // Mill
 
     @p
       And then you can immediately start writing and reading common Scala
