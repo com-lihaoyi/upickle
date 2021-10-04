@@ -57,6 +57,16 @@ object TypedFoo{
 }
 // End TypedFoo
 
+sealed trait SpecialChars
+
+object SpecialChars{
+  case class `+1`(`+1`: Int = 0) extends SpecialChars
+  case class `-1`(`-1`: Int = 0) extends SpecialChars
+  implicit def plusonerw: RW[`+1`] = default.macroRW
+  implicit def minusonerw: RW[`-1`] = default.macroRW
+  implicit def rw: RW[SpecialChars] = default.macroRW
+}
+
 object MacroTests extends TestSuite {
 
   // Doesn't work :(
@@ -240,5 +250,12 @@ object MacroTests extends TestSuite {
       upickle.default.read[KeyedPerson](json) ==> KeyedPerson("N/A", "Snow")
     }
 
+    test("specialchars"){
+      rw(SpecialChars.`+1`(), """{"$type": "upickle.SpecialChars.+1"}""")
+      rw(SpecialChars.`+1`(1), """{"$type": "upickle.SpecialChars.+1", "+1": 1}""")
+      rw(SpecialChars.`-1`(), """{"$type": "upickle.SpecialChars.-1"}""")
+      rw(SpecialChars.`-1`(1), """{"$type": "upickle.SpecialChars.-1", "-1": 1}""")
+    }
   }
 }
+
