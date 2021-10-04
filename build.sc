@@ -75,8 +75,9 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
       .lastTag
       .getOrElse(throw new Exception("Missing last tag"))
 
-    if (isDotty) Nil else Seq("1.4.0", lastTag)
+    Seq("1.4.0", lastTag)
   }
+  def mimaPreviousArtifacts = T{ if (isDotty) Agg() else super.mimaPreviousArtifacts() }
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
