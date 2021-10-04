@@ -811,6 +811,9 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{1.4.2}
+      @ul 
+         Bugfixes @lnk("#365", "https://github.com/com-lihaoyi/upickle/pull/365") @lnk("#366", "https://github.com/com-lihaoyi/upickle/pull/365")
     @sect{1.4.1}
       @ul
         @li
