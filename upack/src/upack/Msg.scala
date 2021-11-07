@@ -128,7 +128,13 @@ object Obj{
 
   def apply(): Obj = Obj(new mutable.LinkedHashMap[Msg, Msg]())
 }
-case class Ext(tag: Byte, data: Array[Byte]) extends Msg
+case class Ext(tag: Byte, data: Array[Byte]) extends Msg {
+  override def equals(other: Any): Boolean = other match {
+    case Ext(tagOther, dataOther) =>
+      tag == tagOther && java.util.Arrays.equals(data, dataOther)
+    case _ => false
+  }
+}
 
 sealed abstract class Bool extends Msg{
   def value: Boolean

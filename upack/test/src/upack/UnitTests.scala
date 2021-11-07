@@ -68,5 +68,21 @@ object UnitTests extends TestSuite{
       val parsed = upack.read(bytes)
       assert(msg == parsed)
     }
+    test("extInMap"){
+      val msg = Obj(Str("foo") -> Ext(33, new Array[Byte](12)), Str("bar") -> Null)
+      val out = new ByteArrayOutputStream()
+      msg.writeBytesTo(out)
+      val bytes = out.toByteArray
+      val parsed = upack.read(bytes)
+      assert(msg == parsed)
+    }
+    test("extInList"){
+      val msg = Arr(upack.Ext(33, new Array[Byte](4)), upack.False)
+      val out = new ByteArrayOutputStream()
+      msg.writeBytesTo(out)
+      val bytes = out.toByteArray
+      val parsed = upack.read(bytes)
+      assert(msg == parsed)
+    }
   }
 }
