@@ -134,6 +134,9 @@ case class Ext(tag: Byte, data: Array[Byte]) extends Msg {
       tag == tagOther && java.util.Arrays.equals(data, dataOther)
     case _ => false
   }
+
+  override def hashCode: Int =
+    MurmurHash3.bytesHash(b, "Ext".hashCode)
 }
 
 sealed abstract class Bool extends Msg{
