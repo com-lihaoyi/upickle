@@ -68,5 +68,19 @@ object UnitTests extends TestSuite{
       val parsed = upack.read(bytes)
       assert(msg == parsed)
     }
+    test("extInMap"){
+      val msg = Obj(Str("foo") -> Ext(33, new Array[Byte](12)), Str("bar") -> Null)
+      val bytes1 = upack.write(msg)
+      val parsed = upack.read(bytes1)
+      val bytes2 = upack.write(parsed)
+      assert(bytes1 sameElements bytes2)
+    }
+    test("extInList"){
+      val msg = Arr(upack.Ext(33, new Array[Byte](4)), upack.False)
+      val bytes1 = upack.write(msg)
+      val parsed = upack.read(bytes1)
+      val bytes2 = upack.write(parsed)
+      assert(bytes1 sameElements bytes2)
+    }
   }
 }

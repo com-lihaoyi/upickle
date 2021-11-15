@@ -98,7 +98,9 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
   }
   def parseExt[T](n: Int, visitor: Visitor[_, T]) = {
     val (arr, i, j) = sliceArr(index + 1, n)
-    visitor.visitExt(getByteSafe(index), arr, i, j, index)
+    val res = visitor.visitExt(getByteSafe(index), arr, i, j, index)
+    index += n + 1
+    res
   }
 
   def parseStr[T](n: Int, visitor: Visitor[_, T]) = {
