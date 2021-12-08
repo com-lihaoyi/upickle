@@ -211,6 +211,7 @@ object FailureTests extends TestSuite {
           test - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
           test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
           test - assertErrorMsgDefault[Fi]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
+          test - assertErrorMsgDefault[Fi]("""{}""", "expected tagged dictionary")
         }
 
         test("taggedInvalidBody"){
