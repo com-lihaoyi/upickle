@@ -4,6 +4,7 @@ import compiletime.{summonInline}
 import deriving.Mirror
 import scala.reflect.ClassTag
 import upickle.core.{ Visitor, ObjVisitor, Annotator }
+import deriving.*, compiletime.*
 
 trait CaseClassWriterPiece extends MacrosCommon:
   this: upickle.core.Types with Writers with Annotator =>
@@ -38,6 +39,10 @@ trait CaseClassWriterPiece extends MacrosCommon:
     end writeToObject
   end CaseClassWriter
 
+  class EnumWriter[T] extends Writer[T]:
+    override def write0[V](out: Visitor[_, V], v: T): V = out.visitString(v.toString, -1)
+  end EnumWriter
+
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
       def elemsInfo(v: T): List[(String, Writer[_], Any)] =
@@ -59,11 +64,23 @@ trait CaseClassWriterPiece extends MacrosCommon:
       Writer.merge[T](writers:_*)
   }
 
+  inline def macroEnumW[T](using m: Mirror.Of[T]): Writer[T] = inline m match {
+    case m: Mirror.ProductOf[T] =>
+      throw new UnsupportedOperationException("Generated Enum Writer should never encounter Product")
+
+    case m: Mirror.SumOf[T] =>
+      new EnumWriter[T]
+  }
+
   inline given [T <: Singleton: Mirror.Of: ClassTag]: Writer[T] = macroW[T]
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class WriterExtension(r: Writer.type):
-    inline def derived[T](using Mirror.Of[T], ClassTag[T]): Writer[T] = macroW[T]
+    inline def derived[T](using Mirror.Of[T], ClassTag[T]): Writer[T] = inline erasedValue[T] match {
+      case _: scala.reflect.Enum => new EnumWriter[T]
+      case other => macroW[T]
+    }
+
   end WriterExtension
 
 end CaseClassWriterPiece

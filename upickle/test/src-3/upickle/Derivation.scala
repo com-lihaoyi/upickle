@@ -73,7 +73,7 @@ object DerivationTests extends TestSuite {
       assert(result == expected)
     }
 
-    test("readWritrer") - {
+    test("readWriter") - {
       val rw = summon[ReadWriter[Animal]]
       val person = Person("Peter", "Somewhere", 30)
       val json = write(person)(rw)

@@ -2,15 +2,25 @@ package upickle.implicits
 
 import deriving.Mirror
 import scala.reflect.ClassTag
+import scala.compiletime.erasedValue
 
 trait MacroImplicits extends Readers with Writers with upickle.core.Annotator:
   this: upickle.core.Types =>
 
   inline def macroRW[T: ClassTag](using Mirror.Of[T]): ReadWriter[T] =
-    ReadWriter.join(
-      macroR[T],
-      macroW[T]
-    )
+    inline erasedValue[T] match {
+      case _: scala.reflect.Enum =>
+        ReadWriter.join(
+          macroEnumR[T],
+          macroEnumW[T]
+        )
+      case _ =>
+        ReadWriter.join(
+          macroR[T],
+          macroW[T]
+        )
+    }
+
   end macroRW
 
 

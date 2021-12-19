@@ -1,8 +1,12 @@
 package upickle.implicits
 
-import compiletime.{summonInline}
+import compiletime.summonInline
 import deriving.Mirror
-import upickle.core.{ Visitor, ObjVisitor, Annotator }
+import upickle.core.{Annotator, ObjVisitor, Visitor, Abort}
+import upickle.implicits.macros.EnumDescription
+
+import deriving.*
+import compiletime.*
 
 trait CaseClassReaderPiece extends MacrosCommon:
   this: upickle.core.Types with Readers with Annotator =>
@@ -29,6 +33,19 @@ trait CaseClassReaderPiece extends MacrosCommon:
         make(builder.toMap)
     }
   end CaseClassReader
+
+  class EnumReader[T](f: String => T, description: EnumDescription) extends SimpleReader[T]:
+    override def expectedMsg = "expected string enumeration"
+    override def visitString(s: CharSequence, index: Int) = {
+      val str = s.toString
+      try {
+        f(str)
+      } catch {
+        case _: IllegalArgumentException =>
+          throw new Abort(s"Value '$str' was not found in enumeration ${description.pretty}")
+      }
+    }
+  end EnumReader
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
@@ -82,11 +99,27 @@ trait CaseClassReaderPiece extends MacrosCommon:
       Reader.merge[T](readers:_*)
   }
 
+  inline def macroEnumR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
+    case m: Mirror.ProductOf[T] =>
+      throw new UnsupportedOperationException("Generated Enum Writer should never encounter Product")
+
+    case m: Mirror.SumOf[T] =>
+      val valueOf = macros.enumValueOf[T]
+      val description = macros.enumDescription[T]
+      new EnumReader[T](valueOf, description)
+  }
+
   inline given [T <: Singleton: Mirror.Of]: Reader[T] = macroR[T]
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class ReaderExtension(r: Reader.type):
-    inline def derived[T](using Mirror.Of[T]): Reader[T] = macroR[T]
+    inline def derived[T](using Mirror.Of[T]): Reader[T] = inline erasedValue[T] match {
+      case _: scala.reflect.Enum =>
+        val valueOf = macros.enumValueOf[T]
+        val description = macros.enumDescription[T]
+        new EnumReader[T](valueOf, description)
+      case _ => macroR[T]
+    }
   end ReaderExtension
 
 end CaseClassReaderPiece
