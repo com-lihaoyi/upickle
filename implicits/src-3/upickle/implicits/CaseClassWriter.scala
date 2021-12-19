@@ -38,6 +38,10 @@ trait CaseClassWriterPiece extends MacrosCommon:
     end writeToObject
   end CaseClassWriter
 
+  class EnumWriter[T] extends Writer[T]:
+    override def write0[V](out: Visitor[_, V], v: T): V = out.visitString(v.toString, -1)
+  end EnumWriter
+
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
       def elemsInfo(v: T): List[(String, Writer[_], Any)] =
@@ -53,10 +57,14 @@ trait CaseClassWriterPiece extends MacrosCommon:
 
       if macros.isMemberOfSealedHierarchy[T] then annotate(writer, macros.fullClassName[T])
       else writer
-    case m: Mirror.SumOf[T] =>
-      val writers: List[Writer[_ <: T]] = macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
-        .asInstanceOf[List[Writer[_ <: T]]]
-      Writer.merge[T](writers:_*)
+    case _: Mirror.SumOf[T] =>
+      inline compiletime.erasedValue[T] match {
+        case _: scala.reflect.Enum => new EnumWriter[T]
+        case _ =>
+          val writers: List[Writer[_ <: T]] = macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+          .asInstanceOf[List[Writer[_ <: T]]]
+          Writer.merge[T](writers:_*)
+      }
   }
 
   inline given [T <: Singleton: Mirror.Of: ClassTag]: Writer[T] = macroW[T]

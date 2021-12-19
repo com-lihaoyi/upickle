@@ -1,8 +1,9 @@
 package upickle.implicits
 
-import compiletime.{summonInline}
+import compiletime.summonInline
 import deriving.Mirror
-import upickle.core.{ Visitor, ObjVisitor, Annotator }
+import upickle.core.{Annotator, ObjVisitor, Visitor, Abort}
+import upickle.implicits.macros.EnumDescription
 
 trait CaseClassReaderPiece extends MacrosCommon:
   this: upickle.core.Types with Readers with Annotator =>
@@ -29,6 +30,19 @@ trait CaseClassReaderPiece extends MacrosCommon:
         make(builder.toMap)
     }
   end CaseClassReader
+
+  class EnumReader[T](f: String => T, description: EnumDescription) extends SimpleReader[T]:
+    override def expectedMsg = "expected string enumeration"
+    override def visitString(s: CharSequence, index: Int) = {
+      val str = s.toString
+      try {
+        f(str)
+      } catch {
+        case _: IllegalArgumentException =>
+          throw new Abort(s"Value '$str' was not found in enumeration ${description.pretty}")
+      }
+    }
+  end EnumReader
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
@@ -77,9 +91,16 @@ trait CaseClassReaderPiece extends MacrosCommon:
       else reader
 
     case m: Mirror.SumOf[T] =>
-      val readers: List[Reader[_ <: T]] = macros.summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
-        .asInstanceOf[List[Reader[_ <: T]]]
-      Reader.merge[T](readers:_*)
+      inline compiletime.erasedValue[T] match {
+        case _: scala.reflect.Enum =>
+          val valueOf = macros.enumValueOf[T]
+          val description = macros.enumDescription[T]
+          new EnumReader[T](valueOf, description)
+        case _ =>
+          val readers: List[Reader[_ <: T]] = macros.summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
+            .asInstanceOf[List[Reader[_ <: T]]]
+            Reader.merge[T](readers:_*)
+      }
   }
 
   inline given [T <: Singleton: Mirror.Of]: Reader[T] = macroR[T]
