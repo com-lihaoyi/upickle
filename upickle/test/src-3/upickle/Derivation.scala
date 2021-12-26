@@ -18,6 +18,10 @@ case class Cat(name: String, owner: Person)
 case class Dog(name: String, age: Int)
   derives ReadWriter
 
+case object Cthulu
+  extends Animal
+  derives ReadWriter
+
 object DerivationTests extends TestSuite {
 
   val tests = Tests {
@@ -63,7 +67,24 @@ object DerivationTests extends TestSuite {
       val dog = Dog("Ball", 10)
       val result = write(dog)
       val expected = """{"name":"Ball","age":10}"""
-      println(result == expected)
+      assert(result == expected)
+    }
+
+    test("caseObjectWriter") - {
+      val result1 = write(Cthulu)
+
+      val animal: Animal = Cthulu
+      val result2 = write(animal)
+
+      val expected = """{"$type":"upickle.Cthulu"}"""
+      assert(result1 == expected)
+      assert(result2 == expected)
+    }
+
+    test ("caseObjectReader") - {
+      val json = """{"$type":"upickle.Cthulu"}"""
+      val result = read[Animal](json)
+      assert(result == Cthulu)
     }
 
     test("traitWriter") - {
@@ -73,7 +94,7 @@ object DerivationTests extends TestSuite {
       assert(result == expected)
     }
 
-    test("readWritrer") - {
+    test("readWriter") - {
       val rw = summon[ReadWriter[Animal]]
       val person = Person("Peter", "Somewhere", 30)
       val json = write(person)(rw)

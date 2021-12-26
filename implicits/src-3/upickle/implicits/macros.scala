@@ -3,13 +3,16 @@ package upickle.implicits.macros
 import scala.quoted.{ given, _ }
 import deriving._, compiletime._
 
-inline def getDefaultParams[T]: Map[String, AnyRef] = ${ getDefaultParmasImpl[T] }
-def getDefaultParmasImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
+inline def getDefaultParams[T]: Map[String, AnyRef] = ${ getDefaultParamsImpl[T] }
+def getDefaultParamsImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
   import quotes.reflect._
   val sym = TypeTree.of[T].symbol
 
   if (sym.isClassDef) {
-    val comp = if (sym.isClassDef) sym.companionClass else sym
+    val comp =
+      if (sym.isClassDef && !sym.companionClass.isNoSymbol ) sym.companionClass
+      else sym
+
     val hasDefaults =
       for p <- sym.caseFields
       yield p.flags.is(Flags.HasDefault)
@@ -29,7 +32,7 @@ def getDefaultParmasImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
   } else {
     '{ Map.empty }
   }
-end getDefaultParmasImpl
+end getDefaultParamsImpl
 
 inline def summonList[T <: Tuple]: List[_] =
   inline erasedValue[T] match
