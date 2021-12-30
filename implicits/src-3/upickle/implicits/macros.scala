@@ -51,10 +51,11 @@ end extractKey
 inline def fieldLabels[T] = ${fieldLabelsImpl[T]}
 def fieldLabelsImpl0[T](using Quotes, Type[T]): List[String] =
   import quotes.reflect._
-  val fields: List[Symbol] = TypeTree.of[T].symbol
+  val fields: List[Symbol] = TypeRepr.of[T].typeSymbol
     .primaryConstructor
     .paramSymss
     .flatten
+    .filterNot(_.isType)
 
   fields.map{ sym =>
     extractKey(sym) match {

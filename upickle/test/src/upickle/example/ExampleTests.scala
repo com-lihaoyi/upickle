@@ -78,6 +78,13 @@ object Custom2{
     )
   }
 }
+object Generic {
+  case class Container[T](a: T)
+  object Container{
+    implicit val intRW: RW[Container[Int]] = macroRW
+  }
+}
+
 
 import KeyedTag._
 import Keyed._
@@ -568,6 +575,23 @@ object ExampleTests extends TestSuite {
 
       writeBinary(Array[Byte](1, 2, 3, 4)) ==> Array(0xc4.toByte, 4, 1, 2, 3, 4)
       readBinary[Array[Byte]](Array[Byte](0xc4.toByte, 4, 1, 2, 3, 4)) ==> Array(1, 2, 3, 4)
+    }
+    test("generic"){
+      import upickle.default._
+      import Generic._
+      test("read") - {
+        val containerJson = """{"a":3}"""
+        val parsed = read[Container[Int]](containerJson)
+        val expected = Container[Int](3)
+        assert(parsed == expected)
+      }
+
+      test("write") - {
+        val original = Container[Int](3)
+        val serialized = write(original)
+        val expected = """{"a":3}"""
+        assert(serialized == expected)
+      }
     }
   }
 }
