@@ -25,7 +25,7 @@ jobs:
       - name: Run JS tests
         run: |
           ./mill -i __.resolvedIvyDeps
-          ./mill -i -j $(nproc) all __.js.__.compile __.js.__.publishArtifacts __.js.__.test
+          ./mill -i -j 0 all __.js.__.compile __.js.__.publishArtifacts __.js.__.test
   test-native:
     runs-on: ubuntu-latest
     env:
@@ -40,7 +40,7 @@ jobs:
       - name: Run Native tests
         run: |
           ./mill -i __.resolvedIvyDeps
-          ./mill -i -j $(nproc) all __.native.__.compile __.native.__.publishArtifacts __.native.__.test
+          ./mill -i -j 0 all __.native.__.compile __.native.__.publishArtifacts __.native.__.test
   test-jvm:
     runs-on: ubuntu-latest
     env:
@@ -55,7 +55,7 @@ jobs:
       - name: Run JVM tests
         run: |
           ./mill -i __.resolvedIvyDeps
-          ./mill -i -j $(nproc) all __.jvm.__.compile __.jvm.__.publishArtifacts __.jvm.__.test
+          ./mill -i -j 0 all __.jvm.__.compile __.jvm.__.publishArtifacts __.jvm.__.test
   check-binary-compatibility:
     runs-on: ubuntu-latest
     steps:
