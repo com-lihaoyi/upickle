@@ -14,7 +14,7 @@ object PrimitiveTestsJvmNative extends TestSuite {
     }
 
     test("Float"){
-      test("max") - rwNum(Float.MaxValue)
+      test("max") - rwNum(Float.MaxValue, "3.4028234663852886E38")
       test("inf") - rwNum(Float.PositiveInfinity, """ "Infinity" """)
     }
   }

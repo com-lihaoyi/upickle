@@ -41,6 +41,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       utest.assert(normalizedReadString == normalizedValue)
     }
 
+
     val normalizedReadWrittenT = normalize(api.read[T](writtenT))
     val normalizedReadByteArrayWrittenT = normalize(
       api.read[T](writtenT.getBytes(StandardCharsets.UTF_8))
@@ -69,6 +70,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
         .parse(api.reader[T])
     )
     val normalizedT = normalize(t)
+    if (strings.nonEmpty) utest.assert(ujson.reformat(strings.head) == writtenT)
     utest.assert(normalizedReadWrittenT == normalizedT)
     utest.assert(normalizedReadByteArrayWrittenT == normalizedT)
     utest.assert(normalizedReadStreamWrittenT == normalizedT)

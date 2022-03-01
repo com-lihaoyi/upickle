@@ -159,9 +159,9 @@ object MacroTests extends TestSuite {
           // the $type-tag appears later in the dict. It does this by a totally
           // different code-path than for tag-first dicts, using an intermediate
           // AST, so make sure that code path works too.
-          test - rw(C("a", "b"), """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
-          test - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
-          test - rw(C("a", "b"): A, """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
+          test - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C","s1":"a","s2":"b"}""")
+          test - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
+          test - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C","s1":"a","s2":"b"}""")
         }
         test("deep"){
           import DeepHierarchy._

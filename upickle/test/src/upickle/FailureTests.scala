@@ -167,19 +167,20 @@ object FailureTests extends TestSuite {
 
     test("facadeFailures"){
       def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
-        val err = intercept[AbortException] { upickle.legacy.read[T](s) }
+        val err = intercept[Exception] { upickle.legacy.read[T](s) }
         for (msg <- msgs) assert(err.getMessage.contains(msg))
 
         err
       }
+
       def assertErrorMsgDefault[T: upickle.default.Reader](s: String, msgs: String*) = {
         val err = intercept[AbortException] { upickle.default.read[T](s) }
         for (msg <- msgs) assert(err.getMessage.contains(msg))
         err
       }
+
       test("structs"){
-        test - assertErrorMsg[Boolean]("\"lol\"", "expected boolean got string at index 0")
-        test - assertErrorMsg[Int]("\"lol\"", "expected number got string at index 0")
+        test - assertErrorMsg[Int]("\"lol\"", "For input string: \"lol\"")
         test - assertErrorMsg[Seq[Int]]("\"lol\"", "expected sequence got string at index 0")
         test - assertErrorMsg[Seq[String]]("""["1", 2, 3]""", "expected string got number at index 6")
         test("tupleShort"){
