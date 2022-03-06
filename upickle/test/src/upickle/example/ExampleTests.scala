@@ -401,7 +401,7 @@ object ExampleTests extends TestSuite {
       // Some messagepack structs cannot be converted to valid JSON, e.g.
       // they may have maps with non-string keys. These can still be pretty-printed:
       val msg2 = upack.Obj(upack.Arr(upack.Int32(1), upack.Int32(2)) -> upack.Int32(1))
-      upack.transform(msg2, new ujson.StringRenderer()).toString ==> """{[1,2]:1}"""
+      upack.transform(msg2, new ujson.StringRenderer()).toString ==> """{"[1,2]":1}"""
     }
     test("json"){
       test("construction"){
@@ -568,6 +568,38 @@ object ExampleTests extends TestSuite {
 
       writeBinary(Array[Byte](1, 2, 3, 4)) ==> Array(0xc4.toByte, 4, 1, 2, 3, 4)
       readBinary[Array[Byte]](Array[Byte](0xc4.toByte, 4, 1, 2, 3, 4)) ==> Array(1, 2, 3, 4)
+    }
+    test("nonCustomMapKeys") {
+      import upickle.default._
+
+      case class FooId(x: Int)
+      implicit val fooRW: ReadWriter[FooId] = readwriter[Int].bimap[FooId](_.x, FooId(_))
+
+      write(FooId(123)) ==> "123"
+      read[FooId]("123") ==> FooId(123)
+
+      write(Map(FooId(123) -> "hello", FooId(456) -> "world")) ==>
+        """[[123,"hello"],[456,"world"]]"""
+
+      read[Map[FooId, String]]("""[[123,"hello"],[456,"world"]]""") ==>
+        Map(FooId(123) -> "hello", FooId(456) -> "world")
+
+    }
+    test("customMapKeys") {
+      import upickle.default._
+
+      case class FooId(x: Int)
+      implicit val fooRW: ReadWriter[FooId] = stringKeyRW(readwriter[Int].bimap[FooId](_.x, FooId(_)))
+
+      write(FooId(123)) ==> "123"
+      read[FooId]("123") ==> FooId(123)
+
+      write(Map(FooId(123) -> "hello", FooId(456) -> "world")) ==>
+        """{"123":"hello","456":"world"}"""
+
+      read[Map[FooId, String]]("""{"123":"hello","456":"world"}""") ==>
+        Map(FooId(123) -> "hello", FooId(456) -> "world")
+
     }
   }
 }

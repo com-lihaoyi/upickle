@@ -74,7 +74,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
     utest.assert(normalizedReadWrittenT == normalizedT)
     utest.assert(normalizedReadByteArrayWrittenT == normalizedT)
     utest.assert(normalizedReadStreamWrittenT == normalizedT)
-    utest.assert(normalizedReadSmallStreamWrittenT == normalizedT)
+    utest.assert(normalizedReadSmallStr1eamWrittenT == normalizedT)
     utest.assert(normalizedReadByteArrayWrittenBytesT == normalizedT)
     utest.assert(normalizedReadStreamWrittenBytesT == normalizedT)
     utest.assert(normalizedReadSmallStreamWrittenBytesT == normalizedT)

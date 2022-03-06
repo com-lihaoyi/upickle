@@ -11,70 +11,62 @@ trait Writers extends upickle.core.Types
   with WritersVersionSpecific
   with LowPriWriters { this: Annotator =>
 
-  implicit val StringWriter: Writer[String] = new MapKeyWriter[String] {
+  implicit val StringWriter: Writer[String] = new SimpleMapKeyWriter[String] {
     def writeString(v: String) = v
   }
 
-  implicit val UnitWriter: Writer[Unit] = new MapKeyWriter[Unit] {
-    def writeString(v: Unit) = v.toString
+  implicit val UnitWriter: Writer[Unit] = new Writer[Unit] with MapKey{
     override def write0[R](out: Visitor[_, R], v: Unit): R = out.visitNull(-1)
   }
 
-  implicit val DoubleWriter: Writer[Double] = new MapKeyWriter[Double] {
-    def writeString(v: Double) = v.toString
+  implicit val DoubleWriter: Writer[Double] = new Writer[Double] with MapKey{
     override def write0[R](out: Visitor[_, R], v: Double): R = out.visitFloat64(v, -1)
   }
 
-  implicit val IntWriter: Writer[Int] = new MapKeyWriter[Int] {
-    def writeString(v: Int) = v.toString
+  implicit val IntWriter: Writer[Int] = new Writer[Int] with MapKey{
     override def write0[V](out: Visitor[_, V], v: Int) = out.visitInt32(v, -1)
   }
 
-  implicit val FloatWriter: Writer[Float] = new MapKeyWriter[Float] {
-    def writeString(v: Float) = v.toString
+  implicit val FloatWriter: Writer[Float] = new Writer[Float] with MapKey{
     override def write0[R](out: Visitor[_, R], v: Float): R = out.visitFloat32(v, -1)
   }
 
-  implicit val ShortWriter: Writer[Short] = new MapKeyWriter[Short] {
-    def writeString(v: Short) = v.toString
+  implicit val ShortWriter: Writer[Short] = new Writer[Short] with MapKey{
     override def write0[V](out: Visitor[_, V], v: Short) = out.visitInt32(v, -1)
   }
 
-  implicit val ByteWriter: Writer[Byte] = new MapKeyWriter[Byte] {
-    def writeString(v: Byte) = v.toString
+  implicit val ByteWriter: Writer[Byte] = new Writer[Byte] with MapKey{
     override def write0[V](out: Visitor[_, V], v: Byte) = out.visitInt32(v, -1)
   }
 
-  implicit val BooleanWriter: Writer[Boolean] = new MapKeyWriter[Boolean] {
-    def writeString(v: Boolean) = v.toString
+  implicit val BooleanWriter: Writer[Boolean] = new Writer[Boolean] with MapKey{
     override def write0[R](out: Visitor[_, R], v: Boolean): R = {
       if(v) out.visitTrue(-1) else out.visitFalse(-1)
     }
   }
 
-  implicit val CharWriter: Writer[Char] = new MapKeyWriter[Char] {
-    def writeString(v: Char) = v.toString
+  implicit val CharWriter: Writer[Char] = new Writer[Char] with MapKey{
     override def write0[V](out: Visitor[_, V], v: Char) = out.visitChar(v, -1)
   }
 
-  implicit val UUIDWriter: Writer[UUID] = new MapKeyWriter[UUID]{
+  implicit val UUIDWriter: Writer[UUID] = new SimpleMapKeyWriter[UUID]{
     override def writeString(v: UUID) = v.toString
   }
 
-  implicit val LongWriter: Writer[Long] = new MapKeyWriter[Long] {
+  implicit val LongWriter: Writer[Long] = new Writer[Long] with MapKey{
     def writeString(v: Long) = v.toString
     override def write0[V](out: Visitor[_, V], v: Long) = out.visitInt64(v, -1)
   }
 
-  implicit val BigIntWriter: Writer[BigInt] = new MapKeyWriter[BigInt] {
+  implicit val BigIntWriter: Writer[BigInt] = new SimpleMapKeyWriter[BigInt] {
     override def writeString(v: BigInt) = v.toString
   }
 
-  implicit val BigDecimalWriter: Writer[BigDecimal] = new MapKeyWriter[BigDecimal] {
+  implicit val BigDecimalWriter: Writer[BigDecimal] = new SimpleMapKeyWriter[BigDecimal] {
     override def writeString(v: BigDecimal) = v.toString
   }
 
-  implicit val SymbolWriter: Writer[Symbol] = new MapKeyWriter[Symbol] {
+  implicit val SymbolWriter: Writer[Symbol] = new SimpleMapKeyWriter[Symbol] {
     override def writeString(v: Symbol) = v.name
   }
 
@@ -116,7 +108,7 @@ trait Writers extends upickle.core.Types
     }
   }
 
-  trait MapKeyWriter[T] extends Writer[T]{
+  trait SimpleMapKeyWriter[T] extends Writer[T] with MapKey{
     def writeString(v: T): String
     def write0[R](out: Visitor[_, R], v: T): R = out.visitString(writeString(v), -1)
   }
@@ -124,7 +116,7 @@ trait Writers extends upickle.core.Types
   def MapWriter0[M[A, B] <: collection.Map[A, B], K, V]
                 (implicit kw: Writer[K], vw: Writer[V]): Writer[M[K, V]] = {
     kw match{
-      case kw: MapKeyWriter[K] =>
+      case kw: Writer[K] with MapKey =>
         new Writer[M[K, V]]{
           def write0[R](out: Visitor[_, R], v: M[K, V]): R = {
             val ctx = out.visitObject(v.size, -1).narrow
@@ -132,7 +124,7 @@ trait Writers extends upickle.core.Types
               val (k1, v1) = pair
               val keyVisitor = ctx.visitKey(-1)
 
-              ctx.visitKeyValue(keyVisitor.visitString(kw.writeString(k1), -1))
+              ctx.visitKeyValue(kw.write(keyVisitor, k1))
               ctx.visitValue(vw.write(ctx.subVisitor, v1), -1)
             }
             ctx.visitEnd(-1)
@@ -154,11 +146,7 @@ trait Writers extends upickle.core.Types
     MapWriter0[collection.mutable.Map, K, V]
   }
 
-  implicit val DurationWriter: Writer[Duration] = new MapKeyWriter[Duration]{
-    override def write0[R](out: Visitor[_, R], v: Duration): R = {
-      out.visitString(writeString(v), -1)
-    }
-
+  implicit val DurationWriter: Writer[Duration] = new SimpleMapKeyWriter[Duration]{
     override def writeString(v: Duration) = v match{
       case Duration.Inf => "inf"
       case Duration.MinusInf => "-inf"

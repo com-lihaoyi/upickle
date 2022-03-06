@@ -125,7 +125,14 @@ trait Api
     def to[V](f: Visitor[_, V]): V = transform(f)
     def to[V](implicit f: Reader[V]): V = transform(f)
   }
+
+  def stringKeyRW[T](readwriter: ReadWriter[T]): ReadWriter[T] with MapKey = {
+    new ReadWriter.Delegate[T](readwriter) with MapKey {
+      def write0[R](out: Visitor[_, R], v: T): R = readwriter.write0(out, v)
+    }
+  }
   // End Api
+
 }
 /**
  * The default way of accessing upickle

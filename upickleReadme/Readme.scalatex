@@ -372,6 +372,28 @@
           you try to tackle the resource issue (bandwidth, storage, CPU) because
           FQNs might get quite long
 
+    @sect{JSON Dictionary Formats}
+      @p
+        By default, serializing a @hl.scala{Map[K, V]} generates a nested
+        array-of-arrays. This is because not all types @code{K} can be
+        easily serialized into JSON strings, so keeping them as nested tuples
+        preserves the structure of the serialized @code{K} values:
+
+      @hl.ref(exampleTests, Seq("nonCustomMapKeys", ""))
+
+      @p
+        For types of @code{K} that you want to serialize to JSON strings in
+        JSON dictionaries, you can wrap your @hl.scala{ReadWriter[K]} in a
+        @hl.scala{stringKeyRW}.
+
+      @hl.ref(exampleTests, Seq("customMapKeys", ""))
+
+      @p
+        Note that this only works for types @code{K} which serialize to JSON
+        primitives: numbers, strings, booleans, and so on. Types of @code{K}
+        that serialize to complex structures like JSON arrays or dictionaries
+        are unsupported for use a JSON dictionary keys.
+
     @sect{Custom Configuration}
       @p
         Often, there will be times that you want to customize something on a

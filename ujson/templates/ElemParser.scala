@@ -78,7 +78,8 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       new upickle.core.CharBuilder(),
       out,
       new ArrayCharSequence(Array(elemOps.toInt(getElemSafe(i)).toChar)),
-      unicode = false
+      unicode = false,
+      true
     )
     val s = "%s got %s" format (msg, out.makeString())
     throw ParseException(s, i)

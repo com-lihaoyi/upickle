@@ -28,6 +28,8 @@ trait Types{ types =>
   }
 
   object ReadWriter{
+    abstract class Delegate[T](other: Visitor[Any, T])
+      extends Visitor.Delegate[Any, T](other) with ReadWriter[T]
 
     def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
       new TaggedReadWriter.Node(rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
@@ -360,6 +362,13 @@ trait Types{ types =>
       def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, CaseW[T])]
     }
   }
+
+  /**
+   * Marker trait used to indicate that a map with this reader/writer for its
+   * keys is to be serialized as a JSON dictionary, with the keys quoted as
+   * strings, instead of as two-level nested arrays.
+   */
+  trait MapKey
 
 }
 
