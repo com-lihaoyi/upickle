@@ -103,7 +103,6 @@ object PrimitiveTests extends TestSuite {
       test("simple") - rwNum(125.125f, """125.125""", """ "125.125" """)
       test("min") - rwNum(Float.MinValue)
       test("minPos") - rwNum(Float.MinPositiveValue)
-      test("max") - rwNum(Float.MaxValue)
       test("neg-inf") - rwNum(Float.NegativeInfinity, """ "-Infinity" """)
       test("null") - assert(read[Float]("null") == 0.0)
       test("nan") - assert(
