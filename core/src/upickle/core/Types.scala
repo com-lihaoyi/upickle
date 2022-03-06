@@ -45,12 +45,14 @@ trait Types{ types =>
 
       case (r1: TaggedReader[T], w1: TaggedWriter[T]) =>
         new TaggedReadWriter[T] {
+          override def isJsonDictKey = w0.isJsonDictKey
           def findReader(s: String) = r1.findReader(s)
           def findWriter(v: Any) = w1.findWriter(v)
         }
 
       case _ =>
         new Visitor.Delegate[Any, T](r0) with ReadWriter[T]{
+          override def isJsonDictKey = w0.isJsonDictKey
           def write0[V](out: Visitor[_, V], v: T) = w0.write(out, v)
         }
     }
@@ -114,6 +116,12 @@ trait Types{ types =>
     * a [[Visitor]], along with some utility methods
     */
   trait Writer[T] {
+    /**
+     * Whether or not the type being written can be used as a key in a JSON dictionary.
+     * Opt-in, and only applicable to writers that write primitive types like
+     * strings, booleans, numbers, etc..
+     */
+    def isJsonDictKey: Boolean = false
     def narrow[K] = this.asInstanceOf[Writer[K]]
     def transform[V](v: T, out: Visitor[_, V]) = write(out, v)
     def write0[V](out: Visitor[_, V], v: T): V
@@ -368,14 +376,6 @@ trait Types{ types =>
       def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, CaseW[T])]
     }
   }
-
-  /**
-   * Marker trait used to indicate that a map with this reader/writer for its
-   * keys is to be serialized as a JSON dictionary, with the keys quoted as
-   * strings, instead of as two-level nested arrays.
-   */
-  trait MapKey
-
 }
 
 trait Annotator { this: Types =>

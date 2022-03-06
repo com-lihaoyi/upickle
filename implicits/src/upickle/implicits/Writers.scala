@@ -15,37 +15,45 @@ trait Writers extends upickle.core.Types
     def writeString(v: String) = v
   }
 
-  implicit val UnitWriter: Writer[Unit] = new Writer[Unit] with MapKey{
+  implicit val UnitWriter: Writer[Unit] = new Writer[Unit] {
+    override def isJsonDictKey = true
     override def write0[R](out: Visitor[_, R], v: Unit): R = out.visitNull(-1)
   }
 
-  implicit val DoubleWriter: Writer[Double] = new Writer[Double] with MapKey{
+  implicit val DoubleWriter: Writer[Double] = new Writer[Double] {
+    override def isJsonDictKey = true
     override def write0[R](out: Visitor[_, R], v: Double): R = out.visitFloat64(v, -1)
   }
 
-  implicit val IntWriter: Writer[Int] = new Writer[Int] with MapKey{
+  implicit val IntWriter: Writer[Int] = new Writer[Int] {
+    override def isJsonDictKey = true
     override def write0[V](out: Visitor[_, V], v: Int) = out.visitInt32(v, -1)
   }
 
-  implicit val FloatWriter: Writer[Float] = new Writer[Float] with MapKey{
+  implicit val FloatWriter: Writer[Float] = new Writer[Float] {
+    override def isJsonDictKey = true
     override def write0[R](out: Visitor[_, R], v: Float): R = out.visitFloat32(v, -1)
   }
 
-  implicit val ShortWriter: Writer[Short] = new Writer[Short] with MapKey{
+  implicit val ShortWriter: Writer[Short] = new Writer[Short] {
+    override def isJsonDictKey = true
     override def write0[V](out: Visitor[_, V], v: Short) = out.visitInt32(v, -1)
   }
 
-  implicit val ByteWriter: Writer[Byte] = new Writer[Byte] with MapKey{
+  implicit val ByteWriter: Writer[Byte] = new Writer[Byte] {
+    override def isJsonDictKey = true
     override def write0[V](out: Visitor[_, V], v: Byte) = out.visitInt32(v, -1)
   }
 
-  implicit val BooleanWriter: Writer[Boolean] = new Writer[Boolean] with MapKey{
+  implicit val BooleanWriter: Writer[Boolean] = new Writer[Boolean] {
+    override def isJsonDictKey = true
     override def write0[R](out: Visitor[_, R], v: Boolean): R = {
       if(v) out.visitTrue(-1) else out.visitFalse(-1)
     }
   }
 
-  implicit val CharWriter: Writer[Char] = new Writer[Char] with MapKey{
+  implicit val CharWriter: Writer[Char] = new Writer[Char] {
+    override def isJsonDictKey = true
     override def write0[V](out: Visitor[_, V], v: Char) = out.visitChar(v, -1)
   }
 
@@ -53,8 +61,8 @@ trait Writers extends upickle.core.Types
     override def writeString(v: UUID) = v.toString
   }
 
-  implicit val LongWriter: Writer[Long] = new Writer[Long] with MapKey{
-    def writeString(v: Long) = v.toString
+  implicit val LongWriter: Writer[Long] = new Writer[Long] {
+    override def isJsonDictKey = true
     override def write0[V](out: Visitor[_, V], v: Long) = out.visitInt64(v, -1)
   }
 
@@ -108,7 +116,8 @@ trait Writers extends upickle.core.Types
     }
   }
 
-  trait SimpleMapKeyWriter[T] extends Writer[T] with MapKey{
+  trait SimpleMapKeyWriter[T] extends Writer[T] {
+    override def isJsonDictKey = true
     def writeString(v: T): String
     def write0[R](out: Visitor[_, R], v: T): R = out.visitString(writeString(v), -1)
   }
@@ -117,7 +126,7 @@ trait Writers extends upickle.core.Types
                 (implicit kw: Writer[K], vw: Writer[V]): Writer[M[K, V]] = {
     new Writer[M[K, V]]{
       def write0[R](out: Visitor[_, R], v: M[K, V]): R = {
-        val ctx = out.visitObject(v.size, kw.isInstanceOf[MapKey], -1).narrow
+        val ctx = out.visitObject(v.size, kw.isJsonDictKey, -1).narrow
         for(pair <- v){
           val (k1, v1) = pair
           val keyVisitor = ctx.visitKey(-1)

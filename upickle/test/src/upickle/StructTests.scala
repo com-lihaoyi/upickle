@@ -1,14 +1,13 @@
 package upickle
 import java.io.ByteArrayOutputStream
-
 import utest._
 import upickle.legacy.{read, write}
-
 import upickle.core.compat._
+
 import scala.concurrent.duration._
 import TestUtil._
-import java.util.UUID
 
+import java.util.UUID
 import scala.reflect.ClassTag
 import language.postfixOps
 
@@ -110,6 +109,13 @@ object StructTests extends TestSuite {
         )
       }
       test("primitive"){
+        test("ReadWriterJoin"){
+          def foo[T: upickle.default.ReadWriter](x: T, expected: String) = {
+            rw(Map(x -> x), expected)
+          }
+
+          foo[Int](123, """{"123": 123}""")
+        }
         test("boolean") - rw(
           Map(true -> false, false -> true),
           """{"true": false, "false": true}""",

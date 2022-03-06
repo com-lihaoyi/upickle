@@ -15,19 +15,35 @@ object TestUtil extends TestUtil[upickle.default.type](upickle.default)
 object LegacyTestUtil extends TestUtil[upickle.legacy.type](upickle.legacy)
 class TestUtil[Api <: upickle.Api](val api: Api){
 
-  def rw[T: api.Reader: api.Writer](t: T, s: String*) = {
-    rwk[T, T](t, s:_*)(x => x)
+  def rw[T](t: T, s: String*)
+           (implicit r: api.Reader[T], w: api.Writer[T], rw: api.ReadWriter[T]) = {
+    rwk[T, T](t, s:_*)(x => x)(r, w, rw)
   }
-  def rwNoBinaryJson[T: api.Reader: api.Writer](t: T, s: String*) = {
-    rwk[T, T](t, s:_*)(x => x, checkBinaryJson = false)
+
+  def rwNoBinaryJson[T](t: T, s: String*)
+                       (implicit r: api.Reader[T], w: api.Writer[T], rw: api.ReadWriter[T])= {
+    rwk[T, T](t, s:_*)(x => x, checkBinaryJson = false)(r, w, rw)
   }
-  def rwEscape[T: api.Reader: api.Writer](t: T, s: String*) = {
-    rwk[T, T](t, s:_*)(x => x, escapeUnicode = true)
+
+  def rwEscape[T](t: T, s: String*)
+                 (implicit r: api.Reader[T], w: api.Writer[T], rw: api.ReadWriter[T])= {
+    rwk[T, T](t, s:_*)(x => x, escapeUnicode = true)(r, w, rw)
   }
-  def rwk[T: api.Reader: api.Writer, V](t: T, sIn: String*)
-                                       (normalize: T => V,
-                                        escapeUnicode: Boolean = false,
-                                        checkBinaryJson: Boolean = true) = {
+
+  def rwk[T, V](t: T, sIn: String*)
+               (normalize: T => V,
+                escapeUnicode: Boolean = false,
+                checkBinaryJson: Boolean = true)
+               (implicit r: api.Reader[T], w: api.Writer[T], rw: api.ReadWriter[T])= {
+    rwk0(t, sIn:_*)(normalize, escapeUnicode, checkBinaryJson)(r, w)
+    rwk0(t, sIn:_*)(normalize, escapeUnicode, checkBinaryJson)(rw, rw)
+  }
+
+  def rwk0[T, V](t: T, sIn: String*)
+               (normalize: T => V,
+                escapeUnicode: Boolean = false,
+                checkBinaryJson: Boolean = true)
+               (implicit r: api.Reader[T], w: api.Writer[T])= {
     val writtenT = api.write(t)
     val writtenBytesT = api.writeToByteArray(t)
 

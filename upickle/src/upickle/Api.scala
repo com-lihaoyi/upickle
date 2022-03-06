@@ -126,14 +126,31 @@ trait Api
     def to[V](implicit f: Reader[V]): V = transform(f)
   }
 
-  def stringKeyRW[T](readwriter: ReadWriter[T]): ReadWriter[T] with MapKey = {
-    new ReadWriter.Delegate[T](readwriter) with MapKey {
+
+  /**
+   * Mark a `ReadWriter[T]` as something that can be used as a key in a JSON
+   * dictionary, such that `Map[T, V]` serializes to `{"a": "b", "c": "d"}`
+   * rather than `[["a", "b"], ["c", "d"]]`
+   */
+  def stringKeyRW[T](readwriter: ReadWriter[T]): ReadWriter[T] = {
+    new ReadWriter.Delegate[T](readwriter) {
+      override def isJsonDictKey = true
       def write0[R](out: Visitor[_, R], v: T): R = readwriter.write0(out, v)
     }
   }
-  // End Api
 
+  /**
+   * Mark a `Writer[T]` as something that can be used as a key in a JSON
+   * dictionary, such that `Map[T, V]` serializes to `{"a": "b", "c": "d"}`
+   * rather than `[["a", "b"], ["c", "d"]]`
+   */
+  def stringKeyW[T](readwriter: Writer[T]): Writer[T] = new Writer[T]{
+    override def isJsonDictKey = true
+    def write0[R](out: Visitor[_, R], v: T): R = readwriter.write0(out, v)
+  }
+  // End Api
 }
+
 /**
  * The default way of accessing upickle
  */
