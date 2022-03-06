@@ -78,6 +78,13 @@ object Custom2{
     )
   }
 }
+object Generic {
+  case class Container[T](a: T)
+  object Container{
+    implicit val intRW: RW[Container[Int]] = macroRW
+  }
+}
+
 
 import KeyedTag._
 import Keyed._
@@ -599,7 +606,23 @@ object ExampleTests extends TestSuite {
 
       read[Map[FooId, String]]("""{"123":"hello","456":"world"}""") ==>
         Map(FooId(123) -> "hello", FooId(456) -> "world")
+    }
+    test("generic"){
+      import upickle.default._
+      import Generic._
+      test("read") - {
+        val containerJson = """{"a":3}"""
+        val parsed = read[Container[Int]](containerJson)
+        val expected = Container[Int](3)
+        assert(parsed == expected)
+      }
 
+      test("write") - {
+        val original = Container[Int](3)
+        val serialized = write(original)
+        val expected = """{"a":3}"""
+        assert(serialized == expected)
+      }
     }
   }
 }

@@ -89,7 +89,6 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       case _ => utest.assert(roundTrippedBinary == t)
     }
 
-
     // Test binary-JSON equivalence
     if (checkBinaryJson){
       val rewrittenBinary = api.writeBinary(roundTrippedBinary)
