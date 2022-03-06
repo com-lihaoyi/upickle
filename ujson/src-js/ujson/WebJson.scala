@@ -37,7 +37,7 @@ object WebJson extends ujson.Transformer[js.Any]{
       def visitEnd(index: Int): js.Any = out
     }
 
-    def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[js.Any, js.Any] {
+    def visitJsonableObject(length: Int, index: Int) = new ObjVisitor[js.Any, js.Any] {
       val out = js.Dictionary[js.Any]()
       var currentKey: String = _
       def subVisitor = Builder.this
