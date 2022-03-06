@@ -103,7 +103,7 @@ trait Api
   def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
     streamBinary[T](t).writeBytesTo(out)
   }
-  def writeBinaryToByteArray[T: Writer](t: T, out: java.io.OutputStream) = {
+  def writeBinaryToByteArray[T: Writer](t: T) = {
     val out = new java.io.ByteArrayOutputStream()
     streamBinary[T](t).writeBytesTo(out)
     out.toByteArray
