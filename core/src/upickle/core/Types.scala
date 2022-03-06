@@ -84,7 +84,10 @@ trait Types{ types =>
   object Reader{
     class Delegate[T, V](delegatedReader: Visitor[T, V])
       extends Visitor.Delegate[T, V](delegatedReader) with Reader[V]{
-      override def visitObject(length: Int, index: Int) = super.visitObject(length, index).asInstanceOf[ObjVisitor[Any, V]]
+      override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = {
+        super.visitObject(length, jsonableKeys, index).asInstanceOf[ObjVisitor[Any, V]]
+      }
+
       override def visitArray(length: Int, index: Int) = super.visitArray(length, index).asInstanceOf[ArrVisitor[Any, V]]
     }
 
@@ -93,7 +96,10 @@ trait Types{ types =>
 
       def mapNonNullsFunction(t: V): Z
 
-      override def visitObject(length: Int, index: Int) = super.visitObject(length, index).asInstanceOf[ObjVisitor[Any, Z]]
+      override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = {
+        super.visitObject(length, jsonableKeys, index).asInstanceOf[ObjVisitor[Any, Z]]
+      }
+
       override def visitArray(length: Int, index: Int) = super.visitArray(length, index).asInstanceOf[ArrVisitor[Any, Z]]
     }
     def merge[T](readers0: Reader[_ <: T]*) = {
@@ -258,7 +264,7 @@ trait Types{ types =>
     def write0[R](out: Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
       else{
-        val ctx = out.visitObject(length(v), -1)
+        val ctx = out.visitObject(length(v), true, -1)
         writeToObject(ctx, v)
         ctx.visitEnd(-1)
       }
@@ -277,7 +283,7 @@ trait Types{ types =>
   }
   class SingletonR[T](t: T) extends CaseR[T]{
     override def expectedMsg = "expected dictionary"
-    override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, T] {
       def subVisitor = NoOpVisitor
 
       def visitKey(index: Int) = NoOpVisitor
@@ -313,7 +319,7 @@ trait Types{ types =>
 
     override def expectedMsg = taggedExpectedMsg
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
-    override def visitObject(length: Int, index: Int) = taggedObjectContext(this, index)
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = taggedObjectContext(this, index)
   }
   object TaggedReader{
     class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
@@ -346,7 +352,7 @@ trait Types{ types =>
 
   trait TaggedReadWriter[T] extends ReadWriter[T] with TaggedReader[T] with TaggedWriter[T] with SimpleReader[T]{
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
-    override def visitObject(length: Int, index: Int) = taggedObjectContext(this, index)
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = taggedObjectContext(this, index)
 
   }
   object TaggedReadWriter{

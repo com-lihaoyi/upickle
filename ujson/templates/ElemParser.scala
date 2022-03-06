@@ -321,7 +321,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       // if we have a recursive top-level structure, we'll delegate the parsing
       // duties to our good friend rparse().
       case '[' => parseNested(ARRBEG, i + 1, facade.visitArray(-1, i), Nil)
-      case '{' => parseNested(OBJBEG, i + 1, facade.visitObject(-1, i), Nil)
+      case '{' => parseNested(OBJBEG, i + 1, facade.visitObject(-1, true, i), Nil)
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => parseNumTopLevel(i, facade)
@@ -399,7 +399,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       case '{' =>
         failIfNotData(state, i)
         val ctx =
-          try stackHead.subVisitor.asInstanceOf[Visitor[_, J]].visitObject(-1, i)
+          try stackHead.subVisitor.asInstanceOf[Visitor[_, J]].visitObject(-1, true, i)
           catch reject(i)
         parseNested(OBJBEG, i + 1, ctx, stackHead :: stackTail)
 

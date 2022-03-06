@@ -251,7 +251,7 @@ object Macros {
           yield q"private[this] lazy val ${localReaders(i)} = implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
         }
         new ${c.prefix}.CaseR[$targetType]{
-          override def visitObject(length: Int, index: Int) = new ${if (rawArgs.size <= 64) tq"CaseObjectContext" else tq"HugeCaseObjectContext"}(${rawArgs.size}){
+          override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ${if (rawArgs.size <= 64) tq"CaseObjectContext" else tq"HugeCaseObjectContext"}(${rawArgs.size}){
             ..${
               for (i <- rawArgs.indices)
               yield q"private[this] var ${aggregates(i)}: ${argTypes(i)} = _"

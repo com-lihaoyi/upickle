@@ -607,6 +607,30 @@ object ExampleTests extends TestSuite {
       read[Map[FooId, String]]("""{"123":"hello","456":"world"}""") ==>
         Map(FooId(123) -> "hello", FooId(456) -> "world")
     }
+    test("msgPackMapKeys") {
+      import upickle.default._
+
+      write(Map(Seq(1) -> 1, Seq(1, 2) -> 3, Seq(1, 2, 3) -> 6)) ==> "[[[1],1],[[1,2],3],[[1,2,3],6]]"
+
+      read[Map[Seq[Int], Int]]("[[[1],1],[[1,2],3],[[1,2,3],6]]") ==>
+        Map(Seq(1) -> 1, Seq(1, 2) -> 3, Seq(1, 2, 3) -> 6)
+
+      writeMsg(Map(Seq(1) -> 1, Seq(1, 2) -> 3, Seq(1, 2, 3) -> 6)) ==>
+        upack.Obj(
+          upack.Arr(upack.Int32(1)) -> upack.Int32(1),
+          upack.Arr(upack.Int32(1), upack.Int32(2)) -> upack.Int32(3),
+          upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3)) -> upack.Int32(6)
+        )
+
+      readBinary[Map[Seq[Int], Int]](
+        upack.Obj(
+          upack.Arr(upack.Int32(1)) -> upack.Int32(1),
+          upack.Arr(upack.Int32(1), upack.Int32(2)) -> upack.Int32(3),
+          upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3)) -> upack.Int32(6)
+        )
+      ) ==>
+        Map(Seq(1) -> 1, Seq(1, 2) -> 3, Seq(1, 2, 3) -> 6)
+    }
     test("generic"){
       import upickle.default._
       import Generic._

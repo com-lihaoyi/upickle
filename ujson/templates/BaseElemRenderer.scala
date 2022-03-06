@@ -41,6 +41,7 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
       elemBuilder.append('"')
     }
   }
+
   def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
     flushBuffer()
     elemBuilder.append('[')
@@ -62,7 +63,7 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     }
   }
 
-  def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
+  def visitJsonableObject(length: Int, index: Int) = new ObjVisitor[T, T] {
     flushBuffer()
     elemBuilder.append('{')
     depth += 1

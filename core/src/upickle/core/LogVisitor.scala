@@ -28,10 +28,10 @@ class LogVisitor[-T, +V](downstream: Visitor[T, V], log: String => Unit = printl
     downstream.visitFloat64StringParts(s, decIndex, expIndex, index)
   }
 
-  def visitObject(length: Int, index: Int): ObjVisitor[T, V] = {
+  def visitObject(length: Int, jsonableKeys: Boolean, index: Int): ObjVisitor[T, V] = {
     log(s"visitObject($length, $index)")
 
-    val d = downstream.visitObject(length, index)
+    val d = downstream.visitObject(length, jsonableKeys, index)
     new ObjVisitor[T, V] {
       def logIndented(s: String) = log(indent + s)
       def visitKey(index: Int): Visitor[_, _] = {

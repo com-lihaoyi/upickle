@@ -17,7 +17,7 @@ object WebJson extends ujson.Transformer[js.Any]{
         for(i <- s) ctx.visitValue(transform(i, ctx.subVisitor), -1)
         ctx.visitEnd(-1)
       case s: js.Object =>
-        val ctx = f.visitObject(-1, -1).narrow
+        val ctx = f.visitObject(-1, true, -1).narrow
         for(p <- s.asInstanceOf[js.Dictionary[js.Any]]) {
           val keyVisitor = ctx.visitKey(-1)
           val keyValue = transform(p._1, keyVisitor)
@@ -37,7 +37,7 @@ object WebJson extends ujson.Transformer[js.Any]{
       def visitEnd(index: Int): js.Any = out
     }
 
-    def visitObject(length: Int, index: Int) = new ObjVisitor[js.Any, js.Any] {
+    def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[js.Any, js.Any] {
       val out = js.Dictionary[js.Any]()
       var currentKey: String = _
       def subVisitor = Builder.this

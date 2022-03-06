@@ -394,6 +394,21 @@
         that serialize to complex structures like JSON arrays or dictionaries
         are unsupported for use a JSON dictionary keys.
 
+      @p
+        Older versions of uPickle serialized almost all @hl.scala{Map[K, V]}s to
+        nested arrays. Data already serialized in that format is forwards-compatible
+        with the current implementation of uPickle, which can read both nested-json-arrays
+        and json-dictionary formats without issue.
+
+      @p
+        These subtleties around deciding between nested-json-array v.s. json-dictionary
+        formats only apply to uPickle's JSON backend. When serializing to MessagePack
+        using @hl.scala{upickle.default.writeBinary} or @hl.scala{upickle.default.writeMsg},
+        it always uses the dictionary-based format, since MessagePack does not have
+        the restriction that dictionary keys can only be strings:
+
+      @hl.ref(exampleTests, Seq("msgPackMapKeys", ""))
+
     @sect{Custom Configuration}
       @p
         Often, there will be times that you want to customize something on a

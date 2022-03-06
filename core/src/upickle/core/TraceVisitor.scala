@@ -87,8 +87,8 @@ class TraceVisitor[T, J](
   wrapper: TraceVisitor.Wrapper[T, J]
 ) extends Visitor.Delegate[T, J](delegate) {
   wrapper.lastHasPath = parentPath
-  override def visitObject(length: Int, index: Int): ObjVisitor[T, J] = {
-    val objVisitor = super.visitObject(length, index)
+  override def visitObject(length: Int, jsonableKeys: Boolean, index: Int): ObjVisitor[T, J] = {
+    val objVisitor = super.visitObject(length, jsonableKeys, index)
     new ObjVisitor[T, J] with HasPath {
       private var key: String = _
 

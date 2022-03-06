@@ -115,22 +115,18 @@ trait Writers extends upickle.core.Types
 
   def MapWriter0[M[A, B] <: collection.Map[A, B], K, V]
                 (implicit kw: Writer[K], vw: Writer[V]): Writer[M[K, V]] = {
-    kw match{
-      case kw: Writer[K] with MapKey =>
-        new Writer[M[K, V]]{
-          def write0[R](out: Visitor[_, R], v: M[K, V]): R = {
-            val ctx = out.visitObject(v.size, -1).narrow
-            for(pair <- v){
-              val (k1, v1) = pair
-              val keyVisitor = ctx.visitKey(-1)
+    new Writer[M[K, V]]{
+      def write0[R](out: Visitor[_, R], v: M[K, V]): R = {
+        val ctx = out.visitObject(v.size, kw.isInstanceOf[MapKey], -1).narrow
+        for(pair <- v){
+          val (k1, v1) = pair
+          val keyVisitor = ctx.visitKey(-1)
 
-              ctx.visitKeyValue(kw.write(keyVisitor, k1))
-              ctx.visitValue(vw.write(ctx.subVisitor, v1), -1)
-            }
-            ctx.visitEnd(-1)
-          }
+          ctx.visitKeyValue(kw.write(keyVisitor, k1))
+          ctx.visitValue(vw.write(ctx.subVisitor, v1), -1)
         }
-      case _ => SeqLikeWriter[Seq, (K, V)].comap[M[K, V]](_.toSeq)
+        ctx.visitEnd(-1)
+      }
     }
   }
 

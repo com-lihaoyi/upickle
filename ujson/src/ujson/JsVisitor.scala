@@ -60,4 +60,34 @@ trait JsVisitor[-T, +J] extends Visitor[T, J]{
   }
 
   def visitChar(s: Char, index: Int) = visitString(s.toString, index)
+
+  def visitJsonableObject(length: Int, index: Int): ObjVisitor[T, J]
+
+  override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = {
+    if (jsonableKeys) visitJsonableObject(length, index)
+    else new ObjVisitor[T, J] {
+      val wrapped = visitArray(length, index)
+      var lastKeyIndex = -1
+      var lastNested: ArrVisitor[T, T] = null
+      def subVisitor = JsVisitor.this
+      def visitKey(index: Int) = {
+        lastNested = wrapped.subVisitor.visitArray(2, index).asInstanceOf[ArrVisitor[T, T]]
+        lastKeyIndex = index
+        JsVisitor.this
+      }
+
+      def visitKeyValue(s: Any): Unit = {
+        lastNested.visitValue(s.asInstanceOf[T], lastKeyIndex)
+      }
+
+      def visitValue(v: T, index: Int): Unit = {
+        lastNested.visitValue(v, index)
+        wrapped.visitValue(lastNested.visitEnd(index), index)
+      }
+
+      def visitEnd(index: Int) = wrapped.visitEnd(index)
+    }
+
+  }
 }
+

@@ -29,7 +29,7 @@ trait Visitor[-T, +J] {
     * @param index json source position at the start of the `{` being visited
     * @return a [[ObjVisitor]] used for visiting the keys/values of the object
     */
-  def visitObject(length: Int, index: Int): ObjVisitor[T, J]
+  def visitObject(length: Int, jsonableKeys: Boolean, index: Int): ObjVisitor[T, J]
 
   /**
     * @param index json source position at the start of the `null` being visited
@@ -161,7 +161,11 @@ object Visitor{
     override def visitFloat64(d: Double, index: Int) = {
       delegatedReader.visitFloat64(d, index)
     }
-    override def visitObject(length: Int, index: Int) = delegatedReader.visitObject(length, index)
+
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = {
+      delegatedReader.visitObject(length, jsonableKeys, index)
+    }
+
     override def visitArray(length: Int, index: Int) = delegatedReader.visitArray(length, index)
 
     override def visitFloat32(d: Float, index: Int) = delegatedReader.visitFloat32(d, index)
@@ -194,8 +198,8 @@ object Visitor{
     }
     override def visitTrue(index: Int) = mapFunction(delegatedReader.visitTrue(index))
 
-    override def visitObject(length: Int, index: Int): ObjVisitor[T, Z] = {
-      new MapObjContext[T, V, Z](delegatedReader.visitObject(length, index), mapNonNullsFunction)
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int): ObjVisitor[T, Z] = {
+      new MapObjContext[T, V, Z](delegatedReader.visitObject(length, jsonableKeys, index), mapNonNullsFunction)
     }
     override def visitArray(length: Int, index: Int): ArrVisitor[T, Z] = {
       new MapArrContext[T, V, Z](delegatedReader.visitArray(length, index), mapNonNullsFunction)

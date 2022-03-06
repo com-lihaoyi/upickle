@@ -233,7 +233,7 @@ trait AttributeTagged extends Api with Annotator{
           if (s.toString == tagName) () //do nothing
           else {
             // otherwise, go slow path
-            val slowCtx = IndexedValue.Builder.visitObject(-1, index).narrow
+            val slowCtx = IndexedValue.Builder.visitObject(-1, true, index).narrow
             val keyVisitor = slowCtx.visitKey(index)
             val xxx = keyVisitor.visitString(s.toString, index)
             slowCtx.visitKeyValue(xxx)
@@ -250,7 +250,7 @@ trait AttributeTagged extends Api with Annotator{
           if (facade0 == null) {
             throw new Abort("invalid tag for tagged object: " + typeName)
           }
-          val fastCtx = facade0.visitObject(-1, index)
+          val fastCtx = facade0.visitObject(-1, true, index)
           context = fastCtx
           fastPath = true
         }
@@ -266,7 +266,7 @@ trait AttributeTagged extends Api with Annotator{
           if (delegate == null){
             throw new AbortException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, null)
           }
-          val ctx2 = delegate.visitObject(-1, -1)
+          val ctx2 = delegate.visitObject(-1, true, -1)
           for (p <- x.value0) {
             val (k0, v) = p
             val k = k0.toString
@@ -284,7 +284,7 @@ trait AttributeTagged extends Api with Annotator{
     }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
-    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, -1)
+    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, true, -1)
     val keyVisitor = ctx.visitKey(-1)
 
     ctx.visitKeyValue(keyVisitor.visitString(tagName, -1))

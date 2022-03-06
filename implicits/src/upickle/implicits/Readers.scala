@@ -15,7 +15,7 @@ trait Readers extends upickle.core.Types
   with ReadersVersionSpecific { this: Annotator =>
   implicit val UnitReader: Reader[Unit] = new SimpleReader[Unit] with MapKey{
     override def expectedMsg = "expected unit"
-    override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, Unit] {
       def subVisitor = NoOpVisitor
 
       def visitValue(v: Any, index: Int): Unit = ()
@@ -183,35 +183,29 @@ trait Readers extends upickle.core.Types
   def MapReader0[M[A, B] <: collection.Map[A, B], K, V]
                 (make: Iterable[(K, V)] => M[K, V])
                 (implicit k: Reader[K], v: Reader[V]): Reader[M[K, V]] = {
-    k match{
-      case k: Reader[K] with MapKey =>
-        new SimpleReader[M[K, V]]{
-          override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, M[K, V]] {
-            val keys = mutable.Buffer.empty[K]
-            val values = mutable.Buffer.empty[V]
-            def subVisitor = v
+    new SimpleReader[M[K, V]]{
+      override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, M[K, V]] {
+        val keys = mutable.Buffer.empty[K]
+        val values = mutable.Buffer.empty[V]
+        def subVisitor = v
 
-            def visitKey(index: Int) = k
+        def visitKey(index: Int) = k
 
-            def visitKeyValue(s: Any): Unit = keys.append(s.asInstanceOf[K])
+        def visitKeyValue(s: Any): Unit = keys.append(s.asInstanceOf[K])
 
-            def visitValue(v: Any, index: Int): Unit = values.append(v.asInstanceOf[V])
+        def visitValue(v: Any, index: Int): Unit = values.append(v.asInstanceOf[V])
 
-            def visitEnd(index: Int) = make(keys.zip(values))
-          }
+        def visitEnd(index: Int) = make(keys.zip(values))
+      }
 
-          override def visitArray(length: Int, index: Int) = {
-            SeqLikeReader[Array, (K, V)](Tuple2Reader(k, v), implicitly)
-              .map(x => make(x))
-              .visitArray(length, index)
-          }
+      override def visitArray(length: Int, index: Int) = {
+        SeqLikeReader[Array, (K, V)](Tuple2Reader(k, v), implicitly)
+          .map(x => make(x))
+          .visitArray(length, index)
+      }
 
-          def expectedMsg = "expected map or sequence"
-        }
-
-      case _ => SeqLikeReader[Array, (K, V)].map(x => make(x))
+      def expectedMsg = "expected map or sequence"
     }
-
   }
 
   implicit def MapReader1[K, V](implicit k: Reader[K], v: Reader[V]): Reader[collection.Map[K, V]] = {
