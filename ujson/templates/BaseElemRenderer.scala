@@ -25,8 +25,10 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
 
   private[this] var depth: Int = 0
 
+  private[this] var visitingKey = false
 
   private[this] var commaBuffered = false
+  private[this] var quoteBuffered = false
 
   def flushBuffer() = {
     if (commaBuffered) {
@@ -34,7 +36,12 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
       elemBuilder.append(',')
       renderIndent()
     }
+    if (quoteBuffered) {
+      quoteBuffered = false
+      elemBuilder.append('"')
+    }
   }
+
   def visitArray(length: Int, index: Int) = new ArrVisitor[T, T] {
     flushBuffer()
     elemBuilder.append('[')
@@ -56,14 +63,20 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     }
   }
 
-  def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
+  def visitJsonableObject(length: Int, index: Int) = new ObjVisitor[T, T] {
     flushBuffer()
     elemBuilder.append('{')
     depth += 1
     renderIndent()
     def subVisitor = BaseElemRenderer.this
-    def visitKey(index: Int) = BaseElemRenderer.this
+    def visitKey(index: Int) = {
+      quoteBuffered = true
+      visitingKey = true
+      BaseElemRenderer.this
+    }
     def visitKeyValue(s: Any): Unit = {
+      elemBuilder.append('"')
+      visitingKey = false
       elemBuilder.append(':')
       if (indent != -1) elemBuilder.append(' ')
     }
@@ -127,6 +140,21 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     out
   }
 
+  override def visitFloat32(d: Float, index: Int) = {
+    d match{
+      case Float.PositiveInfinity => visitNonNullString("Infinity", -1)
+      case Float.NegativeInfinity => visitNonNullString("-Infinity", -1)
+      case d if java.lang.Float.isNaN(d) => visitNonNullString("NaN", -1)
+      case d =>
+        val i = d.toInt
+        if (d == i) visitFloat64StringParts(i.toString, -1, -1, index)
+        else super.visitFloat32(d, index)
+        flushBuffer()
+    }
+    flushElemBuilder()
+    out
+  }
+
   override def visitFloat64(d: Double, index: Int) = {
     d match{
       case Double.PositiveInfinity => visitNonNullString("Infinity", -1)
@@ -151,7 +179,11 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
 
   def visitNonNullString(s: CharSequence, index: Int) = {
     flushBuffer()
-    upickle.core.RenderUtils.escapeElem(unicodeCharBuilder, elemBuilder, s, escapeUnicode)
+
+    upickle.core.RenderUtils.escapeElem(
+      unicodeCharBuilder, elemBuilder, s, escapeUnicode, !visitingKey
+    )
+
     flushElemBuilder()
     out
   }

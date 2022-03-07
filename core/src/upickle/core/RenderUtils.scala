@@ -28,13 +28,14 @@ object RenderUtils{
   final def escapeByte(unicodeCharBuilder: upickle.core.CharBuilder,
                        sb: upickle.core.ByteBuilder,
                        s: CharSequence,
-                       unicode: Boolean): Unit = {
+                       unicode: Boolean,
+                       wrapQuotes: Boolean): Unit = {
 
     var i = 0
     val len = s.length
-    val naiveOutLen = len + 2 // +2 for the start and end quotes
+    val naiveOutLen = len + (if (wrapQuotes) 2 else 0) // +2 for the start and end quotes
     sb.ensureLength(naiveOutLen)
-    sb.appendUnsafe('"')
+    if (wrapQuotes) sb.appendUnsafe('"')
     while (i < len) {
       (s.charAt(i): @switch) match {
         case '"' => escapeSingleByte(sb, i, naiveOutLen, '"')
@@ -51,18 +52,27 @@ object RenderUtils{
           else if (!notControlChar || (!notUnicodeChar && unicode)) {
             escapeSingleByteUnicodeEscape(sb, i, naiveOutLen, c)
           } else {
-            escapeSingleByteUnicodeRaw(unicodeCharBuilder, sb, s, unicode, i, len, naiveOutLen)
+            escapeSingleByteUnicodeRaw(
+              unicodeCharBuilder, sb, s, unicode, i, len, naiveOutLen, wrapQuotes
+            )
             return
           }
       }
       i += 1
     }
-    sb.appendUnsafe('"')
+    if (wrapQuotes) sb.appendUnsafe('"')
   }
 
-  def escapeSingleByteUnicodeRaw(unicodeCharBuilder: CharBuilder, sb: ByteBuilder, s: CharSequence, unicode: Boolean, i: Int, len: Int, naiveOutLen: Int) = {
+  def escapeSingleByteUnicodeRaw(unicodeCharBuilder: CharBuilder,
+                                 sb: ByteBuilder,
+                                 s: CharSequence,
+                                 unicode: Boolean,
+                                 i: Int,
+                                 len: Int,
+                                 naiveOutLen: Int,
+                                 wrapQuotes: Boolean) = {
     unicodeCharBuilder.reset()
-    escapeChar0(i, naiveOutLen, len, unicodeCharBuilder, s, unicode)
+    escapeChar0(i, naiveOutLen, len, unicodeCharBuilder, s, unicode, wrapQuotes)
 
     val bytes = unicodeCharBuilder.makeString().getBytes(StandardCharsets.UTF_8)
     sb.appendAll(bytes, bytes.length)
@@ -85,21 +95,23 @@ object RenderUtils{
   }
 
   def escapeChar(unicodeCharBuilder: upickle.core.CharBuilder,
-                       sb: upickle.core.CharBuilder,
-                       s: CharSequence,
-                       unicode: Boolean) = {
+                 sb: upickle.core.CharBuilder,
+                 s: CharSequence,
+                 unicode: Boolean,
+                 wrapQuotes: Boolean) = {
     val len = s.length
-    val naiveOutLen = len + 2 // +2 for the start and end quotes
+    val naiveOutLen = len + (if (wrapQuotes) 2 else 0) // +2 for the start and end quotes
     sb.ensureLength(naiveOutLen)
-    sb.appendUnsafe('"')
-    escapeChar0(0, naiveOutLen, len, sb, s, unicode)
+    if (wrapQuotes) sb.appendUnsafe('"')
+    escapeChar0(0, naiveOutLen, len, sb, s, unicode, wrapQuotes)
   }
   final def escapeChar0(i0: Int,
                         naiveOutLen: Int,
                         len: Int,
                         sb: upickle.core.CharBuilder,
                         s: CharSequence,
-                        unicode: Boolean) = {
+                        unicode: Boolean,
+                        wrapQuotes: Boolean) = {
     var i = i0
     sb.ensureLength(naiveOutLen)
     while (i < len) {
@@ -119,7 +131,7 @@ object RenderUtils{
       }
       i += 1
     }
-    sb.appendUnsafe('"')
+    if (wrapQuotes) sb.appendUnsafe('"')
     sb
   }
 

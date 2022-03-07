@@ -194,7 +194,7 @@ object Msg extends MsgVisitor[Msg, Msg]{
   }
 
   private def visitObjContents[T](f: Visitor[_, T], items: mutable.LinkedHashMap[Msg, Msg]) = {
-    val obj = f.visitObject(items.size, -1)
+    val obj = f.visitObject(items.size, true, -1)
     val kvs = items.iterator
     while(kvs.hasNext){
       val kv = kvs.next()
@@ -225,7 +225,7 @@ object Msg extends MsgVisitor[Msg, Msg]{
     def visitEnd(index: Int) = Arr(arr)
   }
 
-  def visitObject(length: Int, index: Int) = new ObjVisitor[Msg, Msg] {
+  def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Msg, Msg] {
     val map = mutable.LinkedHashMap[Msg, Msg]()
     var lastKey: Msg = null
     def subVisitor = Msg

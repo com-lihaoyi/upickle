@@ -115,7 +115,7 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
     res
   }
   def parseMap[T](n: Int, visitor: Visitor[_, T]) = {
-    val obj = visitor.visitObject(n, index)
+    val obj = visitor.visitObject(n, true, index)
 
     var i = 0
     while(i < n){

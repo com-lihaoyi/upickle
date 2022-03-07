@@ -17,7 +17,7 @@ object PlayJson extends ujson.AstTransformer[JsValue] {
   }
   def visitArray(length: Int, index: Int) = new AstArrVisitor[Array](JsArray(_))
 
-  def visitObject(length: Int, index: Int) = new AstObjVisitor[ArrayBuffer[(String, JsValue)]](JsObject(_))
+  def visitJsonableObject(length: Int, index: Int) = new AstObjVisitor[ArrayBuffer[(String, JsValue)]](JsObject(_))
 
   def visitNull(index: Int) = JsNull
 
