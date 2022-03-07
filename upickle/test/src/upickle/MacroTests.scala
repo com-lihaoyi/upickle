@@ -148,8 +148,8 @@ object MacroTests extends TestSuite {
         test("shallow"){
           test - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
           test - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
-          test - rw(AnZ: Z, """{"$type": "upickle.Hierarchy.AnZ"}""")
-          test - rw(AnZ, """{"$type": "upickle.Hierarchy.AnZ"}""")
+          test - rw(AnZ: Z, """ "upickle.Hierarchy.AnZ" """, """{"$type": "upickle.Hierarchy.AnZ"}""")
+          test - rw(AnZ, """ "upickle.Hierarchy.AnZ" """, """{"$type": "upickle.Hierarchy.AnZ"}""")
           test - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
           test - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
 

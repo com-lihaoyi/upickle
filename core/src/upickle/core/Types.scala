@@ -274,7 +274,10 @@ trait Types{ types =>
     }
   }
   class SingletonR[T](t: T) extends CaseR[T]{
-    override def expectedMsg = "expected dictionary"
+    override def expectedMsg = "expected string or dictionary"
+
+    override def visitString(s: CharSequence, index: Int) = t
+
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
       def subVisitor = NoOpVisitor
 
@@ -311,6 +314,8 @@ trait Types{ types =>
 
     override def expectedMsg = taggedExpectedMsg
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
+
+    override def visitString(s: CharSequence, index: Int) = findReader(s.toString).visitString(s, index)
     override def visitObject(length: Int, index: Int) = taggedObjectContext(this, index)
   }
   object TaggedReader{
