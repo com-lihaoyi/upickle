@@ -54,7 +54,7 @@ trait Readers extends upickle.core.Types
 
   implicit val DoubleReader: Reader[Double] = new NumericReader[Double] {
     override def expectedMsg = "expected number"
-    override def visitString(s: CharSequence, index: Int) = s.toString.toDouble
+    override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
     override def visitInt32(d: Int, index: Int) = d
     override def visitInt64(d: Long, index: Int) = d
     override def visitUInt64(d: Long, index: Int) = d
@@ -67,7 +67,7 @@ trait Readers extends upickle.core.Types
   }
   implicit val IntReader: Reader[Int] = new NumericReader[Int] {
     override def expectedMsg = "expected number"
-    override def visitString(s: CharSequence, index: Int) = s.toString.toInt
+    override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
     override def visitInt32(d: Int, index: Int) = d
     override def visitInt64(d: Long, index: Int) = d.toInt
     override def visitUInt64(d: Long, index: Int) = d.toInt
@@ -82,7 +82,7 @@ trait Readers extends upickle.core.Types
   implicit val FloatReader: Reader[Float] = new NumericReader[Float] {
     override def expectedMsg = "expected number"
 
-    override def visitString(s: CharSequence, index: Int) = s.toString.toFloat
+    override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
     override def visitInt32(d: Int, index: Int) = d.toFloat
     override def visitInt64(d: Long, index: Int) = d.toFloat
     override def visitUInt64(d: Long, index: Int) = d.toFloat
@@ -96,7 +96,7 @@ trait Readers extends upickle.core.Types
 
   implicit val ShortReader: Reader[Short] = new NumericReader[Short]{
     override def expectedMsg = "expected number"
-    override def visitString(s: CharSequence, index: Int) = s.toString.toShort
+    override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
     override def visitInt32(d: Int, index: Int) = d.toShort
     override def visitInt64(d: Long, index: Int) = d.toShort
     override def visitUInt64(d: Long, index: Int) = d.toShort
@@ -110,7 +110,7 @@ trait Readers extends upickle.core.Types
 
   implicit val ByteReader: Reader[Byte] = new NumericReader[Byte] {
     override def expectedMsg = "expected number"
-    override def visitString(s: CharSequence, index: Int) = s.toString.toByte
+    override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
     override def visitInt32(d: Int, index: Int) = d.toByte
     override def visitInt64(d: Long, index: Int) = d.toByte
     override def visitUInt64(d: Long, index: Int) = d.toByte

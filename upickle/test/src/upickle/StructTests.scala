@@ -25,10 +25,10 @@ object StructTests extends TestSuite {
 
     test("tuples"){
       test("null") - rw(null: Tuple2[Int, Int], "null")
-      "2" - rw((1, 2, 3.0), "[1,2,3]", "[1,2,3.0]")
-      "2-1" - rw((false, 1), "[false,1]")
-      "3" - rw(("omg", 1, "bbq"), """["omg",1,"bbq"]""")
-      "21" - rw(
+      test("2") - rw((1, 2, 3.0), "[1,2,3]", "[1,2,3.0]")
+      test("2-1") - rw((false, 1), "[false,1]")
+      test("3") - rw(("omg", 1, "bbq"), """["omg",1,"bbq"]""")
+      test("21") - rw(
         (1, 2.2, 3, 4, "5", 6, '7', 8, 9, 10.1, 11, 12, 13, 14.5, 15, "16", 17, 18, 19, 20, 21),
         """[1,2.2,3,4,"5",6,"7",8,9,10.1,11,12,13,14.5,15,"16",17,18,19,20,21]"""
       )
@@ -71,7 +71,8 @@ object StructTests extends TestSuite {
         )
         test("Structured2") - rw[collection.mutable.Map[List[Int], List[Int]]](
           collection.mutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
-          "[[[1],[1,2,3]], [[],[1]]]"
+          "[[[1],[1,2,3]], [[],[1]]]",
+          "[[[],[1]],[[1],[1,2,3]]]"
         )
         test("Structured3") - rw[collection.immutable.Map[List[Int], List[Int]]](
           collection.immutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),

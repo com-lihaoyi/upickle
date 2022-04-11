@@ -9,8 +9,8 @@ import scala.Numeric.Implicits._
 
 import utest.{assert => _, _}
 /**
-* Created by haoyi on 4/22/14.
-*/
+ * Created by haoyi on 4/22/14.
+ */
 object TestUtil extends TestUtil[upickle.default.type](upickle.default)
 object LegacyTestUtil extends TestUtil[upickle.legacy.type](upickle.legacy)
 class TestUtil[Api <: upickle.Api](val api: Api){
@@ -40,10 +40,10 @@ class TestUtil[Api <: upickle.Api](val api: Api){
   }
 
   def rwk0[T, V](t: T, sIn: String*)
-               (normalize: T => V,
-                escapeUnicode: Boolean = false,
-                checkBinaryJson: Boolean = true)
-               (implicit r: api.Reader[T], w: api.Writer[T])= {
+                (normalize: T => V,
+                 escapeUnicode: Boolean = false,
+                 checkBinaryJson: Boolean = true)
+                (implicit r: api.Reader[T], w: api.Writer[T])= {
     val writtenT = api.write(t)
     val writtenBytesT = api.writeToByteArray(t)
 

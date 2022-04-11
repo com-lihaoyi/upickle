@@ -18,6 +18,7 @@ trait JsVisitor[-T, +J] extends Visitor[T, J]{
     if(i == d) visitFloat64StringParts(i.toString, -1, -1, index)
     else visitFloat64String(d.toString, index)
   }
+
   def visitInt32(i: Int, index: Int): J = visitFloat64(i, index)
   def visitInt64(i: Long, index: Int): J = {
     if (math.abs(i) > math.pow(2, 53) || i == -9223372036854775808L) visitString(i.toString, index)

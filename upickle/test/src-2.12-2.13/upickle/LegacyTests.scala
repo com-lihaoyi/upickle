@@ -58,7 +58,6 @@ object LegacyTests extends TestSuite {
       implicit def Brw: RW[B] = upickle.legacy.macroRW
       implicit def Crw: RW[C] = upickle.legacy.macroRW
       implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(Crw, Brw)
-
       implicit def AnZrw: RW[AnZ.type] = upickle.legacy.macroRW
       implicit def Zrw: RW[Z] = upickle.legacy.macroRW
       test("shallow"){
@@ -104,6 +103,8 @@ object LegacyTests extends TestSuite {
       implicit def BBrw: RW[BB.type] = legacy.macroRW
       implicit def CCrw: RW[CC.type] = legacy.macroRW
       implicit def AArw: RW[AA] = legacy.macroRW
+      implicit def BBrw: RW[BB.type] = legacy.macroRW
+      implicit def CCrw: RW[CC.type] = legacy.macroRW
       rw(BB, """["upickle.Singletons.BB",{}]""")
       rw(CC, """["upickle.Singletons.CC",{}]""")
       rw(BB: AA, """["upickle.Singletons.BB",{}]""")
@@ -194,6 +195,7 @@ object LegacyTests extends TestSuite {
 
       implicit def Endrw: RW[End.type] = upickle.legacy.macroRW
       implicit def LLrw: RW[LL] = upickle.legacy.macroRW
+      implicit def Endrw: RW[End.type] = upickle.legacy.macroRW
       rw(
         IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
         """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
