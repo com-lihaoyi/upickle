@@ -180,7 +180,7 @@ object FailureTests extends TestSuite {
       }
 
       test("structs"){
-        test - assertErrorMsg[Int]("\"lol\"", "For input string: \"lol\"")
+        test - assertErrorMsg[Int]("\"lol\"", "lol")
         test - assertErrorMsg[Seq[Int]]("\"lol\"", "expected sequence got string at index 0")
         test - assertErrorMsg[Seq[String]]("""["1", 2, 3]""", "expected string got number at index 6")
         test("tupleShort"){
