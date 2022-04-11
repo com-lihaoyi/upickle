@@ -250,7 +250,7 @@ object AdvancedTests extends TestSuite {
             "c":3,
             "next": "upickle.Recursive.End"
           }
-        }""",
+        }"""
       )
 
     }

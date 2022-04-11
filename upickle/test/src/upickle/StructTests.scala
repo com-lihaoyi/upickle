@@ -73,7 +73,7 @@ object StructTests extends TestSuite {
         test("Structured2") - rw[collection.mutable.Map[List[Int], List[Int]]](
           collection.mutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
           "[[[1],[1,2,3]], [[],[1]]]",
-          "[[[],[1]],[[1],[1,2,3]]]",
+          "[[[],[1]],[[1],[1,2,3]]]"
         )
         test("Structured3") - rw[collection.immutable.Map[List[Int], List[Int]]](
           collection.immutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
@@ -140,7 +140,7 @@ object StructTests extends TestSuite {
         test("char") - rw(
           Map('a' -> 'b', 'c' -> 'd', 'e' -> 'f'),
           """[["a", "b"], ["c", "d"], ["e", "f"]]""",
-          """{"a": "b", "c": "d", "e": "f"}""",
+          """{"a": "b", "c": "d", "e": "f"}"""
         )
 
         test("uuid") - rw(
@@ -149,13 +149,13 @@ object StructTests extends TestSuite {
               new java.util.UUID(987654321L, 123456789L)
           ),
           """[["00000000-075b-cd15-0000-00003ade68b1", "00000000-3ade-68b1-0000-0000075bcd15"]]""",
-          """{"00000000-075b-cd15-0000-00003ade68b1": "00000000-3ade-68b1-0000-0000075bcd15"}""",
+          """{"00000000-075b-cd15-0000-00003ade68b1": "00000000-3ade-68b1-0000-0000075bcd15"}"""
         )
 
         test("symbol") - rw(
           Map(Symbol("abc") -> Symbol("def")),
           """[["abc", "def"]]""",
-          """{"abc": "def"}""",
+          """{"abc": "def"}"""
         )
       }
     }
@@ -192,7 +192,7 @@ object StructTests extends TestSuite {
       test("tuples") - rw(
         (1, (2.0, true), (3.0, 4.0, 5.0)),
         """[1,[2,true],[3,4,5]]""",
-        """[1,[2.0,true],[3.0,4.0,5.0]]""",
+        """[1,[2.0,true],[3.0,4.0,5.0]]"""
       )
 
       test("EitherDurationOptionDuration"){
