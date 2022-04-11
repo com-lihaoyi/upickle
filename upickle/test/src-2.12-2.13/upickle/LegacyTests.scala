@@ -58,7 +58,7 @@ object LegacyTests extends TestSuite {
       implicit def Brw: RW[B] = upickle.legacy.macroRW
       implicit def Crw: RW[C] = upickle.legacy.macroRW
       implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(Crw, Brw)
-
+      implicit def AnZrw: RW[AnZ.type] = upickle.legacy.macroRW
       implicit def Zrw: RW[Z] = upickle.legacy.macroRW
       test("shallow"){
         test - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
@@ -101,6 +101,8 @@ object LegacyTests extends TestSuite {
       import Singletons._
 
       implicit def AArw: RW[AA] = legacy.macroRW
+      implicit def BBrw: RW[BB.type] = legacy.macroRW
+      implicit def CCrw: RW[CC.type] = legacy.macroRW
       rw(BB, """["upickle.Singletons.BB",{}]""")
       rw(CC, """["upickle.Singletons.CC",{}]""")
       rw(BB: AA, """["upickle.Singletons.BB",{}]""")
@@ -190,6 +192,7 @@ object LegacyTests extends TestSuite {
 
 
       implicit def LLrw: RW[LL] = upickle.legacy.macroRW
+      implicit def Endrw: RW[End.type] = upickle.legacy.macroRW
       rw(
         IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
         """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""
@@ -301,6 +304,7 @@ object LegacyTests extends TestSuite {
       rw(new CaseClassWithJson(ujson.Arr(ujson.Num(7), ujson.Str("lol"))), """{"json":[7,"lol"]}""")
     }
     test("traitFromOtherPackage"){
+      implicit val BaseChildRW: RW[subpackage.Base.Child.type] = upickle.legacy.macroRW
       implicit val BaseRW: RW[subpackage.Base] = upickle.legacy.macroRW
       implicit val WrapperRW: RW[subpackage.Wrapper] = upickle.legacy.macroRW
       upickle.legacy.write(subpackage.Wrapper(subpackage.Base.Child))

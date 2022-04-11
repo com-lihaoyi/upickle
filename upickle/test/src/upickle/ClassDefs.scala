@@ -73,6 +73,7 @@ object Hierarchy {
   }
   sealed trait Z //new line
   case object AnZ extends Z
+  implicit def AnZrw: upickle.default.ReadWriter[AnZ.type] = default.macroRW
 }
 
 object DeepHierarchy {
@@ -129,7 +130,9 @@ object Singletons{
    )
   }
   case object BB extends AA
+  implicit val BBrw: upickle.default.ReadWriter[BB.type] = default.macroRW
   case object CC extends AA
+  implicit val CCrw: upickle.default.ReadWriter[CC.type] = default.macroRW
 
   case object Standalone
 }

@@ -186,7 +186,7 @@ trait Types{ types =>
 
   abstract class CaseR[V] extends SimpleReader[V]{
     override def expectedMsg = "expected dictionary"
-
+    override def visitString(s: CharSequence, index: Int) = visitObject(0, index).visitEnd(index)
     abstract class CaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V]{
       def storeAggregatedValue(currentIndex: Int, v: Any): Unit
       var found = 0L
@@ -274,7 +274,10 @@ trait Types{ types =>
     }
   }
   class SingletonR[T](t: T) extends CaseR[T]{
-    override def expectedMsg = "expected dictionary"
+    override def expectedMsg = "expected string or dictionary"
+
+    override def visitString(s: CharSequence, index: Int) = t
+
     override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
       def subVisitor = NoOpVisitor
 
@@ -312,6 +315,7 @@ trait Types{ types =>
     override def expectedMsg = taggedExpectedMsg
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
     override def visitObject(length: Int, index: Int) = taggedObjectContext(this, index)
+    override def visitString(s: CharSequence, index: Int) = findReader(s.toString).visitString(s, index)
   }
   object TaggedReader{
     class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{

@@ -211,14 +211,28 @@ object AdvancedTests extends TestSuite {
           ]
         }"""
       )
-      rw(End: LL, """{"$type":"upickle.Recursive.End"}""")
-      rw(Node(3, End): LL,
+      rw(
+        End: LL,
+        """{"$type":"upickle.Recursive.End"}""",
+        """ "upickle.Recursive.End" """
+      )
+
+      rw(
+        Node(3, End): LL,
         """{
           "$type": "upickle.Recursive.Node",
           "c": 3,
           "next": {"$type":"upickle.Recursive.End"}
-        }""")
-      rw(Node(6, Node(3, End)),
+        }""",
+        """{
+          "$type": "upickle.Recursive.Node",
+          "c": 3,
+          "next": "upickle.Recursive.End"
+        }"""
+      )
+
+      rw(
+        Node(6, Node(3, End)),
         """{
           "$type": "upickle.Recursive.Node",
           "c": 6,
@@ -227,7 +241,17 @@ object AdvancedTests extends TestSuite {
             "c":3,
             "next":{"$type":"upickle.Recursive.End"}
           }
-        }""")
+        }""",
+        """{
+          "$type": "upickle.Recursive.Node",
+          "c": 6,
+          "next": {
+            "$type": "upickle.Recursive.Node",
+            "c":3,
+            "next": "upickle.Recursive.End"
+          }
+        }"""
+      )
 
     }
     test("gadt"){
