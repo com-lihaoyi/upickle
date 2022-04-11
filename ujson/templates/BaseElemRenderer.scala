@@ -142,6 +142,20 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     out
   }
 
+  override def visitFloat32(d: Float, index: Int) = {
+    d match{
+      case Float.PositiveInfinity => visitNonNullString("Infinity", -1)
+      case Float.NegativeInfinity => visitNonNullString("-Infinity", -1)
+      case d if java.lang.Float.isNaN(d) => visitNonNullString("NaN", -1)
+      case d =>
+        val i = d.toInt
+        if (d == i) visitFloat64StringParts(i.toString, -1, -1, index)
+        else super.visitFloat32(d, index)
+        flushBuffer()
+    }
+    flushElemBuilder()
+    out
+  }
 
   def visitString(s: CharSequence, index: Int) = {
 

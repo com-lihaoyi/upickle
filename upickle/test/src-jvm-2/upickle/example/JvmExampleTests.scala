@@ -139,6 +139,12 @@ object JvmExampleTests extends TestSuite {
       }
     }
 
+    test("duration") - rw(
+      Map(Duration.Inf -> Duration.Zero),
+      """{"inf": "0"}""",
+      """[["inf", "0"]]"""
+    )
+
   }
 }
 
