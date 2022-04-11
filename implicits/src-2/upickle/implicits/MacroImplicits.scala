@@ -38,9 +38,6 @@ object MacroImplicits{
 
 }
 trait MacroImplicits extends MacrosCommon { this: upickle.core.Types =>
-  def macroSingletonR[T <: Singleton]: Reader[T] = macro MacroImplicits.applyR[T]
-  def macroSingletonW[T <: Singleton]: Writer[T] = macro MacroImplicits.applyW[T]
-  def macroSingletonRW[T <: Singleton]: ReadWriter[T] = macro MacroImplicits.applyRW[T]
   def macroR[T]: Reader[T] = macro MacroImplicits.applyR[T]
   def macroW[T]: Writer[T] = macro MacroImplicits.applyW[T]
   def macroRW[T]: ReadWriter[T] = macro MacroImplicits.applyRW[ReadWriter[T]]

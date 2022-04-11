@@ -170,7 +170,6 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     out
   }
 
-
   def visitString(s: CharSequence, index: Int) = {
 
     if (s eq null) visitNull(index)

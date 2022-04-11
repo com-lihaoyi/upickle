@@ -222,8 +222,11 @@ object AdvancedTests extends TestSuite {
           "$type": "upickle.Recursive.Node",
           "c": 3,
           "next": {"$type":"upickle.Recursive.End"}
-        }""")
-      rw(Node(6, Node(3, End)),
+        }"""
+      )
+
+      rw(
+        Node(6, Node(3, End)),
         """{
           "$type": "upickle.Recursive.Node",
           "c": 6,
@@ -241,7 +244,8 @@ object AdvancedTests extends TestSuite {
             "c":3,
             "next":{"$type":"upickle.Recursive.End"}
           }
-        }""")
+        }"""
+      )
 
     }
     test("gadt"){

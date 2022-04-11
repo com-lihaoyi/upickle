@@ -202,7 +202,7 @@ trait Types{ types =>
 
   abstract class CaseR[V] extends SimpleReader[V]{
     override def expectedMsg = "expected dictionary"
-
+    override def visitString(s: CharSequence, index: Int) = visitObject(0, true, index).visitEnd(index)
     abstract class CaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V]{
       def storeAggregatedValue(currentIndex: Int, v: Any): Unit
       var found = 0L
@@ -334,6 +334,7 @@ trait Types{ types =>
 
     override def visitString(s: CharSequence, index: Int) = findReader(s.toString).visitString(s, index)
     override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = taggedObjectContext(this, index)
+    override def visitString(s: CharSequence, index: Int) = findReader(s.toString).visitString(s, index)
   }
   object TaggedReader{
     class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
