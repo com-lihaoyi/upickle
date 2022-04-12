@@ -815,6 +815,12 @@
         formats: @code{Map}s can be deserialized from both JSON list-of-list and JSON dictionary
         formats, numbers can be deserialized from strings, and @code{Unit} can be deserialized from
         empty JSON dictionaries or nulls
+      @ul
+        Automatic serialization of @hl.scala{case object}s has been removed, due to
+        confusing bugs in how its implicit macro interacted with other implicit definitions.
+        You now need to define @hl.scala{case object} serializers manually, via
+        @hl.scala{implicit val rw: RW[MyCaseObject.type] = macroRW}
+
     @sect{1.5.0}
       @ul
         Support Scala-Native on Scala 3
