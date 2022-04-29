@@ -17,7 +17,7 @@ object CirceJson extends ujson.AstTransformer[Json]{
 
   def visitArray(length: Int, index: Int) = new AstArrVisitor[Vector](x => Json.arr(x:_*))
 
-  def visitObject(length: Int, index: Int) = new AstObjVisitor[ArrayBuffer[(String, Json)]](vs => Json.obj(vs.toSeq:_*))
+  def visitJsonableObject(length: Int, index: Int) = new AstObjVisitor[ArrayBuffer[(String, Json)]](vs => Json.obj(vs.toSeq:_*))
 
   def visitNull(index: Int) = Json.Null
 

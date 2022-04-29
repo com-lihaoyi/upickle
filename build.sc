@@ -6,23 +6,24 @@ import mill.scalanativelib._
 import mill.modules._
 import mill.scalalib.api.Util.isScala3
 import mill.scalanativelib.api.{LTO, ReleaseMode}
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
-import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.4`
+import $ivy.`com.github.lolgab::mill-mima::0.0.9`
 import com.github.lolgab.mill.mima._
 
 val scala211  = "2.11.12"
 val scala212  = "2.12.13"
 val scala213  = "2.13.4"
-val scala3    = "3.0.2"
+val scala30   = "3.0.2"
+val scala31   = "3.1.0"
 val scalaJS06 = "0.6.33"
 val scalaJS1  = "1.5.1"
-val scalaNative = "0.4.0"
+val scalaNative = "0.4.3"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
 val scala2JVMVersions = Seq(scala211, scala212, scala213)
-val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
+val scalaJVMVersions = scala2JVMVersions ++ Seq(scala30) ++ dottyCustomVersion
 
 val scalaJSVersions = Seq(
   (scala211, scalaJS06),
@@ -31,13 +32,14 @@ val scalaJSVersions = Seq(
   (scala211, scalaJS1),
   (scala212, scalaJS1),
   (scala213, scalaJS1),
-  (scala3, scalaJS1)
+  (scala30, scalaJS1)
 )
 
 val scalaNativeVersions = Seq(
   (scala211, scalaNative),
   (scala212, scalaNative),
-  (scala213, scalaNative)
+  (scala213, scalaNative),
+  (scala31, scalaNative)
 )
 
 trait CommonModule extends ScalaModule {
@@ -84,10 +86,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
     organization = "com.lihaoyi",
     url = "https://github.com/lihaoyi/upickle",
     licenses = Seq(License.MIT),
-    scm = SCM(
-      "git://github.com/lihaoyi/upickle.git",
-      "scm:git://github.com/lihaoyi/upickle.git"
-    ),
+    versionControl = VersionControl.github(owner = "com-lihaoyi", repo = "upickle"),
     developers = Seq(
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
@@ -117,12 +116,11 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
   }
 }
 
-trait CommonTestModule extends CommonModule with TestModule{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.10") ++ (
+trait CommonTestModule extends CommonModule with TestModule.Utest{
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.11") ++ (
     if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
-    else Agg(ivy"com.lihaoyi::acyclic:0.2.1")
+    else Agg(ivy"com.lihaoyi:::acyclic:0.3.2")
   )
-  def testFramework = "upickle.core.UTestFramework"
   def docJar = T {
     val outDir = T.ctx().dest
     val javadocDir = outDir / 'javadoc
@@ -163,7 +161,7 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
 
 trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.6.10")
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.7.1")
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
@@ -187,14 +185,14 @@ object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
     def compileIvyDeps = if (!isDotty) Agg(
-      ivy"com.lihaoyi::acyclic:0.2.1",
+      ivy"com.lihaoyi:::acyclic:0.3.2",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
     else Agg.empty[Dep]
     def generatedSources = T{
       val dir = T.ctx().dest
       val file = dir / "upickle" / "Generated.scala"
-      ammonite.ops.mkdir(dir / "upickle")
+      os.makeDir(dir / "upickle")
       val tuples = (1 to 22).map{ i =>
         def commaSeparated(s: Int => String) = (1 to i).map(s).mkString(", ")
         val writerTypes = commaSeparated(j => s"T$j: Writer")
@@ -212,7 +210,7 @@ object implicits extends Module {
         """
       }
 
-      ammonite.ops.write(file, s"""
+      os.write(file, s"""
       package upickle.implicits
       /**
        * Auto-generated picklers and unpicklers, used for creating the 22
@@ -374,7 +372,7 @@ object ujson extends Module{
 trait UpickleModule extends CommonPublishModule{
   def artifactName = "upickle"
   def compileIvyDeps = if (!isDotty) Agg(
-    ivy"com.lihaoyi::acyclic:0.2.1",
+    ivy"com.lihaoyi:::acyclic:0.3.2",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )

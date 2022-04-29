@@ -12,7 +12,7 @@ trait CaseClassReaderPiece extends MacrosCommon:
 
     def visitorForKey(currentKey: String): Visitor[_, _]
 
-    override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, T] {
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, T] {
       private val builder = collection.mutable.Map.empty[String, Any]
       var currentKey: String = null
 
@@ -29,6 +29,7 @@ trait CaseClassReaderPiece extends MacrosCommon:
       def visitEnd(index: Int): T =
         make(builder.toMap)
     }
+    override def visitString(v: CharSequence, index: Int) = make(Map())
   end CaseClassReader
 
   class EnumReader[T](f: String => T, description: EnumDescription) extends SimpleReader[T]:

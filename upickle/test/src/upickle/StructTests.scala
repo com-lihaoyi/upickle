@@ -1,14 +1,13 @@
 package upickle
 import java.io.ByteArrayOutputStream
-
 import utest._
 import upickle.legacy.{read, write}
-
 import upickle.core.compat._
+
 import scala.concurrent.duration._
 import TestUtil._
-import java.util.UUID
 
+import java.util.UUID
 import scala.reflect.ClassTag
 import language.postfixOps
 
@@ -26,10 +25,10 @@ object StructTests extends TestSuite {
 
     test("tuples"){
       test("null") - rw(null: Tuple2[Int, Int], "null")
-      "2" - rw((1, 2, 3.0), "[1,2,3.0]", "[1,2,3]")
-      "2-1" - rw((false, 1), "[false,1]")
-      "3" - rw(("omg", 1, "bbq"), """["omg",1,"bbq"]""")
-      "21" - rw(
+      test("2") - rw((1, 2, 3.0), "[1,2,3]", "[1,2,3.0]")
+      test("2-1") - rw((false, 1), "[false,1]")
+      test("3") - rw(("omg", 1, "bbq"), """["omg",1,"bbq"]""")
+      test("21") - rw(
         (1, 2.2, 3, 4, "5", 6, '7', 8, 9, 10.1, 11, 12, 13, 14.5, 15, "16", 17, 18, 19, 20, 21),
         """[1,2.2,3,4,"5",6,"7",8,9,10.1,11,12,13,14.5,15,"16",17,18,19,20,21]"""
       )
@@ -62,13 +61,17 @@ object StructTests extends TestSuite {
         test("Buffer") - rw(collection.mutable.Buffer("omg", "i am", "cow"), """["omg","i am","cow"]""")
         test("SortedSet") - rw(collection.mutable.SortedSet("omg", "i am", "cow"), """["cow","i am","omg"]""")
       }
-      test("Map"){
+    }
+
+    test("maps"){
+      test("structured") {
         test("Structured") - rw[Map[List[Int], List[Int]]](
           Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
           "[[[],[1]],[[1],[1,2,3]]]"
         )
         test("Structured2") - rw[collection.mutable.Map[List[Int], List[Int]]](
           collection.mutable.Map(Nil -> List(1), List(1) -> List(1, 2, 3)),
+          "[[[1],[1,2,3]], [[],[1]]]",
           "[[[],[1]],[[1],[1,2,3]]]"
         )
         test("Structured3") - rw[collection.immutable.Map[List[Int], List[Int]]](
@@ -83,6 +86,8 @@ object StructTests extends TestSuite {
           Map[List[Int], List[Int]](),
           "[]"
         )
+      }
+      test("string"){
         test("String") - rw(
           Map("Hello" -> List(1), "World" -> List(1, 2, 3)),
           """{"Hello":[1],"World":[1,2,3]}"""
@@ -102,6 +107,54 @@ object StructTests extends TestSuite {
         test("StringEmpty") - rw(
           Map[String, List[Int]](),
           "{}"
+        )
+      }
+      test("primitive"){
+        test("ReadWriterJoin"){
+          def foo[T: upickle.default.ReadWriter](x: T, expected: String) = {
+            rw(Map(x -> x), expected)
+          }
+
+          foo[Int](123, """{"123": 123}""")
+        }
+        test("boolean") - rw(
+          Map(true -> false, false -> true),
+          """{"true": false, "false": true}""",
+          """[[true, false], [false, true]]""",
+          """[["true", false], ["false", true]]"""
+        )
+        test("int") - rw(
+          Map(1 -> 2, 3 -> 4, 5 -> 6),
+          """{"1": 2, "3": 4, "5": 6}""",
+          """[[1, 2], [3, 4], [5, 6]]""",
+          """[["1", 2], ["3", 4], ["5", 6]]"""
+        )
+        test("long") - rw(
+          Map(1L -> 2L, 3L -> 4L, 5L -> 6L),
+          """{"1": 2, "3": 4, "5": 6}""",
+          """[[1, 2], [3, 4], [5, 6]]""",
+          """[["1", 2], ["3", 4], ["5", 6]]"""
+        )
+
+        test("char") - rw(
+          Map('a' -> 'b', 'c' -> 'd', 'e' -> 'f'),
+          """{"a": "b", "c": "d", "e": "f"}""",
+          """[["a", "b"], ["c", "d"], ["e", "f"]]"""
+        )
+
+        test("uuid") - rw(
+          Map(
+            new java.util.UUID(123456789L, 987654321L) ->
+            new java.util.UUID(987654321L, 123456789L)
+          ),
+          """{"00000000-075b-cd15-0000-00003ade68b1": "00000000-3ade-68b1-0000-0000075bcd15"}""",
+          """[["00000000-075b-cd15-0000-00003ade68b1", "00000000-3ade-68b1-0000-0000075bcd15"]]"""
+        )
+
+        test("symbol") - rw(
+          Map(Symbol("abc") -> Symbol("def")),
+          """{"abc": "def"}""",
+          """[["abc", "def"]]"""
         )
       }
     }
@@ -137,8 +190,8 @@ object StructTests extends TestSuite {
 
       test("tuples") - rw(
         (1, (2.0, true), (3.0, 4.0, 5.0)),
-        """[1,[2.0,true],[3.0,4.0,5.0]]""",
-        """[1,[2,true],[3,4,5]]"""
+        """[1,[2,true],[3,4,5]]""",
+        """[1,[2.0,true],[3.0,4.0,5.0]]"""
       )
 
       test("EitherDurationOptionDuration"){

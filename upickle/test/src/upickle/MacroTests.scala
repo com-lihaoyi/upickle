@@ -148,8 +148,8 @@ object MacroTests extends TestSuite {
         test("shallow"){
           test - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
           test - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
-          test - rw(AnZ: Z, """{"$type": "upickle.Hierarchy.AnZ"}""")
-          test - rw(AnZ, """{"$type": "upickle.Hierarchy.AnZ"}""")
+          test - rw(AnZ: Z, """ "upickle.Hierarchy.AnZ" """, """{"$type": "upickle.Hierarchy.AnZ"}""")
+          test - rw(AnZ, """ "upickle.Hierarchy.AnZ" """, """{"$type": "upickle.Hierarchy.AnZ"}""")
           test - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
           test - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
 
@@ -159,9 +159,23 @@ object MacroTests extends TestSuite {
           // the $type-tag appears later in the dict. It does this by a totally
           // different code-path than for tag-first dicts, using an intermediate
           // AST, so make sure that code path works too.
-          test - rw(C("a", "b"), """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
-          test - rw(B(1), """{"i":1, "$type": "upickle.Hierarchy.B"}""")
-          test - rw(C("a", "b"): A, """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""")
+          test - rw(
+            C("a", "b"),
+            """{"$type": "upickle.Hierarchy.C","s1":"a","s2":"b"}""",
+            """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}"""
+          )
+
+          test - rw(
+            B(1),
+            """{"$type": "upickle.Hierarchy.B", "i":1}""",
+            """{"i":1, "$type": "upickle.Hierarchy.B"}"""
+          )
+
+          test - rw(
+            C("a", "b"): A,
+            """{"$type": "upickle.Hierarchy.C","s1":"a","s2":"b"}""",
+            """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}"""
+          )
         }
         test("deep"){
           import DeepHierarchy._
@@ -185,10 +199,10 @@ object MacroTests extends TestSuite {
       test("singleton"){
         import Singletons._
 
-        rw(BB, """{"$type":"upickle.Singletons.BB"}""")
-        rw(CC, """{"$type":"upickle.Singletons.CC"}""")
-        rw(BB: AA, """{"$type":"upickle.Singletons.BB"}""")
-        rw(CC: AA, """{"$type":"upickle.Singletons.CC"}""")
+        rw(BB, """ "upickle.Singletons.BB" """, """{"$type":"upickle.Singletons.BB"}""")
+        rw(CC, """ "upickle.Singletons.CC" """, """{"$type":"upickle.Singletons.CC"}""")
+        rw(BB: AA, """ "upickle.Singletons.BB" """, """{"$type":"upickle.Singletons.BB"}""")
+        rw(CC: AA, """ "upickle.Singletons.CC" """, """{"$type":"upickle.Singletons.CC"}""")
       }
     }
     test("robustnessAgainstVaryingSchemas"){

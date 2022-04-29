@@ -75,6 +75,7 @@ def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
   import quotes.reflect._
 
   val parents = TypeRepr.of[T].baseClasses
+
   Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
 
 
@@ -87,6 +88,7 @@ def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
     case Some(name) => Expr(name)
     case None => Expr(sym.fullName.replace("$", ""))
   }
+
 end fullClassNameImpl
 
 inline def enumValueOf[T]: String => T = ${ enumValueOfImpl[T] }
@@ -119,3 +121,10 @@ inline def enumDescription[T](using m: Mirror.Of[T]): EnumDescription = inline m
     val values = constValueTuple[m.MirroredElemLabels].productIterator.toSeq.map(_.toString)
     EnumDescription(name, values)
 }
+
+
+inline def isSingleton[T]: Boolean = ${ isSingletonImpl[T] }
+def isSingletonImpl[T](using Quotes, Type[T]): Expr[Boolean] =
+  import quotes.reflect._
+  Expr(TypeRepr.of[T].isSingleton)
+

@@ -103,7 +103,7 @@ trait Api
   def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
     streamBinary[T](t).writeBytesTo(out)
   }
-  def writeBinaryToByteArray[T: Writer](t: T, out: java.io.OutputStream): Unit = {
+  def writeBinaryToByteArray[T: Writer](t: T) = {
     val out = new java.io.ByteArrayOutputStream()
     streamBinary[T](t).writeBytesTo(out)
     out.toByteArray
@@ -125,8 +125,32 @@ trait Api
     def to[V](f: Visitor[_, V]): V = transform(f)
     def to[V](implicit f: Reader[V]): V = transform(f)
   }
+
+
+  /**
+   * Mark a `ReadWriter[T]` as something that can be used as a key in a JSON
+   * dictionary, such that `Map[T, V]` serializes to `{"a": "b", "c": "d"}`
+   * rather than `[["a", "b"], ["c", "d"]]`
+   */
+  def stringKeyRW[T](readwriter: ReadWriter[T]): ReadWriter[T] = {
+    new ReadWriter.Delegate[T](readwriter) {
+      override def isJsonDictKey = true
+      def write0[R](out: Visitor[_, R], v: T): R = readwriter.write0(out, v)
+    }
+  }
+
+  /**
+   * Mark a `Writer[T]` as something that can be used as a key in a JSON
+   * dictionary, such that `Map[T, V]` serializes to `{"a": "b", "c": "d"}`
+   * rather than `[["a", "b"], ["c", "d"]]`
+   */
+  def stringKeyW[T](readwriter: Writer[T]): Writer[T] = new Writer[T]{
+    override def isJsonDictKey = true
+    def write0[R](out: Visitor[_, R], v: T): R = readwriter.write0(out, v)
+  }
   // End Api
 }
+
 /**
  * The default way of accessing upickle
  */
@@ -226,7 +250,7 @@ trait AttributeTagged extends Api with Annotator{
           if (s.toString == tagName) () //do nothing
           else {
             // otherwise, go slow path
-            val slowCtx = IndexedValue.Builder.visitObject(-1, index).narrow
+            val slowCtx = IndexedValue.Builder.visitObject(-1, true, index).narrow
             val keyVisitor = slowCtx.visitKey(index)
             val xxx = keyVisitor.visitString(s.toString, index)
             slowCtx.visitKeyValue(xxx)
@@ -243,7 +267,7 @@ trait AttributeTagged extends Api with Annotator{
           if (facade0 == null) {
             throw new Abort("invalid tag for tagged object: " + typeName)
           }
-          val fastCtx = facade0.visitObject(-1, index)
+          val fastCtx = facade0.visitObject(-1, true, index)
           context = fastCtx
           fastPath = true
         }
@@ -259,7 +283,7 @@ trait AttributeTagged extends Api with Annotator{
           if (delegate == null){
             throw new AbortException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, null)
           }
-          val ctx2 = delegate.visitObject(-1, -1)
+          val ctx2 = delegate.visitObject(-1, true, -1)
           for (p <- x.value0) {
             val (k0, v) = p
             val k = k0.toString
@@ -277,13 +301,17 @@ trait AttributeTagged extends Api with Annotator{
     }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
-    val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, -1)
-    val keyVisitor = ctx.visitKey(-1)
 
-    ctx.visitKeyValue(keyVisitor.visitString(tagName, -1))
-    ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tag), -1), -1)
-    w.writeToObject(ctx, v)
-    val res = ctx.visitEnd(-1)
-    res
+    if (w.isInstanceOf[SingletonW[_]]) out.visitString(tag, -1)
+    else {
+      val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, true, -1)
+      val keyVisitor = ctx.visitKey(-1)
+
+      ctx.visitKeyValue(keyVisitor.visitString(tagName, -1))
+      ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tag), -1), -1)
+      w.writeToObject(ctx, v)
+      val res = ctx.visitEnd(-1)
+      res
+    }
   }
 }

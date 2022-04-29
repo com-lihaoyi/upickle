@@ -44,7 +44,7 @@ object IndexedValue extends Transformer[IndexedValue]{
         for(item <- items) try ctx.visitValue(transform(item, ctx.subVisitor), item.index) catch reject(item.index)
         ctx.visitEnd(i)
       case IndexedValue.Obj(i, items @_*) =>
-        val ctx = f.visitObject(-1, -1).narrow
+        val ctx = f.visitObject(-1, true, -1).narrow
         for((k, item) <- items) {
           val keyVisitor = try ctx.visitKey(i) catch reject(i)
 
@@ -66,7 +66,7 @@ object IndexedValue extends Transformer[IndexedValue]{
       def visitEnd(index: Int): IndexedValue.Arr = IndexedValue.Arr(i, out.toSeq:_*)
     }
 
-    def visitObject(length: Int, i: Int) = new ObjVisitor[IndexedValue, IndexedValue.Obj] {
+    def visitJsonableObject(length: Int, i: Int) = new ObjVisitor[IndexedValue, IndexedValue.Obj] {
       val out = mutable.Buffer.empty[(String, IndexedValue)]
       var currentKey: String = _
       def subVisitor = Builder

@@ -44,6 +44,7 @@ trait CaseClassWriterPiece extends MacrosCommon:
 
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
+
       def elemsInfo(v: T): List[(String, Writer[_], Any)] =
         val labels: List[String] = macros.fieldLabels[T]
         val writers: List[Writer[_]] =
@@ -54,8 +55,10 @@ trait CaseClassWriterPiece extends MacrosCommon:
         yield (l, w, v)
       end elemsInfo
       val writer = CaseClassWriter[T](elemsInfo, macros.getDefaultParams[T])
+      if macros.isSingleton[T] then
+        annotate(SingletonW[T](null.asInstanceOf[T]), macros.fullClassName[T])
 
-      if macros.isMemberOfSealedHierarchy[T] then annotate(writer, macros.fullClassName[T])
+      else if macros.isMemberOfSealedHierarchy[T] then annotate(writer, macros.fullClassName[T])
       else writer
     case _: Mirror.SumOf[T] =>
       inline compiletime.erasedValue[T] match {

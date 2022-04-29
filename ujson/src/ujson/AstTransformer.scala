@@ -12,7 +12,7 @@ trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
     ctx.visitEnd(-1)
   }
   def transformObject[T](f: Visitor[_, T], items: Iterable[(String, I)]) = {
-    val ctx = f.visitObject(items.size, -1).narrow
+    val ctx = f.visitObject(items.size, true, -1).narrow
     for(kv <- items) {
       val keyVisitor = ctx.visitKey(-1)
       ctx.visitKeyValue(keyVisitor.visitString(kv._1, -1))
@@ -42,4 +42,5 @@ trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
 
     def visitEnd(index: Int) = build(vs.result())
   }
+
 }
