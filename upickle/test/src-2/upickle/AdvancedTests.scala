@@ -211,23 +211,17 @@ object AdvancedTests extends TestSuite {
           ]
         }"""
       )
-      rw(
-        End: LL,
-        """{"$type":"upickle.Recursive.End"}""",
-        """ "upickle.Recursive.End" """
-      )
-
-      rw(
-        Node(3, End): LL,
-        """{
-          "$type": "upickle.Recursive.Node",
-          "c": 3,
-          "next": {"$type":"upickle.Recursive.End"}
-        }""",
+      rw(End: LL, """ "upickle.Recursive.End" """, """{"$type":"upickle.Recursive.End"}""")
+      rw(Node(3, End): LL,
         """{
           "$type": "upickle.Recursive.Node",
           "c": 3,
           "next": "upickle.Recursive.End"
+        }""",
+        """{
+          "$type": "upickle.Recursive.Node",
+          "c": 3,
+          "next": {"$type":"upickle.Recursive.End"}
         }"""
       )
 
@@ -239,7 +233,7 @@ object AdvancedTests extends TestSuite {
           "next": {
             "$type": "upickle.Recursive.Node",
             "c":3,
-            "next":{"$type":"upickle.Recursive.End"}
+            "next": "upickle.Recursive.End"
           }
         }""",
         """{
@@ -248,7 +242,7 @@ object AdvancedTests extends TestSuite {
           "next": {
             "$type": "upickle.Recursive.Node",
             "c":3,
-            "next": "upickle.Recursive.End"
+            "next":{"$type":"upickle.Recursive.End"}
           }
         }"""
       )

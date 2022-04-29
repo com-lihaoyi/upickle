@@ -148,8 +148,8 @@ object MacroTests extends TestSuite {
         test("shallow"){
           test - rw(B(1), """{"$type": "upickle.Hierarchy.B", "i":1}""")
           test - rw(C("a", "b"), """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
-          test - rw(AnZ: Z, """{"$type": "upickle.Hierarchy.AnZ"}""", """ "upickle.Hierarchy.AnZ" """)
-          test - rw(AnZ, """{"$type": "upickle.Hierarchy.AnZ"}""", """ "upickle.Hierarchy.AnZ" """)
+          test - rw(AnZ: Z, """ "upickle.Hierarchy.AnZ" """, """{"$type": "upickle.Hierarchy.AnZ"}""")
+          test - rw(AnZ, """ "upickle.Hierarchy.AnZ" """, """{"$type": "upickle.Hierarchy.AnZ"}""")
           test - rw(Hierarchy.B(1): Hierarchy.A, """{"$type": "upickle.Hierarchy.B", "i":1}""")
           test - rw(C("a", "b"): A, """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""")
 
@@ -199,10 +199,10 @@ object MacroTests extends TestSuite {
       test("singleton"){
         import Singletons._
 
-        rw(BB, """{"$type":"upickle.Singletons.BB"}""", """ "upickle.Singletons.BB" """)
-        rw(CC, """{"$type":"upickle.Singletons.CC"}""", """ "upickle.Singletons.CC" """)
-        rw(BB: AA, """{"$type":"upickle.Singletons.BB"}""", """ "upickle.Singletons.BB" """)
-        rw(CC: AA, """{"$type":"upickle.Singletons.CC"}""", """ "upickle.Singletons.CC" """)
+        rw(BB, """ "upickle.Singletons.BB" """, """{"$type":"upickle.Singletons.BB"}""")
+        rw(CC, """ "upickle.Singletons.CC" """, """{"$type":"upickle.Singletons.CC"}""")
+        rw(BB: AA, """ "upickle.Singletons.BB" """, """{"$type":"upickle.Singletons.BB"}""")
+        rw(CC: AA, """ "upickle.Singletons.CC" """, """{"$type":"upickle.Singletons.CC"}""")
       }
     }
     test("robustnessAgainstVaryingSchemas"){

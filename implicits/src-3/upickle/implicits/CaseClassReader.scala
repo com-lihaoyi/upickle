@@ -28,6 +28,7 @@ trait CaseClassReaderPiece extends MacrosCommon:
       def visitEnd(index: Int): T =
         make(builder.toMap)
     }
+    override def visitString(v: CharSequence, index: Int) = make(Map())
   end CaseClassReader
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {

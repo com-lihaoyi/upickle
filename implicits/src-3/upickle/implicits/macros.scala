@@ -75,6 +75,7 @@ def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
   import quotes.reflect._
 
   val parents = TypeRepr.of[T].baseClasses
+
   Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
 
 
@@ -87,4 +88,8 @@ def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
     case Some(name) => Expr(name)
     case None => Expr(sym.fullName.replace("$", ""))
   }
-end fullClassNameImpl
+
+inline def isSingleton[T]: Boolean = ${ isSingletonImpl[T] }
+def isSingletonImpl[T](using Quotes, Type[T]): Expr[Boolean] =
+  import quotes.reflect._
+  Expr(TypeRepr.of[T].isSingleton)

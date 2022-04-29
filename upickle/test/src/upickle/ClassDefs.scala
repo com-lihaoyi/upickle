@@ -129,13 +129,16 @@ object Singletons{
       default.macroRW[CC.type]
    )
   }
+
   case object BB extends AA
   implicit val BBrw: upickle.default.ReadWriter[BB.type] = default.macroRW
+
   case object CC extends AA
   implicit val CCrw: upickle.default.ReadWriter[CC.type] = default.macroRW
 
   case object Standalone
 }
+
 object Generic{
   case class A[T](t: T)
 
