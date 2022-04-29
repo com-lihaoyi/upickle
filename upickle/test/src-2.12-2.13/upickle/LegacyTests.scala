@@ -187,7 +187,9 @@ object LegacyTests extends TestSuite {
       implicit def SingleNoderw: RW[SingleNode] = upickle.legacy.macroRW
 
       implicit def SingleTreerw: RW[SingleTree] = upickle.legacy.macroRW
+
       implicit def Noderw: RW[Node] = upickle.legacy.macroRW
+
 
       implicit def Endrw: RW[End.type] = upickle.legacy.macroRW
       implicit def LLrw: RW[LL] = upickle.legacy.macroRW
