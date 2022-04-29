@@ -192,10 +192,9 @@ object LegacyTests extends TestSuite {
 
       implicit def Noderw: RW[Node] = upickle.legacy.macroRW
 
-
       implicit def Endrw: RW[End.type] = upickle.legacy.macroRW
       implicit def LLrw: RW[LL] = upickle.legacy.macroRW
-      implicit def Endrw: RW[End.type] = upickle.legacy.macroRW
+
       rw(
         IntTree(123, List(IntTree(456, Nil), IntTree(789, Nil))),
         """{"value":123,"children":[{"value":456,"children":[]},{"value":789,"children":[]}]}"""

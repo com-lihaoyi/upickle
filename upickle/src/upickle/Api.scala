@@ -301,6 +301,7 @@ trait AttributeTagged extends Api with Annotator{
     }
   }
   def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
+
     if (w.isInstanceOf[SingletonW[_]]) out.visitString(tag, -1)
     else {
       val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, true, -1)

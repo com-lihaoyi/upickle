@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 1.4.3")
+@sect("µPickle 1.6.0")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -72,8 +72,8 @@
 
   @sect{Getting Started}
     @hl.scala
-      "com.lihaoyi" %% "upickle" % "1.4.3" // SBT
-      ivy"com.lihaoyi::upickle:1.4.3" // Mill
+      "com.lihaoyi" %% "upickle" % "1.6.0" // SBT
+      ivy"com.lihaoyi::upickle:1.6.0" // Mill
 
     @p
       And then you can immediately start writing and reading common Scala
@@ -91,16 +91,13 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        "com.lihaoyi" %%% "upickle" % "1.4.3" // SBT
-        ivy"com.lihaoyi::upickle::1.4.3" // Mill
-      @p
-        Other than that, everything is used the same way. upickle-0.9.4
-        is only compatible with ScalaJS 0.6.x.
+        "com.lihaoyi" %%% "upickle" % "1.6.0" // SBT
+        ivy"com.lihaoyi::upickle::1.6.0" // Mill
 
     @sect{Scala Versions}
       @p
 
-        uPickle does not support Scala 2.10 or 2.11; only 2.12 and 2.13 are supported.
+        uPickle does not support Scala 2.10; only 2.11/2.12/2.13/3.x are supported.
 
   @sect{Basics}
     @sect{Builtins}
@@ -848,13 +845,34 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{1.6.0}
+      @ul
+        @li
+          Forwards compatibility for uPickle 2.x (@lnk("#385", "https://github.com/com-lihaoyi/upickle/pull/385")).
+          This reduces the strictness of deserialization logic to allow parsing of both old and new
+          formats: @code{Map}s can be deserialized from both JSON list-of-list and JSON dictionary
+          formats, numbers can be deserialized from strings, and @code{Unit} can be deserialized from
+          empty JSON dictionaries or nulls
+        @li
+          Automatic serialization of @hl.scala{case object}s has been removed, due to
+          confusing bugs in how its implicit macro interacted with other implicit definitions.
+          You now need to define @hl.scala{case object} serializers manually, via
+          @hl.scala{implicit val rw: RW[MyCaseObject.type] = macroRW}
+
+    @sect{1.5.0}
+      @ul
+        @li
+          Support Scala-Native on Scala 3
+
     @sect{1.4.3}
       @ul 
-         @code{MsgPackReader}: properly increment index in ext @lnk("#370", "https://github.com/com-lihaoyi/upickle/pull/370")
+         @li
+           @code{MsgPackReader}: properly increment index in ext @lnk("#370", "https://github.com/com-lihaoyi/upickle/pull/370")
 
     @sect{1.4.2}
       @ul
-         Bugfixes @lnk("#365", "https://github.com/com-lihaoyi/upickle/pull/365") @lnk("#366", "https://github.com/com-lihaoyi/upickle/pull/365")
+         @li
+           Bugfixes @lnk("#365", "https://github.com/com-lihaoyi/upickle/pull/365") @lnk("#366", "https://github.com/com-lihaoyi/upickle/pull/365")
     @sect{1.4.1}
       @ul
         @li

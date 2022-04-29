@@ -295,7 +295,6 @@ trait Types{ types =>
     override def visitString(s: CharSequence, index: Int) = t
 
     override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, T] {
-
       def subVisitor = NoOpVisitor
 
       def visitKey(index: Int) = NoOpVisitor
@@ -331,8 +330,6 @@ trait Types{ types =>
 
     override def expectedMsg = taggedExpectedMsg
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
-
-    override def visitString(s: CharSequence, index: Int) = findReader(s.toString).visitString(s, index)
     override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = taggedObjectContext(this, index)
     override def visitString(s: CharSequence, index: Int) = findReader(s.toString).visitString(s, index)
   }
