@@ -2,6 +2,7 @@ package upickle.implicits
 
 import deriving.Mirror
 import scala.reflect.ClassTag
+import scala.compiletime.erasedValue
 
 trait MacroImplicits extends Readers with Writers with upickle.core.Annotator:
   this: upickle.core.Types =>
