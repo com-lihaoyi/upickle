@@ -199,17 +199,10 @@ object MacroTests extends TestSuite {
       test("singleton"){
         import Singletons._
 
-<<<<<<< HEAD
         rw(BB, """ "upickle.Singletons.BB" """, """{"$type":"upickle.Singletons.BB"}""")
         rw(CC, """ "upickle.Singletons.CC" """, """{"$type":"upickle.Singletons.CC"}""")
         rw(BB: AA, """ "upickle.Singletons.BB" """, """{"$type":"upickle.Singletons.BB"}""")
         rw(CC: AA, """ "upickle.Singletons.CC" """, """{"$type":"upickle.Singletons.CC"}""")
-=======
-        rw(BB, """{"$type":"upickle.Singletons.BB"}""", """ "upickle.Singletons.BB" """)
-        rw(CC, """{"$type":"upickle.Singletons.CC"}""", """ "upickle.Singletons.CC" """)
-        rw(BB: AA, """{"$type":"upickle.Singletons.BB"}""", """ "upickle.Singletons.BB" """)
-        rw(CC: AA, """{"$type":"upickle.Singletons.CC"}""", """ "upickle.Singletons.CC" """)
->>>>>>> mapkeys
       }
     }
     test("robustnessAgainstVaryingSchemas"){
