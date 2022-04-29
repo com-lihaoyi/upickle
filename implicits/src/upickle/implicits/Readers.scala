@@ -15,7 +15,7 @@ trait Readers extends upickle.core.Types
   with ReadersVersionSpecific { this: Annotator =>
   implicit val UnitReader: Reader[Unit] = new SimpleReader[Unit] {
     override def expectedMsg = "expected unit"
-    override def visitObject(length: Int, index: Int) = new ObjVisitor[Any, Unit] {
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, Unit] {
       def subVisitor = NoOpVisitor
 
       def visitValue(v: Any, index: Int): Unit = ()
@@ -184,7 +184,7 @@ trait Readers extends upickle.core.Types
                 (make: Iterable[(K, V)] => M[K, V])
                 (implicit k: Reader[K], v: Reader[V]): Reader[M[K, V]] = {
     new SimpleReader[M[K, V]]{
-      override def visitObject(length: Int,index: Int) = new ObjVisitor[Any, M[K, V]] {
+      override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, M[K, V]] {
         val keys = mutable.Buffer.empty[K]
         val values = mutable.Buffer.empty[V]
         def subVisitor = v

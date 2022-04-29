@@ -33,7 +33,7 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     }
   }
 
-  override def visitObject(length: Int, index: Int) = new ObjVisitor[T, T] {
+  override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[T, T] {
     require(length != -1, "Length of upack object must be known up front")
     depth += 1
     if (length <= 15){

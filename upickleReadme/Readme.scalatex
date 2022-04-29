@@ -369,6 +369,43 @@
           you try to tackle the resource issue (bandwidth, storage, CPU) because
           FQNs might get quite long
 
+    @sect{JSON Dictionary Formats}
+      @p
+        By default, serializing a @hl.scala{Map[K, V]} generates a nested
+        array-of-arrays. This is because not all types @code{K} can be
+        easily serialized into JSON strings, so keeping them as nested tuples
+        preserves the structure of the serialized @code{K} values:
+
+      @hl.ref(exampleTests, Seq("nonCustomMapKeys", ""))
+
+      @p
+        For types of @code{K} that you want to serialize to JSON strings in
+        JSON dictionaries, you can wrap your @hl.scala{ReadWriter[K]} in a
+        @hl.scala{stringKeyRW}.
+
+      @hl.ref(exampleTests, Seq("customMapKeys", ""))
+
+      @p
+        Note that this only works for types @code{K} which serialize to JSON
+        primitives: numbers, strings, booleans, and so on. Types of @code{K}
+        that serialize to complex structures like JSON arrays or dictionaries
+        are unsupported for use a JSON dictionary keys.
+
+      @p
+        Older versions of uPickle serialized almost all @hl.scala{Map[K, V]}s to
+        nested arrays. Data already serialized in that format is forwards-compatible
+        with the current implementation of uPickle, which can read both nested-json-arrays
+        and json-dictionary formats without issue.
+
+      @p
+        These subtleties around deciding between nested-json-array v.s. json-dictionary
+        formats only apply to uPickle's JSON backend. When serializing to MessagePack
+        using @hl.scala{upickle.default.writeBinary} or @hl.scala{upickle.default.writeMsg},
+        it always uses the dictionary-based format, since MessagePack does not have
+        the restriction that dictionary keys can only be strings:
+
+      @hl.ref(exampleTests, Seq("msgPackMapKeys", ""))
+
     @sect{Custom Configuration}
       @p
         Often, there will be times that you want to customize something on a

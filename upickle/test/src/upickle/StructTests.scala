@@ -1,14 +1,13 @@
 package upickle
 import java.io.ByteArrayOutputStream
-
 import utest._
 import upickle.legacy.{read, write}
-
 import upickle.core.compat._
+
 import scala.concurrent.duration._
 import TestUtil._
-import java.util.UUID
 
+import java.util.UUID
 import scala.reflect.ClassTag
 import language.postfixOps
 
@@ -116,46 +115,46 @@ object StructTests extends TestSuite {
             rw(Map(x -> x), expected)
           }
 
-          foo[Int](123, """[[123, 123]]""")
+          foo[Int](123, """{"123": 123}""")
         }
         test("boolean") - rw(
           Map(true -> false, false -> true),
-          """[[true, false], [false, true]]""",
           """{"true": false, "false": true}""",
+          """[[true, false], [false, true]]""",
           """[["true", false], ["false", true]]"""
         )
         test("int") - rw(
           Map(1 -> 2, 3 -> 4, 5 -> 6),
-          """[[1, 2], [3, 4], [5, 6]]""",
           """{"1": 2, "3": 4, "5": 6}""",
+          """[[1, 2], [3, 4], [5, 6]]""",
           """[["1", 2], ["3", 4], ["5", 6]]"""
         )
         test("long") - rw(
           Map(1L -> 2L, 3L -> 4L, 5L -> 6L),
-          """[[1, 2], [3, 4], [5, 6]]""",
           """{"1": 2, "3": 4, "5": 6}""",
+          """[[1, 2], [3, 4], [5, 6]]""",
           """[["1", 2], ["3", 4], ["5", 6]]"""
         )
 
         test("char") - rw(
           Map('a' -> 'b', 'c' -> 'd', 'e' -> 'f'),
-          """[["a", "b"], ["c", "d"], ["e", "f"]]""",
-          """{"a": "b", "c": "d", "e": "f"}"""
+          """{"a": "b", "c": "d", "e": "f"}""",
+          """[["a", "b"], ["c", "d"], ["e", "f"]]"""
         )
 
         test("uuid") - rw(
           Map(
             new java.util.UUID(123456789L, 987654321L) ->
-              new java.util.UUID(987654321L, 123456789L)
+            new java.util.UUID(987654321L, 123456789L)
           ),
-          """[["00000000-075b-cd15-0000-00003ade68b1", "00000000-3ade-68b1-0000-0000075bcd15"]]""",
-          """{"00000000-075b-cd15-0000-00003ade68b1": "00000000-3ade-68b1-0000-0000075bcd15"}"""
+          """{"00000000-075b-cd15-0000-00003ade68b1": "00000000-3ade-68b1-0000-0000075bcd15"}""",
+          """[["00000000-075b-cd15-0000-00003ade68b1", "00000000-3ade-68b1-0000-0000075bcd15"]]"""
         )
 
         test("symbol") - rw(
           Map(Symbol("abc") -> Symbol("def")),
-          """[["abc", "def"]]""",
-          """{"abc": "def"}"""
+          """{"abc": "def"}""",
+          """[["abc", "def"]]"""
         )
       }
     }

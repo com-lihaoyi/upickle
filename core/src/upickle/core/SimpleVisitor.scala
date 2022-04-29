@@ -17,7 +17,7 @@ trait SimpleVisitor[-T, +V] extends Visitor[T, V] {
     throw new Abort(expectedMsg + " got number")
   }
 
-  def visitObject(length: Int, index: Int): ObjVisitor[T, V] = {
+  def visitObject(length: Int, jsonableKeys: Boolean, index: Int): ObjVisitor[T, V] = {
     throw new Abort(expectedMsg + " got dictionary")
   }
   def visitArray(length: Int, index: Int): ArrVisitor[T, V] = {

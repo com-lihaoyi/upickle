@@ -1,6 +1,7 @@
 package upickle.example
 
 import java.io.StringWriter
+import scala.concurrent.duration.Duration
 
 // import ujson.json4s.Json4sJson
 import upickle.TestUtil
@@ -144,7 +145,6 @@ object JvmExampleTests extends TestSuite {
       """{"inf": "0"}""",
       """[["inf", "0"]]"""
     )
-
   }
 }
 

@@ -7,7 +7,7 @@ object PrimitiveTests extends TestSuite {
 
   def tests = Tests {
     test("Unit"){
-      rw((), "{}", "null")
+      rw((), "null", "{}")
     }
     test("Boolean"){
       test("true") - rw(true, "true", "\"true\"")
