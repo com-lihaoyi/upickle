@@ -100,8 +100,6 @@ object LegacyTests extends TestSuite {
     test("singleton"){
       import Singletons._
 
-      implicit def BBrw: RW[BB.type] = legacy.macroRW
-      implicit def CCrw: RW[CC.type] = legacy.macroRW
       implicit def AArw: RW[AA] = legacy.macroRW
       implicit def BBrw: RW[BB.type] = legacy.macroRW
       implicit def CCrw: RW[CC.type] = legacy.macroRW
@@ -189,7 +187,6 @@ object LegacyTests extends TestSuite {
       implicit def SingleNoderw: RW[SingleNode] = upickle.legacy.macroRW
 
       implicit def SingleTreerw: RW[SingleTree] = upickle.legacy.macroRW
-
       implicit def Noderw: RW[Node] = upickle.legacy.macroRW
 
       implicit def Endrw: RW[End.type] = upickle.legacy.macroRW
