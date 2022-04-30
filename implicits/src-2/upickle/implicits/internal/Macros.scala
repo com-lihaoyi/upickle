@@ -124,7 +124,7 @@ object Macros {
             "http://www.lihaoyi.com/upickle/#ManualSealedTraitPicklers"
         fail(tpe, msg)
       }else{
-        val subTypes = fleshedOutSubtypes(tpe).toSeq
+        val subTypes = fleshedOutSubtypes(tpe).toSeq.sortBy(_.typeSymbol.fullName)
         //    println("deriveTrait")
         val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
         //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)
