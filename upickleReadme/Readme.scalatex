@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 1.6.0")
+@sect("µPickle 2.0.0")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -845,6 +845,54 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{2.0.0}
+      @ul
+        @li
+          @b{2.0.0 is a major breaking change in uPickle, including in the serialization
+          format for many common data types (@hl.scala{Map}s, @hl.scala{case object}s,
+          @hl.scala{Unit}, etc.). Please be careful upgrading and follow the instructions
+          below.}
+
+        @li
+          If you are upgrading a system with multiple components from an earlier version
+          of uPickle, please ensure you first upgrade every componentto uPickle 1.6.0,
+          which is forwards-compatible with the changes in uPickle 2.0.0. Only when every
+          component is upgraded to 1.6.0 should you begin upgrading components to 2.0.0
+
+        @li
+          Once every component is upgraded to 1.6.0, they will be able to @i{read} both
+          the old and new serialization formats, though they will
+          still be @i{writing} the old format. You can then
+          upgrade your components piecemeal to 2.0.0 without any incompatibility.
+
+        @li
+          uPickle 2.0.0 will @i{write} using the new serialization formats, but
+          will be able to @i{read} both old and new formats indefinitely. Thus if you have
+          data in storage using the old format, you do not need to migrate it to the new
+          format, and it can remain as-is until it needs to be re-written for other reasons.
+
+        @li
+          @b{Major serialization changes are below}
+
+        @li
+          @hl.scala{case object}s are now serialized as literal strings
+          @hl.scala{"foo.bar.Qux"} rather than JSON dictionaries
+          @hl.scala("""{"$type": "foo.bar.Qux"}"")
+          @lnk("#382", "https://github.com/com-lihaoyi/upickle/pull/382"). This also
+          applies to Scala 3 Enums @lnk("378", "https://github.com/com-lihaoyi/upickle/pull/378")
+
+        @li
+          @hl.scala{Map}s with primitive keys can now be serialized
+          as JSON dictionaries @hl.scala("{"foo": "bar", "baz": "qux"}"), rather than
+          as nested tuples @hl.scala("[["foo", "bar"], ["baz", "qux"]]")
+          @lnk("#381", "https://github.com/com-lihaoyi/upickle/pull/381"). This applies
+          to numbers, booleans, strings, @code{java.util.UUID}s, @code{BigIntegers}, @code{BigDecimals},
+          @code{scala.Symbol}s, @code{scala.concurrent.Duration}, and can be enabled for
+          user-defined types. See @sect.ref{JSON Dictionary Formats} for more information
+        @li
+          @code{scala.Unit} now serializes as @hl.scala{null} rather than @hl.scala("{}")
+
+
     @sect{1.6.0}
       @ul
         @li
