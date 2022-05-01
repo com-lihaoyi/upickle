@@ -13,45 +13,72 @@ import utest.{assert => _, _}
  */
 object TestUtil extends TestUtil[upickle.default.type](upickle.default)
 object LegacyTestUtil extends TestUtil[upickle.legacy.type](upickle.legacy)
+sealed trait TestValue
+object TestValue{
+  implicit class Json(val value: String) extends TestValue
+  implicit class Msg(val value: upack.Msg) extends TestValue
+}
 class TestUtil[Api <: upickle.Api](val api: Api){
 
-  def rw[T](t: T, s: String*)
+  /**
+   * Tests reading and writing of a value `t`, ensuring it can be round-tripped
+   * through the various mechanisms uPickle provides to read and write things
+   *
+   * You can also provide one or more [[TestValue]]s that represent JSON `String`s
+   * or [[upack.Msg]]s that you expect `t` to serialize to. The first `String`
+   * and first [[upack.Msg]] is asserted to be both the value that `t` is written
+   * to as well as a value that can be read into `t`, while subsequent `String`s
+   * and [[upack.Msg]]s are only asserted that they can be read into `t`.
+   *
+   * If no [[TestValue]]s are provided, then we only assert that `t` can be
+   * round-tripped, without any assertions on how exactly it is serialized.
+   */
+  def rw[T](t: T, values: TestValue*)
            (implicit r: api.Reader[T], w: api.Writer[T], rw: api.ReadWriter[T]) = {
-    rwk[T, T](t, s:_*)(x => x)(r, w, rw)
+    rwk[T, T](t, values:_*)(x => x)(r, w, rw)
   }
 
-  def rwNoBinaryJson[T](t: T, s: String*)
+  def rwNoBinaryJson[T](t: T, values: TestValue*)
                        (implicit r: api.Reader[T], w: api.Writer[T], rw: api.ReadWriter[T])= {
-    rwk[T, T](t, s:_*)(x => x, checkBinaryJson = false)(r, w, rw)
+    rwk[T, T](t, values:_*)(x => x, checkBinaryJson = false)(r, w, rw)
   }
 
-  def rwEscape[T](t: T, s: String*)
+  def rwEscape[T](t: T, values: TestValue*)
                  (implicit r: api.Reader[T], w: api.Writer[T], rw: api.ReadWriter[T])= {
-    rwk[T, T](t, s:_*)(x => x, escapeUnicode = true)(r, w, rw)
+    rwk[T, T](t, values:_*)(x => x, escapeUnicode = true)(r, w, rw)
   }
 
-  def rwk[T, V](t: T, sIn: String*)
+  def rwk[T, V](t: T, values: TestValue*)
                (normalize: T => V,
                 escapeUnicode: Boolean = false,
                 checkBinaryJson: Boolean = true)
                (implicit r: api.Reader[T], w: api.Writer[T], rw: api.ReadWriter[T])= {
-    rwk0(t, sIn:_*)(normalize, escapeUnicode, checkBinaryJson)(r, w)
-    rwk0(t, sIn:_*)(normalize, escapeUnicode, checkBinaryJson)(rw, rw)
+    rwk0(t, values:_*)(normalize, escapeUnicode, checkBinaryJson)(r, w)
+    rwk0(t, values:_*)(normalize, escapeUnicode, checkBinaryJson)(rw, rw)
   }
 
-  def rwk0[T, V](t: T, sIn: String*)
+  def rwk0[T, V](t: T, values: TestValue*)
                 (normalize: T => V,
                  escapeUnicode: Boolean = false,
                  checkBinaryJson: Boolean = true)
                 (implicit r: api.Reader[T], w: api.Writer[T])= {
     val writtenT = api.write(t)
+    val writtenTMsg = api.writeMsg(t)
     val writtenBytesT = api.writeToByteArray(t)
 
     // Test JSON round tripping
-    val strings = sIn.map(_.trim)
+    val strings = values.collect{case s: TestValue.Json => s.value.trim}
+    val msgs = values.collect{case s: TestValue.Msg => s.value}
 
     for (s <- strings) {
       val readS = api.read[T](s)
+      val normalizedReadString = normalize(readS)
+      val normalizedValue = normalize(t)
+      utest.assert(normalizedReadString == normalizedValue)
+    }
+
+    for (s <- msgs) {
+      val readS = api.readBinary[T](s)
       val normalizedReadString = normalize(readS)
       val normalizedValue = normalize(t)
       utest.assert(normalizedReadString == normalizedValue)
@@ -87,6 +114,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
     )
     val normalizedT = normalize(t)
     if (strings.nonEmpty) utest.assert(ujson.reformat(strings.head) == writtenT)
+    if (msgs.nonEmpty) utest.assert(msgs.head == writtenTMsg)
     utest.assert(normalizedReadWrittenT == normalizedT)
     utest.assert(normalizedReadByteArrayWrittenT == normalizedT)
     utest.assert(normalizedReadStreamWrittenT == normalizedT)
@@ -115,8 +143,8 @@ class TestUtil[Api <: upickle.Api](val api: Api){
     }
   }
 
-  def rwNum[T: Numeric: api.Reader: api.Writer](t: T, strings: String*) = {
-    rw(t, strings: _*)
+  def rwNum[T: Numeric: api.Reader: api.Writer](t: T, values: TestValue*) = {
+    rw(t, values: _*)
     num(t)
   }
 
