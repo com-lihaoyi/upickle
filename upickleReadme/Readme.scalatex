@@ -855,7 +855,7 @@
 
         @li
           If you are upgrading a system with multiple components from an earlier version
-          of uPickle, please ensure you first upgrade every componentto uPickle 1.6.0,
+          of uPickle, please ensure you first upgrade every component to uPickle 1.6.0,
           which is forwards-compatible with the changes in uPickle 2.0.0. Only when every
           component is upgraded to 1.6.0 should you begin upgrading components to 2.0.0
 
@@ -877,14 +877,14 @@
         @li
           @hl.scala{case object}s are now serialized as literal strings
           @hl.scala{"foo.bar.Qux"} rather than JSON dictionaries
-          @hl.scala("""{"$type": "foo.bar.Qux"}"")
+          @hl.scala("""{"$type": "foo.bar.Qux"}""")
           @lnk("#382", "https://github.com/com-lihaoyi/upickle/pull/382"). This also
           applies to Scala 3 Enums @lnk("378", "https://github.com/com-lihaoyi/upickle/pull/378")
 
         @li
           @hl.scala{Map}s with primitive keys can now be serialized
-          as JSON dictionaries @hl.scala("{"foo": "bar", "baz": "qux"}"), rather than
-          as nested tuples @hl.scala("[["foo", "bar"], ["baz", "qux"]]")
+          as JSON dictionaries @hl.scala("""{"foo": "bar", "baz": "qux"}"""), rather than
+          as nested tuples @hl.scala("""[["foo", "bar"], ["baz", "qux"]]""")
           @lnk("#381", "https://github.com/com-lihaoyi/upickle/pull/381"). This applies
           to numbers, booleans, strings, @code{java.util.UUID}s, @code{BigIntegers}, @code{BigDecimals},
           @code{scala.Symbol}s, @code{scala.concurrent.Duration}, and can be enabled for
