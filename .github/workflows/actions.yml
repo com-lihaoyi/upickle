@@ -13,57 +13,74 @@ on:
 jobs:
   test-js:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['8', '17']
     env:
       JAVA_OPTS: "-Xss10M"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
-          java-version: 8
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
       - name: Run JS tests
         run: |
           ./mill -i __.resolvedIvyDeps
           ./mill -i -j 0 all __.js.__.compile __.js.__.publishArtifacts __.js.__.test
+
   test-native:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['8', '17']
     env:
       JAVA_OPTS: "-Xss10M"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
-          java-version: 8
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+
       - name: Run Native tests
         run: |
           ./mill -i __.resolvedIvyDeps
           ./mill -i -j 0 all __.native.__.compile __.native.__.publishArtifacts __.native.__.test
+
   test-jvm:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['8', '17']
     env:
       JAVA_OPTS: "-Xss10M"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
-          java-version: 8
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
       - name: Run JVM tests
         run: |
           ./mill -i __.resolvedIvyDeps
           ./mill -i -j 0 all __.jvm.__.compile __.jvm.__.publishArtifacts __.jvm.__.test
+
   check-binary-compatibility:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: 8
       - name: Check Binary Compatibility
         run: ./mill -i __.mimaReportBinaryIssues
@@ -84,9 +101,10 @@ jobs:
       LC_MESSAGES: "en_US.UTF-8"
       LC_ALL: "en_US.UTF-8"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: 8
       - name: Publish to Maven Central
         run: |
@@ -111,5 +129,4 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
-          body:
           draft: false
