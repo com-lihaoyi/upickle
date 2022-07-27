@@ -8,7 +8,7 @@ import mill.scalalib.api.Util.isScala3
 import mill.scalanativelib.api.{LTO, ReleaseMode}
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
-import $ivy.`com.github.lolgab::mill-mima::0.0.10`
+import $ivy.`com.github.lolgab::mill-mima::0.0.12`
 import com.github.lolgab.mill.mima._
 
 val scala211  = "2.11.12"
@@ -54,17 +54,12 @@ trait CommonModule extends ScalaModule {
     })
   }
 }
+
+
 trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule{
 
   def publishVersion = VcsVersion.vcsState().format()
-  def mimaPreviousVersions = T {
-    val lastTag = VcsVersion
-      .vcsState()
-      .lastTag
-      .getOrElse(throw new Exception("Missing last tag"))
-
-    Seq("1.4.0", lastTag)
-  }
+  def mimaPreviousVersions = VcsVersion.vcsState().lastTag.toSeq
   def mimaPreviousArtifacts = T{ if (isDotty) Agg() else super.mimaPreviousArtifacts() }
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
