@@ -15,19 +15,18 @@ val scala211  = "2.11.12"
 val scala212  = "2.12.16"
 val scala213  = "2.13.8"
 val scala3   = "3.1.3"
+val scalaJS  = "1.10.1"
 val scalaNative = "0.4.5"
-val scalaJS = "1.10.1"
 val acyclic = "0.3.3"
-val circe = "0.13.0"
+val sourcecode = "0.2.8"
 
-val communityBuildDottyVersion = sys.props.get("dottyVersion").toList
+val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
 val scala2JVMVersions = Seq(scala211, scala212, scala213)
+val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
-val scalaVersions = scala2JVMVersions ++ Seq(scala3) ++ communityBuildDottyVersion
-
-val scalaJSVersions = scalaVersions.map((_, scalaJS))
-val scalaNativeVersions = scalaVersions.map((_, scalaNative))
+val scalaJSVersions = scalaJVMVersions.map((_, scalaJS))
+val scalaNativeVersions = scalaJVMVersions.map((_, scalaNative))
 
 trait CommonModule extends ScalaModule {
   def scalacOptions = T{
@@ -55,8 +54,9 @@ trait CommonModule extends ScalaModule {
     })
   }
 }
+trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule{
 
-trait MimaCheck extends Mima {
+  def publishVersion = VcsVersion.vcsState().format()
   def mimaPreviousVersions = T {
     val lastTag = VcsVersion
       .vcsState()
@@ -65,18 +65,12 @@ trait MimaCheck extends Mima {
 
     Seq("1.4.0", lastTag)
   }
-}
-
-trait CommonPublishModule extends CommonModule with PublishModule with MimaCheck with CrossScalaModule{
-  def publishVersion = VcsVersion.vcsState().format()
-
   def mimaPreviousArtifacts = T{ if (isDotty) Agg() else super.mimaPreviousArtifacts() }
-
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
-    url = "https://github.com/com-lihaoyi/upickle",
+    url = "https://github.com/lihaoyi/upickle",
     licenses = Seq(License.MIT),
     versionControl = VersionControl.github(owner = "com-lihaoyi", repo = "upickle"),
     developers = Seq(
@@ -108,7 +102,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with MimaCheck
   }
 }
 
-trait CommonTestModule extends CommonModule with TestModule.Utest {
+trait CommonTestModule extends CommonModule with TestModule.Utest{
   def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.0") ++ (
     if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
     else Agg(ivy"com.lihaoyi:::acyclic:$acyclic")
@@ -162,7 +156,7 @@ object core extends Module {
     object test extends Tests
   }
 
-  object jvm extends Cross[CoreJvmModule](scalaVersions:_*)
+  object jvm extends Cross[CoreJvmModule](scalaJVMVersions:_*)
   class CoreJvmModule(val crossScalaVersion: String) extends CommonJvmModule with CommonCoreModule{
     object test extends Tests
   }
@@ -230,7 +224,7 @@ object implicits extends Module {
     }
   }
 
-  object jvm extends Cross[JvmModule](scalaVersions:_*)
+  object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends ImplicitsModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
     def artifactName = "upickle-implicits"
@@ -267,7 +261,7 @@ object upack extends Module {
     }
   }
 
-  object jvm extends Cross[JvmModule](scalaVersions:_*)
+  object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends CommonJvmModule {
     def moduleDeps = Seq(core.jvm())
     def artifactName = "upack"
@@ -306,7 +300,7 @@ object ujson extends Module{
     }
   }
 
-  object jvm extends Cross[JvmModule](scalaVersions:_*)
+  object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends JsonModule with CommonJvmModule{
     def moduleDeps = Seq(core.jvm())
     object test extends Tests with CommonTestModule{
@@ -346,7 +340,7 @@ object ujson extends Module{
     def artifactName = "ujson-circe"
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
-    val circeVersion = if(crossScalaVersion == scala211) "0.11.2" else circe
+    val circeVersion = if(crossScalaVersion == scala211) "0.11.2" else "0.13.0"
     def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
   }
 
@@ -379,7 +373,7 @@ trait UpickleModule extends CommonPublishModule{
 
 
 object upickle extends Module{
-  object jvm extends Cross[JvmModule](scalaVersions:_*)
+  object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends UpickleModule with CommonJvmModule{
     def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
 
@@ -431,13 +425,13 @@ trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"
   def ivyDeps = Agg(
-    ivy"io.circe::circe-core::$circe",
-    ivy"io.circe::circe-generic::$circe",
-    ivy"io.circe::circe-parser::$circe",
+    ivy"io.circe::circe-core::0.13.0",
+    ivy"io.circe::circe-generic::0.13.0",
+    ivy"io.circe::circe-parser::0.13.0",
     ivy"com.typesafe.play::play-json::2.9.2",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.7",
-    ivy"com.lihaoyi::sourcecode::0.2.7",
+    ivy"com.lihaoyi::sourcecode::$sourcecode",
   )
 }
 
@@ -469,7 +463,7 @@ object bench extends Module {
     def platformSegment = "native"
     def scalaNativeVersion = scalaNative
     def moduleDeps = Seq(upickle.native(scala213, scalaNative).test)
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.7")
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::$sourcecode")
     def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "NonNative.scala"))
     def releaseMode = ReleaseMode.ReleaseFast
     def nativeLTO = LTO.Thin
