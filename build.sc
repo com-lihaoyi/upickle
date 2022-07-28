@@ -8,39 +8,25 @@ import mill.scalalib.api.Util.isScala3
 import mill.scalanativelib.api.{LTO, ReleaseMode}
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
-import $ivy.`com.github.lolgab::mill-mima::0.0.9`
+import $ivy.`com.github.lolgab::mill-mima::0.0.12`
 import com.github.lolgab.mill.mima._
 
 val scala211  = "2.11.12"
-val scala212  = "2.12.13"
-val scala213  = "2.13.4"
-val scala30   = "3.0.2"
-val scala31   = "3.1.0"
-val scalaJS06 = "0.6.33"
-val scalaJS1  = "1.5.1"
-val scalaNative = "0.4.3"
+val scala212  = "2.12.16"
+val scala213  = "2.13.8"
+val scala3   = "3.1.3"
+val scalaJS  = "1.10.1"
+val scalaNative = "0.4.5"
+val acyclic = "0.3.3"
+val sourcecode = "0.2.8"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
 val scala2JVMVersions = Seq(scala211, scala212, scala213)
-val scalaJVMVersions = scala2JVMVersions ++ Seq(scala30) ++ dottyCustomVersion
+val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
-val scalaJSVersions = Seq(
-  (scala211, scalaJS06),
-  (scala212, scalaJS06),
-  (scala213, scalaJS06),
-  (scala211, scalaJS1),
-  (scala212, scalaJS1),
-  (scala213, scalaJS1),
-  (scala30, scalaJS1)
-)
-
-val scalaNativeVersions = Seq(
-  (scala211, scalaNative),
-  (scala212, scalaNative),
-  (scala213, scalaNative),
-  (scala31, scalaNative)
-)
+val scalaJSVersions = scalaJVMVersions.map((_, scalaJS))
+val scalaNativeVersions = scalaJVMVersions.map((_, scalaNative))
 
 trait CommonModule extends ScalaModule {
   def scalacOptions = T{
@@ -68,17 +54,12 @@ trait CommonModule extends ScalaModule {
     })
   }
 }
+
+
 trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule{
 
   def publishVersion = VcsVersion.vcsState().format()
-  def mimaPreviousVersions = T {
-    val lastTag = VcsVersion
-      .vcsState()
-      .lastTag
-      .getOrElse(throw new Exception("Missing last tag"))
-
-    Seq("1.4.0", lastTag)
-  }
+  def mimaPreviousVersions = VcsVersion.vcsState().lastTag.toSeq
   def mimaPreviousArtifacts = T{ if (isDotty) Agg() else super.mimaPreviousArtifacts() }
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
@@ -117,9 +98,9 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
 }
 
 trait CommonTestModule extends CommonModule with TestModule.Utest{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.11") ++ (
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.0") ++ (
     if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
-    else Agg(ivy"com.lihaoyi:::acyclic:0.3.2")
+    else Agg(ivy"com.lihaoyi:::acyclic:$acyclic")
   )
   def docJar = T {
     val outDir = T.ctx().dest
@@ -185,7 +166,7 @@ object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
     def compileIvyDeps = if (!isDotty) Agg(
-      ivy"com.lihaoyi:::acyclic:0.3.2",
+      ivy"com.lihaoyi:::acyclic:$acyclic",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
     else Agg.empty[Dep]
@@ -372,7 +353,7 @@ object ujson extends Module{
 trait UpickleModule extends CommonPublishModule{
   def artifactName = "upickle"
   def compileIvyDeps = if (!isDotty) Agg(
-    ivy"com.lihaoyi:::acyclic:0.3.2",
+    ivy"com.lihaoyi:::acyclic:$acyclic",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
@@ -445,7 +426,7 @@ trait BenchModule extends CommonModule{
     ivy"com.typesafe.play::play-json::2.9.2",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.7",
-    ivy"com.lihaoyi::sourcecode::0.2.7",
+    ivy"com.lihaoyi::sourcecode::$sourcecode",
   )
 }
 
@@ -453,7 +434,7 @@ object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
     def scalaJSVersion = scalaJSVersions.last._2
     def platformSegment = "js"
-    def moduleDeps = Seq(upickle.js(scala213, scalaJS1).test)
+    def moduleDeps = Seq(upickle.js(scala213, scalaJS).test)
     def run(args: String*) = T.command {
       finalMainClassOpt() match{
         case Left(err) => mill.eval.Result.Failure(err)
@@ -477,7 +458,7 @@ object bench extends Module {
     def platformSegment = "native"
     def scalaNativeVersion = scalaNative
     def moduleDeps = Seq(upickle.native(scala213, scalaNative).test)
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::0.2.7")
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::$sourcecode")
     def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "NonNative.scala"))
     def releaseMode = ReleaseMode.ReleaseFast
     def nativeLTO = LTO.Thin
