@@ -142,7 +142,7 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
 
 trait CommonCoreModule extends CommonPublishModule {
   def artifactName = "upickle-core"
-  def ivyDeps = Agg(ivy"com.lihaoyi::geny::0.7.1")
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.0.0")
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
