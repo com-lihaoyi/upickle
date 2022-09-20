@@ -18,7 +18,7 @@ val scala3   = "3.1.3"
 val scalaJS  = "1.10.1"
 val scalaNative = "0.4.5"
 val acyclic = "0.3.3"
-val sourcecode = "0.2.8"
+val sourcecode = "0.3.0"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
