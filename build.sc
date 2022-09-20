@@ -423,7 +423,7 @@ trait BenchModule extends CommonModule{
     ivy"io.circe::circe-core::0.13.0",
     ivy"io.circe::circe-generic::0.13.0",
     ivy"io.circe::circe-parser::0.13.0",
-    ivy"com.typesafe.play::play-json::2.9.2",
+    ivy"com.typesafe.play::play-json::2.9.3",
     ivy"io.argonaut::argonaut:6.2.3",
     ivy"org.json4s::json4s-ast:3.6.7",
     ivy"com.lihaoyi::sourcecode::$sourcecode",
