@@ -327,8 +327,8 @@ object ujson extends Module{
     def platformSegment = "jvm"
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
-      ivy"org.json4s::json4s-ast:3.6.7",
-      ivy"org.json4s::json4s-native:3.6.7"
+      ivy"org.json4s::json4s-ast:3.6.12",
+      ivy"org.json4s::json4s-native:3.6.12"
     )
   }
 
@@ -427,7 +427,7 @@ trait BenchModule extends CommonModule{
     ivy"io.circe::circe-parser::0.13.0",
     ivy"com.typesafe.play::play-json::2.9.3",
     ivy"io.argonaut::argonaut:6.2.3",
-    ivy"org.json4s::json4s-ast:3.6.7",
+    ivy"org.json4s::json4s-ast:3.6.12",
     ivy"com.lihaoyi::sourcecode::$sourcecode",
   )
 }
