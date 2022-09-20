@@ -98,7 +98,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
 }
 
 trait CommonTestModule extends CommonModule with TestModule.Utest{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.0") ++ (
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.1") ++ (
     if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
     else Agg(ivy"com.lihaoyi:::acyclic:$acyclic")
   )
