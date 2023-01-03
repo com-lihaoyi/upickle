@@ -4,6 +4,7 @@ import $ivy.`com.github.lolgab::mill-mima::0.0.13`
 
 // imports
 import mill._
+import mill.define.Target
 import mill.scalalib._
 import mill.scalalib.publish._
 import mill.scalajslib._
@@ -59,7 +60,7 @@ trait CommonModule extends ScalaModule {
 }
 
 
-trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule{
+trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule {
 
   def publishVersion = VcsVersion.vcsState().format()
   override def mimaPreviousVersions = Seq("2.0.0")
@@ -73,6 +74,10 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
     developers = Seq(
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
+  )
+
+  override def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
+    "info.releaseNotesURL" -> "https://com-lihaoyi.github.io/upickle/#VersionHistory"
   )
   override def versionScheme: T[Option[VersionScheme]] = T(Some(VersionScheme.SemVerSpec))
   def templates = T.source(millSourcePath / "templates")
