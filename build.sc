@@ -320,7 +320,7 @@ object ujson extends Module{
     override def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
-    override def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.3")
+    override def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.6")
   }
   object json4s extends Cross[Json4sModule](scala2JVMVersions:_*)
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
@@ -423,11 +423,11 @@ trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"
   override def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.13.0",
-    ivy"io.circe::circe-generic::0.13.0",
-    ivy"io.circe::circe-parser::0.13.0",
+    ivy"io.circe::circe-core::0.14.3",
+    ivy"io.circe::circe-generic::0.14.3",
+    ivy"io.circe::circe-parser::0.14.3",
     ivy"com.typesafe.play::play-json::2.9.3",
-    ivy"io.argonaut::argonaut:6.2.3",
+    ivy"io.argonaut::argonaut:6.2.6",
     ivy"org.json4s::json4s-ast:4.0.6",
     ivy"com.lihaoyi::sourcecode::$sourcecode",
   )
