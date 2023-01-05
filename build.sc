@@ -63,7 +63,7 @@ trait CommonModule extends ScalaModule {
 trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule {
 
   def publishVersion = VcsVersion.vcsState().format()
-  override def mimaPreviousVersions = Seq("2.0.0")
+  override def mimaPreviousVersions = Seq("3.0.0-M1")
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
