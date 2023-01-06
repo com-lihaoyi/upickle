@@ -130,9 +130,14 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def crossScalaJSVersion: String
   def scalaJSVersion = crossScalaJSVersion
   def remoteSourcesPath = s"https://raw.githubusercontent.com/com-lihaoyi/upickle/${publishVersion}/"
-  def sourcesOptionName = if (crossScalaJSVersion.startsWith("2.")) "-P:scalajs:mapSourceURI" else "-scalajs-mapSourceURI"
+  def sourcesOptionName = 
+    if(scalaVersion == scala211 || scalaVersion == scala212) {  
+      Seq[String]()
+    } else {
+      Seq(if (crossScalaJSVersion.startsWith("2.")) "-P:scalajs:mapSourceURI" else "-scalajs-mapSourceURI")
+    }    
   override def scalacOptions = super.scalacOptions() ++ Seq(
-    s"${sourcesOptionName}:$millSourcePath->$remoteSourcesPath"
+     s"${sourcesOptionName}:$millSourcePath->$remoteSourcesPath"
   )
   override def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
