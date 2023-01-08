@@ -130,6 +130,7 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def crossScalaJSVersion: String
   def scalaJSVersion = crossScalaJSVersion
   def remoteSourcesPath = s"https://raw.githubusercontent.com/com-lihaoyi/upickle/${publishVersion}/"
+  
   private def sourceMapOption = T.task {
     val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
     val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
