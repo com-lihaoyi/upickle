@@ -8,15 +8,23 @@ import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
   */
 trait JsVisitor[-T, +J] extends Visitor[T, J]{
   def visitFloat64(d: Double, index: Int): J = {
-    val i = d.toLong
-    if(i == d) visitFloat64StringParts(i.toString, -1, -1, index)
-    else visitFloat64String(d.toString, index)
+    if (d == Double.PositiveInfinity) visitString("Infinity", index)
+    else if (d == Double.NegativeInfinity) visitString("-Infinity", index)
+    else {
+      val i = d.toLong
+      if(i == d) visitFloat64StringParts(i.toString, -1, -1, index)
+      else visitFloat64String(d.toString, index)
+    }
   }
 
   def visitFloat32(d: Float, index: Int): J = {
-    val i = d.toLong
-    if(i == d) visitFloat64StringParts(i.toString, -1, -1, index)
-    else visitFloat64String(d.toString, index)
+    if (d == Float.PositiveInfinity) visitString("Infinity", index)
+    else if (d == Float.NegativeInfinity) visitString("-Infinity", index)
+    else {
+      val i = d.toLong
+      if (i == d) visitFloat64StringParts(i.toString, -1, -1, index)
+      else visitFloat64String(d.toString, index)
+    }
   }
 
   def visitInt32(i: Int, index: Int): J = visitFloat64(i, index)
