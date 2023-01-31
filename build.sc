@@ -129,7 +129,6 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
   def crossScalaJSVersion: String
   def scalaJSVersion = crossScalaJSVersion
-  def remoteSourcesPath = s"https://raw.githubusercontent.com/com-lihaoyi/upickle/${publishVersion}/"
   
   private def sourceMapOptions = T.task {
     val vcsState = VcsVersion.vcsState()
