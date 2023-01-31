@@ -129,7 +129,18 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
   def crossScalaJSVersion: String
   def scalaJSVersion = crossScalaJSVersion
-  override def scalacOptions = super.scalacOptions()
+  
+  private def sourceMapOptions = T.task {
+    val vcsState = VcsVersion.vcsState()
+    vcsState.lastTag.collect {
+      case tag if vcsState.commitsSinceLastTag == 0 =>
+        val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
+        val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
+        s"$sourcesOptionName:${T.workspace.toIO.toURI}->$baseUrl/$tag/"
+    }
+  }
+  override def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
+
   override def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "js"
