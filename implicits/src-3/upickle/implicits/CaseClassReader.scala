@@ -47,7 +47,7 @@ trait CaseClassReaderPiece extends MacrosCommon:
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val labels: List[String] = macros.fieldLabels[T]
+      val labels: List[String] = macros.fieldLabels[T].map(_._2)
       val visitors: List[Visitor[_, _]] =
         macros.summonList[Tuple.Map[m.MirroredElemTypes, Reader]]
           .asInstanceOf[List[upickle.core.Visitor[_, _]]]

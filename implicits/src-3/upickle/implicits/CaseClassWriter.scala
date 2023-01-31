@@ -7,6 +7,7 @@ import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
 trait CaseClassWriterPiece extends MacrosCommon:
   this: upickle.core.Types with Writers with Annotator =>
+  transparent inline def thisOuter = this
   class CaseClassWriter[V](
     elemsInfo: V => List[(String, Writer[_], Any)],
     defaultParams: Map[String, AnyRef]) extends CaseW[V]:
@@ -44,22 +45,42 @@ trait CaseClassWriterPiece extends MacrosCommon:
 
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
+      def writer = new CaseW[T] {
+        def length(v: T) =
+          def elemsInfo(v: T): List[(String, Writer[_], Any)] =
+            val labels: List[String] = macros.fieldLabels[T].map(_._1)
+            val writers: List[Writer[_]] =
+              macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+                .asInstanceOf[List[Writer[_]]]
+            val values: List[Any] = v.asInstanceOf[Product].productIterator.toList
+            for ((l, w), v) <- labels.zip(writers).zip(values)
+              yield (l, w, v)
 
-      def elemsInfo(v: T): List[(String, Writer[_], Any)] =
-        val labels: List[String] = macros.fieldLabels[T]
-        val writers: List[Writer[_]] =
-          macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
-            .asInstanceOf[List[Writer[_]]]
-        val values: List[Any] = v.asInstanceOf[Product].productIterator.toList
-        for ((l, w), v) <- labels.zip(writers).zip(values)
-        yield (l, w, v)
-      end elemsInfo
-      val writer = CaseClassWriter[T](elemsInfo, macros.getDefaultParams[T])
-      if macros.isSingleton[T] then
-        annotate(SingletonW[T](null.asInstanceOf[T]), macros.fullClassName[T])
+          val defaultParams =
+            macros.getDefaultParams[T]
 
+          var n = 0
+          for
+            (name, _, value) <- elemsInfo(v)
+            defaultValue = defaultParams.get(name)
+            if serializeDefaults || defaultValue.isEmpty || defaultValue.get != value
+          do n += 1
+          n
+
+        def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R], v: T): Unit =
+          macros.writeSnippets[R, T, Tuple.Map[m.MirroredElemTypes, Writer]](
+            thisOuter,
+            this,
+            v,
+            ctx,
+            macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+          )
+      }
+
+      if macros.isSingleton[T] then annotate(SingletonW[T](null.asInstanceOf[T]), macros.fullClassName[T])
       else if macros.isMemberOfSealedHierarchy[T] then annotate(writer, macros.fullClassName[T])
       else writer
+
     case _: Mirror.SumOf[T] =>
       inline compiletime.erasedValue[T] match {
         case _: scala.reflect.Enum => new EnumWriter[T]

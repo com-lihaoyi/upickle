@@ -277,16 +277,16 @@ trait Types{ types =>
         ctx.visitEnd(-1)
       }
     }
-    protected def writeSnippet[R, V](objectAttributeKeyWriteMap: CharSequence => CharSequence,
-                                     ctx: _root_.upickle.core.ObjVisitor[_, R],
-                                     mappedArgsI: String,
-                                     w: Writer[V],
-                                     value: V) = {
+    def writeSnippet[R, V](objectAttributeKeyWriteMap: CharSequence => CharSequence,
+                           ctx: _root_.upickle.core.ObjVisitor[_, R],
+                           mappedArgsI: String,
+                           w: Any,
+                           value: Any) = {
       val keyVisitor = ctx.visitKey(-1)
       ctx.visitKeyValue(
         keyVisitor.visitString(objectAttributeKeyWriteMap(mappedArgsI), -1)
       )
-      ctx.narrow.visitValue(w.write(ctx.subVisitor, value), -1)
+      ctx.narrow.visitValue(w.asInstanceOf[Writer[Any]].write(ctx.subVisitor, value), -1)
     }
   }
   class SingletonR[T](t: T) extends CaseR[T]{

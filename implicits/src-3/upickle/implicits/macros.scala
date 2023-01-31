@@ -16,7 +16,7 @@ def getDefaultParamsImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
     val hasDefaults =
       for p <- sym.caseFields
       yield p.flags.is(Flags.HasDefault)
-    val names = fieldLabelsImpl0[T].zip(hasDefaults).collect{case (n, true) => n}
+    val names = fieldLabelsImpl0[T].map(_._2).zip(hasDefaults).collect{case (n, true) => n}
     val namesExpr: Expr[List[String]] =
       Expr.ofList(names.map(Expr(_)))
 
@@ -48,8 +48,8 @@ def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
     .map{case Apply(_, Literal(StringConstant(s)) :: Nil) => s}
 end extractKey
 
-inline def fieldLabels[T] = ${fieldLabelsImpl[T]}
-def fieldLabelsImpl0[T](using Quotes, Type[T]): List[String] =
+inline def fieldLabels[T]: List[(String, String)] = ${fieldLabelsImpl[T]}
+def fieldLabelsImpl0[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, String)] =
   import quotes.reflect._
   val fields: List[Symbol] = TypeRepr.of[T].typeSymbol
     .primaryConstructor
@@ -59,15 +59,58 @@ def fieldLabelsImpl0[T](using Quotes, Type[T]): List[String] =
 
   fields.map{ sym =>
     extractKey(sym) match {
-      case Some(name) => name
-      case None => sym.name
+      case Some(name) => (sym, name)
+      case None => (sym, sym.name)
     }
   }
 end fieldLabelsImpl0
 
-def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[String]] =
-Expr.ofList(fieldLabelsImpl0[T].map(Expr(_)))
-end fieldLabelsImpl
+def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[(String, String)]] =
+  Expr.ofList(fieldLabelsImpl0[T].map((a, b) => Expr((a.name, b))))
+
+inline def writeSnippets[R, T, WS <: Tuple](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
+                                   inline self: upickle.core.Types#CaseW[T],
+                                   inline v: T,
+                                   inline ctx: _root_.upickle.core.ObjVisitor[_, R],
+                                   inline writers: List[Any]): Unit =
+  ${writeSnippetsImpl[R, T, WS]('thisOuter, 'self, 'v, 'ctx, 'writers)}
+
+def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon],
+                            self: Expr[upickle.core.Types#CaseW[T]],
+                            v: Expr[T],
+                            ctx: Expr[_root_.upickle.core.ObjVisitor[_, R]],
+                            writers: Expr[List[Any]])
+                           (using Quotes, Type[T], Type[R], Type[WS]): Expr[Unit] =
+
+  import quotes.reflect.*
+
+//  println("TypeRepr.of[WS] " + TypeRepr.of[WS])
+//  println("TypeRepr.of[WS].asInstanceOf[AppliedType].args(1) " + TypeRepr.of[WS].asInstanceOf[AppliedType].args(1))
+
+  Expr.block(
+    for (((rawLabel, label), i) <- fieldLabelsImpl0[T].zipWithIndex) yield {
+
+      val tpe0 = TypeRepr.of[T].memberType(rawLabel).asType
+      tpe0 match{
+        case '[tpe] =>
+//          val writerType = Applied(TypeSelect(thisOuter.asTerm, "Writer"), List(TypeTree.of[tpe]))
+            Literal(IntConstant(i)).tpe.asType match{
+            case '[index] =>
+              '{
+                ${self}.writeSnippet[R, tpe](
+                  ${thisOuter}.objectAttributeKeyWriteMap,
+                  ${ctx},
+                  ${Expr(label)},
+                  ${writers}(${Expr(i)}),
+//                  summonInline[Tuple.Elem[WS, index]],
+                  ${Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]}
+                )
+              }
+          }
+      }
+    },
+    '{()}
+  )
 
 
 inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
