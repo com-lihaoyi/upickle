@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 3.0.0-M1")
+@sect("uPickle 3.0.0-M1")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
