@@ -131,12 +131,16 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def scalaJSVersion = crossScalaJSVersion
   def remoteSourcesPath = s"https://raw.githubusercontent.com/com-lihaoyi/upickle/${publishVersion}/"
   
-  private def sourceMapOption = T.task {
-    val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
-    val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
-    s"$sourcesOptionName:${T.workspace}/->$baseUrl/${publishVersion()}/"
-  }   
-  override def scalacOptions = super.scalacOptions() ++ Seq(sourceMapOption())
+  private def sourceMapOptions = T.task {
+    val vcsState = VcsVersion.vcsState()
+    vcsState.lastTag.collect {
+      case tag if vcsState.commitsSinceLastTag == 0 =>
+        val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
+        val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
+        s"$sourcesOptionName:${T.workspace.toIO.toURI}->$baseUrl/$tag/"
+    }
+  }
+  override def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
 
   override def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
