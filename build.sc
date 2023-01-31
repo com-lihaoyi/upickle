@@ -129,7 +129,18 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
   def crossScalaJSVersion: String
   def scalaJSVersion = crossScalaJSVersion
-  override def scalacOptions = super.scalacOptions()
+  
+  private def sourceMapOptions = T.task {
+    val vcsState = VcsVersion.vcsState()
+    vcsState.lastTag.collect {
+      case tag if vcsState.commitsSinceLastTag == 0 =>
+        val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
+        val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
+        s"$sourcesOptionName:${T.workspace.toIO.toURI}->$baseUrl/$tag/"
+    }
+  }
+  override def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
+
   override def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "js"
@@ -431,7 +442,7 @@ trait BenchModule extends CommonModule{
     ivy"io.circe::circe-core::0.14.3",
     ivy"io.circe::circe-generic::0.14.3",
     ivy"io.circe::circe-parser::0.14.3",
-    ivy"com.typesafe.play::play-json::2.9.3",
+    ivy"com.typesafe.play::play-json::2.9.4",
     ivy"io.argonaut::argonaut:6.2.6",
     ivy"org.json4s::json4s-ast:3.6.12",
     ivy"com.lihaoyi::sourcecode::$sourcecode",
