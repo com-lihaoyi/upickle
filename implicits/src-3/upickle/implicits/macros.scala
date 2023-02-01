@@ -110,24 +110,24 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
     for (((rawLabel, label), i) <- fieldLabelsImpl0[T].zipWithIndex) yield {
 
       val tpe0 = TypeRepr.of[T].memberType(rawLabel).asType
-      tpe0 match{
-        case '[tpe] =>
-          val defaults = getDefaultParamsImpl0[T]
-          Literal(IntConstant(i)).tpe.asType match
-          case '[IsInt[index]] =>
-            val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
-            val snippet = '{
-              ${self}.writeSnippet[R, tpe](
-                ${thisOuter}.objectAttributeKeyWriteMap,
-                ${ctx},
-                ${Expr(label)},
-                summonInline[Tuple.Elem[WS, index]],
-                ${select},
-              )
-            }
-            if (!defaults.contains(rawLabel.name)) snippet
-            else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(rawLabel.name)}) $snippet}
-      }
+      tpe0 match
+      case '[tpe] =>
+        val defaults = getDefaultParamsImpl0[T]
+        Literal(IntConstant(i)).tpe.asType match
+        case '[IsInt[index]] =>
+          val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
+          val snippet = '{
+            ${self}.writeSnippet[R, tpe](
+              ${thisOuter}.objectAttributeKeyWriteMap,
+              ${ctx},
+              ${Expr(label)},
+              summonInline[Tuple.Elem[WS, index]],
+              ${select},
+            )
+          }
+          if (!defaults.contains(rawLabel.name)) snippet
+          else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(rawLabel.name)}) $snippet}
+
     },
     '{()}
   )
