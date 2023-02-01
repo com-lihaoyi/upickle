@@ -8,6 +8,63 @@ import upickle.implicits.macros.EnumDescription
 trait ReadersVersionSpecific extends MacrosCommon:
   this: upickle.core.Types with Readers with Annotator =>
 
+  class CaseReader[T](visitors: Product,
+                      fromProduct: Product => T,
+                      keyToIndex: Map[String, Int],
+                      defaultParams: Array[() => Any]) extends CaseR[T] {
+
+
+    lazy val indexToKey = keyToIndex.map(_.swap)
+
+    def make(params: Array[Any],
+             definedParams: Array[Boolean],
+             defaults: Array[() => Any]): T =
+      val missingKeys = collection.mutable.ListBuffer.empty[String]
+
+      var i = 0
+      while (i < params.length)
+        if !definedParams(i) then
+          defaults(i) match
+            case null => missingKeys += indexToKey(i)
+            case computeDefault => params(i) = computeDefault()
+        i += 1
+
+      if !missingKeys.isEmpty then
+        throw new upickle.core.Abort("missing keys in dictionary: " + missingKeys.mkString(", "))
+
+      fromProduct(new Product {
+        def canEqual(that: Any): Boolean = true
+
+        def productArity: Int = params.length
+
+        def productElement(i: Int): Any = params(i)
+      })
+
+    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, T] {
+      private val params = new Array[Any](keyToIndex.size)
+      private val definedParams = new Array[Boolean](keyToIndex.size)
+      var currentIndex: Int = -1
+
+      def subVisitor: Visitor[_, _] =
+        if (currentIndex == -1) upickle.core.NoOpVisitor
+        else visitors.productElement(currentIndex).asInstanceOf[Visitor[_, _]]
+
+      def visitKey(index: Int): Visitor[_, _] = StringReader
+
+      def visitKeyValue(v: Any): Unit =
+        val k = objectAttributeKeyReadMap(v.asInstanceOf[String]).toString
+        currentIndex = keyToIndex.getOrElse(k, -1)
+
+      def visitValue(v: Any, index: Int): Unit =
+        if (currentIndex != -1)
+          params(currentIndex) = v
+          definedParams(currentIndex) = true
+
+      def visitEnd(index: Int): T = make(params, definedParams, defaultParams)
+    }
+
+    override def visitString(v: CharSequence, index: Int) = make(Array(), Array(), Array())
+  }
   class EnumReader[T](f: String => T, description: EnumDescription) extends SimpleReader[T] :
     override def expectedMsg = "expected string enumeration"
 
@@ -24,56 +81,13 @@ trait ReadersVersionSpecific extends MacrosCommon:
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val reader = new CaseR[T]{
-        val visitors = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
-        val keyToIndex = macros.fieldLabels[T].map(_._2).zipWithIndex.toMap
-        lazy val indexToKey = keyToIndex.map(_.swap)
-        def make(params: Array[Any],
-                 definedParams: Array[Boolean],
-                 defaults: Array[() => Any]): T =
-          val missingKeys = collection.mutable.ListBuffer.empty[String]
-
-          var i = 0
-          while(i < params.length)
-            if !definedParams(i) then
-              defaults(i) match
-              case null => missingKeys += indexToKey(i)
-              case computeDefault => params(i) = computeDefault()
-            i += 1
-
-          if !missingKeys.isEmpty then
-            throw new upickle.core.Abort("missing keys in dictionary: " + missingKeys.mkString(", "))
-
-          m.fromProduct(new Product {
-            def canEqual(that: Any): Boolean = true
-            def productArity: Int = params.length
-            def productElement(i: Int): Any = params(i)
-          })
-
-        override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, T] {
-          private val params = new Array[Any](keyToIndex.size)
-          private val definedParams = new Array[Boolean](keyToIndex.size)
-          var currentIndex: Int = -1
-
-          def subVisitor: Visitor[_, _] =
-            if (currentIndex == -1) upickle.core.NoOpVisitor
-            else visitors.productElement(currentIndex).asInstanceOf[Visitor[_, _]]
-
-          def visitKey(index: Int): Visitor[_, _] = StringReader
-          def visitKeyValue(v: Any): Unit =
-            val k = objectAttributeKeyReadMap(v.asInstanceOf[String]).toString
-            currentIndex = keyToIndex.getOrElse(k, -1)
-
-          def visitValue(v: Any, index: Int): Unit =
-            if (currentIndex != -1)
-              params(currentIndex) = v
-              definedParams(currentIndex) = true
-
-          def visitEnd(index: Int): T = make(params, definedParams, macros.getDefaultParamsArray[T])
-        }
-
-        override def visitString(v: CharSequence, index: Int) = make(Array(), Array(), Array())
-      }
+      val visitors = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
+      val reader = new CaseReader(
+        visitors,
+        m.fromProduct(_),
+        macros.fieldLabels[T].map(_._2).zipWithIndex.toMap,
+        macros.getDefaultParamsArray[T]
+      )
 
       if macros.isMemberOfSealedHierarchy[T] then annotate(reader, macros.fullClassName[T])
       else reader
