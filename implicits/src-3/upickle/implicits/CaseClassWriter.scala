@@ -16,27 +16,7 @@ trait CaseClassWriterPiece extends MacrosCommon:
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
       def writer = new CaseW[T] {
-        def length(v: T) =
-          macros.writeLength(v)
-//          def elemsInfo(v: T): List[(String, Writer[_], Any)] =
-//            val labels: List[String] = macros.fieldLabels[T].map(_._1)
-//            val writers: List[Writer[_]] =
-//              macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
-//                .asInstanceOf[List[Writer[_]]]
-//            val values: List[Any] = v.asInstanceOf[Product].productIterator.toList
-//            for ((l, w), v) <- labels.zip(writers).zip(values)
-//              yield (l, w, v)
-//
-//          val defaultParams =
-//            macros.getDefaultParams[T]
-//
-//          var n = 0
-//          for
-//            (name, _, value) <- elemsInfo(v)
-//            defaultValue = defaultParams.get(name)
-//            if serializeDefaults || defaultValue.isEmpty || defaultValue.get != value
-//          do n += 1
-//          n
+        def length(v: T) = macros.writeLength[T](thisOuter, v)
 
         def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R], v: T): Unit =
           macros.writeSnippets[R, T, Tuple.Map[m.MirroredElemTypes, Writer]](

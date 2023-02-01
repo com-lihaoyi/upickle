@@ -97,27 +97,21 @@ def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[(String, String)]] =
 
 
 inline def writeLength[T](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
-                          inline self: upickle.core.Types#CaseW[T],
-                          inline v: T,
-                          inline ctx: _root_.upickle.core.ObjVisitor[_, R]): Unit =
-  ${writeLengthImpl[R, T, WS]('thisOuter, 'self, 'v, 'ctx)}
+                          inline v: T): Int =
+  ${writeLengthImpl[T]('thisOuter, 'v)}
 
-def writeLengthImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon],
-                                       self: Expr[upickle.core.Types#CaseW[T]],
-                                       v: Expr[T],
-                                       ctx: Expr[_root_.upickle.core.ObjVisitor[_, R]])
-                                      (using Quotes, Type[T], Type[R], Type[WS]): Expr[Unit] =
-  Expr.block(
+def writeLengthImpl[T](thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon],
+                                       v: Expr[T])
+                                      (using Quotes, Type[T]): Expr[Int] =
+  import quotes.reflect.*
     fieldLabelsImpl0[T]
       .map{(rawLabel, label) =>
         val defaults = getDefaultParamsImpl0[T]
         val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
-        if (!hasDefaults(i)) '{1}
+        if (!defaults.contains(rawLabel.name)) '{1}
         else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(rawLabel.name)}) 1 else 0}
       }
-      .foldLeft[Tree](q"0") { case (prev, next) => q"$prev + $next" },
-    '{()}
-  )
+      .foldLeft('{0}) { case (prev, next) => '{$prev + $next} }
 
 inline def writeSnippets[R, T, WS <: Tuple](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
                                    inline self: upickle.core.Types#CaseW[T],
@@ -135,7 +129,7 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
   type IsInt[A <: Int] = A
 
   Expr.block(
-    for ((rawLabel, label) <- fieldLabelsImpl0[T]) yield {
+    for (((rawLabel, label), i) <- fieldLabelsImpl0[T].zipWithIndex) yield {
 
       val tpe0 = TypeRepr.of[T].memberType(rawLabel).asType
       tpe0 match{
