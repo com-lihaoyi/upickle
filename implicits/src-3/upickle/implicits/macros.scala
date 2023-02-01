@@ -83,6 +83,15 @@ def writeLengthImpl[T](thisOuter: Expr[upickle.core.Types with upickle.implicits
       }
       .foldLeft('{0}) { case (prev, next) => '{$prev + $next} }
 
+inline def checkErrorMissingKeysCount[T](): Long =
+  ${checkErrorMissingKeysCountImpl[T]()}
+
+def checkErrorMissingKeysCountImpl[T]()(using Quotes, Type[T]): Expr[Long] =
+  import quotes.reflect.*
+  val paramCount = fieldLabelsImpl0[T].size
+  if (paramCount <= 64) if (paramCount == 64) Expr(-1) else Expr((1L << paramCount) - 1)
+  else Expr(paramCount)
+
 inline def writeSnippets[R, T, WS <: Tuple](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
                                    inline self: upickle.core.Types#CaseW[T],
                                    inline v: T,

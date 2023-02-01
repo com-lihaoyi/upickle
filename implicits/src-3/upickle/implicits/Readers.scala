@@ -11,59 +11,53 @@ trait ReadersVersionSpecific extends MacrosCommon:
   class CaseReader[T](visitors0: => Product,
                       fromProduct: Product => T,
                       keyToIndex: Map[String, Int],
-                      defaultParams: Array[() => Any]) extends CaseR[T] {
+                      defaultParams: Array[() => Any],
+                      missingKeyCount: Long) extends CaseR[T] {
 
-
+    val paramCount = keyToIndex.size
     lazy val visitors = visitors0
     lazy val indexToKey = keyToIndex.map(_.swap)
 
-    def make(params: Array[Any],
-             definedParams: Array[Boolean],
-             defaults: Array[() => Any]): T =
-      val missingKeys = collection.mutable.ListBuffer.empty[String]
+    trait ObjectContext extends ObjVisitor[Any, T] with BaseCaseObjectContext{
+      private val params = new Array[Any](paramCount)
 
-      var i = 0
-      while (i < params.length)
-        if !definedParams(i) then
-          defaults(i) match
-          case null => missingKeys += indexToKey(i)
-          case computeDefault => params(i) = computeDefault()
-        i += 1
-
-      if !missingKeys.isEmpty then
-        throw new upickle.core.Abort("missing keys in dictionary: " + missingKeys.mkString(", "))
-
-      fromProduct(new Product {
-        def canEqual(that: Any): Boolean = true
-        def productArity: Int = params.length
-        def productElement(i: Int): Any = params(i)
-      })
-
-    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, T] {
-      private val params = new Array[Any](keyToIndex.size)
-      private val definedParams = new Array[Boolean](keyToIndex.size)
-      var currentIndex: Int = -1
+      def storeAggregatedValue(currentIndex: Int, v: Any): Unit = params(currentIndex) = v
 
       def subVisitor: Visitor[_, _] =
         if (currentIndex == -1) upickle.core.NoOpVisitor
         else visitors.productElement(currentIndex).asInstanceOf[Visitor[_, _]]
 
-      def visitKey(index: Int): Visitor[_, _] = StringReader
-
       def visitKeyValue(v: Any): Unit =
-        val k = objectAttributeKeyReadMap(v.asInstanceOf[String]).toString
+        val k = objectAttributeKeyReadMap(v.toString).toString
         currentIndex = keyToIndex.getOrElse(k, -1)
 
-      def visitValue(v: Any, index: Int): Unit =
-        if (currentIndex != -1)
-          params(currentIndex) = v
-          definedParams(currentIndex) = true
+      def visitEnd(index: Int): T =
+        var i = 0
+        while (i < paramCount)
+          defaultParams(i) match
+            case null =>
+            case computeDefault => storeValueIfNotFound(i, computeDefault())
 
-      def visitEnd(index: Int): T = make(params, definedParams, defaultParams)
+          i += 1
+
+        // Special-case 64 because java bit shifting ignores any RHS values above 63
+        // https://docs.oracle.com/javase/specs/jls/se7/html/jls-15.html#jls-15.19
+        if (this.checkErrorMissingKeys(missingKeyCount))
+          this.errorMissingKeys(paramCount, indexToKey.toSeq.sortBy(_._1).map(_._2).toArray)
+
+        fromProduct(new Product {
+          def canEqual(that: Any): Boolean = true
+          def productArity: Int = params.length
+          def productElement(i: Int): Any = params(i)
+        })
     }
-
-    override def visitString(v: CharSequence, index: Int) = make(Array(), Array(), Array())
+    override def visitObject(length: Int,
+                             jsonableKeys: Boolean,
+                             index: Int) =
+      if (paramCount <= 64) new CaseObjectContext(paramCount) with ObjectContext
+      else new HugeCaseObjectContext(paramCount) with ObjectContext
   }
+
   class EnumReader[T](f: String => T, description: EnumDescription) extends SimpleReader[T] :
     override def expectedMsg = "expected string enumeration"
 
@@ -85,7 +79,8 @@ trait ReadersVersionSpecific extends MacrosCommon:
         compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]],
         m.fromProduct(_),
         macros.fieldLabels[T].map(_._2).zipWithIndex.toMap,
-        macros.getDefaultParamsArray[T]
+        macros.getDefaultParamsArray[T],
+        macros.checkErrorMissingKeysCount[T]()
       )
 
       if macros.isMemberOfSealedHierarchy[T] then annotate(reader, macros.fullClassName[T])
