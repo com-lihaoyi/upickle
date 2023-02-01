@@ -95,6 +95,30 @@ end fieldLabelsImpl0
 def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[(String, String)]] =
   Expr.ofList(fieldLabelsImpl0[T].map((a, b) => Expr((a.name, b))))
 
+
+inline def writeLength[T](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
+                          inline self: upickle.core.Types#CaseW[T],
+                          inline v: T,
+                          inline ctx: _root_.upickle.core.ObjVisitor[_, R]): Unit =
+  ${writeLengthImpl[R, T, WS]('thisOuter, 'self, 'v, 'ctx)}
+
+def writeLengthImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon],
+                                       self: Expr[upickle.core.Types#CaseW[T]],
+                                       v: Expr[T],
+                                       ctx: Expr[_root_.upickle.core.ObjVisitor[_, R]])
+                                      (using Quotes, Type[T], Type[R], Type[WS]): Expr[Unit] =
+  Expr.block(
+    fieldLabelsImpl0[T]
+      .map{(rawLabel, label) =>
+        val defaults = getDefaultParamsImpl0[T]
+        val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
+        if (!hasDefaults(i)) '{1}
+        else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(rawLabel.name)}) 1 else 0}
+      }
+      .foldLeft[Tree](q"0") { case (prev, next) => q"$prev + $next" },
+    '{()}
+  )
+
 inline def writeSnippets[R, T, WS <: Tuple](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
                                    inline self: upickle.core.Types#CaseW[T],
                                    inline v: T,
@@ -111,7 +135,7 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
   type IsInt[A <: Int] = A
 
   Expr.block(
-    for (((rawLabel, label), i) <- fieldLabelsImpl0[T].zipWithIndex) yield {
+    for ((rawLabel, label) <- fieldLabelsImpl0[T]) yield {
 
       val tpe0 = TypeRepr.of[T].memberType(rawLabel).asType
       tpe0 match{
