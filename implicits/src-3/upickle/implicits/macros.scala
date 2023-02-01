@@ -3,36 +3,7 @@ package upickle.implicits.macros
 import scala.quoted.{ given, _ }
 import deriving._, compiletime._
 
-inline def getDefaultParams[T]: Map[String, AnyRef] = ${ getDefaultParamsImpl[T] }
-def getDefaultParamsImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
-  import quotes.reflect._
-  val sym = TypeTree.of[T].symbol
-
-  if (sym.isClassDef) {
-    val comp =
-      if (sym.isClassDef && !sym.companionClass.isNoSymbol ) sym.companionClass
-      else sym
-
-    val hasDefaults =
-      for p <- sym.caseFields
-      yield p.flags.is(Flags.HasDefault)
-    val names = fieldLabelsImpl0[T].map(_._2).zip(hasDefaults).collect{case (n, true) => n}
-    val namesExpr: Expr[List[String]] =
-      Expr.ofList(names.map(Expr(_)))
-
-    val body = comp.tree.asInstanceOf[ClassDef].body
-    val idents: List[Ref] =
-      for case deff @ DefDef(name, _, _, _) <- body
-      if name.startsWith("$lessinit$greater$default")
-      yield Ref(deff.symbol)
-    val identsExpr: Expr[List[Any]] =
-      Expr.ofList(idents.map(_.asExpr))
-
-    '{ $namesExpr.zip($identsExpr.map(_.asInstanceOf[AnyRef])).toMap }
-  } else {
-    '{ Map.empty }
-  }
-end getDefaultParamsImpl
+type IsInt[A <: Int] = A
 
 def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
   import quotes.reflect._
@@ -61,6 +32,16 @@ def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
     Map.empty
   }
 end getDefaultParamsImpl0
+inline def getDefaultParamsArray[T] = ${getDefaultParamsArray1[T]}
+def getDefaultParamsArray1[T](using Quotes, Type[T]): Expr[Array[() => Any]] =
+  '{${Expr.ofSeq(getDefaultParamsArray0[T])}.toArray}
+
+def getDefaultParamsArray0[T](using Quotes, Type[T]): Seq[Expr[() => Any]] =
+  val map = getDefaultParamsImpl0[T]
+  fieldLabelsImpl0.map(_._2).map(map.get(_) match{
+    case None => '{null}
+    case Some(v) => '{() => $v}
+  })
 
 inline def summonList[T <: Tuple]: List[_] =
   inline erasedValue[T] match
@@ -95,7 +76,6 @@ end fieldLabelsImpl0
 def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[(String, String)]] =
   Expr.ofList(fieldLabelsImpl0[T].map((a, b) => Expr((a.name, b))))
 
-
 inline def writeLength[T](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
                           inline v: T): Int =
   ${writeLengthImpl[T]('thisOuter, 'v)}
@@ -126,7 +106,6 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
                            (using Quotes, Type[T], Type[R], Type[WS]): Expr[Unit] =
 
   import quotes.reflect.*
-  type IsInt[A <: Int] = A
 
   Expr.block(
     for (((rawLabel, label), i) <- fieldLabelsImpl0[T].zipWithIndex) yield {
