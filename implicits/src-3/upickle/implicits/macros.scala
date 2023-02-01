@@ -148,7 +148,7 @@ def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
 
   extractKey(sym) match
   case Some(name) => Expr(name)
-  case None => Expr(TypeTree.of[T].tpe.show.takeWhile(_ != '['))
+  case None => Expr(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
 
 inline def enumValueOf[T]: String => T = ${ enumValueOfImpl[T] }
 def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =
