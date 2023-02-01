@@ -72,8 +72,7 @@ trait CaseClassWriterPiece extends MacrosCommon:
             thisOuter,
             this,
             v,
-            ctx,
-            macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+            ctx
           )
       }
 

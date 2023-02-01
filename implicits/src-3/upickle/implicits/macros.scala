@@ -34,6 +34,34 @@ def getDefaultParamsImpl[T](using Quotes, Type[T]): Expr[Map[String, AnyRef]] =
   }
 end getDefaultParamsImpl
 
+def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
+  import quotes.reflect._
+  val sym = TypeTree.of[T].symbol
+
+  if (sym.isClassDef) {
+    val comp =
+      if (sym.isClassDef && !sym.companionClass.isNoSymbol ) sym.companionClass
+      else sym
+
+    val hasDefaults =
+      for p <- sym.caseFields
+      yield p.flags.is(Flags.HasDefault)
+
+    val names = fieldLabelsImpl0[T].map(_._2).zip(hasDefaults).collect{case (n, true) => n}
+
+    val body = comp.tree.asInstanceOf[ClassDef].body
+
+    val idents: List[Ref] =
+      for case deff @ DefDef(name, _, _, _) <- body
+      if name.startsWith("$lessinit$greater$default")
+      yield Ref(deff.symbol)
+
+    names.zip(idents.map(_.asExpr).map(e => '{$e.asInstanceOf[AnyRef]})).toMap
+  } else {
+    Map.empty
+  }
+end getDefaultParamsImpl0
+
 inline def summonList[T <: Tuple]: List[_] =
   inline erasedValue[T] match
     case _: EmptyTuple => Nil
@@ -58,10 +86,9 @@ def fieldLabelsImpl0[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, Str
     .filterNot(_.isType)
 
   fields.map{ sym =>
-    extractKey(sym) match {
-      case Some(name) => (sym, name)
-      case None => (sym, sym.name)
-    }
+    extractKey(sym) match
+    case Some(name) => (sym, name)
+    case None => (sym, sym.name)
   }
 end fieldLabelsImpl0
 
@@ -71,21 +98,17 @@ def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[(String, String)]] =
 inline def writeSnippets[R, T, WS <: Tuple](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
                                    inline self: upickle.core.Types#CaseW[T],
                                    inline v: T,
-                                   inline ctx: _root_.upickle.core.ObjVisitor[_, R],
-                                   inline writers: List[Any]): Unit =
-  ${writeSnippetsImpl[R, T, WS]('thisOuter, 'self, 'v, 'ctx, 'writers)}
+                                   inline ctx: _root_.upickle.core.ObjVisitor[_, R]): Unit =
+  ${writeSnippetsImpl[R, T, WS]('thisOuter, 'self, 'v, 'ctx)}
 
 def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon],
                             self: Expr[upickle.core.Types#CaseW[T]],
                             v: Expr[T],
-                            ctx: Expr[_root_.upickle.core.ObjVisitor[_, R]],
-                            writers: Expr[List[Any]])
+                            ctx: Expr[_root_.upickle.core.ObjVisitor[_, R]])
                            (using Quotes, Type[T], Type[R], Type[WS]): Expr[Unit] =
 
   import quotes.reflect.*
-
-//  println("TypeRepr.of[WS] " + TypeRepr.of[WS])
-//  println("TypeRepr.of[WS].asInstanceOf[AppliedType].args(1) " + TypeRepr.of[WS].asInstanceOf[AppliedType].args(1))
+  type IsInt[A <: Int] = A
 
   Expr.block(
     for (((rawLabel, label), i) <- fieldLabelsImpl0[T].zipWithIndex) yield {
@@ -93,20 +116,21 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
       val tpe0 = TypeRepr.of[T].memberType(rawLabel).asType
       tpe0 match{
         case '[tpe] =>
-//          val writerType = Applied(TypeSelect(thisOuter.asTerm, "Writer"), List(TypeTree.of[tpe]))
-            Literal(IntConstant(i)).tpe.asType match{
-            case '[index] =>
-              '{
-                ${self}.writeSnippet[R, tpe](
-                  ${thisOuter}.objectAttributeKeyWriteMap,
-                  ${ctx},
-                  ${Expr(label)},
-                  ${writers}(${Expr(i)}),
-//                  summonInline[Tuple.Elem[WS, index]],
-                  ${Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]}
-                )
-              }
-          }
+          val defaults = getDefaultParamsImpl0[T]
+          Literal(IntConstant(i)).tpe.asType match
+          case '[IsInt[index]] =>
+            val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
+            val snippet = '{
+              ${self}.writeSnippet[R, tpe](
+                ${thisOuter}.objectAttributeKeyWriteMap,
+                ${ctx},
+                ${Expr(label)},
+                summonInline[Tuple.Elem[WS, index]],
+                ${select},
+              )
+            }
+            if (!defaults.contains(rawLabel.name)) snippet
+            else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(rawLabel.name)}) $snippet}
       }
     },
     '{()}
