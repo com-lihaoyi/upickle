@@ -9,7 +9,8 @@ def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
   import quotes.reflect._
   val sym = TypeTree.of[T].symbol
 
-  if (sym.isClassDef) {
+  if (!sym.isClassDef) Map.empty
+  else
     val comp =
       if (sym.isClassDef && !sym.companionClass.isNoSymbol ) sym.companionClass
       else sym
@@ -28,10 +29,7 @@ def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
       yield Ref(deff.symbol)
 
     names.zip(idents.map(_.asExpr).map(e => '{$e.asInstanceOf[AnyRef]})).toMap
-  } else {
-    Map.empty
-  }
-end getDefaultParamsImpl0
+
 inline def getDefaultParamsArray[T] = ${getDefaultParamsArray1[T]}
 def getDefaultParamsArray1[T](using Quotes, Type[T]): Expr[Array[() => Any]] =
   '{${Expr.ofSeq(getDefaultParamsArray0[T])}.toArray}
@@ -43,19 +41,12 @@ def getDefaultParamsArray0[T](using Quotes, Type[T]): Seq[Expr[() => Any]] =
     case Some(v) => '{() => $v}
   })
 
-inline def summonList[T <: Tuple]: List[_] =
-  inline erasedValue[T] match
-    case _: EmptyTuple => Nil
-    case _: (t *: ts) => summonInline[t] :: summonList[ts]
-end summonList
-
 def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
   import quotes.reflect._
   sym
     .annotations
     .find(_.tpe =:= TypeRepr.of[upickle.implicits.key])
     .map{case Apply(_, Literal(StringConstant(s)) :: Nil) => s}
-end extractKey
 
 inline def fieldLabels[T]: List[(String, String)] = ${fieldLabelsImpl[T]}
 def fieldLabelsImpl0[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, String)] =
@@ -71,7 +62,6 @@ def fieldLabelsImpl0[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, Str
     case Some(name) => (sym, name)
     case None => (sym, sym.name)
   }
-end fieldLabelsImpl0
 
 def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[(String, String)]] =
   Expr.ofList(fieldLabelsImpl0[T].map((a, b) => Expr((a.name, b))))
@@ -133,7 +123,6 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
     '{()}
   )
 
-
 inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
 def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
   import quotes.reflect._
@@ -141,7 +130,6 @@ def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
   val parents = TypeRepr.of[T].baseClasses
 
   Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
-
 
 inline def fullClassName[T]: String = ${ fullClassNameImpl[T] }
 def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
@@ -152,8 +140,6 @@ def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
     case Some(name) => Expr(name)
     case None => Expr(sym.fullName.replace("$", ""))
   }
-
-end fullClassNameImpl
 
 inline def enumValueOf[T]: String => T = ${ enumValueOfImpl[T] }
 def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =
@@ -170,11 +156,9 @@ def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =
 
   val methodSymbol = valueOfMethod.symbol
   Ref(methodSymbol).etaExpand(methodSymbol.owner).asExpr.asInstanceOf[Expr[String => T]]
-end enumValueOfImpl
 
-case class EnumDescription(name: String, values: Seq[String]) {
+case class EnumDescription(name: String, values: Seq[String]):
   def pretty = s"$name[values: ${values.mkString(", ")}]"
-}
 
 inline def enumDescription[T](using m: Mirror.Of[T]): EnumDescription = inline m match {
   case m: Mirror.ProductOf[T] =>
@@ -185,7 +169,6 @@ inline def enumDescription[T](using m: Mirror.Of[T]): EnumDescription = inline m
     val values = constValueTuple[m.MirroredElemLabels].productIterator.toSeq.map(_.toString)
     EnumDescription(name, values)
 }
-
 
 inline def isSingleton[T]: Boolean = ${ isSingletonImpl[T] }
 def isSingletonImpl[T](using Quotes, Type[T]): Expr[Boolean] =

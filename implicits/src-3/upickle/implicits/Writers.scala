@@ -36,7 +36,8 @@ trait WritersVersionSpecific extends MacrosCommon:
       inline compiletime.erasedValue[T] match {
         case _: scala.reflect.Enum => new EnumWriter[T]
         case _ =>
-          val writers: List[Writer[_ <: T]] = macros.summonList[Tuple.Map[m.MirroredElemTypes, Writer]]
+          val writers: List[Writer[_ <: T]] = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Writer]]
+            .toList
             .asInstanceOf[List[Writer[_ <: T]]]
           Writer.merge[T](writers: _*)
       }

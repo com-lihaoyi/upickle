@@ -26,8 +26,8 @@ trait ReadersVersionSpecific extends MacrosCommon:
       while (i < params.length)
         if !definedParams(i) then
           defaults(i) match
-            case null => missingKeys += indexToKey(i)
-            case computeDefault => params(i) = computeDefault()
+          case null => missingKeys += indexToKey(i)
+          case computeDefault => params(i) = computeDefault()
         i += 1
 
       if !missingKeys.isEmpty then
@@ -35,9 +35,7 @@ trait ReadersVersionSpecific extends MacrosCommon:
 
       fromProduct(new Product {
         def canEqual(that: Any): Boolean = true
-
         def productArity: Int = params.length
-
         def productElement(i: Int): Any = params(i)
       })
 
