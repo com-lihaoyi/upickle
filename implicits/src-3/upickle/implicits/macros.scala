@@ -145,10 +145,10 @@ def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
   import quotes.reflect._
 
   val sym = TypeTree.of[T].symbol
-  extractKey(sym) match {
-    case Some(name) => Expr(name)
-    case None => Expr(sym.fullName.replace("$", ""))
-  }
+
+  extractKey(sym) match
+  case Some(name) => Expr(name)
+  case None => Expr(TypeTree.of[T].tpe.show.takeWhile(_ != '['))
 
 inline def enumValueOf[T]: String => T = ${ enumValueOfImpl[T] }
 def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =
@@ -157,11 +157,10 @@ def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =
   val sym = TypeTree.of[T].symbol
   val companion = sym.companionClass.tree.asInstanceOf[ClassDef]
 
-  val valueOfMethod: DefDef = companion.body.collectFirst {
-    case dd @ DefDef("valueOf", _, _, _) => dd
-  }.getOrElse {
-    throw Exception("Enumeration valueOf method not found")
-  }
+  val valueOfMethod: DefDef = companion
+    .body
+    .collectFirst { case dd @ DefDef("valueOf", _, _, _) => dd }
+    .getOrElse { throw Exception("Enumeration valueOf method not found") }
 
   val methodSymbol = valueOfMethod.symbol
   Ref(methodSymbol).etaExpand(methodSymbol.owner).asExpr.asInstanceOf[Expr[String => T]]
@@ -169,15 +168,15 @@ def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =
 case class EnumDescription(name: String, values: Seq[String]):
   def pretty = s"$name[values: ${values.mkString(", ")}]"
 
-inline def enumDescription[T](using m: Mirror.Of[T]): EnumDescription = inline m match {
-  case m: Mirror.ProductOf[T] =>
-    throw new UnsupportedOperationException("Products cannot have enum descriptions")
+inline def enumDescription[T](using m: Mirror.Of[T]): EnumDescription = inline m match
+case m: Mirror.ProductOf[T] =>
+  throw new UnsupportedOperationException("Products cannot have enum descriptions")
 
-  case m: Mirror.SumOf[T] =>
-    val name = constValue[m.MirroredLabel]
-    val values = constValueTuple[m.MirroredElemLabels].productIterator.toSeq.map(_.toString)
-    EnumDescription(name, values)
-}
+case m: Mirror.SumOf[T] =>
+  val name = constValue[m.MirroredLabel]
+  val values = constValueTuple[m.MirroredElemLabels].productIterator.toSeq.map(_.toString)
+  EnumDescription(name, values)
+
 
 inline def isSingleton[T]: Boolean = ${ isSingletonImpl[T] }
 def isSingletonImpl[T](using Quotes, Type[T]): Expr[Boolean] =
