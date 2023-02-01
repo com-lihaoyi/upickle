@@ -104,5 +104,9 @@ object DerivationTests extends TestSuite {
       val expectedDeserialized = Person("Peter", "Somewhere", 30)
       assert(deserialized == expectedDeserialized)
     }
+    test("recursive"){
+      case class Recur(recur: Option[Recur]) derives ReadWriter
+      assert(write(Recur(None)) == """{"recur":[]}""")
+    }
   }
 }
