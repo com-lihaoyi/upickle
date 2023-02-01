@@ -8,12 +8,13 @@ import upickle.implicits.macros.EnumDescription
 trait ReadersVersionSpecific extends MacrosCommon:
   this: upickle.core.Types with Readers with Annotator =>
 
-  class CaseReader[T](visitors: Product,
+  class CaseReader[T](visitors0: => Product,
                       fromProduct: Product => T,
                       keyToIndex: Map[String, Int],
                       defaultParams: Array[() => Any]) extends CaseR[T] {
 
 
+    lazy val visitors = visitors0
     lazy val indexToKey = keyToIndex.map(_.swap)
 
     def make(params: Array[Any],
@@ -81,9 +82,9 @@ trait ReadersVersionSpecific extends MacrosCommon:
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val visitors = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
+
       val reader = new CaseReader(
-        visitors,
+        compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]],
         m.fromProduct(_),
         macros.fieldLabels[T].map(_._2).zipWithIndex.toMap,
         macros.getDefaultParamsArray[T]
