@@ -63,6 +63,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
                  checkBinaryJson: Boolean = true)
                 (implicit r: api.Reader[T], w: api.Writer[T])= {
     val writtenT = api.write(t)
+    val writtenJsT = api.writeJs(t)
     val writtenTMsg = api.writeMsg(t)
     val writtenBytesT = api.writeToByteArray(t)
 
@@ -86,6 +87,7 @@ class TestUtil[Api <: upickle.Api](val api: Api){
 
 
     val normalizedReadWrittenT = normalize(api.read[T](writtenT))
+    val normalizedReadWrittenJsT = normalize(api.read[T](writtenJsT))
     val normalizedReadByteArrayWrittenT = normalize(
       api.read[T](writtenT.getBytes(StandardCharsets.UTF_8))
     )
@@ -113,9 +115,13 @@ class TestUtil[Api <: upickle.Api](val api: Api){
         .parse(api.reader[T])
     )
     val normalizedT = normalize(t)
-    if (strings.nonEmpty) utest.assert(ujson.reformat(strings.head) == writtenT)
+    if (strings.nonEmpty) {
+      utest.assert(ujson.reformat(strings.head) == writtenT)
+      utest.assert(ujson.reformat(strings.head) == writtenJsT.render())
+    }
     if (msgs.nonEmpty) utest.assert(msgs.head == writtenTMsg)
     utest.assert(normalizedReadWrittenT == normalizedT)
+    utest.assert(normalizedReadWrittenT == normalizedReadWrittenJsT)
     utest.assert(normalizedReadByteArrayWrittenT == normalizedT)
     utest.assert(normalizedReadStreamWrittenT == normalizedT)
     utest.assert(normalizedReadSmallStreamWrittenT == normalizedT)
