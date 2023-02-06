@@ -23,7 +23,7 @@
   )
 )
 
-@sect("uPickle 3.0.0-M1")
+@sect("uPickle 3.0.0-M2")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -845,6 +845,18 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{3.0.0-M2}
+      @ul
+        @li
+          Greatly improved speed and runtime-time safety for Scala 3 macros
+
+        @li
+          Fixed infinite compile-loop issue on Scala 3
+
+        @li
+          Ensured, that @code{ujson.Value}s behave properly as a direct target of reading
+          and writing operations
+
     @sect{3.0.0-M1}
       @ul
         @li

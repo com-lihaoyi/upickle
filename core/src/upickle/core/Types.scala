@@ -203,17 +203,25 @@ trait Types{ types =>
   abstract class CaseR[V] extends SimpleReader[V]{
     override def expectedMsg = "expected dictionary"
     override def visitString(s: CharSequence, index: Int) = visitObject(0, true, index).visitEnd(index)
-    abstract class CaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V]{
+    trait BaseCaseObjectContext{
       def storeAggregatedValue(currentIndex: Int, v: Any): Unit
-      var found = 0L
+      def visitKey(index: Int) = _root_.upickle.core.StringVisitor
       var currentIndex = -1
+      protected def storeValueIfNotFound(i: Int, v: Any): Unit
+      protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]): Unit
+      protected def checkErrorMissingKeys(rawArgsBitset: Long): Boolean
+    }
+
+    abstract class CaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext{
+      var found = 0L
+
       def visitValue(v: Any, index: Int): Unit = {
         if (currentIndex != -1 && ((found & (1L << currentIndex)) == 0)) {
           storeAggregatedValue(currentIndex, v)
           found |= (1L << currentIndex)
         }
       }
-      def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+
       protected def storeValueIfNotFound(i: Int, v: Any) = {
         if ((found & (1L << i)) == 0) {
           found |= (1L << i)
@@ -233,17 +241,16 @@ trait Types{ types =>
         found != rawArgsBitset
       }
     }
-    abstract class HugeCaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V]{
-      def storeAggregatedValue(currentIndex: Int, v: Any): Unit
+    abstract class HugeCaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext{
       var found = new Array[Long](fieldCount / 64 + 1)
-      var currentIndex = -1
+
       def visitValue(v: Any, index: Int): Unit = {
         if (currentIndex != -1 && ((found(currentIndex / 64) & (1L << currentIndex)) == 0)) {
           storeAggregatedValue(currentIndex, v)
           found(currentIndex / 64) |= (1L << currentIndex)
         }
       }
-      def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+
       protected def storeValueIfNotFound(i: Int, v: Any) = {
         if ((found(i / 64) & (1L << i)) == 0) {
           found(i / 64) |= (1L << i)
@@ -259,7 +266,7 @@ trait Types{ types =>
           "missing keys in dictionary: " + keys.mkString(", ")
         )
       }
-      protected def checkErrorMissingKeys(rawArgsLength: Int) = {
+      protected def checkErrorMissingKeys(rawArgsLength: Long) = {
         var bits = 0
         for(v <- found) bits += java.lang.Long.bitCount(v)
         bits != rawArgsLength
@@ -277,16 +284,16 @@ trait Types{ types =>
         ctx.visitEnd(-1)
       }
     }
-    protected def writeSnippet[R, V](objectAttributeKeyWriteMap: CharSequence => CharSequence,
-                                     ctx: _root_.upickle.core.ObjVisitor[_, R],
-                                     mappedArgsI: String,
-                                     w: Writer[V],
-                                     value: V) = {
+    def writeSnippet[R, V](objectAttributeKeyWriteMap: CharSequence => CharSequence,
+                           ctx: _root_.upickle.core.ObjVisitor[_, R],
+                           mappedArgsI: String,
+                           w: Any,
+                           value: Any) = {
       val keyVisitor = ctx.visitKey(-1)
       ctx.visitKeyValue(
         keyVisitor.visitString(objectAttributeKeyWriteMap(mappedArgsI), -1)
       )
-      ctx.narrow.visitValue(w.write(ctx.subVisitor, value), -1)
+      ctx.narrow.visitValue(w.asInstanceOf[Writer[Any]].write(ctx.subVisitor, value), -1)
     }
   }
   class SingletonR[T](t: T) extends CaseR[T]{
