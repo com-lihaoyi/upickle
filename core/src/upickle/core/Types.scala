@@ -338,24 +338,19 @@ trait Types{ types =>
     override def expectedMsg = taggedExpectedMsg
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
     override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = taggedObjectContext(this, index)
-    override def visitString(s: CharSequence, index: Int) = findReader(s.toString).visitString(s, index)
+    override def visitString(s: CharSequence, index: Int) = {
+      findReader(s.toString) match {
+        case null => throw new AbortException("invalid tag for tagged object: " + s, index, -1, -1, null)
+        case reader => reader.visitString(s, index)
+      }
+    }
   }
   object TaggedReader{
     class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
-      def findReader(s: String) = {
-        println("LHY findReader s " + s)
-        println("LHY findReader tag " + tag)
-        val res = if (s == tag) r else null
-        println("LHY findReader res " + res)
-        res
-      }
+      def findReader(s: String) = if (s == tag) r else null
     }
     class Node[T](rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
-      def findReader(s: String) = {
-        val res = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
-        println("LHY findReader res " + res)
-        res
-      }
+      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
     }
   }
 
@@ -368,11 +363,11 @@ trait Types{ types =>
     }
   }
   object TaggedWriter{
-    class Leaf[T](checker: AnnotatorChecker, tag: String, r: CaseW[T]) extends TaggedWriter[T]{
+    class Leaf[T](checker: Annotator.Checker, tag: String, r: CaseW[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
         checker match{
-          case AnnotatorChecker.Cls(c) if c.isInstance(v) => tag -> r
-          case AnnotatorChecker.Val(v0) if v0 == v => tag -> r
+          case Annotator.Checker.Cls(c) if c.isInstance(v) => tag -> r
+          case Annotator.Checker.Val(v0) if v0 == v => tag -> r
           case _ => null
         }
       }
@@ -402,12 +397,23 @@ trait Types{ types =>
   }
 }
 
+/**
+ * Wrap a CaseR or CaseW reader/writer to handle $type tags during reading and writing.
+ *
+ * Note that Scala 3 singleton `enum` values do not have proper `ClassTag[V]`s
+ * like Scala 2 `case object`s do, so we instead use a `Checker.Val` to check
+ * for `.equals` equality during writes to determine which tag to use.
+ */
 trait Annotator { this: Types =>
   def annotate[V](rw: CaseR[V], n: String): TaggedReader[V]
-  def annotate[V](rw: CaseW[V], n: String, checker: AnnotatorChecker): TaggedWriter[V]
+  def annotate[V](rw: CaseW[V], n: String, checker: Annotator.Checker): TaggedWriter[V]
+  def annotate[V](rw: CaseW[V], n: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
+    annotate(rw, n, Annotator.Checker.Cls(ct.runtimeClass))
 }
-sealed trait AnnotatorChecker
-object AnnotatorChecker{
-  case class Cls(c: Class[_]) extends AnnotatorChecker
-  case class Val(v: Any) extends AnnotatorChecker
+object Annotator{
+  sealed trait Checker
+  object Checker{
+    case class Cls(c: Class[_]) extends Checker
+    case class Val(v: Any) extends Checker
+  }
 }

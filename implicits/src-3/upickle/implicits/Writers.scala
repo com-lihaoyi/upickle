@@ -5,7 +5,7 @@ import upickle.core.Annotator
 import compiletime.{summonInline}
 import deriving.Mirror
 import scala.reflect.ClassTag
-import upickle.core.{ Visitor, ObjVisitor, Annotator, AnnotatorChecker }
+import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
 trait WritersVersionSpecific extends MacrosCommon:
   outerThis: upickle.core.Types with Writers with Annotator =>
@@ -25,9 +25,9 @@ trait WritersVersionSpecific extends MacrosCommon:
       }
 
       inline if macros.isSingleton[T] then
-        annotate[T](SingletonW[T](null.asInstanceOf[T]), macros.tagName[T], AnnotatorChecker.Val(valueOf[T]))
+        annotate[T](SingletonW[T](null.asInstanceOf[T]), macros.tagName[T], Annotator.Checker.Val(valueOf[T]))
       else if macros.isMemberOfSealedHierarchy[T] then
-        annotate[T](writer, macros.tagName[T], AnnotatorChecker.Cls(implicitly[ClassTag[T]].runtimeClass))
+        annotate[T](writer, macros.tagName[T], Annotator.Checker.Cls(implicitly[ClassTag[T]].runtimeClass))
       else writer
 
     case _: Mirror.SumOf[T] =>

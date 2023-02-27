@@ -57,7 +57,8 @@ def fieldLabelsImpl0[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, Str
     .flatten
     .filterNot(_.isType)
 
-  fields.map{ sym =>
+  if (TypeRepr.of[T].isSingleton) Nil
+  else fields.map{ sym =>
     extractKey(sym) match
     case Some(name) => (sym, name)
     case None => (sym, sym.name)
@@ -108,7 +109,6 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
 
   Expr.block(
     for (((rawLabel, label), i) <- fieldLabelsImpl0[T].zipWithIndex) yield {
-
       val tpe0 = TypeRepr.of[T].memberType(rawLabel).asType
       tpe0 match
       case '[tpe] =>
@@ -151,7 +151,7 @@ def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   case None =>
 
     if (sym.flags.is(Flags.Enum)) Expr(sym.name.filter(_ != '$'))
-    else Expr(sym.fullName.filter(_ != '$'))
+    else Expr(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
 
 inline def enumValueOf[T]: String => T = ${ enumValueOfImpl[T] }
 def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =
