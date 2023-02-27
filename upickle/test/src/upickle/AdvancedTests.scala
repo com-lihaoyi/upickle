@@ -333,7 +333,19 @@ object AdvancedTests extends TestSuite {
       //        rw(TypedFoo.Baz("lol"): TypedFoo, """{"$type": "upickle.TypedFoo.Baz", "s": "lol"}""")
       //        rw(TypedFoo.Quz(true): TypedFoo, """{"$type": "upickle.TypedFoo.Quz", "b": true}""")
       //      }
+      test("issue-371") {
+        val input = """{"head":"a","tail":[{"head":"b","tail":[]}]}"""
+        val expected = Node371("a", Some(Node371("b", None)))
+        val result = upickle.default.read[Node371](input)
+        assert(result == expected)
+      }
     }
+  }
+
+  case class Node371(head: String, tail: Option[Node371])
+
+  object Node371 {
+    implicit val nodeRW: ReadWriter[Node371] = macroRW[Node371]
   }
 
   class Thing[T: upickle.default.Writer, V: upickle.default.Writer](t: Option[(V, T)]) {
