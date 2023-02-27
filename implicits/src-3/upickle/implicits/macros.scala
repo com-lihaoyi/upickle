@@ -109,6 +109,7 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
 
   Expr.block(
     for (((rawLabel, label), i) <- fieldLabelsImpl0[T].zipWithIndex) yield {
+
       val tpe0 = TypeRepr.of[T].memberType(rawLabel).asType
       tpe0 match
       case '[tpe] =>
@@ -149,7 +150,6 @@ def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   extractKey(sym) match
   case Some(name) => Expr(name)
   case None =>
-
     // In Scala 3 enums, we use the short name of each case as the tag, rather
     // than the fully-qualified name. We can do this because we know that all
     // enum cases are in the same `enum Foo` namespace with distinct short names,
