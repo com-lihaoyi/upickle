@@ -333,12 +333,14 @@ object AdvancedTests extends TestSuite {
       //        rw(TypedFoo.Baz("lol"): TypedFoo, """{"$type": "upickle.TypedFoo.Baz", "s": "lol"}""")
       //        rw(TypedFoo.Quz(true): TypedFoo, """{"$type": "upickle.TypedFoo.Quz", "b": true}""")
       //      }
+
       test("issue-371") {
         val input = """{"head":"a","tail":[{"head":"b","tail":[]}]}"""
         val expected = Node371("a", Some(Node371("b", None)))
         val result = upickle.default.read[Node371](input)
         assert(result == expected)
       }
+
       test("issue-416"){
         def zeroHashCodeStrings: Iterator[String] = {
           def charAndHash(h: Int): Iterator[(Char, Int)] = ('!' to '~').iterator.map(ch => (ch, (h + ch) * 31))

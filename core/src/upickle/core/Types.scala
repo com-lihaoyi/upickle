@@ -203,14 +203,6 @@ trait Types{ types =>
   abstract class CaseR[V] extends SimpleReader[V]{
     override def expectedMsg = "expected dictionary"
     override def visitString(s: CharSequence, index: Int) = visitObject(0, true, index).visitEnd(index)
-    trait BaseCaseObjectContext{
-      def storeAggregatedValue(currentIndex: Int, v: Any): Unit
-      def visitKey(index: Int) = _root_.upickle.core.StringVisitor
-      var currentIndex = -1
-      protected def storeValueIfNotFound(i: Int, v: Any): Unit
-      protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]): Unit
-      protected def checkErrorMissingKeys(rawArgsBitset: Long): Boolean
-    }
 
     abstract class CaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext{
       var found = 0L
@@ -222,7 +214,7 @@ trait Types{ types =>
         }
       }
 
-      protected def storeValueIfNotFound(i: Int, v: Any) = {
+      def storeValueIfNotFound(i: Int, v: Any) = {
         if ((found & (1L << i)) == 0) {
           found |= (1L << i)
           storeAggregatedValue(i, v)
@@ -251,7 +243,7 @@ trait Types{ types =>
         }
       }
 
-      protected def storeValueIfNotFound(i: Int, v: Any) = {
+      def storeValueIfNotFound(i: Int, v: Any) = {
         if ((found(i / 64) & (1L << i)) == 0) {
           found(i / 64) |= (1L << i)
           storeAggregatedValue(i, v)
@@ -416,4 +408,18 @@ object Annotator{
     case class Cls(c: Class[_]) extends Checker
     case class Val(v: Any) extends Checker
   }
+}
+
+trait BaseCaseObjectContext {
+  def storeAggregatedValue(currentIndex: Int, v: Any): Unit
+
+  def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+
+  var currentIndex = -1
+
+  def storeValueIfNotFound(i: Int, v: Any): Unit
+
+  protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]): Unit
+
+  protected def checkErrorMissingKeys(rawArgsBitset: Long): Boolean
 }
