@@ -140,15 +140,18 @@ def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
 
   Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
 
-inline def fullClassName[T]: String = ${ fullClassNameImpl[T] }
-def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
+inline def tagName[T]: String = ${ tagNameImpl[T] }
+def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   import quotes.reflect._
 
   val sym = TypeTree.of[T].symbol
 
   extractKey(sym) match
   case Some(name) => Expr(name)
-  case None => Expr(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
+  case None =>
+
+    if (sym.flags.is(Flags.Enum)) Expr(sym.name.filter(_ != '$'))
+    else Expr(sym.fullName.filter(_ != '$'))
 
 inline def enumValueOf[T]: String => T = ${ enumValueOfImpl[T] }
 def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =

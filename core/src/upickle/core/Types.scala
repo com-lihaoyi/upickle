@@ -342,10 +342,20 @@ trait Types{ types =>
   }
   object TaggedReader{
     class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
-      def findReader(s: String) = if (s == tag) r else null
+      def findReader(s: String) = {
+        println("LHY findReader s " + s)
+        println("LHY findReader tag " + tag)
+        val res = if (s == tag) r else null
+        println("LHY findReader res " + res)
+        res
+      }
     }
     class Node[T](rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
-      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
+      def findReader(s: String) = {
+        val res = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
+        println("LHY findReader res " + res)
+        res
+      }
     }
   }
 
@@ -358,10 +368,13 @@ trait Types{ types =>
     }
   }
   object TaggedWriter{
-    class Leaf[T](c: ClassTag[_], tag: String, r: CaseW[T]) extends TaggedWriter[T]{
+    class Leaf[T](checker: AnnotatorChecker, tag: String, r: CaseW[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
-        if (c.runtimeClass.isInstance(v)) tag -> r
-        else null
+        checker match{
+          case AnnotatorChecker.Cls(c) if c.isInstance(v) => tag -> r
+          case AnnotatorChecker.Val(v0) if v0 == v => tag -> r
+          case _ => null
+        }
       }
     }
     class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
@@ -391,5 +404,10 @@ trait Types{ types =>
 
 trait Annotator { this: Types =>
   def annotate[V](rw: CaseR[V], n: String): TaggedReader[V]
-  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]): TaggedWriter[V]
+  def annotate[V](rw: CaseW[V], n: String, checker: AnnotatorChecker): TaggedWriter[V]
+}
+sealed trait AnnotatorChecker
+object AnnotatorChecker{
+  case class Cls(c: Class[_]) extends AnnotatorChecker
+  case class Val(v: Any) extends AnnotatorChecker
 }

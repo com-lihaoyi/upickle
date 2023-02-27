@@ -58,23 +58,8 @@ trait ReadersVersionSpecific extends MacrosCommon:
       else new HugeCaseObjectContext(paramCount) with ObjectContext
   }
 
-  class EnumReader[T](f: String => T, description: EnumDescription) extends SimpleReader[T] :
-    override def expectedMsg = "expected string enumeration"
-
-    override def visitString(s: CharSequence, index: Int) = {
-      val str = s.toString
-      try {
-        f(str)
-      } catch {
-        case _: IllegalArgumentException =>
-          throw new Abort(s"Value '$str' was not found in enumeration ${description.pretty}")
-      }
-    }
-  end EnumReader
-
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-
       val reader = new CaseReader(
         compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]],
         m.fromProduct(_),
@@ -83,22 +68,18 @@ trait ReadersVersionSpecific extends MacrosCommon:
         macros.checkErrorMissingKeysCount[T]()
       )
 
-      if macros.isMemberOfSealedHierarchy[T] then annotate(reader, macros.fullClassName[T])
+      if macros.isSingleton[T] then
+        annotate[T](SingletonR[T](valueOf[T]), macros.tagName[T])
+      else if macros.isMemberOfSealedHierarchy[T] then
+        annotate[T](reader, macros.tagName[T])
       else reader
 
     case m: Mirror.SumOf[T] =>
-      inline compiletime.erasedValue[T] match {
-        case _: scala.reflect.Enum =>
-          val valueOf = macros.enumValueOf[T]
-          val description = macros.enumDescription[T]
-          new EnumReader[T](valueOf, description)
-        case _ =>
-          val readers: List[Reader[_ <: T]] = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
-            .toList
-            .asInstanceOf[List[Reader[_ <: T]]]
+      val readers: List[Reader[_ <: T]] = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
+        .toList
+        .asInstanceOf[List[Reader[_ <: T]]]
 
-          Reader.merge[T](readers: _*)
-      }
+      Reader.merge[T](readers: _*)
   }
 
   inline given[T <: Singleton : Mirror.Of]: Reader[T] = macroR[T]
