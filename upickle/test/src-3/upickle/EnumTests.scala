@@ -26,9 +26,6 @@ enum ColorEnum(val rgb: Int):
   case Unknown(mix: Int) extends ColorEnum(0x000000)
 
 object ColorEnum{
-  implicit val rwRed: ReadWriter[ColorEnum.Red.type] = macroRW
-  implicit val rwGreen: ReadWriter[ColorEnum.Green.type] = macroRW
-  implicit val rwBlue: ReadWriter[ColorEnum.Blue.type] = macroRW
   implicit val rwMix: ReadWriter[ColorEnum.Mix] = macroRW
   implicit val rwUnknown: ReadWriter[ColorEnum.Unknown] = macroRW
   implicit val rwColor: ReadWriter[ColorEnum] = macroRW
