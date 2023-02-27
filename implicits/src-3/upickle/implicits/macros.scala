@@ -150,6 +150,13 @@ def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   case Some(name) => Expr(name)
   case None =>
 
+    // In Scala 3 enums, we use the short name of each case as the tag, rather
+    // than the fully-qualified name. We can do this because we know that all
+    // enum cases are in the same `enum Foo` namespace with distinct short names,
+    // whereas sealed trait instances could be all over the place with identical
+    // short names only distinguishable by their prefix.
+    //
+    // Harmonizing these two cases further is TBD
     if (sym.flags.is(Flags.Enum)) Expr(sym.name.filter(_ != '$'))
     else Expr(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
 
