@@ -23,6 +23,20 @@ object Fi{
     implicit def rw2: upickle.default.ReadWriter[Fum] = upickle.default.macroRW
   }
 }
+
+sealed trait WrongTag
+
+object WrongTag {
+  case object Foo1 extends WrongTag
+
+  case object Foo2 extends WrongTag
+  implicit val rw1: upickle.default.ReadWriter[Foo1.type] = upickle.default.macroRW
+  implicit val rw2: upickle.default.ReadWriter[Foo2.type] = upickle.default.macroRW
+  implicit val rw: upickle.default.ReadWriter[WrongTag] = upickle.default.macroRW
+
+
+}
+
 /**
 * Generally, every failure should be a Invalid.Json or a
 * InvalidData. If any assertion errors, match errors, number
@@ -210,8 +224,9 @@ object FailureTests extends TestSuite {
         test("invalidTag"){
           test - assertErrorMsg[Fi.Fo]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
           test - assertErrorMsg[Fi]("""["omg", {}]""", "invalid tag for tagged object: omg at index 1")
-          test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
-          test - assertErrorMsgDefault[Fi]("""{"$type": "omg"}]""", "invalid tag for tagged object: omg at index 1")
+          test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}""", "invalid tag for tagged object: omg at index 1")
+          test - assertErrorMsgDefault[Fi](""""omg"""", "invalid tag for tagged object: omg at index 0")
+          test - assertErrorMsgDefault[Fi]("""{"$type": "omg"}""", "invalid tag for tagged object: omg at index 1")
           test - assertErrorMsgDefault[Fi]("""{}""", "expected tagged dictionary")
         }
 

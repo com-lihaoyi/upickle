@@ -203,14 +203,6 @@ trait Types{ types =>
   abstract class CaseR[V] extends SimpleReader[V]{
     override def expectedMsg = "expected dictionary"
     override def visitString(s: CharSequence, index: Int) = visitObject(0, true, index).visitEnd(index)
-    trait BaseCaseObjectContext{
-      def storeAggregatedValue(currentIndex: Int, v: Any): Unit
-      def visitKey(index: Int) = _root_.upickle.core.StringVisitor
-      var currentIndex = -1
-      protected def storeValueIfNotFound(i: Int, v: Any): Unit
-      protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]): Unit
-      protected def checkErrorMissingKeys(rawArgsBitset: Long): Boolean
-    }
 
     abstract class CaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext{
       var found = 0L
@@ -222,7 +214,7 @@ trait Types{ types =>
         }
       }
 
-      protected def storeValueIfNotFound(i: Int, v: Any) = {
+      def storeValueIfNotFound(i: Int, v: Any) = {
         if ((found & (1L << i)) == 0) {
           found |= (1L << i)
           storeAggregatedValue(i, v)
@@ -251,7 +243,7 @@ trait Types{ types =>
         }
       }
 
-      protected def storeValueIfNotFound(i: Int, v: Any) = {
+      def storeValueIfNotFound(i: Int, v: Any) = {
         if ((found(i / 64) & (1L << i)) == 0) {
           found(i / 64) |= (1L << i)
           storeAggregatedValue(i, v)
@@ -338,7 +330,12 @@ trait Types{ types =>
     override def expectedMsg = taggedExpectedMsg
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
     override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = taggedObjectContext(this, index)
-    override def visitString(s: CharSequence, index: Int) = findReader(s.toString).visitString(s, index)
+    override def visitString(s: CharSequence, index: Int) = {
+      findReader(s.toString) match {
+        case null => throw new AbortException("invalid tag for tagged object: " + s, index, -1, -1, null)
+        case reader => reader.visitString(s, index)
+      }
+    }
   }
   object TaggedReader{
     class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
@@ -358,10 +355,13 @@ trait Types{ types =>
     }
   }
   object TaggedWriter{
-    class Leaf[T](c: ClassTag[_], tag: String, r: CaseW[T]) extends TaggedWriter[T]{
+    class Leaf[T](checker: Annotator.Checker, tag: String, r: CaseW[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
-        if (c.runtimeClass.isInstance(v)) tag -> r
-        else null
+        checker match{
+          case Annotator.Checker.Cls(c) if c.isInstance(v) => tag -> r
+          case Annotator.Checker.Val(v0) if v0 == v => tag -> r
+          case _ => null
+        }
       }
     }
     class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
@@ -389,7 +389,37 @@ trait Types{ types =>
   }
 }
 
+/**
+ * Wrap a CaseR or CaseW reader/writer to handle $type tags during reading and writing.
+ *
+ * Note that Scala 3 singleton `enum` values do not have proper `ClassTag[V]`s
+ * like Scala 2 `case object`s do, so we instead use a `Checker.Val` to check
+ * for `.equals` equality during writes to determine which tag to use.
+ */
 trait Annotator { this: Types =>
   def annotate[V](rw: CaseR[V], n: String): TaggedReader[V]
-  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]): TaggedWriter[V]
+  def annotate[V](rw: CaseW[V], n: String, checker: Annotator.Checker): TaggedWriter[V]
+  def annotate[V](rw: CaseW[V], n: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
+    annotate(rw, n, Annotator.Checker.Cls(ct.runtimeClass))
+}
+object Annotator{
+  sealed trait Checker
+  object Checker{
+    case class Cls(c: Class[_]) extends Checker
+    case class Val(v: Any) extends Checker
+  }
+}
+
+trait BaseCaseObjectContext {
+  def storeAggregatedValue(currentIndex: Int, v: Any): Unit
+
+  def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+
+  var currentIndex = -1
+
+  def storeValueIfNotFound(i: Int, v: Any): Unit
+
+  protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]): Unit
+
+  protected def checkErrorMissingKeys(rawArgsBitset: Long): Boolean
 }

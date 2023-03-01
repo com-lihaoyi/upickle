@@ -48,6 +48,26 @@ def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
     .find(_.tpe =:= TypeRepr.of[upickle.implicits.key])
     .map{case Apply(_, Literal(StringConstant(s)) :: Nil) => s}
 
+inline def paramsCount[T]: Int = ${paramsCountImpl[T]}
+def paramsCountImpl[T](using Quotes, Type[T]) = {
+  Expr(fieldLabelsImpl0[T].size)
+}
+
+inline def storeDefaults[T](inline x: upickle.core.BaseCaseObjectContext): Unit = ${storeDefaultsImpl[T]('x)}
+def storeDefaultsImpl[T](x: Expr[upickle.core.BaseCaseObjectContext])(using Quotes, Type[T]) = {
+  import quotes.reflect.*
+
+  val statements = fieldLabelsImpl0[T]
+    .zipWithIndex
+    .map { case ((rawLabel, label), i) =>
+      val defaults = getDefaultParamsImpl0[T]
+      if (defaults.contains(label)) '{${x}.storeValueIfNotFound(${Expr(i)}, ${defaults(label)})}
+      else '{}
+    }
+
+  Expr.block(statements, '{})
+}
+
 inline def fieldLabels[T]: List[(String, String)] = ${fieldLabelsImpl[T]}
 def fieldLabelsImpl0[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, String)] =
   import quotes.reflect._
@@ -57,7 +77,8 @@ def fieldLabelsImpl0[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, Str
     .flatten
     .filterNot(_.isType)
 
-  fields.map{ sym =>
+  if (TypeRepr.of[T].isSingleton) Nil
+  else fields.map{ sym =>
     extractKey(sym) match
     case Some(name) => (sym, name)
     case None => (sym, sym.name)
@@ -65,6 +86,21 @@ def fieldLabelsImpl0[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, Str
 
 def fieldLabelsImpl[T](using Quotes, Type[T]): Expr[List[(String, String)]] =
   Expr.ofList(fieldLabelsImpl0[T].map((a, b) => Expr((a.name, b))))
+
+inline def keyToIndex[T](inline x: String): Int = ${keyToIndexImpl[T]('x)}
+def keyToIndexImpl[T](x: Expr[String])(using Quotes, Type[T]): Expr[Int] = {
+  import quotes.reflect.*
+  val z = Match(
+    x.asTerm,
+    fieldLabelsImpl0[T].map(_._2).zipWithIndex.map{(f, i) =>
+      CaseDef(Literal(StringConstant(f)), None, Literal(IntConstant(i)))
+    } ++ Seq(
+      CaseDef(Wildcard(), None, Literal(IntConstant(-1)))
+    )
+  )
+
+  z.asExpr.asInstanceOf[Expr[Int]]
+}
 
 inline def writeLength[T](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
                           inline v: T): Int =
@@ -78,8 +114,8 @@ def writeLengthImpl[T](thisOuter: Expr[upickle.core.Types with upickle.implicits
       .map{(rawLabel, label) =>
         val defaults = getDefaultParamsImpl0[T]
         val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
-        if (!defaults.contains(rawLabel.name)) '{1}
-        else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(rawLabel.name)}) 1 else 0}
+        if (!defaults.contains(label)) '{1}
+        else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(label)}) 1 else 0}
       }
       .foldLeft('{0}) { case (prev, next) => '{$prev + $next} }
 
@@ -125,8 +161,8 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
               ${select},
             )
           }
-          if (!defaults.contains(rawLabel.name)) snippet
-          else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(rawLabel.name)}) $snippet}
+          if (!defaults.contains(label)) snippet
+          else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(label)}) $snippet}
 
     },
     '{()}
@@ -140,15 +176,24 @@ def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
 
   Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
 
-inline def fullClassName[T]: String = ${ fullClassNameImpl[T] }
-def fullClassNameImpl[T](using Quotes, Type[T]): Expr[String] =
+inline def tagName[T]: String = ${ tagNameImpl[T] }
+def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   import quotes.reflect._
 
   val sym = TypeTree.of[T].symbol
 
   extractKey(sym) match
   case Some(name) => Expr(name)
-  case None => Expr(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
+  case None =>
+    // In Scala 3 enums, we use the short name of each case as the tag, rather
+    // than the fully-qualified name. We can do this because we know that all
+    // enum cases are in the same `enum Foo` namespace with distinct short names,
+    // whereas sealed trait instances could be all over the place with identical
+    // short names only distinguishable by their prefix.
+    //
+    // Harmonizing these two cases further is TBD
+    if (sym.flags.is(Flags.Enum)) Expr(sym.name.filter(_ != '$'))
+    else Expr(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
 
 inline def enumValueOf[T]: String => T = ${ enumValueOfImpl[T] }
 def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =

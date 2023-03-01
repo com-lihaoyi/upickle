@@ -5,6 +5,7 @@ import upickle.TestUtil._
 import upickle.default.{read, write, ReadWriter => RW}
 
 case class Trivial(a: Int = 1)
+
 case class KeyedPerson(
                    @upickle.implicits.key("first_name") firstName: String = "N/A",
                    @upickle.implicits.key("last_name") lastName: String)
@@ -552,9 +553,9 @@ object MacroTests extends TestSuite {
 
     }
     test("defaultkeyregression"){
-
-      val json = """{"last_name": "Snow"}"""
+      val json = """{"last_name":"Snow"}"""
       upickle.default.read[KeyedPerson](json) ==> KeyedPerson("N/A", "Snow")
+      upickle.default.write[KeyedPerson](KeyedPerson("N/A", "Snow")) ==> json
     }
 
     test("specialchars"){
@@ -565,4 +566,3 @@ object MacroTests extends TestSuite {
     }
   }
 }
-
