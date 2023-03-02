@@ -22,8 +22,15 @@ case object Cthulu
   extends Animal
   derives ReadWriter
 
-object DerivationTests extends TestSuite {
+//sealed trait Animal2
+//case object Cthulu2
+//  extends Animal2
 
+
+
+object DerivationTests extends TestSuite {
+//  implicit val rwAnimal2: ReadWriter[Animal2] = ReadWriter.derived
+//  implicit val rwCthulu2: ReadWriter[Cthulu2.type] = ReadWriter.derived
   val tests = Tests {
     test("caseClassReader") - {
       val dogJson = """
@@ -80,6 +87,18 @@ object DerivationTests extends TestSuite {
       assert(result1 == expected)
       assert(result2 == expected)
     }
+
+
+//    test("caseObjectWriterImplicit") - {
+//      val result1 = write(Cthulu2)
+//
+//      val animal: Animal2 = Cthulu2
+//      val result2 = write(animal)
+//
+//      val expected = """{"$type":"upickle.Cthulu2"}"""
+//      assert(result1 == expected)
+//      assert(result2 == expected)
+//    }
 
     test ("caseObjectReader") - {
       val json = """{"$type":"upickle.Cthulu"}"""

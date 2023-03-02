@@ -226,5 +226,5 @@ case m: Mirror.SumOf[T] =>
 inline def isSingleton[T]: Boolean = ${ isSingletonImpl[T] }
 def isSingletonImpl[T](using Quotes, Type[T]): Expr[Boolean] =
   import quotes.reflect._
-  Expr(TypeRepr.of[T].isSingleton)
+  Expr(TypeRepr.of[T].typeSymbol.flags.is(Flags.Module))
 
