@@ -12,10 +12,10 @@ import upickle.default.*
 enum SimpleEnum derives ReadWriter:
   case A, B
 
-sealed trait FooX derives ReadWriter
-object FooX{
-  case object Foo1 extends FooX
-  case object Foo2 extends FooX
+sealed trait Scala3SealedTrait derives ReadWriter
+object Scala3SealedTrait{
+  case object Case1 extends Scala3SealedTrait derives ReadWriter
+  case class Case2(x: Scala3SealedTrait) extends Scala3SealedTrait derives ReadWriter
 }
 
 enum ColorEnum(val rgb: Int):
@@ -56,6 +56,24 @@ object EnumTests extends TestSuite {
           """{"str":"test","simple1":"A","simple2":["B"]}"""
         )
       }
+    }
+    test("sealedTrait"){
+      rw[Scala3SealedTrait](
+        Scala3SealedTrait.Case2(Scala3SealedTrait.Case1),
+        """{"$type":"upickle.Scala3SealedTrait.Case2","x":"upickle.Scala3SealedTrait.Case1"}"""
+      )
+      rw[Scala3SealedTrait.Case2](
+        Scala3SealedTrait.Case2(Scala3SealedTrait.Case1),
+        """{"$type":"upickle.Scala3SealedTrait.Case2","x":"upickle.Scala3SealedTrait.Case1"}"""
+      )
+      rw[Scala3SealedTrait](
+        Scala3SealedTrait.Case1,
+        """"upickle.Scala3SealedTrait.Case1""""
+      )
+      rw[Scala3SealedTrait.Case1.type](
+        Scala3SealedTrait.Case1,
+        """"upickle.Scala3SealedTrait.Case1""""
+      )
     }
     test("color"){
       rw[ColorEnum](ColorEnum.Red, "\"Red\"")
