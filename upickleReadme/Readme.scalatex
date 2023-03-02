@@ -23,7 +23,7 @@
   )
 )
 
-@sect("µPickle 2.0.0")
+@sect("uPickle 3.0.0-M2")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -72,8 +72,8 @@
 
   @sect{Getting Started}
     @hl.scala
-      "com.lihaoyi" %% "upickle" % "1.6.0" // SBT
-      ivy"com.lihaoyi::upickle:1.6.0" // Mill
+      "com.lihaoyi" %% "upickle" % "3.0.0-M1" // SBT
+      ivy"com.lihaoyi::upickle:3.0.0-M1" // Mill
 
     @p
       And then you can immediately start writing and reading common Scala
@@ -91,8 +91,8 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        "com.lihaoyi" %%% "upickle" % "1.6.0" // SBT
-        ivy"com.lihaoyi::upickle::1.6.0" // Mill
+        "com.lihaoyi" %%% "upickle" % "3.0.0-M1" // SBT
+        ivy"com.lihaoyi::upickle::3.0.0-M1" // Mill
 
     @sect{Scala Versions}
       @p
@@ -845,6 +845,29 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{3.0.0-M2}
+      @ul
+        @li
+          Greatly improved speed and runtime-time safety for Scala 3 macros
+
+        @li
+          Fixed infinite compile-loop issue on Scala 3
+
+        @li
+          Ensured, that @code{ujson.Value}s behave properly as a direct target of reading
+          and writing operations
+
+    @sect{3.0.0-M1}
+      @ul
+        @li
+          @b{Updated geny dependency from 0.7.1 to 1.0.0. This breaks binary compatibility, hence we increased the major version number.}
+
+        @li
+          uPickle now applies Semantic Versioning and follows the SemVer spec
+
+        @li
+          various library dependency updates
+
     @sect{2.0.0}
       @ul
         @li

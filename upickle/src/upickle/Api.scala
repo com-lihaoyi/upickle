@@ -166,8 +166,8 @@ object legacy extends LegacyApi
 trait LegacyApi extends Api with Annotator{
   def annotate[V](rw: CaseR[V], n: String) = new TaggedReader.Leaf[V](n, rw)
 
-  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]) = {
-    new TaggedWriter.Leaf[V](c, n, rw)
+  def annotate[V](rw: CaseW[V], n: String, checker: Annotator.Checker): TaggedWriter[V] = {
+    new TaggedWriter.Leaf[V](checker, n, rw)
   }
 
   def taggedExpectedMsg = "expected sequence"
@@ -227,8 +227,8 @@ trait AttributeTagged extends Api with Annotator{
     new TaggedReader.Leaf[V](n, rw)
   }
 
-  def annotate[V](rw: CaseW[V], n: String)(implicit c: ClassTag[V]) = {
-    new TaggedWriter.Leaf[V](c, n, rw)
+  def annotate[V](rw: CaseW[V], n: String, checker: Annotator.Checker): TaggedWriter[V] = {
+    new TaggedWriter.Leaf[V](checker, n, rw)
   }
 
   def taggedExpectedMsg = "expected dictionary"

@@ -3,12 +3,12 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - main
     tags:
       - '*'
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   test-js:
@@ -28,8 +28,7 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Run JS tests
         run: |
-          ./mill -i __.resolvedIvyDeps
-          ./mill -i -j 0 all __.js.__.compile __.js.__.publishArtifacts __.js.__.test
+          ./mill -i -j 0 -k __.js.__.compile + __.js.__.publishArtifacts + __.js.__.test
 
   test-native:
     runs-on: ubuntu-latest
@@ -49,8 +48,7 @@ jobs:
 
       - name: Run Native tests
         run: |
-          ./mill -i __.resolvedIvyDeps
-          ./mill -i -j 0 all __.native.__.compile __.native.__.publishArtifacts __.native.__.test
+          ./mill -i -j 0 -k __.native.__.compile + __.native.__.publishArtifacts + __.native.__.test
 
   test-jvm:
     runs-on: ubuntu-latest
@@ -69,8 +67,7 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Run JVM tests
         run: |
-          ./mill -i __.resolvedIvyDeps
-          ./mill -i -j 0 all __.jvm.__.compile __.jvm.__.publishArtifacts __.jvm.__.test
+          ./mill -i -j 0 -k __.jvm.__.compile + __.jvm.__.publishArtifacts + __.jvm.__.test
 
   check-binary-compatibility:
     runs-on: ubuntu-latest
@@ -83,7 +80,7 @@ jobs:
           distribution: 'temurin'
           java-version: 8
       - name: Check Binary Compatibility
-        run: ./mill -i __.mimaReportBinaryIssues
+        run: ./mill -i -k __.mimaReportBinaryIssues
 
   publish-sonatype:
     if: github.repository == 'com-lihaoyi/upickle' && contains(github.ref, 'refs/tags/')

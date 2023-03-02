@@ -4,6 +4,7 @@ import $ivy.`com.github.lolgab::mill-mima::0.0.13`
 
 // imports
 import mill._
+import mill.define.Target
 import mill.scalalib._
 import mill.scalalib.publish._
 import mill.scalajslib._
@@ -59,10 +60,10 @@ trait CommonModule extends ScalaModule {
 }
 
 
-trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule{
+trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule {
 
   def publishVersion = VcsVersion.vcsState().format()
-  override def mimaPreviousVersions = Seq("2.0.0")
+  override def mimaPreviousVersions = Seq("3.0.0-M2")
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -73,6 +74,10 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
     developers = Seq(
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
+  )
+
+  override def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
+    "info.releaseNotesURL" -> "https://com-lihaoyi.github.io/upickle/#VersionHistory"
   )
   override def versionScheme: T[Option[VersionScheme]] = T(Some(VersionScheme.SemVerSpec))
   def templates = T.source(millSourcePath / "templates")
@@ -124,7 +129,18 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
   def platformSegment = "js"
   def crossScalaJSVersion: String
   def scalaJSVersion = crossScalaJSVersion
-  override def scalacOptions = super.scalacOptions()
+  
+  private def sourceMapOptions = T.task {
+    val vcsState = VcsVersion.vcsState()
+    vcsState.lastTag.collect {
+      case tag if vcsState.commitsSinceLastTag == 0 =>
+        val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
+        val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
+        s"$sourcesOptionName:${T.workspace.toIO.toURI}->$baseUrl/$tag/"
+    }
+  }
+  override def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
+
   override def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "js"
@@ -423,10 +439,10 @@ trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"
   override def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.14.3",
-    ivy"io.circe::circe-generic::0.14.3",
-    ivy"io.circe::circe-parser::0.14.3",
-    ivy"com.typesafe.play::play-json::2.9.3",
+    ivy"io.circe::circe-core::0.14.4",
+    ivy"io.circe::circe-generic::0.14.4",
+    ivy"io.circe::circe-parser::0.14.4",
+    ivy"com.typesafe.play::play-json::2.9.4",
     ivy"io.argonaut::argonaut:6.2.6",
     ivy"org.json4s::json4s-ast:4.0.6",
     ivy"com.lihaoyi::sourcecode::$sourcecode",
