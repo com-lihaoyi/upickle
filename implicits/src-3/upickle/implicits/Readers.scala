@@ -3,7 +3,6 @@ package upickle.implicits
 import compiletime.summonInline
 import deriving.Mirror
 import upickle.core.{Annotator, ObjVisitor, Visitor, Abort, BaseCaseObjectContext}
-import upickle.implicits.macros.EnumDescription
 
 trait ReadersVersionSpecific extends MacrosCommon:
   this: upickle.core.Types with Readers with Annotator =>
@@ -60,7 +59,7 @@ trait ReadersVersionSpecific extends MacrosCommon:
       }
 
       inline if macros.isSingleton[T] then
-        annotate[T](SingletonR[T](valueOf[T]), macros.tagName[T])
+        annotate[T](SingletonR[T](macros.getSingleton[T]), macros.tagName[T])
       else if macros.isMemberOfSealedHierarchy[T] then
         annotate[T](reader, macros.tagName[T])
       else reader

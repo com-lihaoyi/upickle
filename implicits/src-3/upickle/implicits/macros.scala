@@ -30,16 +30,6 @@ def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
 
     names.zip(idents.map(_.asExpr).map(e => '{$e.asInstanceOf[AnyRef]})).toMap
 
-inline def getDefaultParamsArray[T] = ${getDefaultParamsArray1[T]}
-def getDefaultParamsArray1[T](using Quotes, Type[T]): Expr[Array[() => Any]] =
-  '{${Expr.ofSeq(getDefaultParamsArray0[T])}.toArray}
-
-def getDefaultParamsArray0[T](using Quotes, Type[T]): Seq[Expr[() => Any]] =
-  val map = getDefaultParamsImpl0[T]
-  fieldLabelsImpl0.map(_._2).map(map.get(_) match{
-    case None => '{null}
-    case Some(v) => '{() => $v}
-  })
 
 def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
   import quotes.reflect._
@@ -195,36 +185,16 @@ def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
     if (sym.flags.is(Flags.Enum)) Expr(sym.name.filter(_ != '$'))
     else Expr(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
 
-inline def enumValueOf[T]: String => T = ${ enumValueOfImpl[T] }
-def enumValueOfImpl[T](using Quotes, Type[T]): Expr[String => T] =
-  import quotes.reflect._
-
-  val sym = TypeTree.of[T].symbol
-  val companion = sym.companionClass.tree.asInstanceOf[ClassDef]
-
-  val valueOfMethod: DefDef = companion
-    .body
-    .collectFirst { case dd @ DefDef("valueOf", _, _, _) => dd }
-    .getOrElse { throw Exception("Enumeration valueOf method not found") }
-
-  val methodSymbol = valueOfMethod.symbol
-  Ref(methodSymbol).etaExpand(methodSymbol.owner).asExpr.asInstanceOf[Expr[String => T]]
-
-case class EnumDescription(name: String, values: Seq[String]):
-  def pretty = s"$name[values: ${values.mkString(", ")}]"
-
-inline def enumDescription[T](using m: Mirror.Of[T]): EnumDescription = inline m match
-case m: Mirror.ProductOf[T] =>
-  throw new UnsupportedOperationException("Products cannot have enum descriptions")
-
-case m: Mirror.SumOf[T] =>
-  val name = constValue[m.MirroredLabel]
-  val values = constValueTuple[m.MirroredElemLabels].productIterator.toSeq.map(_.toString)
-  EnumDescription(name, values)
-
-
 inline def isSingleton[T]: Boolean = ${ isSingletonImpl[T] }
 def isSingletonImpl[T](using Quotes, Type[T]): Expr[Boolean] =
   import quotes.reflect._
-  Expr(TypeRepr.of[T].typeSymbol.flags.is(Flags.Module))
+  Expr(TypeRepr.of[T].typeSymbol.flags.is(Flags.Module) || TypeRepr.of[T].isSingleton)
 
+inline def getSingleton[T]: T = ${ getSingletonImpl[T] }
+def getSingletonImpl[T](using Quotes, Type[T]): Expr[T] =
+  import quotes.reflect._
+
+  TypeRepr.of[T] match{
+    case tref: TypeRef => Ref(tref.classSymbol.get.companionModule).asExpr.asInstanceOf[Expr[T]]
+    case v => '{valueOf[T]}
+  }
