@@ -25,7 +25,7 @@ trait WritersVersionSpecific extends MacrosCommon:
       }
 
       inline if macros.isSingleton[T] then
-        annotate[T](SingletonW[T](null.asInstanceOf[T]), macros.tagName[T], Annotator.Checker.Val(valueOf[T]))
+        annotate[T](SingletonW[T](null.asInstanceOf[T]), macros.tagName[T], Annotator.Checker.Val(macros.getSingleton[T]))
       else if macros.isMemberOfSealedHierarchy[T] then
         annotate[T](writer, macros.tagName[T], Annotator.Checker.Cls(implicitly[ClassTag[T]].runtimeClass))
       else writer

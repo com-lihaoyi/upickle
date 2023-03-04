@@ -8,15 +8,8 @@ import scala.language.implicitConversions
 import utest.{assert, intercept, *}
 import upickle.default.*
 
-
 enum SimpleEnum derives ReadWriter:
   case A, B
-
-sealed trait FooX derives ReadWriter
-object FooX{
-  case object Foo1 extends FooX
-  case object Foo2 extends FooX
-}
 
 enum ColorEnum(val rgb: Int):
   case Red extends ColorEnum(0xFF0000)
@@ -38,10 +31,10 @@ object EnumTests extends TestSuite {
   val tests = Tests {
     test("simple") {
       test("readwrite") - {
-        rw[SimpleEnum](SimpleEnum.A, "\"A\"")
-        rw[SimpleEnum](SimpleEnum.B, "\"B\"")
-        rw[SimpleEnum.A.type](SimpleEnum.A, "\"A\"")
-        rw[SimpleEnum.B.type](SimpleEnum.B, "\"B\"")
+        rw[SimpleEnum](SimpleEnum.A, "\"A\"", """{"$type": "A"}""")
+        rw[SimpleEnum](SimpleEnum.B, "\"B\"", """{"$type": "B"}""")
+        rw[SimpleEnum.A.type](SimpleEnum.A, "\"A\"", """{"$type": "A"}""")
+        rw[SimpleEnum.B.type](SimpleEnum.B, "\"B\"", """{"$type": "B"}""")
       }
 
       test("readFailure") - {
@@ -58,15 +51,15 @@ object EnumTests extends TestSuite {
       }
     }
     test("color"){
-      rw[ColorEnum](ColorEnum.Red, "\"Red\"")
-      rw[ColorEnum](ColorEnum.Green, "\"Green\"")
-      rw[ColorEnum](ColorEnum.Blue, "\"Blue\"")
+      rw[ColorEnum](ColorEnum.Red, "\"Red\"", """{"$type": "Red"}""")
+      rw[ColorEnum](ColorEnum.Green, "\"Green\"", """{"$type": "Green"}""")
+      rw[ColorEnum](ColorEnum.Blue, "\"Blue\"", """{"$type": "Blue"}""")
       rw[ColorEnum](ColorEnum.Mix(12345), "{\"$type\":\"Mix\",\"mix\":12345}")
       rw[ColorEnum](ColorEnum.Unknown(12345), "{\"$type\":\"Unknown\",\"mix\":12345}")
 
-      rw[ColorEnum.Red.type](ColorEnum.Red, "\"Red\"")
-      rw[ColorEnum.Green.type](ColorEnum.Green, "\"Green\"")
-      rw[ColorEnum.Blue.type](ColorEnum.Blue, "\"Blue\"")
+      rw[ColorEnum.Red.type](ColorEnum.Red, "\"Red\"", """{"$type": "Red"}""")
+      rw[ColorEnum.Green.type](ColorEnum.Green, "\"Green\"", """{"$type": "Green"}""")
+      rw[ColorEnum.Blue.type](ColorEnum.Blue, "\"Blue\"", """{"$type": "Blue"}""")
       rw[ColorEnum.Mix](ColorEnum.Mix(12345), "{\"$type\":\"Mix\",\"mix\":12345}")
       rw[ColorEnum.Unknown](ColorEnum.Unknown(12345), "{\"$type\":\"Unknown\",\"mix\":12345}")
     }
