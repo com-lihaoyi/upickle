@@ -341,7 +341,7 @@ object AdvancedTests extends TestSuite {
         assert(result == expected)
       }
 
-      test("issue-416"){
+      test("hash-collision"){
         def zeroHashCodeStrings: Iterator[String] = {
           def charAndHash(h: Int): Iterator[(Char, Int)] = ('!' to '~').iterator.map(ch => (ch, (h + ch) * 31))
 
@@ -357,19 +357,20 @@ object AdvancedTests extends TestSuite {
           } yield new String(Array(ch0, ch1, ch2, ch3, ch4, ch5, ch6, ch7))
         }
 
-        val jsonString =
+        def jsonString(elements: Int) =
           zeroHashCodeStrings
             .map(s => ujson.write(s))
-            .take(1000000)
+            .take(elements)
             .mkString("{", s":null,", ":null}")
 
-        // This is expected to have sub-linear behavior, due to use of `LinkedHashMap` in `ujson.Value`
-        // which is not robust against collisions
-        //        ujson.read(jsonString)
-
-        // Make sure this can pass in Scala 3. We do not use `ujson.Value` in this code path at all,
-        // so it should finish in a reasonable amount of time and without issue
-        upickle.default.read[Foo416](jsonString)
+        test("issue-416") {
+          upickle.default.read[Foo416](jsonString(1000000))
+          ()
+        }
+        test("issue-446") {
+          ujson.read(jsonString(100000))
+          ()
+        }
       }
     }
   }
