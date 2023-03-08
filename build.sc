@@ -15,7 +15,6 @@ import mill.scalanativelib.api.{LTO, ReleaseMode}
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
-val scala211  = "2.11.12"
 val scala212  = "2.12.17"
 val scala213  = "2.13.10"
 val scala3   = "3.2.2"
@@ -26,7 +25,7 @@ val sourcecode = "0.3.0"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
-val scala2JVMVersions = Seq(scala211, scala212, scala213)
+val scala2JVMVersions = Seq(scala212, scala213)
 val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 val scalaJSVersions = scalaJVMVersions.map((_, scalaJS))
@@ -43,12 +42,10 @@ trait CommonModule extends ScalaModule {
   override def sources = T.sources{
     super.sources() ++
     Seq(PathRef(millSourcePath / s"src-$platformSegment")) ++
-    (if (scalaVersion() != scala212 && scalaVersion() != scala211) {
+    (if (scalaVersion() != scala212) {
       Seq(PathRef(millSourcePath / "src-2.13+"))
-    } else Seq()) ++
-    (if (scalaVersion() != scala211) {
-      Seq(PathRef(millSourcePath / "src-2.12+"))
-    } else Seq()) ++
+    } else Seq()) ++    
+      Seq(PathRef(millSourcePath / "src-2.12+")) ++ // TODO: tidy up source code and remove this line.    
     (if (scalaVersion() == scala212 || scalaVersion() == scala213) {
       Seq(PathRef(millSourcePath / "src-2.12-2.13"))
     } else Seq()) ++
@@ -354,16 +351,16 @@ object ujson extends Module{
     override def artifactName = "ujson-circe"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
-    val circeVersion = if(crossScalaVersion == scala211) "0.11.2" else "0.14.5"
+    val circeVersion = "0.14.5"
     override def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
   }
 
-  object play extends Cross[PlayModule](scala2JVMVersions:_*)
+  object play extends Cross[PlayModule](scalaJVMVersions:_*)
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
     override def artifactName = "ujson-play"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
-    val playJsonVersion = if(crossScalaVersion == scala211) "2.7.4" else "2.9.4"
+    val playJsonVersion = "2.9.4"
     override def ivyDeps = Agg(
       ivy"com.typesafe.play::play-json:$playJsonVersion"
     )
