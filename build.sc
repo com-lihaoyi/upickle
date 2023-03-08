@@ -363,8 +363,9 @@ object ujson extends Module{
     override def artifactName = "ujson-play"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
+    val playJsonVersion = if(crossScalaVersion == scala211) "2.7.4" else "2.9.4"
     override def ivyDeps = Agg(
-      ivy"com.typesafe.play::play-json:2.9.4"
+      ivy"com.typesafe.play::play-json:$playJsonVersion"
     )
   }
 }
