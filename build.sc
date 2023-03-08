@@ -335,14 +335,14 @@ object ujson extends Module{
     override def moduleDeps = Seq(ujson.jvm())
     override def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.6")
   }
-  object json4s extends Cross[Json4sModule](scala2JVMVersions:_*)
+  object json4s extends Cross[Json4sModule](scalaJVMVersions:_*)
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
     override def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
     override def ivyDeps = Agg(
-      ivy"org.json4s::json4s-ast:3.6.12",
-      ivy"org.json4s::json4s-native:3.6.12"
+      ivy"org.json4s::json4s-ast:4.0.6",
+      ivy"org.json4s::json4s-native:4.0.6"
     )
   }
 
@@ -355,7 +355,7 @@ object ujson extends Module{
     override def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
   }
 
-  object play extends Cross[PlayModule](scalaJVMVersions:_*)
+  object play extends Cross[PlayModule](scala2JVMVersions:_*)
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
     override def artifactName = "ujson-play"
     def platformSegment = "jvm"
