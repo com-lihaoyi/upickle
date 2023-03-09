@@ -116,7 +116,14 @@ object Arr{
     Arr(buf)
   }
 }
-case class Obj private (val value: mutable.Map[Msg, Msg]) extends Msg
+class Obj private (val value: mutable.Map[Msg, Msg]) extends Msg {
+  override def toString(): String = s"Obj($value)"
+  override def equals(x: Any): Boolean = {
+    if(!x.isInstanceOf[Obj]) false
+    else value.equals(x.asInstanceOf[Obj].value)
+  }
+  override def hashCode(): Int = value.hashCode()
+}
 object Obj{
   def apply(item: (Msg, Msg),
             items: (Msg, Msg)*): Obj = {
@@ -228,7 +235,7 @@ object Msg extends MsgVisitor[Msg, Msg]{
   }
 
   def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Msg, Msg] {
-    val map = mutable.LinkedHashMap[Msg, Msg]()
+    val map = mutable.Map[Msg, Msg]()
     var lastKey: Msg = null
     def subVisitor = Msg
     def visitValue(v: Msg, index: Int): Unit = map(lastKey) = v
