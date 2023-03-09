@@ -7,11 +7,16 @@ import java.{util => ju}
 
 class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     extends mutable.Map[K, V]
-    with mutable.Builder[(K, V), LinkedHashMap[K, V]] {
-  def addOne(elem: (K, V)): this.type = {
-    if (elem._1 == null)
+    with mutable.Builder[(K, V), LinkedHashMap[K, V]]
+    with LinkedHashMapCompat[K, V]
+    {
+  private def _put(key: K, value: V): V = {
+    if (key == null)
       throw new NullPointerException("null keys are not allowed")
-    underlying.put(elem._1, elem._2)
+    underlying.put(key, value)
+  }
+  def addOne(elem: (K, V)): this.type = {
+    _put(elem._1, elem._2)
     this
   }
   def iterator: Iterator[(K, V)] = {
@@ -30,7 +35,7 @@ class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     this
   }
   override def put(key: K, value: V): Option[V] = {
-    Option(underlying.put(key, value))
+    Option(_put(key, value))
   }
   override def result(): LinkedHashMap[K, V] = this
 }
