@@ -97,7 +97,7 @@
     @sect{Scala Versions}
       @p
 
-        uPickle supports Scala 2.12, 2.13 and 3.x
+        uPickle supports Scala 2.12, 2.13 and 3.1+
 
   @sect{Basics}
     @sect{Builtins}
