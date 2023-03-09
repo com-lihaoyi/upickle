@@ -199,7 +199,8 @@ object Value extends AstTransformer[Value]{
 
   def visitArray(length: Int, index: Int) = new AstArrVisitor[ArrayBuffer](xs => ujson.Arr(xs))
 
-  def visitJsonableObject(length: Int, index: Int) = new AstObjVisitor[internal.LinkedHashMap[String, Value]](xs => ujson.Obj(xs))
+  def visitJsonableObject(length: Int, index: Int) =
+    new AstObjVisitor[mutable.Map[String, Value]](xs => ujson.Obj(xs))(internal.LinkedHashMap.factory[String, Value])
 
   def visitNull(index: Int) = ujson.Null
 

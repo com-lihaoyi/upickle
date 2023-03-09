@@ -8,8 +8,7 @@ import java.{util => ju}
 class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     extends mutable.Map[K, V]
     with mutable.Builder[(K, V), LinkedHashMap[K, V]]
-    with LinkedHashMapCompat[K, V]
-    {
+    with LinkedHashMapCompat[K, V] {
   private def _put(key: K, value: V): V = {
     if (key == null)
       throw new NullPointerException("null keys are not allowed")
@@ -40,15 +39,25 @@ class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
   override def result(): LinkedHashMap[K, V] = this
 }
 object LinkedHashMap {
-  def apply[K, V](): LinkedHashMap[K, V] =
+
+  /** Creates an empty mutable.Map[K, V] which wraps a
+    * java.util.LinkedHashMap[K, V] Useful since the java.util implementation is
+    * safe from hash-collision attacks
+    */
+  def apply[K, V](): mutable.Map[K, V] =
     new LinkedHashMap[K, V](new ju.LinkedHashMap[K, V])
-  def apply[K, V](items: TraversableOnce[(K, V)]): LinkedHashMap[K, V] = {
+
+  /** Given a collection of (K, V) tuples, creates an mutable.Map[K, V] which
+    * wraps a java.util.LinkedHashMap[K, V] Useful since the java.util
+    * implementation is safe from hash-collision attacks
+    */
+  def apply[K, V](items: TraversableOnce[(K, V)]): mutable.Map[K, V] = {
     val underlying = new ju.LinkedHashMap[K, V]()
     for ((key, value) <- items) {
       underlying.put(key, value)
     }
     new LinkedHashMap[K, V](underlying)
   }
-  implicit def factory[K, V]: Factory[(K, V), LinkedHashMap[K, V]] =
+  def factory[K, V]: Factory[(K, V), mutable.Map[K, V]] =
     LinkedHashMapCompat.factory[K, V]
 }
