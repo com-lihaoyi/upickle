@@ -4,6 +4,7 @@ import upickle.core.compat.Factory
 
 import scala.collection.mutable
 
+trait LinkedHashMapCompat[K, V]
 object LinkedHashMapCompat {
   def factory[K, V]: Factory[(K, V), LinkedHashMap[K, V]] =
     new Factory[(K, V), LinkedHashMap[K, V]] {

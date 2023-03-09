@@ -33,8 +33,6 @@ class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     Option(underlying.put(key, value))
   }
   override def result(): LinkedHashMap[K, V] = this
-  override def -=(key: K): this.type = subtractOne(key)
-  override def +=(kv: (K, V)): this.type = addOne(kv)
 }
 object LinkedHashMap {
   def apply[K, V](): LinkedHashMap[K, V] =
