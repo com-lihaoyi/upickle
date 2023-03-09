@@ -49,5 +49,6 @@ object LinkedHashMap {
     }
     new LinkedHashMap[K, V](underlying)
   }
-  implicit def factory[K, V] = LinkedHashMapCompat.factory[K, V]
+  implicit def factory[K, V]: Factory[(K, V), LinkedHashMap[K, V]] =
+    LinkedHashMapCompat.factory[K, V]
 }

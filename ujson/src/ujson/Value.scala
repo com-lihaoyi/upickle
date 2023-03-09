@@ -229,9 +229,17 @@ object Value extends AstTransformer[Value]{
     */
   case class InvalidData private (data: Value, msg: String)
     extends Exception(s"$msg (data: $data)")
+  object InvalidData {
+    def apply(data: Value, msg: String): InvalidData =
+      new InvalidData(data = data, msg = msg)
+  }
 }
 
 case class Str private (value: String) extends Value
+object Str {
+  def apply(value: String): Str =
+    new Str(value)
+}
 class Obj private (val value: mutable.Map[String, Value]) extends Value {
   override def equals(x: Any): Boolean = {
     if(!x.isInstanceOf[Obj]) false
@@ -279,8 +287,15 @@ object Arr{
     }
     Arr(buf)
   }
+
+  def apply(value: ArrayBuffer[Value]): Arr =
+    new Arr(value)
 }
 case class Num private (value: Double) extends Value
+object Num {
+  def apply(value: Double): Num =
+    new Num(value)
+}
 sealed abstract class Bool extends Value{
   def value: Boolean
 }
