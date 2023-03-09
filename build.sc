@@ -45,10 +45,6 @@ trait CommonModule extends ScalaModule {
     (if (scalaVersion() != scala212) {
       Seq(PathRef(millSourcePath / "src-2.13+"))
     } else Seq()) ++    
-      Seq(PathRef(millSourcePath / "src-2.12+")) ++ // TODO: tidy up source code and remove this line.    
-    (if (scalaVersion() == scala212 || scalaVersion() == scala213) {
-      Seq(PathRef(millSourcePath / "src-2.12-2.13"))
-    } else Seq()) ++
     (platformSegment match {
       case "jvm" | "native" => Seq(PathRef(millSourcePath / "src-jvm-native"))
       case _ => Seq()
