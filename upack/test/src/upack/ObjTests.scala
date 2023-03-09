@@ -33,6 +33,12 @@ object ObjTests extends TestSuite {
       first ==> Str("1")
       second ==> Str("-1")
     }
+    test("should keep insertion order when reading bytes") {
+      val obj = Obj(Str("1") -> Int32(0), Str("-1") -> Int32(1))
+      val fromBytes = read(write(obj))
+
+      assert(write(obj).sameElements(write(fromBytes)))
+    }
     test("toString") {
       Obj(Str("0") -> Int32(0)).toString ==> """Obj(Map(Str(0) -> Int32(0)))"""
     }

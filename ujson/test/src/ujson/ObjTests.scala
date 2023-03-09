@@ -25,6 +25,12 @@ object ObjTests extends TestSuite {
 
       obj.toString ==> """{"1":0,"0":0}"""
     }
+    test("should keep insertion order when reading json") {
+      val json = """{"0":0,"1":0}"""
+      val written = write(read(json))
+
+      written ==> json
+    }
     test("toString renders to json") {
       Obj("0" -> 0).toString ==> """{"0":0}"""
     }
