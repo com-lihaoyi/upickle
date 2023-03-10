@@ -24,10 +24,5 @@ object BoolTests extends TestSuite {
         }
       }
     }
-    // test("ujson.Bool unapply should compile without exhaustivity warning") {
-    //   ujson.Bool(true) match {
-    //     case ujson.Bool(v) =>
-    //   }
-    // }
   }
 }
