@@ -115,7 +115,7 @@ object Arr {
     Arr(buf)
   }
 }
-case class Obj(value: LinkedHashMap[Msg, Msg])
+case class Obj(value: LinkedHashMap[Msg, Msg]) extends Msg
 object Obj{
   def apply(item: (Msg, Msg),
             items: (Msg, Msg)*): Obj = {
