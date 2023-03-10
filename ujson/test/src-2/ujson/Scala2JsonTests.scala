@@ -7,7 +7,7 @@ import utest._
 object Scala2JsonTests extends TestSuite {
   val tests = Tests {
     test {
-      val unparsed = """"\\\\uCAFE""""
+      val unparsed = """"\\쫾""""
       val fromString = ujson.read(unparsed)
       val fromBytes = ujson.read(unparsed.getBytes)
       assert(fromString == fromBytes)
