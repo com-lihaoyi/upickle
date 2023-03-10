@@ -341,7 +341,7 @@ object AdvancedTests extends TestSuite {
         assert(result == expected)
       }
 
-      test("issue-416"){
+      test("hash-collision") {
         def zeroHashCodeStrings: Iterator[String] = {
           def charAndHash(h: Int): Iterator[(Char, Int)] = ('!' to '~').iterator.map(ch => (ch, (h + ch) * 31))
 
@@ -363,13 +363,20 @@ object AdvancedTests extends TestSuite {
             .take(1000000)
             .mkString("{", s":null,", ":null}")
 
-        // This is expected to have sub-linear behavior, due to use of `LinkedHashMap` in `ujson.Value`
-        // which is not robust against collisions
-        //        ujson.read(jsonString)
-
-        // Make sure this can pass in Scala 3. We do not use `ujson.Value` in this code path at all,
-        // so it should finish in a reasonable amount of time and without issue
-        upickle.default.read[Foo416](jsonString)
+        test("issue-416") {
+          withTimeout { upickle.default.read[Foo416](jsonString) }
+        }
+        test("issue-446") {
+          sys.props("java.vm.name") match {
+            case "Scala.js" | "Scala Native" =>
+            // The fix assumes a hash collision safe java.util.LinkedHashMap
+            // implementation. When/if other platforms will have such characteristics
+            // ujson doesn't need to change.
+            case _ =>
+              withTimeout { ujson.read(jsonString) }
+          }
+          ()
+        }
       }
     }
   }

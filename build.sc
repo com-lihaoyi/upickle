@@ -44,10 +44,11 @@ trait CommonModule extends ScalaModule {
     Seq(PathRef(millSourcePath / s"src-$platformSegment")) ++
     (if (scalaVersion() != scala212) {
       Seq(PathRef(millSourcePath / "src-2.13+"))
-    } else Seq()) ++    
+    } else Seq()) ++
     (platformSegment match {
-      case "jvm" | "native" => Seq(PathRef(millSourcePath / "src-jvm-native"))
-      case _ => Seq()
+      case "jvm" => Seq(PathRef(millSourcePath / "src-jvm-native"))
+      case "native" => Seq(PathRef(millSourcePath / "src-js-native"), PathRef(millSourcePath / "src-jvm-native"))
+      case "js" => Seq(PathRef(millSourcePath / "src-js-native"))
     })
   }
 }
