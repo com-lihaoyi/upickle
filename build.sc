@@ -389,7 +389,7 @@ object upickle extends Module{
   class JvmModule(val crossScalaVersion: String) extends UpickleModule with CommonJvmModule{
     override def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
 
-    object test extends Tests with CommonModule{
+    object test extends Tests with CommonBaseModule{
       override def moduleDeps = {
         (super.moduleDeps :+ core.jvm().test) ++ (
           if (isDotty) Nil else Seq(
