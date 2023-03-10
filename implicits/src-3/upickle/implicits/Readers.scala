@@ -72,7 +72,7 @@ trait ReadersVersionSpecific extends MacrosCommon:
       Reader.merge[T](readers: _*)
   }
 
-  inline given enumReader[T <: scala.reflect.Enum: Mirror.Of]: Reader[T] = macroR[T]
+  inline given enumReader[T <: scala.reflect.Enum: Mirror.ProductOf]: Reader[T] = macroR[T]
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class ReaderExtension(r: Reader.type):
