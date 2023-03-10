@@ -357,14 +357,14 @@ object AdvancedTests extends TestSuite {
           } yield new String(Array(ch0, ch1, ch2, ch3, ch4, ch5, ch6, ch7))
         }
 
-        def jsonString(elements: Int) =
+        val jsonString =
           zeroHashCodeStrings
             .map(s => ujson.write(s))
-            .take(elements)
+            .take(1000000)
             .mkString("{", s":null,", ":null}")
 
         test("issue-416") {
-          upickle.default.read[Foo416](jsonString(1000000))
+          upickle.default.read[Foo416](jsonString)
           ()
         }
         test("issue-446") {
@@ -374,7 +374,7 @@ object AdvancedTests extends TestSuite {
             // implementation. When/if other platforms will have such characteristics
             // ujson doesn't need to change.
             case _ =>
-              ujson.read(jsonString(100000))
+              ujson.read(jsonString)
           }
           ()
         }
