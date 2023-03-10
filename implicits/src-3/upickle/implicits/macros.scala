@@ -2,7 +2,7 @@ package upickle.implicits.macros
 
 import scala.quoted.{ given, _ }
 import deriving._, compiletime._
-
+import upickle.implicits.ReadersVersionSpecific
 type IsInt[A <: Int] = A
 
 def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
@@ -209,3 +209,40 @@ def getSingletonImpl[T](using Quotes, Type[T]): Expr[T] =
     case tref: TypeRef => Ref(tref.classSymbol.get.companionModule).asExpr.asInstanceOf[Expr[T]]
     case v => '{valueOf[T]}
   }
+
+
+inline def defineEnumVisitors[T0, T <: Tuple](prefix: ReadersVersionSpecific): T0 = ${ defineEnumVisitorsImpl[T0, T]('prefix) }
+def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[ReadersVersionSpecific])(using Quotes, Type[T0], Type[T]): Expr[T0] =
+  import quotes.reflect._
+
+  println("")
+  println(TypeRepr.of[T0].show)
+  println(TypeRepr.of[T].show)
+  def handleType(tpe: TypeRepr, name: String): (ValDef, Symbol) = {
+    type Foo
+    given Type[Foo] = tpe.asType.asInstanceOf
+
+    val sym = Symbol.newVal(Symbol.spliceOwner, name, tpe, Flags.EmptyFlags, Symbol.noSymbol)
+    val newDef = ValDef(sym, Some('{ ${prefix}.macroR[Foo] }.asTerm))
+
+    (newDef, sym)
+
+  }
+  def getDefs(t: TypeRepr, defs: List[(ValDef, Symbol)]): List[(ValDef, Symbol)] = {
+    println("getDefs " + t.show)
+    t match{
+      case AppliedType(prefix, args) =>
+        val defAndSymbol = handleType(args(0), "x" + defs.size)
+        getDefs(args(1), defAndSymbol :: defs)
+      case _ if t =:= TypeRepr.of[EmptyTuple] =>
+        println("B")
+        defs
+    }
+  }
+  val subTypeDefs = getDefs(TypeRepr.of[T], Nil)
+  val allDefs = handleType(TypeRepr.of[T0], "x" + subTypeDefs.size) :: subTypeDefs
+
+  val res = Block(allDefs.map(_._1), Ident(allDefs.head._2.termRef)).asExprOf[T0]
+  println(res.show)
+  res
+

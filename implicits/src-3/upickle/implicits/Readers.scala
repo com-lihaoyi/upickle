@@ -65,14 +65,19 @@ trait ReadersVersionSpecific extends MacrosCommon:
       else reader
 
     case m: Mirror.SumOf[T] =>
-      val readers: List[Reader[_ <: T]] = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
-        .toList
-        .asInstanceOf[List[Reader[_ <: T]]]
-
-      Reader.merge[T](readers: _*)
+//      import EnumReaders.given
+      macros.defineEnumVisitors[Reader[T], Tuple.Map[m.MirroredElemTypes, Reader]](this)
+//      val readers: List[Reader[_ <: T]] = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
+//        .toList
+//        .asInstanceOf[List[Reader[_ <: T]]]
+//
+//      Reader.merge[T](readers: _*)
   }
 
-  inline given enumReader[T <: scala.reflect.Enum: Mirror.Of]: Reader[T] = macroR[T]
+
+//  object EnumReaders{
+//  inline given enumReader[T <: scala.reflect.Enum: Mirror.Of]: Reader[T] = macroR[T]
+//  }
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class ReaderExtension(r: Reader.type):
