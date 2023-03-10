@@ -11,7 +11,6 @@ import java.{util => ju}
   */
 class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     extends mutable.Map[K, V]
-    with mutable.Builder[(K, V), LinkedHashMap[K, V]]
     with LinkedHashMapCompat[K, V] {
   private def _put(key: K, value: V): V = {
     if (key == null)

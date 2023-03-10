@@ -13,6 +13,15 @@ object LinkedHashMapCompat {
         LinkedHashMap(it)
 
       def newBuilder: mutable.Builder[(K, V), LinkedHashMap[K, V]] =
-        LinkedHashMap()
+        new mutable.Builder[(K, V), LinkedHashMap[K, V]] {
+          private val map = LinkedHashMap[K, V]()
+
+          def addOne(elem: (K, V)): this.type = {
+            map.addOne(elem)
+            this
+          }
+          def clear(): Unit = map.clear()
+          def result(): LinkedHashMap[K, V] = map
+        }
     }
 }
