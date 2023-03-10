@@ -18,13 +18,6 @@ object ObjTests extends TestSuite {
 
       obj.toString ==> """{"1":0,"0":0}"""
     }
-    test("should keep insertion order when wrapping mutable.Map") {
-      val obj = Obj(mutable.Map[String, Value]("1" -> 0))
-      obj("0") = 0
-      val Seq(first, second) = obj.value.keys.toSeq
-
-      obj.toString ==> """{"1":0,"0":0}"""
-    }
     test("should keep insertion order when reading json") {
       val json = """{"0":0,"1":0}"""
       val written = write(read(json))

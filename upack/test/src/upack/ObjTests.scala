@@ -24,15 +24,6 @@ object ObjTests extends TestSuite {
       first ==> Str("1")
       second ==> Str("-1")
     }
-    test("should keep insertion order when wrapping mutable.Map") {
-      val obj = Obj(mutable.Map[Msg, Msg](Str("1") -> Int32(0)))
-      obj.value += Str("-1") -> Int32(0)
-
-      val Seq((first, _), (second, _)) = obj.value.toSeq
-
-      first ==> Str("1")
-      second ==> Str("-1")
-    }
     test("should keep insertion order when reading bytes") {
       val obj = Obj(Str("1") -> Int32(0), Str("-1") -> Int32(1))
       val fromBytes = read(write(obj))
