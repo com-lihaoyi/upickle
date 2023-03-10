@@ -6,12 +6,13 @@ import scala.collection.mutable
 import java.{util => ju}
 
 /** mutable.Map[K, V] implementation wrapping a java.util.LinkedHashMap[K, V]
-  * Useful since the java.util implementation is safe from hash-collision attacks.
+  * Useful since the java.util implementation is safe from hash-collision
+  * attacks.
   */
 class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     extends mutable.Map[K, V]
     with mutable.Builder[(K, V), LinkedHashMap[K, V]]
-    with LinkedHashMapCompat[K, V] {  
+    with LinkedHashMapCompat[K, V] {
   private def _put(key: K, value: V): V = {
     if (key == null)
       throw new NullPointerException("null keys are not allowed")

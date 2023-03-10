@@ -227,14 +227,11 @@ object Value extends AstTransformer[Value]{
 }
 
 case class Str(value: String) extends Value
-object Str {
-  def apply(value: String): Str =
-    new Str(value)
-}
 case class Obj(value: LinkedHashMap[String, Value]) extends Value
 object Obj{
-  implicit def from(items: TraversableOnce[(String, Value)]): Obj =
-    new Obj(LinkedHashMap(items))
+  implicit def from(items: TraversableOnce[(String, Value)]): Obj = {
+    Obj(LinkedHashMap(items))
+  }
 
   // Weird telescoped version of `apply(items: (String, Value)*)`, to avoid
   // type inference issues due to overloading the existing `apply` method
@@ -245,9 +242,9 @@ object Obj{
     val map = LinkedHashMap[String, Value]()
     map.put(item._1, conv(item._2))
     for (i <- items) map.put(i._1, i._2)
-    new Obj(map)
+    Obj(map)
   }
-  def apply(items: TraversableOnce[(String, Value)]): Obj = from(items)
+  def apply(): Obj = Obj(LinkedHashMap[String, Value]())
 }
 case class Arr(value: mutable.ArrayBuffer[Value]) extends Value
 

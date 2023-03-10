@@ -115,17 +115,17 @@ object Arr {
     Arr(buf)
   }
 }
-case class Obj(val value: LinkedHashMap[Msg, Msg])
+case class Obj(value: LinkedHashMap[Msg, Msg])
 object Obj{
   def apply(item: (Msg, Msg),
             items: (Msg, Msg)*): Obj = {
     val map = LinkedHashMap[Msg, Msg]()
     map.put(item._1, item._2)
     for (i <- items) map.put(i._1, i._2)
-    new Obj(map)
+    Obj(map)
   }
 
-  def apply(value: LinkedHashMap[Msg, Msg]): Obj = new Obj(internal.LinkedHashMap(value))
+  def apply(): Obj = Obj(LinkedHashMap[Msg, Msg]())
 }
 case class Ext(tag: Byte, data: Array[Byte]) extends Msg
 
@@ -225,11 +225,11 @@ object Msg extends MsgVisitor[Msg, Msg]{
   }
 
   def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Msg, Msg] {
-    val obj = Obj()
+    val map = LinkedHashMap[Msg, Msg]()
     var lastKey: Msg = null
     def subVisitor = Msg
-    def visitValue(v: Msg, index: Int): Unit = obj.value(lastKey) = v
-    def visitEnd(index: Int) = obj
+    def visitValue(v: Msg, index: Int): Unit = map(lastKey) = v
+    def visitEnd(index: Int) = Obj(map)
     def visitKey(index: Int) = Msg
     def visitKeyValue(s: Any): Unit = lastKey = s.asInstanceOf[Msg]
   }
