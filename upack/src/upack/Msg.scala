@@ -1,9 +1,8 @@
 package upack
 
-import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
+import upickle.core.{ArrVisitor, ObjVisitor, LinkedHashMap, Visitor}
 
 import upickle.core.compat._
-import upickle.core.internal
 import scala.collection.mutable
 
 /**
@@ -101,78 +100,34 @@ case object True extends Bool{
 case object False extends Bool{
   def value = false
 }
-case class Int32 private (value: Int) extends Msg
-object Int32 {
-  def apply(value: Int): Int32 =
-    new Int32(value)
-}
-case class Int64 private (value: Long) extends Msg
-object Int64 {
-  def apply(value: Long): Int64 =
-    new Int64(value)
-}
-case class UInt64 private (value: Long) extends Msg
-object UInt64 {
-  def apply(value: Long): UInt64 =
-    new UInt64(value)
-}
-case class Float32 private (value: Float) extends Msg
-object Float32 {
-  def apply(value: Float): Float32 =
-    new Float32(value)
-}
-case class Float64 private (value: Double) extends Msg
-object Float64 {
-  def apply(value: Double): Float64 =
-    new Float64(value)
-}
-case class Str private (value: String) extends Msg
-object Str {
-  def apply(value: String): Str =
-    new Str(value)
-}
-case class Binary private (value: Array[Byte]) extends Msg
-object Binary {
-  def apply(value: Array[Byte]): Binary =
-    new Binary(value)
-}
-case class Arr private (value: mutable.ArrayBuffer[Msg]) extends Msg
-
+case class Int32(value: Int) extends Msg
+case class Int64(value: Long) extends Msg
+case class UInt64(value: Long) extends Msg
+case class Float32(value: Float) extends Msg
+case class Float64(value: Double) extends Msg
+case class Str(value: String) extends Msg
+case class Binary(value: Array[Byte]) extends Msg
+case class Arr(value: mutable.ArrayBuffer[Msg]) extends Msg
 object Arr {
-  def apply(value: mutable.ArrayBuffer[Msg]): Arr =
-    new Arr(value)
   def apply(items: Msg*): Arr = {
     val buf = new mutable.ArrayBuffer[Msg](items.size)
     items.foreach(item => buf += item)
     Arr(buf)
   }
 }
-class Obj private (val value: mutable.Map[Msg, Msg]) extends Msg {
-  override def toString(): String = s"Obj($value)"
-  override def equals(x: Any): Boolean = {
-    if(!x.isInstanceOf[Obj]) false
-    else value.equals(x.asInstanceOf[Obj].value)
-  }
-  override def hashCode(): Int = value.hashCode()
-}
+case class Obj(val value: LinkedHashMap[Msg, Msg])
 object Obj{
   def apply(item: (Msg, Msg),
             items: (Msg, Msg)*): Obj = {
-    val map = internal.LinkedHashMap[Msg, Msg]()
+    val map = LinkedHashMap[Msg, Msg]()
     map.put(item._1, item._2)
     for (i <- items) map.put(i._1, i._2)
     new Obj(map)
   }
 
-  def apply(value: mutable.Map[Msg, Msg]): Obj = new Obj(internal.LinkedHashMap(value))
-  def apply(): Obj = new Obj(internal.LinkedHashMap[Msg, Msg]())
-  def unapply(obj: Obj): Some[mutable.Map[Msg, Msg]] = Some(obj.value)
+  def apply(value: LinkedHashMap[Msg, Msg]): Obj = new Obj(internal.LinkedHashMap(value))
 }
 case class Ext(tag: Byte, data: Array[Byte]) extends Msg
-object Ext {
-  def apply(tag: Byte, data: Array[Byte]): Ext =
-    new Ext(tag = tag, data = data)
-}
 
 sealed abstract class Bool extends Msg{
   def value: Boolean
@@ -191,12 +146,8 @@ object Msg extends MsgVisitor[Msg, Msg]{
     *             This could be the entire blob, or it could be some subtree.
     * @param msg Human-readable text saying what went wrong
     */
-  case class InvalidData private (data: Msg, msg: String)
+  case class InvalidData(data: Msg, msg: String)
     extends Exception(s"$msg (data: $data)")
-  object InvalidData {
-    def apply(data: Msg, msg: String): InvalidData =
-      new InvalidData(data = data, msg = msg)
-  }
 
   sealed trait Selector{
     def apply(x: Msg): Msg
@@ -241,7 +192,7 @@ object Msg extends MsgVisitor[Msg, Msg]{
     }
   }
 
-  private def visitObjContents[T](f: Visitor[_, T], items: mutable.Map[Msg, Msg]) = {
+  private def visitObjContents[T](f: Visitor[_, T], items: LinkedHashMap[Msg, Msg]) = {
     val obj = f.visitObject(items.size, true, -1)
     val kvs = items.iterator
     while(kvs.hasNext){

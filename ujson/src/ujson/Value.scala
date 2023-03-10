@@ -1,14 +1,9 @@
 package ujson
 
-
-
-import upickle.core.Util
-import upickle.core.{ObjArrVisitor, Visitor}
-
+import upickle.core._
 import upickle.core.compat._
-import upickle.core.internal
+
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 sealed trait Value extends Readable with geny.Writable{
   override def httpContentType = Some("application/json")
@@ -197,10 +192,9 @@ object Value extends AstTransformer[Value]{
     }
   }
 
-  def visitArray(length: Int, index: Int) = new AstArrVisitor[ArrayBuffer](xs => ujson.Arr(xs))
+  def visitArray(length: Int, index: Int) = new AstArrVisitor[mutable.ArrayBuffer](xs => ujson.Arr(xs))
 
-  def visitJsonableObject(length: Int, index: Int) =
-    new AstObjVisitor[mutable.Map[String, Value]](xs => ujson.Obj(xs))(internal.LinkedHashMap.factory[String, Value])
+  def visitJsonableObject(length: Int, index: Int) = new AstObjVisitor[LinkedHashMap[String, Value]](xs => ujson.Obj(xs))
 
   def visitNull(index: Int) = ujson.Null
 
@@ -228,30 +222,19 @@ object Value extends AstTransformer[Value]{
     *             This could be the entire blob, or it could be some subtree.
     * @param msg Human-readable text saying what went wrong
     */
-  case class InvalidData private (data: Value, msg: String)
+  case class InvalidData(data: Value, msg: String)
     extends Exception(s"$msg (data: $data)")
-  object InvalidData {
-    def apply(data: Value, msg: String): InvalidData =
-      new InvalidData(data = data, msg = msg)
-  }
 }
 
-case class Str private (value: String) extends Value
+case class Str(value: String) extends Value
 object Str {
   def apply(value: String): Str =
     new Str(value)
 }
-class Obj private (val value: mutable.Map[String, Value]) extends Value {
-  override def equals(x: Any): Boolean = {
-    if(!x.isInstanceOf[Obj]) false
-    else value.equals(x.asInstanceOf[Obj].value)
-  }
-  override def hashCode(): Int = value.hashCode()
-}
-
+case class Obj(value: LinkedHashMap[String, Value]) extends Value
 object Obj{
   implicit def from(items: TraversableOnce[(String, Value)]): Obj =
-    new Obj(internal.LinkedHashMap(items))
+    new Obj(LinkedHashMap(items))
 
   // Weird telescoped version of `apply(items: (String, Value)*)`, to avoid
   // type inference issues due to overloading the existing `apply` method
@@ -259,18 +242,14 @@ object Obj{
   // https://github.com/lihaoyi/upickle/issues/230
   def apply[V](item: (String, V),
                items: (String, Value)*)(implicit conv: V => Value): Obj = {
-    val map = internal.LinkedHashMap[String, Value]()
+    val map = LinkedHashMap[String, Value]()
     map.put(item._1, conv(item._2))
     for (i <- items) map.put(i._1, i._2)
     new Obj(map)
   }
   def apply(items: TraversableOnce[(String, Value)]): Obj = from(items)
-
-  def unapply(obj: Obj): Some[mutable.Map[String, Value]] = Some(obj.value)
-
-  def apply(): Obj = new Obj(internal.LinkedHashMap[String, Value]())
 }
-case class Arr private (value: ArrayBuffer[Value]) extends Value
+case class Arr(value: mutable.ArrayBuffer[Value]) extends Value
 
 object Arr{
   implicit def from[T](items: TraversableOnce[T])(implicit conv: T => Value): Arr = {
@@ -288,15 +267,8 @@ object Arr{
     }
     Arr(buf)
   }
-
-  def apply(value: ArrayBuffer[Value]): Arr =
-    new Arr(value)
 }
-case class Num private (value: Double) extends Value
-object Num {
-  def apply(value: Double): Num =
-    new Num(value)
-}
+case class Num(value: Double) extends Value
 sealed abstract class Bool extends Value{
   def value: Boolean
 }

@@ -1,14 +1,17 @@
-package upickle.core.internal
+package upickle.core
 
-import upickle.core.compat.Factory
+import upickle.core.compat._
 
 import scala.collection.mutable
 import java.{util => ju}
 
+/** mutable.Map[K, V] implementation wrapping a java.util.LinkedHashMap[K, V]
+  * Useful since the java.util implementation is safe from hash-collision attacks.
+  */
 class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     extends mutable.Map[K, V]
     with mutable.Builder[(K, V), LinkedHashMap[K, V]]
-    with LinkedHashMapCompat[K, V] {
+    with LinkedHashMapCompat[K, V] {  
   private def _put(key: K, value: V): V = {
     if (key == null)
       throw new NullPointerException("null keys are not allowed")
@@ -40,24 +43,16 @@ class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
 }
 object LinkedHashMap {
 
-  /** Creates an empty mutable.Map[K, V] which wraps a
-    * java.util.LinkedHashMap[K, V] Useful since the java.util implementation is
-    * safe from hash-collision attacks
-    */
-  def apply[K, V](): mutable.Map[K, V] =
+  def apply[K, V](): LinkedHashMap[K, V] =
     new LinkedHashMap[K, V](new ju.LinkedHashMap[K, V])
 
-  /** Given a collection of (K, V) tuples, creates an mutable.Map[K, V] which
-    * wraps a java.util.LinkedHashMap[K, V] Useful since the java.util
-    * implementation is safe from hash-collision attacks
-    */
-  def apply[K, V](items: TraversableOnce[(K, V)]): mutable.Map[K, V] = {
-    val underlying = new ju.LinkedHashMap[K, V]()
+  def apply[K, V](items: TraversableOnce[(K, V)]): LinkedHashMap[K, V] = {
+    val map = LinkedHashMap[K, V]()
     for ((key, value) <- items) {
-      underlying.put(key, value)
+      map._put(key, value)
     }
-    new LinkedHashMap[K, V](underlying)
+    map
   }
-  def factory[K, V]: Factory[(K, V), mutable.Map[K, V]] =
+  implicit def factory[K, V]: Factory[(K, V), LinkedHashMap[K, V]] =
     LinkedHashMapCompat.factory[K, V]
 }

@@ -1,4 +1,4 @@
-package upickle.core.internal
+package upickle.core.compat
 
 import upickle.core.compat.Factory
 
