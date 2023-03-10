@@ -348,7 +348,7 @@ object ujson extends Module{
     override def artifactName = "ujson-circe"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
-    val circeVersion = "0.14.5"
+    val circeVersion = "0.14.1"
     override def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
   }
 
