@@ -362,10 +362,21 @@ object AdvancedTests extends TestSuite {
             .map(s => ujson.write(s))
             .take(1000000)
             .mkString("{", s":null,", ":null}")
+        
+        def withTimeout(f: => Unit) = {
+          import scala.concurrent._
+          import scala.concurrent.ExecutionContext.Implicits.global
+          import scala.concurrent.duration._
+          Await.result(
+            Future {
+              blocking { f }
+            },
+            2.minutes
+          )
+        }
 
         test("issue-416") {
-          upickle.default.read[Foo416](jsonString)
-          ()
+          withTimeout { upickle.default.read[Foo416](jsonString) }
         }
         test("issue-446") {
           sys.props("java.vm.name") match {
@@ -374,7 +385,7 @@ object AdvancedTests extends TestSuite {
             // implementation. When/if other platforms will have such characteristics
             // ujson doesn't need to change.
             case _ =>
-              ujson.read(jsonString)
+              withTimeout { ujson.read(jsonString) }
           }
           ()
         }
