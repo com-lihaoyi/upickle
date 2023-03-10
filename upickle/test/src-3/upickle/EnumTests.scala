@@ -6,7 +6,7 @@ import upickle.core.AbortException
 
 import scala.language.implicitConversions
 import utest.{assert, intercept, *}
-import upickle.default.{singletonReader, singletonWriter, *}
+import upickle.default.*
 
 enum SimpleEnum derives ReadWriter:
   case A, B
@@ -18,8 +18,12 @@ enum ColorEnum(val rgb: Int) derives ReadWriter:
   case Mix(mix: Int) extends ColorEnum(mix)
   case Unknown(mix: Int) extends ColorEnum(0x000000)
 
-
 case class Enclosing(str: String, simple1: SimpleEnum, simple2: Option[SimpleEnum]) derives ReadWriter
+
+enum LinkedList[+T] derives ReadWriter:
+  case End
+  case Node(value: T, next: LinkedList[T]) // direct recursion
+  case Node2(value: T, next: Node[T]) // indirect recursion
 
 object EnumTests extends TestSuite {
 
@@ -57,6 +61,18 @@ object EnumTests extends TestSuite {
       rw[ColorEnum.Blue.type](ColorEnum.Blue, "\"Blue\"", """{"$type": "Blue"}""")
       rw[ColorEnum.Mix](ColorEnum.Mix(12345), "{\"$type\":\"Mix\",\"mix\":12345}")
       rw[ColorEnum.Unknown](ColorEnum.Unknown(12345), "{\"$type\":\"Unknown\",\"mix\":12345}")
+    }
+
+    test("recursive"){
+      rw[LinkedList[Int]](LinkedList.End, "\"End\"", """{"$type": "End"}""")
+      rw[LinkedList[Int]](
+        LinkedList.Node(1, LinkedList.End),
+        """{"$type": "Node", "value": 1, "next": "End"}"""
+      )
+      rw[LinkedList[Int]](
+        LinkedList.Node2(1, LinkedList.Node(2, LinkedList.End)),
+        """{"$type": "Node2", "value": 1, "next": {"$type": "Node", "value": 2, "next": "End"}}"""
+      )
     }
   }
 }
