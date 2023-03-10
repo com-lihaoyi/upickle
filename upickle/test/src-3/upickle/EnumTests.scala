@@ -6,23 +6,18 @@ import upickle.core.AbortException
 
 import scala.language.implicitConversions
 import utest.{assert, intercept, *}
-import upickle.default.*
+import upickle.default.{singletonReader, singletonWriter, *}
 
 enum SimpleEnum derives ReadWriter:
   case A, B
 
-enum ColorEnum(val rgb: Int):
+enum ColorEnum(val rgb: Int) derives ReadWriter:
   case Red extends ColorEnum(0xFF0000)
   case Green extends ColorEnum(0x00FF00)
   case Blue extends ColorEnum(0x0000FF)
   case Mix(mix: Int) extends ColorEnum(mix)
   case Unknown(mix: Int) extends ColorEnum(0x000000)
 
-object ColorEnum{
-  implicit val rwMix: ReadWriter[ColorEnum.Mix] = macroRW
-  implicit val rwUnknown: ReadWriter[ColorEnum.Unknown] = macroRW
-  implicit val rwColor: ReadWriter[ColorEnum] = macroRW
-}
 
 case class Enclosing(str: String, simple1: SimpleEnum, simple2: Option[SimpleEnum]) derives ReadWriter
 
