@@ -1,9 +1,10 @@
 package ujson
+
 import java.io.StringWriter
 
 import upickle.core.{Abort, AbortException, ObjArrVisitor, ObjVisitor, Visitor}
+import java.nio.CharBuffer
 import java.nio.charset.Charset
-
 
 import scala.annotation.{switch, tailrec}
 
@@ -77,7 +78,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     upickle.core.RenderUtils.escapeElem(
       new upickle.core.CharBuilder(),
       out,
-      new ArrayCharSequence(Array(elemOps.toInt(getElemSafe(i)).toChar)),
+      CharBuffer.wrap(Array(elemOps.toInt(getElemSafe(i)).toChar)),
       unicode = false,
       true
     )

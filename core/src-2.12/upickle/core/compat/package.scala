@@ -27,6 +27,10 @@ package object compat {
    */
   type Factory[-A, +C] = CanBuildFrom[Nothing, A, C]
 
+  type IterableOnce[T] = TraversableOnce[T]
+
+  def toIterator[T](iterable: IterableOnce[T]): IterableOnce[T] = iterable
+
   implicit class FactoryOps[-A, +C](private val factory: Factory[A, C]) {
 
     /**

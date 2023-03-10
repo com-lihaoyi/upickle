@@ -36,7 +36,13 @@ trait CommonModule extends ScalaModule {
   override def scalacOptions = T{
     super.scalacOptions() ++ {
       if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil
-    }
+    } ++ Seq(
+      "-unchecked",
+      "-deprecation",
+      "-encoding", "utf8",
+      "-feature",
+      "-Xfatal-warnings"
+    )
   }
   def platformSegment: String
 
@@ -373,12 +379,6 @@ trait UpickleModule extends CommonPublishModule{
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
   else Agg.empty[Dep]
-  override def scalacOptions = super.scalacOptions() ++ Seq(
-    "-unchecked",
-    "-deprecation",
-    "-encoding", "utf8",
-    "-feature",
-  )
 }
 
 

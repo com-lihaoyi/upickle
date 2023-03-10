@@ -46,9 +46,9 @@ object LinkedHashMap {
   def apply[K, V](): LinkedHashMap[K, V] =
     new LinkedHashMap[K, V](new ju.LinkedHashMap[K, V])
 
-  def apply[K, V](items: TraversableOnce[(K, V)]): LinkedHashMap[K, V] = {
+  def apply[K, V](items: IterableOnce[(K, V)]): LinkedHashMap[K, V] = {
     val map = LinkedHashMap[K, V]()
-    for ((key, value) <- items) {
+    toIterator(items).foreach { case (key, value) =>
       map._put(key, value)
     }
     map

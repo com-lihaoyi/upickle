@@ -82,7 +82,7 @@ object OptionsAsNullTests extends TestSuite {
 
         object CustomThing2 {
           implicit val rw: OptionPickler.ReadWriter[CustomThing2] = /*upickle.default*/ OptionPickler.readwriter[String].bimap[CustomThing2](
-            x => x.i + " " + x.s,
+            x => s"${x.i} ${x.s}",
             str => {
               val Array(i, s) = str.split(" ", 2)
               new CustomThing2(i.toInt, s)

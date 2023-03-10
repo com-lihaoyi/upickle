@@ -49,7 +49,7 @@ object SmallJsonTests extends TestSuite {
           |      "members_50": 4,
           |      "activity_expert_groups": "none",
           |      "other_code_of_conduct": null,
-          |      "head_office_town": "K\u00f8benhavn V"
+          |      "head_office_town": "K\\u00f8benhavn V"
           |    }
           |
           |

@@ -3,6 +3,7 @@ package ujson
 import upickle.core.{LinkedHashMap, ObjArrVisitor, ParseUtils, Visitor}
 import upickle.core.compat._
 
+import scala.language.implicitConversions
 import scala.collection.mutable
 
 sealed trait Value extends Readable with geny.Writable{
@@ -139,36 +140,10 @@ object Value extends AstTransformer[Value]{
     }
   }
 
-  @deprecated("use ujson.Str")
-  val Str = ujson.Str
-  @deprecated("use ujson.Str")
-  type Str = ujson.Str
-  @deprecated("use ujson.Obj")
-  val Obj = ujson.Obj
-  @deprecated("use ujson.Obj")
-  type Obj = ujson.Obj
-  @deprecated("use ujson.Arr")
-  val Arr = ujson.Arr
-  @deprecated("use ujson.Arr")
-  type Arr = ujson.Arr
-  @deprecated("use ujson.Num")
-  val Num = ujson.Num
-  @deprecated("use ujson.Num")
-  type Num = ujson.Num
-  @deprecated("use ujson.Bool")
-  val Bool = ujson.Bool
-  @deprecated("use ujson.Bool")
-  type Bool = ujson.Bool
-  @deprecated("use ujson.True")
-  val True = ujson.True
-  @deprecated("use ujson.False")
-  val False = ujson.False
-  @deprecated("use ujson.Null")
-  val Null = ujson.Null
-  implicit def JsonableSeq[T](items: TraversableOnce[T])
-                             (implicit f: T => Value): Arr = Arr.from(items.map(f))
-  implicit def JsonableDict[T](items: TraversableOnce[(String, T)])
-                              (implicit f: T => Value): Obj = Obj.from(items.map(x => (x._1, f(x._2))))
+  implicit def JsonableSeq[T](items: IterableOnce[T])
+                             (implicit f: T => Value): Arr = Arr.from(toIterator(items).map(f))
+  implicit def JsonableDict[T](items: IterableOnce[(String, T)])
+                              (implicit f: T => Value): Obj = Obj.from(toIterator(items).map(x => (x._1, f(x._2))))
   implicit def JsonableBoolean(i: Boolean): Bool = if (i) ujson.True else ujson.False
   implicit def JsonableByte(i: Byte): Num = Num(i)
   implicit def JsonableShort(i: Short): Num = Num(i)
@@ -206,7 +181,7 @@ object Value extends AstTransformer[Value]{
   override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     ujson.Num(
       if (decIndex != -1 || expIndex != -1) s.toString.toDouble
-      else ParseUtils.parseIntegralNum(s, decIndex, expIndex, index)
+      else ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toDouble
     )
   }
 
@@ -229,7 +204,7 @@ object Value extends AstTransformer[Value]{
 case class Str(value: String) extends Value
 case class Obj(value: LinkedHashMap[String, Value]) extends Value
 object Obj{
-  implicit def from(items: TraversableOnce[(String, Value)]): Obj = {
+  implicit def from(items: IterableOnce[(String, Value)]): Obj = {
     Obj(LinkedHashMap(items))
   }
 
@@ -249,9 +224,9 @@ object Obj{
 case class Arr(value: mutable.ArrayBuffer[Value]) extends Value
 
 object Arr{
-  implicit def from[T](items: TraversableOnce[T])(implicit conv: T => Value): Arr = {
+  implicit def from[T](items: IterableOnce[T])(implicit conv: T => Value): Arr = {
     val buf = new mutable.ArrayBuffer[Value]()
-    items.foreach{ item =>
+    toIterator(items).foreach{ item =>
       buf += (conv(item): Value)
     }
     Arr(buf)

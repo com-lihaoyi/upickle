@@ -37,7 +37,7 @@ object LegacyTests extends TestSuite {
       )
       val chunks = for (i <- 1 to 18) yield {
         val rhs = if (i % 2 == 1) "1" else "\"1\""
-        val lhs = '"' + s"t$i" + '"'
+        val lhs = s""""t$i""""
         s"$lhs:$rhs"
       }
 
