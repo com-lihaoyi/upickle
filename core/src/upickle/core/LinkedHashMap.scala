@@ -6,8 +6,8 @@ import scala.collection.mutable
 import java.{util => ju}
 
 /** mutable.Map[K, V] implementation wrapping a java.util.LinkedHashMap[K, V]
-  * Useful since the java.util implementation is safe from hash-collision
-  * attacks.
+  * which doesn't allow null as key. Useful since the java.util implementation
+  * is safe from hash-collision attacks.
   */
 class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     extends mutable.Map[K, V]
