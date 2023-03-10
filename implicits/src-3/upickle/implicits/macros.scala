@@ -209,9 +209,3 @@ def getSingletonImpl[T](using Quotes, Type[T]): Expr[T] =
     case tref: TypeRef => Ref(tref.classSymbol.get.companionModule).asExpr.asInstanceOf[Expr[T]]
     case v => '{valueOf[T]}
   }
-//
-//inline def macroRCode[M[_], T]: M[T] = ${ macroRCodeImpl[M, T] }
-//def macroRCodeImpl[M[_], T](using Quotes, Type[M[_]], Type[T]): Expr[M[T]] =
-//  import quotes.reflect._
-//
-//  ???
