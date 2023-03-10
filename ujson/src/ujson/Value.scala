@@ -1,6 +1,6 @@
 package ujson
 
-import upickle.core._
+import upickle.core.{LinkedHashMap, ObjArrVisitor, Util, Visitor}
 import upickle.core.compat._
 
 import scala.collection.mutable
