@@ -40,11 +40,11 @@ object UtilTests extends TestSuite {
           if start != end // NumberFormatException, not IndexOutOfBoundsException
       } {
         // Roundabout way to avoid scala.js differences: https://github.com/scala-js/scala-js/issues/3546
-        val isValidRange = Try(s.substring(start, end)).toOption.exists(_.length == end - start)
+        val isValidRange = 0 <= start && start <= end && end <= s.length
         if (isValidRange) {
           Util.parseLong(s, start, end)
         } else {
-          intercept[IndexOutOfBoundsException](Util.parseLong(s, start, end))
+          intercept[java.lang.IndexOutOfBoundsException](Util.parseLong(s, start, end))
         }
       }
     }
