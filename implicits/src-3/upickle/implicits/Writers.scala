@@ -44,7 +44,9 @@ trait WritersVersionSpecific extends MacrosCommon:
       macros.defineEnumWriters[Writer[T], Tuple.Map[m.MirroredElemTypes, Writer]](this)
   }
 
-//  inline given enumWriter[T <: scala.reflect.Enum : Mirror.Of : ClassTag]: Writer[T] = macroW[T]
+  inline given superTypeWriter[T: Mirror.ProductOf : ClassTag, V >: T : Writer]: Writer[T] = {
+    implicitly[Writer[V]].comap[T](_.asInstanceOf[V])
+  }
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class WriterExtension(r: Writer.type):

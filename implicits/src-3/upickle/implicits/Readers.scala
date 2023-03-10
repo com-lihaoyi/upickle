@@ -79,10 +79,9 @@ trait ReadersVersionSpecific extends MacrosCommon:
       macros.defineEnumReaders[Reader[T], Tuple.Map[m.MirroredElemTypes, Reader]](this)
   }
 
-
-//  object EnumReaders{
-//  inline given enumReader[T <: scala.reflect.Enum: Mirror.Of]: Reader[T] = macroR[T]
-//  }
+  inline given superTypeReader[T: Mirror.ProductOf, V >: T : Reader]: Reader[T] = {
+    implicitly[Reader[V]].map(_.asInstanceOf[T])
+  }
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class ReaderExtension(r: Reader.type):
