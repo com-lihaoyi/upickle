@@ -211,38 +211,45 @@ def getSingletonImpl[T](using Quotes, Type[T]): Expr[T] =
   }
 
 
-inline def defineEnumVisitors[T0, T <: Tuple](prefix: ReadersVersionSpecific): T0 = ${ defineEnumVisitorsImpl[T0, T]('prefix) }
-def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[ReadersVersionSpecific])(using Quotes, Type[T0], Type[T]): Expr[T0] =
+inline def defineEnumReaders[T0, T <: Tuple](prefix: Any): T0 = ${ defineEnumVisitorsImpl[T0, T]('prefix, "macroR") }
+inline def defineEnumWriters[T0, T <: Tuple](prefix: Any): T0 = ${ defineEnumVisitorsImpl[T0, T]('prefix, "macroW") }
+def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[Any], macroX: String)(using Quotes, Type[T0], Type[T]): Expr[T0] =
   import quotes.reflect._
 
-  println("")
-  println(TypeRepr.of[T0].show)
-  println(TypeRepr.of[T].show)
   def handleType(tpe: TypeRepr, name: String): (ValDef, Symbol) = {
-    type Foo
-    given Type[Foo] = tpe.asType.asInstanceOf
+    val sym = Symbol.newVal(
+      Symbol.spliceOwner,
+      name,
+      tpe,
+      Flags.Implicit | Flags.Lazy,
+      Symbol.noSymbol
+    )
 
-    val sym = Symbol.newVal(Symbol.spliceOwner, name, tpe, Flags.EmptyFlags, Symbol.noSymbol)
-    val newDef = ValDef(sym, Some('{ ${prefix}.macroR[Foo] }.asTerm))
+    val AppliedType(typePrefix, List(arg)) = tpe
+
+    val newDef = ValDef(
+      sym,
+      Some(
+        TypeApply(
+          Select(prefix.asTerm, prefix.asTerm.tpe.typeSymbol.memberMethod(macroX).head),
+          List(TypeTree.of(using arg.asType))
+        )
+      )
+    )
 
     (newDef, sym)
 
   }
   def getDefs(t: TypeRepr, defs: List[(ValDef, Symbol)]): List[(ValDef, Symbol)] = {
-    println("getDefs " + t.show)
     t match{
       case AppliedType(prefix, args) =>
         val defAndSymbol = handleType(args(0), "x" + defs.size)
         getDefs(args(1), defAndSymbol :: defs)
-      case _ if t =:= TypeRepr.of[EmptyTuple] =>
-        println("B")
-        defs
+      case _ if t =:= TypeRepr.of[EmptyTuple] => defs
     }
   }
   val subTypeDefs = getDefs(TypeRepr.of[T], Nil)
   val allDefs = handleType(TypeRepr.of[T0], "x" + subTypeDefs.size) :: subTypeDefs
 
-  val res = Block(allDefs.map(_._1), Ident(allDefs.head._2.termRef)).asExprOf[T0]
-  println(res.show)
-  res
+  Block(allDefs.map(_._1), Ident(allDefs.head._2.termRef)).asExprOf[T0]
 

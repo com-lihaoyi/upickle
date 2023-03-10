@@ -38,11 +38,17 @@ trait WritersVersionSpecific extends MacrosCommon:
       Writer.merge[T](writers: _*): Writer[T]
   }
 
-  inline given enumWriter[T <: scala.reflect.Enum : Mirror.Of : ClassTag]: Writer[T] = macroW[T]
+  inline def macroWAll[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match{
+    case m: Mirror.ProductOf[T] => macroW[T]
+    case m: Mirror.SumOf[T] =>
+      macros.defineEnumWriters[Writer[T], Tuple.Map[m.MirroredElemTypes, Writer]](this)
+  }
+
+//  inline given enumWriter[T <: scala.reflect.Enum : Mirror.Of : ClassTag]: Writer[T] = macroW[T]
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class WriterExtension(r: Writer.type):
-    inline def derived[T](using Mirror.Of[T], ClassTag[T]): Writer[T] = macroW[T]
+    inline def derived[T](using Mirror.Of[T], ClassTag[T]): Writer[T] = macroWAll[T]
   end WriterExtension
 
 end WritersVersionSpecific
