@@ -218,7 +218,7 @@ def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[Any], macroX: String)(us
 
   def handleType(tpe: TypeRepr, name: String, skipTrait: Boolean): Option[(ValDef, Symbol)] = {
 
-    val AppliedType(typePrefix, List(arg)) = tpe
+    val AppliedType(typePrefix, List(arg)) = tpe: @unchecked
 
     if (skipTrait && arg.typeSymbol.flags.is(Flags.Trait)) None
     else {
