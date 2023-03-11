@@ -6,21 +6,12 @@ import utest._
 
 import upickle.default.{ read, write, Reader, ReadWriter, macroRWAll }
 
-
-case class Dog(name: String, age: Int)
-  derives ReadWriter
-
+case class Dog(name: String, age: Int) derives ReadWriter
 
 sealed trait Animal derives ReadWriter
-
-case class Person(name: String, address: String, age: Int = 20)
-  extends Animal
-
-case class Cat(name: String, owner: Person)
-  extends Animal
-
-case object Cthulu
-  extends Animal
+case class Person(name: String, address: String, age: Int = 20) extends Animal
+case class Cat(name: String, owner: Person) extends Animal\
+case object Cthulu extends Animal
 
 sealed trait AnimalImplicit
 object AnimalImplicit{
@@ -41,6 +32,23 @@ case object Level3Obj extends Level3
 
 object DerivationTests extends TestSuite {
   val tests = Tests {
+    test("example") {
+      test("dog"){
+        upickle.default.write(Dog("Ball", 2)) ==> """{"name":"Ball","age":2}"""
+        upickle.default.read[Dog]("""{"name":"Ball","age":2}""") ==> Dog("Ball", 2)
+      }
+      test("animal"){
+        upickle.default.write(Person("Peter", "Ave 10")) ==>
+          """{"$type":"upickle.Person","name":"Peter","address":"Ave 10"}"""
+
+        upickle.default.read("""{"$type":"upickle.Person","name":"Peter","address":"Ave 10"}""") ==>
+          Person("Peter", "Ave10")
+
+        upickle.default.write(Cthulu) ==> "\"Cthulu\""
+        upickle.default.read("\"Cthulu\"") ==> Cthulu
+      }
+    }
+
     test("caseClass") - {
       rw[Dog](Dog("Ball", 2), """{"name":"Ball","age":2}""")
     }

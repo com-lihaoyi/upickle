@@ -6,7 +6,7 @@ object Common{
   import Generic.ADT
   import Hierarchy._
   import Recursive._
-  type Data = ADT[Seq[(Boolean, String, Int, Double)], String, A, LL, ADTc, ADT0]
+  type Data = ADT[Seq[(Boolean, String, Int, Double)], String, A, LL, Seq[ADTc], ADT0]
   val benchmarkSampleData: Seq[Data] = Seq.fill(1000)(ADT(
     Vector(
       (true,  "zero",  0, 0),
@@ -53,9 +53,14 @@ object Common{
         )
       )
     ),
-    ADTc(
-      i = 1234567890,
-      s = "I am cow hear me moo I weigh twice as much as you and I look good on the barbecue"
+    Seq(
+      ADTc(i = 1234567890, s = "I am cow hear me moo"),
+      ADTc(i = 1234567890, s = "I weigh twice as much as you"),
+      ADTc(i = 1234567890, s = "And I look good on the barbecue"),
+      ADTc(i = 1234567890, s = "Yoghurt curds cream cheese and butter"),
+      ADTc(i = 1234567890, s = "Come from liquids from my udder"),
+      ADTc(i = 1234567890, s = "I can cow I am cow"),
+      ADTc(i = 1234567890, s = "Hear me moo moo."),
     ),
     ADT0()
   ))
