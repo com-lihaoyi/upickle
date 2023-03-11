@@ -4,7 +4,7 @@ import deriving.Mirror
 import scala.reflect.ClassTag
 import scala.compiletime.erasedValue
 
-trait MacroImplicits extends Readers with Writers with upickle.implicits.Annotator:
+trait MacroImplicits extends Readers with Writers with upickle.core.Annotator:
   this: upickle.core.Types =>
 
   inline def macroRW[T: ClassTag](using Mirror.Of[T]): ReadWriter[T] =

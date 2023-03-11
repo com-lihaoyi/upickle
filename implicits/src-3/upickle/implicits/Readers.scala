@@ -2,8 +2,7 @@ package upickle.implicits
 
 import compiletime.summonInline
 import deriving.Mirror
-import upickle.core.{ObjVisitor, Visitor, Abort}
-import upickle.implicits.Annotator
+import upickle.core.{Annotator, ObjVisitor, Visitor, Abort}
 import upickle.implicits.BaseCaseObjectContext
 
 trait ReadersVersionSpecific extends MacrosCommon:

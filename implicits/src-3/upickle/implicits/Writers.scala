@@ -1,10 +1,10 @@
 package upickle.implicits
 
-import upickle.implicits.Annotator
+import upickle.core.Annotator
 
 import deriving.Mirror
 import scala.reflect.ClassTag
-import upickle.core.{ Visitor, ObjVisitor}
+import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
 trait WritersVersionSpecific extends MacrosCommon:
   outerThis: upickle.core.Types with Writers with Annotator =>

@@ -2,13 +2,12 @@ package upickle.implicits
 
 import java.util.UUID
 
-import upickle.core.Visitor
-import upickle.implicits.Annotator
+import upickle.core.{ Visitor, Annotator }
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Writers extends upickle.core.Types
-  with CaseClassReadWriters
+  with TupleCaseClassReadWriters
   with Generated
   with WritersVersionSpecific
   with LowPriWriters { this: Annotator =>

@@ -119,13 +119,13 @@ def checkErrorMissingKeysCountImpl[T]()(using Quotes, Type[T]): Expr[Long] =
   else Expr(paramCount)
 
 inline def writeSnippets[R, T, WS <: Tuple](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
-                                   inline self: upickle.implicits.CaseClassReadWriters#CaseClassWriter[T],
+                                   inline self: upickle.implicits.TupleCaseClassReadWriters#CaseClassWriter[T],
                                    inline v: T,
                                    inline ctx: _root_.upickle.core.ObjVisitor[_, R]): Unit =
   ${writeSnippetsImpl[R, T, WS]('thisOuter, 'self, 'v, 'ctx)}
 
 def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon],
-                            self: Expr[upickle.implicits.CaseClassReadWriters#CaseClassWriter[T]],
+                            self: Expr[upickle.implicits.TupleCaseClassReadWriters#CaseClassWriter[T]],
                             v: Expr[T],
                             ctx: Expr[_root_.upickle.core.ObjVisitor[_, R]])
                            (using Quotes, Type[T], Type[R], Type[WS]): Expr[Unit] =
