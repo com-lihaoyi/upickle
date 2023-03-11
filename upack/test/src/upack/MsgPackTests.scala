@@ -1,7 +1,7 @@
 package upack
 import java.io.ByteArrayOutputStream
 
-import upickle.core.Util
+import upickle.core.ParseUtils
 import utest._
 object MsgPackTests extends TestSuite{
 
@@ -740,13 +740,13 @@ object MsgPackTests extends TestSuite{
         val (tag, expectedJson) = testCase.obj.find{_._1 != "msgpack"}.get
         val packedStr = packed0.str
         println(k + " " + tag + " " + expectedJson + " " + packedStr)
-        val packed = Util.stringToBytes(packedStr)
+        val packed = ParseUtils.stringToBytes(packedStr)
 
         val jsonified0 = upack.transform(packed, ujson.Value)
 
         val jsonified = tag match{
-          case "binary" => ujson.Str(Util.bytesToString(jsonified0.arr.map(_.num.toByte).toArray))
-          case "ext" => ujson.Arr(jsonified0(0), ujson.Str(Util.bytesToString(jsonified0(1).arr.map(_.num.toByte).toArray)))
+          case "binary" => ujson.Str(ParseUtils.bytesToString(jsonified0.arr.map(_.num.toByte).toArray))
+          case "ext" => ujson.Arr(jsonified0(0), ujson.Str(ParseUtils.bytesToString(jsonified0(1).arr.map(_.num.toByte).toArray)))
           case _ => jsonified0
         }
         assert(jsonified == expectedJson)
@@ -757,8 +757,8 @@ object MsgPackTests extends TestSuite{
 
         val rewrittenBytes = upack.write(msg)
         val rewrittenBytes2 = upack.write(msg2)
-        val rewritten = Util.bytesToString(rewrittenBytes)
-        val rewritten2 = Util.bytesToString(rewrittenBytes2)
+        val rewritten = ParseUtils.bytesToString(rewrittenBytes)
+        val rewritten2 = ParseUtils.bytesToString(rewrittenBytes2)
         val possibilities = testCase("msgpack").arr.map(_.str)
 
         assert(possibilities.contains(rewritten))

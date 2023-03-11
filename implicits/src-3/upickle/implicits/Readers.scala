@@ -2,18 +2,22 @@ package upickle.implicits
 
 import compiletime.summonInline
 import deriving.Mirror
-import upickle.core.{Annotator, ObjVisitor, Visitor, Abort, BaseCaseObjectContext}
+import upickle.core.{Annotator, ObjVisitor, Visitor, Abort}
+import upickle.implicits.BaseCaseObjectContext
 
-trait ReadersVersionSpecific extends MacrosCommon:
-  this: upickle.core.Types with Readers with Annotator =>
+trait ReadersVersionSpecific
+  extends MacrosCommon
+    with upickle.core.Types
+    with Annotator
+    with CaseClassReadWriters:
 
-  abstract class CaseReader[T](paramCount: Int, missingKeyCount: Long) extends CaseR[T] {
+  abstract class CaseClassReadereader[T](paramCount: Int, missingKeyCount: Long) extends CaseClassReader[T] {
     def visitors0: Product
     lazy val visitors = visitors0
     def fromProduct(p: Product): T
     def keyToIndex(x: String): Int
     def allKeysArray: Array[String]
-    def storeDefaults(x: upickle.core.BaseCaseObjectContext): Unit
+    def storeDefaults(x: upickle.implicits.BaseCaseObjectContext): Unit
     trait ObjectContext extends ObjVisitor[Any, T] with BaseCaseObjectContext{
       private val params = new Array[Any](paramCount)
 
@@ -44,22 +48,22 @@ trait ReadersVersionSpecific extends MacrosCommon:
     override def visitObject(length: Int,
                              jsonableKeys: Boolean,
                              index: Int) =
-      if (paramCount <= 64) new CaseObjectContext(paramCount) with ObjectContext
-      else new HugeCaseObjectContext(paramCount) with ObjectContext
+      if (paramCount <= 64) new CaseObjectContext[T](paramCount) with ObjectContext
+      else new HugeCaseObjectContext[T](paramCount) with ObjectContext
   }
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val reader = new CaseReader[T](macros.paramsCount[T], macros.checkErrorMissingKeysCount[T]()){
+      val reader = new CaseClassReadereader[T](macros.paramsCount[T], macros.checkErrorMissingKeysCount[T]()){
         override def visitors0 = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
         override def fromProduct(p: Product): T = m.fromProduct(p)
         override def keyToIndex(x: String): Int = macros.keyToIndex[T](x)
         override def allKeysArray = macros.fieldLabels[T].map(_._2).toArray
-        override def storeDefaults(x: upickle.core.BaseCaseObjectContext): Unit = macros.storeDefaults[T](x)
+        override def storeDefaults(x: upickle.implicits.BaseCaseObjectContext): Unit = macros.storeDefaults[T](x)
       }
 
       inline if macros.isSingleton[T] then
-        annotate[T](SingletonR[T](macros.getSingleton[T]), macros.tagName[T])
+        annotate[T](SingletonReader[T](macros.getSingleton[T]), macros.tagName[T])
       else if macros.isMemberOfSealedHierarchy[T] then
         annotate[T](reader, macros.tagName[T])
       else reader

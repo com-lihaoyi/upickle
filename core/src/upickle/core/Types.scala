@@ -146,184 +146,6 @@ trait Types{ types =>
     }
   }
 
-  class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{
-    def write0[R](out: Visitor[_, R], v: V): R = {
-      if (v == null) out.visitNull(-1)
-      else{
-        val ctx = out.visitArray(writers.length, -1)
-        val vs = f(v)
-        var i = 0
-        while(i < writers.length){
-          ctx.visitValue(
-            writers(i).asInstanceOf[Writer[Any]].write(
-              ctx.subVisitor.asInstanceOf[Visitor[Any, Nothing]],
-              vs(i)
-            ),
-            -1
-          )
-          i += 1
-        }
-        ctx.visitEnd(-1)
-      }
-    }
-  }
-
-  class TupleNReader[V](val readers: Array[Reader[_]], val f: Array[Any] => V) extends SimpleReader[V]{
-
-    override def expectedMsg = "expected sequence"
-    override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, V] {
-      val b = new Array[Any](readers.length)
-      var facadesIndex = 0
-
-      var start = facadesIndex
-      def visitValue(v: Any, index: Int): Unit = {
-        b(facadesIndex % readers.length) = v
-        facadesIndex = facadesIndex + 1
-      }
-
-      def visitEnd(index: Int) = {
-        val lengthSoFar = facadesIndex - start
-        if (lengthSoFar != readers.length) {
-          throw new Abort(
-            "expected " + readers.length + " items in sequence, found " + lengthSoFar
-          )
-        }
-        start = facadesIndex
-
-        f(b)
-
-      }
-
-      def subVisitor: Visitor[_, _] = {
-        readers(facadesIndex % readers.length)
-      }
-    }
-  }
-
-  abstract class CaseR[V] extends SimpleReader[V]{
-    override def expectedMsg = "expected dictionary"
-    override def visitString(s: CharSequence, index: Int) = visitObject(0, true, index).visitEnd(index)
-
-    abstract class CaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext{
-      var found = 0L
-
-      def visitValue(v: Any, index: Int): Unit = {
-        if (currentIndex != -1 && ((found & (1L << currentIndex)) == 0)) {
-          storeAggregatedValue(currentIndex, v)
-          found |= (1L << currentIndex)
-        }
-      }
-
-      def storeValueIfNotFound(i: Int, v: Any) = {
-        if ((found & (1L << i)) == 0) {
-          found |= (1L << i)
-          storeAggregatedValue(i, v)
-        }
-      }
-      protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]) = {
-        val keys = for{
-          i <- 0 until rawArgsLength
-          if (found & (1L << i)) == 0
-        } yield mappedArgs(i)
-        throw new _root_.upickle.core.Abort(
-          "missing keys in dictionary: " + keys.mkString(", ")
-        )
-      }
-      protected def checkErrorMissingKeys(rawArgsBitset: Long) = {
-        found != rawArgsBitset
-      }
-    }
-    abstract class HugeCaseObjectContext(fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext{
-      var found = new Array[Long](fieldCount / 64 + 1)
-
-      def visitValue(v: Any, index: Int): Unit = {
-        if (currentIndex != -1 && ((found(currentIndex / 64) & (1L << currentIndex)) == 0)) {
-          storeAggregatedValue(currentIndex, v)
-          found(currentIndex / 64) |= (1L << currentIndex)
-        }
-      }
-
-      def storeValueIfNotFound(i: Int, v: Any) = {
-        if ((found(i / 64) & (1L << i)) == 0) {
-          found(i / 64) |= (1L << i)
-          storeAggregatedValue(i, v)
-        }
-      }
-      protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]) = {
-        val keys = for{
-          i <- 0 until rawArgsLength
-          if (found(i / 64) & (1L << i)) == 0
-        } yield mappedArgs(i)
-        throw new _root_.upickle.core.Abort(
-          "missing keys in dictionary: " + keys.mkString(", ")
-        )
-      }
-      protected def checkErrorMissingKeys(rawArgsLength: Long) = {
-        var bits = 0
-        for(v <- found) bits += java.lang.Long.bitCount(v)
-        bits != rawArgsLength
-      }
-    }
-  }
-  trait CaseW[V] extends Writer[V]{
-    def length(v: V): Int
-    def writeToObject[R](ctx: ObjVisitor[_, R], v: V): Unit
-    def write0[R](out: Visitor[_, R], v: V): R = {
-      if (v == null) out.visitNull(-1)
-      else{
-        val ctx = out.visitObject(length(v), true, -1)
-        writeToObject(ctx, v)
-        ctx.visitEnd(-1)
-      }
-    }
-    def writeSnippet[R, V](objectAttributeKeyWriteMap: CharSequence => CharSequence,
-                           ctx: _root_.upickle.core.ObjVisitor[_, R],
-                           mappedArgsI: String,
-                           w: Any,
-                           value: Any) = {
-      val keyVisitor = ctx.visitKey(-1)
-      ctx.visitKeyValue(
-        keyVisitor.visitString(objectAttributeKeyWriteMap(mappedArgsI), -1)
-      )
-      ctx.narrow.visitValue(w.asInstanceOf[Writer[Any]].write(ctx.subVisitor, value), -1)
-    }
-  }
-  class SingletonR[T](t: T) extends CaseR[T]{
-    override def expectedMsg = "expected string or dictionary"
-
-    override def visitString(s: CharSequence, index: Int) = t
-
-    override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Any, T] {
-      def subVisitor = NoOpVisitor
-
-      def visitKey(index: Int) = NoOpVisitor
-      def visitKeyValue(s: Any) = ()
-
-      def visitValue(v: Any, index: Int): Unit = ()
-
-      def visitEnd(index: Int) = t
-    }
-  }
-  class SingletonW[T](f: T) extends CaseW[T] {
-    def length(v: T) = 0
-    def writeToObject[R](ctx: ObjVisitor[_, R], v: T): Unit = () // do nothing
-  }
-
-
-  def taggedExpectedMsg: String
-  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): ArrVisitor[Any, T] = throw new Abort(taggedExpectedMsg)
-  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): ObjVisitor[Any, T] = throw new Abort(taggedExpectedMsg)
-  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_, R], v: T): R
-
-  private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {
-    var x: V = null.asInstanceOf[V]
-    val i = xs.iterator
-    while(x == null && i.hasNext){
-      val t = f(i.next())
-      if(t != null) x = t
-    }
-    x
-  }
   trait TaggedReader[T] extends SimpleReader[T]{
     def findReader(s: String): Reader[T]
 
@@ -347,7 +169,7 @@ trait Types{ types =>
   }
 
   trait TaggedWriter[T] extends Writer[T]{
-    def findWriter(v: Any): (String, CaseW[T])
+    def findWriter(v: Any): (String, ObjectWriter[T])
     def write0[R](out: Visitor[_, R], v: T): R = {
       val (tag, w) = findWriter(v)
       taggedWrite(w, tag, out, v)
@@ -355,7 +177,7 @@ trait Types{ types =>
     }
   }
   object TaggedWriter{
-    class Leaf[T](checker: Annotator.Checker, tag: String, r: CaseW[T]) extends TaggedWriter[T]{
+    class Leaf[T](checker: Annotator.Checker, tag: String, r: ObjectWriter[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
         checker match{
           case Annotator.Checker.Cls(c) if c.isInstance(v) => tag -> r
@@ -365,7 +187,7 @@ trait Types{ types =>
       }
     }
     class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
-      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, CaseW[T])]
+      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, ObjectWriter[T])]
     }
   }
 
@@ -375,7 +197,7 @@ trait Types{ types =>
 
   }
   object TaggedReadWriter{
-    class Leaf[T](c: ClassTag[_], tag: String, r: CaseW[T] with Reader[T]) extends TaggedReadWriter[T]{
+    class Leaf[T](c: ClassTag[_], tag: String, r: ObjectWriter[T] with Reader[T]) extends TaggedReadWriter[T]{
       def findReader(s: String) = if (s == tag) r else null
       def findWriter(v: Any) = {
         if (c.runtimeClass.isInstance(v)) (tag -> r)
@@ -384,22 +206,45 @@ trait Types{ types =>
     }
     class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
       def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
-      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, CaseW[T])]
+      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, ObjectWriter[T])]
     }
+  }
+
+  def taggedExpectedMsg: String
+
+  def taggedArrayContext[T](taggedReader: TaggedReader[T], index: Int): ArrVisitor[Any, T] = throw new Abort(taggedExpectedMsg)
+
+  def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): ObjVisitor[Any, T] = throw new Abort(taggedExpectedMsg)
+
+  def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_, R], v: T): R
+
+  private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {
+    var x: V = null.asInstanceOf[V]
+    val i = xs.iterator
+    while (x == null && i.hasNext) {
+      val t = f(i.next())
+      if (t != null) x = t
+    }
+    x
+  }
+
+  trait ObjectWriter[T] extends Writer[T]{
+    def length(v: T): Int
+    def writeToObject[R](ctx: ObjVisitor[_, R], v: T): Unit
   }
 }
 
 /**
- * Wrap a CaseR or CaseW reader/writer to handle $type tags during reading and writing.
+ * Wrap a CaseClassReader or CaseClassWriter reader/writer to handle $type tags during reading and writing.
  *
  * Note that Scala 3 singleton `enum` values do not have proper `ClassTag[V]`s
  * like Scala 2 `case object`s do, so we instead use a `Checker.Val` to check
  * for `.equals` equality during writes to determine which tag to use.
  */
 trait Annotator { this: Types =>
-  def annotate[V](rw: CaseR[V], n: String): TaggedReader[V]
-  def annotate[V](rw: CaseW[V], n: String, checker: Annotator.Checker): TaggedWriter[V]
-  def annotate[V](rw: CaseW[V], n: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
+  def annotate[V](rw: Reader[V], n: String): TaggedReader[V]
+  def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V]
+  def annotate[V](rw: ObjectWriter[V], n: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
     annotate(rw, n, Annotator.Checker.Cls(ct.runtimeClass))
 }
 object Annotator{
@@ -408,18 +253,4 @@ object Annotator{
     case class Cls(c: Class[_]) extends Checker
     case class Val(v: Any) extends Checker
   }
-}
-
-trait BaseCaseObjectContext {
-  def storeAggregatedValue(currentIndex: Int, v: Any): Unit
-
-  def visitKey(index: Int) = _root_.upickle.core.StringVisitor
-
-  var currentIndex = -1
-
-  def storeValueIfNotFound(i: Int, v: Any): Unit
-
-  protected def errorMissingKeys(rawArgsLength: Int, mappedArgs: Array[String]): Unit
-
-  protected def checkErrorMissingKeys(rawArgsBitset: Long): Boolean
 }
