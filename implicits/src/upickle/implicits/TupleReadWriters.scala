@@ -1,6 +1,6 @@
 package upickle.implicits
 
-import upickle.core.*
+import upickle.core._
 
 import scala.language.experimental.macros
 import scala.language.higherKinds

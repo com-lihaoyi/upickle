@@ -2,7 +2,8 @@ package upickle.implicits
 
 import java.util.UUID
 
-import upickle.core.{ Visitor, Annotator }
+import upickle.core.Visitor
+import upickle.implicits.Annotator
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 

@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream
 import language.experimental.macros
 import language.higherKinds
 import upickle.core._
+import upickle.implicits.Annotator
 import scala.reflect.ClassTag
 import ujson.IndexedValue
 
