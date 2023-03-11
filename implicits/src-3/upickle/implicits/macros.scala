@@ -231,7 +231,7 @@ def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[Any], macroX: String)(us
       )
 
       val macroCall = TypeApply(
-        Select(prefix.asTerm, prefix.asTerm.tpe.typeSymbol.memberMethod(macroX).head),
+        Select(prefix.asTerm, prefix.asTerm.tpe.typeSymbol.methodMember(macroX).head),
         List(TypeTree.of(using arg.asType))
       )
 
