@@ -217,6 +217,15 @@
         @hl.scala{enum}s or @hl.scala{sealed trait}s, and not on all the
         individual @hl.scala{case class}es or @hl.scala{case object}s.
 
+      @p
+        Also, note that for @hl.scala{enum}s, the short un-qualified name is used
+        for the type key, rather than the fully qualified name with package path.
+        This is because unlike @hl.scala{sealed trait}s, @hl.scala{enum}s enforce
+        that every case is in the same flat namespace, and thus the short name is
+        enough to dis-ambiguate them. This behavior can be overriden with the
+        @hl.scala{@key("...")} annotation in both cases, if a different type key
+        is desired.
+
     @sect{Read/Writing Other Things}
 
       @p

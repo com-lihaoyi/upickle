@@ -10,7 +10,7 @@ case class Dog(name: String, age: Int) derives ReadWriter
 
 sealed trait Animal derives ReadWriter
 case class Person(name: String, address: String, age: Int = 20) extends Animal
-case class Cat(name: String, owner: Person) extends Animal\
+case class Cat(name: String, owner: Person) extends Animal
 case object Cthulu extends Animal
 
 sealed trait AnimalImplicit
@@ -41,11 +41,11 @@ object DerivationTests extends TestSuite {
         upickle.default.write(Person("Peter", "Ave 10")) ==>
           """{"$type":"upickle.Person","name":"Peter","address":"Ave 10"}"""
 
-        upickle.default.read("""{"$type":"upickle.Person","name":"Peter","address":"Ave 10"}""") ==>
-          Person("Peter", "Ave10")
+        upickle.default.read[Animal]("""{"$type":"upickle.Person","name":"Peter","address":"Ave 10"}""") ==>
+          Person("Peter", "Ave 10")
 
-        upickle.default.write(Cthulu) ==> "\"Cthulu\""
-        upickle.default.read("\"Cthulu\"") ==> Cthulu
+        upickle.default.write(Cthulu) ==> "\"upickle.Cthulu\""
+        upickle.default.read[Animal]("\"upickle.Cthulu\"") ==> Cthulu
       }
     }
 

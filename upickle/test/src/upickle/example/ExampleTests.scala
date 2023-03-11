@@ -174,7 +174,7 @@ object ExampleTests extends TestSuite {
       }
       test("maps"){
         write(Map(1 -> 2, 3 -> 4))         ==> """{"1":2,"3":4}"""
-        write(Map("hello" -> "world"))     ==> """{"hello": "world"}"""
+        write(Map("hello" -> "world"))     ==> """{"hello":"world"}"""
         write(Map(Seq(1, 2) -> Seq(3, 4))) ==> """[[[1,2],[3,4]]]"""
       }
       test("options"){

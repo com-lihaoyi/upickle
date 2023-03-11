@@ -47,8 +47,8 @@ object EnumTests extends TestSuite {
       test("readwrite") - {
         rw[SimpleEnum](SimpleEnum.A, "\"A\"", """{"$type": "A"}""")
         rw[SimpleEnum](SimpleEnum.B, "\"B\"", """{"$type": "B"}""")
-//        rw[SimpleEnum.A.type](SimpleEnum.A, "\"A\"", """{"$type": "A"}""")
-//        rw[SimpleEnum.B.type](SimpleEnum.B, "\"B\"", """{"$type": "B"}""")
+        rw[SimpleEnum.A.type](SimpleEnum.A, "\"A\"", """{"$type": "A"}""")
+        rw[SimpleEnum.B.type](SimpleEnum.B, "\"B\"", """{"$type": "B"}""")
       }
 
       test("readFailure") - {
@@ -68,14 +68,14 @@ object EnumTests extends TestSuite {
       rw[ColorEnum](ColorEnum.Red, "\"Red\"", """{"$type": "Red"}""")
       rw[ColorEnum](ColorEnum.Green, "\"Green\"", """{"$type": "Green"}""")
       rw[ColorEnum](ColorEnum.Blue, "\"Blue\"", """{"$type": "Blue"}""")
-      rw[ColorEnum](ColorEnum.Mix(12345), )
-      rw[ColorEnum](ColorEnum.Unknown(12345), "{\"$type\":\"Unknown\",\"mix\":12345}")
+      rw[ColorEnum](ColorEnum.Mix(12345), """{"$type":"Mix","mix":12345}""")
+      rw[ColorEnum](ColorEnum.Unknown(12345), """{"$type":"Unknown","mix":12345}""")
 
-//      rw[ColorEnum.Red.type](ColorEnum.Red, "\"Red\"", """{"$type": "Red"}""")
-//      rw[ColorEnum.Green.type](ColorEnum.Green, "\"Green\"", """{"$type": "Green"}""")
-//      rw[ColorEnum.Blue.type](ColorEnum.Blue, "\"Blue\"", """{"$type": "Blue"}""")
-//      rw[ColorEnum.Mix](ColorEnum.Mix(12345), "{\"$type\":\"Mix\",\"mix\":12345}")
-//      rw[ColorEnum.Unknown](ColorEnum.Unknown(12345), "{\"$type\":\"Unknown\",\"mix\":12345}")
+      rw[ColorEnum.Red.type](ColorEnum.Red, "\"Red\"", """{"$type": "Red"}""")
+      rw[ColorEnum.Green.type](ColorEnum.Green, "\"Green\"", """{"$type": "Green"}""")
+      rw[ColorEnum.Blue.type](ColorEnum.Blue, "\"Blue\"", """{"$type": "Blue"}""")
+      rw[ColorEnum.Mix](ColorEnum.Mix(12345), "{\"$type\":\"Mix\",\"mix\":12345}")
+      rw[ColorEnum.Unknown](ColorEnum.Unknown(12345), "{\"$type\":\"Unknown\",\"mix\":12345}")
     }
 
     test("recursive"){
