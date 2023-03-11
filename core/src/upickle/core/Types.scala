@@ -351,7 +351,6 @@ trait Types{ types =>
     def write0[R](out: Visitor[_, R], v: T): R = {
       val (tag, w) = findWriter(v)
       taggedWrite(w, tag, out, v)
-
     }
   }
   object TaggedWriter{
@@ -365,7 +364,9 @@ trait Types{ types =>
       }
     }
     class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
-      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, CaseW[T])]
+      def findWriter(v: Any) = {
+        scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, CaseW[T])]
+      }
     }
   }
 

@@ -400,5 +400,48 @@ object Macros {
 //    println(res)
     c0.Expr[W[T]](res)
   }
+  def macroRAllImpl[T, R[_]](c0: scala.reflect.macros.blackbox.Context)
+                            (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[R[_]]): c0.Expr[R[T]] = {
+    import c0.universe._
+    c0.Expr[R[T]](
+      if (!e1.tpe.typeSymbol.asClass.isTrait) q"${c0.prefix}.macroR[$e1]"
+      else {
+        val subs = e1.tpe.typeSymbol.asClass.knownDirectSubclasses.toList.filter(!_.asClass.isTrait)
+        val bindings = for (i <- subs.indices) yield TermName("bindings" + i)
+        val finalBinding = TermName("bindings" + subs.size)
+        q"""
+        ..${
+          for ((sub, binding) <- subs.zip(bindings)) yield {
+            q"implicit lazy val $binding: ${c0.prefix}.Reader[$sub] = ${c0.prefix}.macroR"
+          }
+        }
+        implicit lazy val $finalBinding: ${c0.prefix}.Reader[$e1] = ${c0.prefix}.macroR
+        $finalBinding
+        """
+      }
+    )
+  }
+
+  def macroWAllImpl[T, W[_]](c0: scala.reflect.macros.blackbox.Context)
+                         (implicit e1: c0.WeakTypeTag[T], e2: c0.WeakTypeTag[W[_]]): c0.Expr[W[T]] = {
+    import c0.universe._
+    c0.Expr[W[T]](
+      if (!e1.tpe.typeSymbol.asClass.isTrait) q"${c0.prefix}.macroW[$e1]"
+      else {
+        val subs = e1.tpe.typeSymbol.asClass.knownDirectSubclasses.toList.filter(!_.asClass.isTrait)
+        val bindings = for (i <- subs.indices) yield TermName("bindings" + i)
+        val finalBinding = TermName("bindings" + subs.size)
+          q"""
+          ..${
+              for ((sub, binding) <- subs.zip(bindings)) yield {
+                q"implicit lazy val $binding: ${c0.prefix}.Writer[$sub] = ${c0.prefix}.macroW"
+              }
+            }
+          implicit lazy val $finalBinding: ${c0.prefix}.Writer[$e1] = ${c0.prefix}.macroW
+          $finalBinding
+        """
+      }
+    )
+  }
 }
 

@@ -212,7 +212,7 @@ trait Readers extends upickle.core.Types
       }
 
       override def visitArray(length: Int, index: Int) = {
-        SeqLikeReader[Array, (K, V)](Tuple2Reader(k, v), implicitly)
+        SeqLikeReader0[Array, (K, V)](Tuple2Reader(k, v), implicitly)
           .map(x => make(x))
           .visitArray(length, index)
       }
@@ -289,8 +289,11 @@ trait Readers extends upickle.core.Types
         def subVisitor = implicitly[Reader[T]]
       }
     }
-  implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
-                                      factory: Factory[T, C[T]]): Reader[C[T]] = new SimpleReader[C[T]] {
+  implicit def SeqLikeReader[C[_] <: TraversableOnce[_], T](implicit r: Reader[T],
+                                                   factory: Factory[T, C[T]]): Reader[C[T]] =
+    SeqLikeReader0[C, T]
+  def SeqLikeReader0[C[_], T](implicit r: Reader[T],
+                              factory: Factory[T, C[T]]): Reader[C[T]] = new SimpleReader[C[T]] {
     override def expectedMsg = "expected sequence"
     override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, C[T]] {
       val b = factory.newBuilder
