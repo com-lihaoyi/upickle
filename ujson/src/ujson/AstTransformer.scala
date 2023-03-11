@@ -3,6 +3,8 @@ import upickle.core._
 
 import upickle.core.compat._
 
+import scala.language.higherKinds
+
 trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
   def apply(t: Readable): I = t.transform(this)
 
@@ -32,7 +34,7 @@ trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
 
     def visitValue(v: I, index: Int): Unit = vs += (key -> v)
 
-    def visitEnd(index: Int) = build(vs.result)
+    def visitEnd(index: Int) = build(vs.result())
   }
   class AstArrVisitor[T[_]](build: T[I] => I)
                            (implicit factory: Factory[I, T[I]]) extends ArrVisitor[I, I]{

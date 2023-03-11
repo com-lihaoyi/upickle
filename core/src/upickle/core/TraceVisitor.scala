@@ -3,7 +3,7 @@ package upickle.core
 import upickle.core.TraceVisitor._
 
 import scala.annotation.tailrec
-import scala.util.control.NoStackTrace
+import scala.util.control.{NonFatal, NoStackTrace}
 
 /**
   * Adds a JSON Path to exceptions thrown by the delegate Visitor.
@@ -19,7 +19,7 @@ object TraceVisitor {
     else{
       val wrapper = new upickle.core.TraceVisitor.Wrapper[T, J]()
       try f(wrapper.visitor(v))
-      catch{case e => throw new upickle.core.TraceVisitor.TraceException(wrapper.lastHasPath.toString, e) }
+      catch{case NonFatal(e) => throw new upickle.core.TraceVisitor.TraceException(wrapper.lastHasPath.toString, e) }
     }
   }
 
@@ -122,7 +122,7 @@ class TraceVisitor[T, J](
         objVisitor.visitEnd(index)
       }
 
-      override def pathComponent: Option[String] = Option(key).map("'" + _.replaceAllLiterally("'", "\\'") + "'")
+      override def pathComponent: Option[String] = Option(key).map("'" + _.replace("'", "\\'") + "'")
 
       override def parent: Option[HasPath] = Some(TraceVisitor.this.parentPath)
     }

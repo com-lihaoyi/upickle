@@ -30,7 +30,7 @@ object Custom {
 
   abstract class ThingBaseCompanion[T <: ThingBase](f: (Int, String) => T){
     implicit val thing2Writer: RW[T] = upickle.default.readwriter[String].bimap[T](
-      t => t.i + " " + t.s,
+      t => s"${t.i} ${t.s}",
       str => {
         val Array(i, s) = str.toString.split(" ", 2)
         f(i.toInt, s)
@@ -169,7 +169,7 @@ object MacroTests extends TestSuite {
         )
         val chunks = for (i <- 1 to 18) yield {
           val rhs = if (i % 2 == 1) "1" else "\"1\""
-          val lhs = '"' + s"t$i" + '"'
+          val lhs = s""""t$i""""
           s"$lhs:$rhs"
         }
 

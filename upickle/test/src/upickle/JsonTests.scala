@@ -33,7 +33,7 @@ object JsonTests extends TestSuite {
         |        "digit": "0123456789",
         |        "0123456789": "digit",
         |        "special": "`1~!@#$%^&*()_+-={':[,]}|;.</>?",
-        |        "hex": "\u0123\u4567\u89AB\uCDEF\uabcd\uef4A",
+        |        "hex": "ģ䕧覫췯ꯍ",
         |        "true": true,
         |        "false": false,
         |        "null": null,
@@ -49,8 +49,8 @@ object JsonTests extends TestSuite {
         |
         |4 , 5        ,          6           ,7        ],"compact":[1,2,3,4,5,6,7],
         |        "jsontext": "{\"object with 1 member\":[\"array with 1 element\"]}",
-        |        "quotes": "&#34; \u005Cu0022 %22 0x22 034 &#x22;",
-        |        "\/\\\"\uCAFE\uBABE\uAB98\uFCDE\ubcda\uef4A\b\f\n\r\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?"
+        |        "quotes": "&#34; \""".stripMargin + "\\" + """u0022 %22 0x22 034 &#x22;",
+        |        "\/\\\"쫾몾ꮘﳞ볚\b\f\n\r\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?"
         |: "A key can be any string"
         |    },
         |    0.5 ,98.6
@@ -155,7 +155,7 @@ object JsonTests extends TestSuite {
           |      "members_50": 4,
           |      "activity_expert_groups": "none",
           |      "other_code_of_conduct": null,
-          |      "head_office_town": "K\u00f8benhavn V"
+          |      "head_office_town": "København V"
           |    }
           |
           |

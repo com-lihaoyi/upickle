@@ -1,6 +1,7 @@
 package upickle.implicits
 
 import language.experimental.macros
+import scala.language.higherKinds
 
 /**
   * Stupid hacks to work around scalac not forwarding macro type params properly

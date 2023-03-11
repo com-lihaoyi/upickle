@@ -2,6 +2,7 @@ package upickle
 
 import upack.MsgPackWriter
 
+import scala.annotation.nowarn
 
 object Main{
   import ADTs.ADT0
@@ -53,6 +54,7 @@ object Main{
       println()
     }
   }
+  @nowarn("cat=deprecation")
   def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean, streams: Boolean, msgpack: Boolean) = {
     import java.nio.file.{Files, Paths}
     import collection.JavaConverters._
@@ -126,7 +128,7 @@ object Main{
 
   def circeJsonAst(duration: Int) = {
     Common.bench0[String, io.circe.Json](duration, Common.benchmarkSampleJson)(
-      io.circe.parser.parse(_).right.get,
+      io.circe.parser.parse(_).getOrElse(???),
       _.toString()
     )
   }
@@ -139,7 +141,7 @@ object Main{
 
   def argonautJsonAst(duration: Int) = {
     Common.bench0[String, argonaut.Json](duration, Common.benchmarkSampleJson)(
-      argonaut.Parse.parse(_).right.get,
+      argonaut.Parse.parse(_).getOrElse(???),
       _.toString()
     )
   }

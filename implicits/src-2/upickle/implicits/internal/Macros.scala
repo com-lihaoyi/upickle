@@ -1,6 +1,6 @@
 package upickle.implicits.internal
 
-import scala.annotation.StaticAnnotation
+import scala.annotation.{nowarn, StaticAnnotation}
 import scala.language.experimental.macros
 import compat._
 import acyclic.file
@@ -15,6 +15,7 @@ import language.existentials
  * directly, since they are called implicitly when trying to read/write
  * types you don't have a Reader/Writer in scope for.
  */
+@nowarn("cat=deprecation")
 object Macros {
 
   trait DeriveDefaults[M[_]] {

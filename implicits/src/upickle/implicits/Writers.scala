@@ -5,6 +5,7 @@ import java.util.UUID
 import upickle.core.{ Visitor, Annotator }
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.language.higherKinds
 
 trait Writers extends upickle.core.Types
   with TupleReadWriters

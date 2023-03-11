@@ -8,6 +8,7 @@ import upickle.core._
 import upickle.core.compat._
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 trait Readers extends upickle.core.Types
@@ -57,8 +58,8 @@ trait Readers extends upickle.core.Types
     override def expectedMsg = "expected number"
     override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
     override def visitInt32(d: Int, index: Int) = d
-    override def visitInt64(d: Long, index: Int) = d
-    override def visitUInt64(d: Long, index: Int) = d
+    override def visitInt64(d: Long, index: Int) = d.toDouble
+    override def visitUInt64(d: Long, index: Int) = d.toDouble
     override def visitFloat32(d: Float, index: Int) = d
     override def visitFloat64(d: Double, index: Int) = d
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
