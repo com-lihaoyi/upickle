@@ -15,18 +15,18 @@ import mill.scalanativelib.api.{LTO, ReleaseMode}
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
-val scala211  = "2.11.12"
 val scala212  = "2.12.17"
 val scala213  = "2.13.10"
+
 val scala3   = "3.2.2"
-val scalaJS  = "1.10.1"
-val scalaNative = "0.4.5"
+val scalaJS  = "1.13.0"
+val scalaNative = "0.4.10"
 val acyclic = "0.3.6"
 val sourcecode = "0.3.0"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
-val scala2JVMVersions = Seq(scala211, scala212, scala213)
+val scala2JVMVersions = Seq(scala212, scala213)
 val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 val scalaJSVersions = scalaJVMVersions.map((_, scalaJS))
@@ -43,18 +43,13 @@ trait CommonModule extends ScalaModule {
   override def sources = T.sources{
     super.sources() ++
     Seq(PathRef(millSourcePath / s"src-$platformSegment")) ++
-    (if (scalaVersion() != scala212 && scalaVersion() != scala211) {
+    (if (scalaVersion() != scala212) {
       Seq(PathRef(millSourcePath / "src-2.13+"))
     } else Seq()) ++
-    (if (scalaVersion() != scala211) {
-      Seq(PathRef(millSourcePath / "src-2.12+"))
-    } else Seq()) ++
-    (if (scalaVersion() == scala212 || scalaVersion() == scala213) {
-      Seq(PathRef(millSourcePath / "src-2.12-2.13"))
-    } else Seq()) ++
     (platformSegment match {
-      case "jvm" | "native" => Seq(PathRef(millSourcePath / "src-jvm-native"))
-      case _ => Seq()
+      case "jvm" => Seq(PathRef(millSourcePath / "src-jvm-native"))
+      case "native" => Seq(PathRef(millSourcePath / "src-js-native"), PathRef(millSourcePath / "src-jvm-native"))
+      case "js" => Seq(PathRef(millSourcePath / "src-js-native"))
     })
   }
 }
@@ -338,23 +333,23 @@ object ujson extends Module{
     override def moduleDeps = Seq(ujson.jvm())
     override def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.6")
   }
-  object json4s extends Cross[Json4sModule](scala2JVMVersions:_*)
+  object json4s extends Cross[Json4sModule](scalaJVMVersions:_*)
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
     override def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
     override def ivyDeps = Agg(
-      ivy"org.json4s::json4s-ast:3.6.12",
-      ivy"org.json4s::json4s-native:3.6.12"
+      ivy"org.json4s::json4s-ast:4.0.6",
+      ivy"org.json4s::json4s-native:4.0.6"
     )
   }
 
-  object circe extends Cross[CirceModule](scala2JVMVersions:_*)
+  object circe extends Cross[CirceModule](scalaJVMVersions:_*)
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
     override def artifactName = "ujson-circe"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
-    val circeVersion = if(crossScalaVersion == scala211) "0.11.2" else "0.13.0"
+    val circeVersion = "0.14.5"
     override def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
   }
 
@@ -363,8 +358,9 @@ object ujson extends Module{
     override def artifactName = "ujson-play"
     def platformSegment = "jvm"
     override def moduleDeps = Seq(ujson.jvm())
+    val playJsonVersion = "2.9.4"
     override def ivyDeps = Agg(
-      ivy"com.typesafe.play::play-json:2.7.4"
+      ivy"com.typesafe.play::play-json:$playJsonVersion"
     )
   }
 }
@@ -439,9 +435,9 @@ trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"
   override def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.14.4",
-    ivy"io.circe::circe-generic::0.14.4",
-    ivy"io.circe::circe-parser::0.14.4",
+    ivy"io.circe::circe-core::0.14.5",
+    ivy"io.circe::circe-generic::0.14.5",
+    ivy"io.circe::circe-parser::0.14.5",
     ivy"com.typesafe.play::play-json::2.9.4",
     ivy"io.argonaut::argonaut:6.2.6",
     ivy"org.json4s::json4s-ast:3.6.12",

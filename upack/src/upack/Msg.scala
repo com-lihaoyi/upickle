@@ -1,10 +1,9 @@
 package upack
 
-import upickle.core.{ArrVisitor, ObjVisitor, Visitor}
+import upickle.core.{ArrVisitor, ObjVisitor, LinkedHashMap, Visitor}
 
 import upickle.core.compat._
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 /**
   * In-memory representation of the MessagePack data model
@@ -109,24 +108,24 @@ case class Float64(value: Double) extends Msg
 case class Str(value: String) extends Msg
 case class Binary(value: Array[Byte]) extends Msg
 case class Arr(value: mutable.ArrayBuffer[Msg]) extends Msg
-object Arr{
+object Arr {
   def apply(items: Msg*): Arr = {
     val buf = new mutable.ArrayBuffer[Msg](items.size)
     items.foreach(item => buf += item)
     Arr(buf)
   }
 }
-case class Obj(value: mutable.LinkedHashMap[Msg, Msg]) extends Msg
+case class Obj(value: LinkedHashMap[Msg, Msg]) extends Msg
 object Obj{
   def apply(item: (Msg, Msg),
             items: (Msg, Msg)*): Obj = {
-    val map = new mutable.LinkedHashMap[Msg, Msg]()
+    val map = LinkedHashMap[Msg, Msg]()
     map.put(item._1, item._2)
     for (i <- items) map.put(i._1, i._2)
     Obj(map)
   }
 
-  def apply(): Obj = Obj(new mutable.LinkedHashMap[Msg, Msg]())
+  def apply(): Obj = Obj(LinkedHashMap[Msg, Msg]())
 }
 case class Ext(tag: Byte, data: Array[Byte]) extends Msg
 
@@ -193,7 +192,7 @@ object Msg extends MsgVisitor[Msg, Msg]{
     }
   }
 
-  private def visitObjContents[T](f: Visitor[_, T], items: mutable.LinkedHashMap[Msg, Msg]) = {
+  private def visitObjContents[T](f: Visitor[_, T], items: LinkedHashMap[Msg, Msg]) = {
     val obj = f.visitObject(items.size, true, -1)
     val kvs = items.iterator
     while(kvs.hasNext){
@@ -207,7 +206,7 @@ object Msg extends MsgVisitor[Msg, Msg]{
     obj.visitEnd(-1)
   }
 
-  private def visitArrContents[T](f: Visitor[_, T], items: ArrayBuffer[Msg]) = {
+  private def visitArrContents[T](f: Visitor[_, T], items: mutable.ArrayBuffer[Msg]) = {
     val arr = f.visitArray(items.length, -1)
     var i = 0
     val itemsLength = items.length
@@ -219,14 +218,14 @@ object Msg extends MsgVisitor[Msg, Msg]{
   }
 
   def visitArray(length: Int, index: Int) = new ArrVisitor[Msg, Msg] {
-    val arr = ArrayBuffer[Msg]()
+    val arr = mutable.ArrayBuffer[Msg]()
     def subVisitor = Msg
     def visitValue(v: Msg, index: Int): Unit = arr.append(v)
     def visitEnd(index: Int) = Arr(arr)
   }
 
   def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ObjVisitor[Msg, Msg] {
-    val map = mutable.LinkedHashMap[Msg, Msg]()
+    val map = LinkedHashMap[Msg, Msg]()
     var lastKey: Msg = null
     def subVisitor = Msg
     def visitValue(v: Msg, index: Int): Unit = map(lastKey) = v
