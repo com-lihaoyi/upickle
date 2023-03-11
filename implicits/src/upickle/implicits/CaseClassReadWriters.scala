@@ -132,9 +132,9 @@ trait CaseClassReadWriters extends upickle.core.Types{
     }
 
     class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T] {
-      def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
+      def findReader(s: String) = scanChildren[TaggedReader[_], Reader[_]](rs)(_.findReader(s)).asInstanceOf[Reader[T]]
 
-      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, ObjectWriter[T])]
+      def findWriter(v: Any) = scanChildren[TaggedWriter[_], (String, ObjectWriter[_])](rs)(_.findWriter(v)).asInstanceOf[(String, ObjectWriter[T])]
     }
   }
 
@@ -173,6 +173,25 @@ trait CaseClassReadWriters extends upickle.core.Types{
   protected def mergeWriters[T](rws: Writer[_ <: T]*): TaggedWriter[T] = {
     new TaggedWriter.Node(rws.asInstanceOf[Seq[TaggedWriter[T]]]: _*)
   }
+
+  protected def joinReadWriter[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T] = (r0, w0) match {
+    case (r1: TaggedReader[T], w1: TaggedWriter[T]) =>
+      new TaggedReadWriter[T] {
+        override def isJsonDictKey = w0.isJsonDictKey
+
+        def findReader(s: String) = r1.findReader(s)
+
+        def findWriter(v: Any) = w1.findWriter(v)
+      }
+
+    case _ =>
+      new Visitor.Delegate[Any, T](r0) with ReadWriter[T] {
+        override def isJsonDictKey = w0.isJsonDictKey
+
+        def write0[V](out: Visitor[_, V], v: T) = w0.write(out, v)
+      }
+  }
+
 }
 
 

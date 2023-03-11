@@ -27,6 +27,7 @@ trait Types{ types =>
     }
   }
 
+  protected def joinReadWriter[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T]
   object ReadWriter{
     abstract class Delegate[T](other: Visitor[Any, T])
       extends Visitor.Delegate[Any, T](other) with ReadWriter[T]
@@ -34,10 +35,8 @@ trait Types{ types =>
     def merge[T](rws: ReadWriter[_ <: T]*): ReadWriter[T] = mergeReadWriters(rws: _*)
 
     implicit def join[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T] =
-      new Visitor.Delegate[Any, T](r0) with ReadWriter[T]{
-        override def isJsonDictKey = w0.isJsonDictKey
-        def write0[V](out: Visitor[_, V], v: T) = w0.write(out, v)
-      }
+      joinReadWriter(r0, w0)
+      
   }
 
   /**
