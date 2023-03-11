@@ -119,6 +119,11 @@ trait CommonTestModule extends CommonBaseModule with TestModule.Utest{
     os.makeDir.all(javadocDir)
     mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
   }
+  override def scalacOptions = super.scalacOptions() ++
+    (if (isScala3(scalaVersion())) Seq(
+      "-Ximplicit-search-limit",
+      "200000"
+    ) else Seq.empty[String])
 }
 
 trait CommonJvmModule extends CommonPublishModule{
