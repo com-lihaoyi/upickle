@@ -1,6 +1,6 @@
 package ujson
 
-import upickle.core.{LinkedHashMap, ObjArrVisitor, Util, Visitor}
+import upickle.core.{LinkedHashMap, ObjArrVisitor, ParseUtils, Visitor}
 import upickle.core.compat._
 
 import scala.collection.mutable
@@ -206,7 +206,7 @@ object Value extends AstTransformer[Value]{
   override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     ujson.Num(
       if (decIndex != -1 || expIndex != -1) s.toString.toDouble
-      else Util.parseIntegralNum(s, decIndex, expIndex, index)
+      else ParseUtils.parseIntegralNum(s, decIndex, expIndex, index)
     )
   }
 

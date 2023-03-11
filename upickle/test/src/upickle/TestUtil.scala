@@ -143,8 +143,8 @@ class TestUtil[Api <: upickle.Api](val api: Api){
     if (checkBinaryJson){
       val rewrittenBinary = api.writeBinary(roundTrippedBinary)
 
-      val writtenBinaryStr = upickle.core.Util.bytesToString(writtenBinary)
-      val rewrittenBinaryStr = upickle.core.Util.bytesToString(rewrittenBinary)
+      val writtenBinaryStr = upickle.core.ParseUtils.bytesToString(writtenBinary)
+      val rewrittenBinaryStr = upickle.core.ParseUtils.bytesToString(rewrittenBinary)
       utest.assert(writtenBinaryStr == rewrittenBinaryStr)
     }
   }
