@@ -1,7 +1,6 @@
 package upack
 import java.io.ByteArrayOutputStream
 
-import upickle.core.Util
 import utest._
 
 import scala.collection.mutable
