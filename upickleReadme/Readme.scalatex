@@ -4,6 +4,8 @@
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
 @val exampleTests = wd/'upickle/'test/"src"/'upickle/'example/"ExampleTests.scala"
+@val derivationTests = wd/'upickle/'test/"src-3"/'upickle/"DerivationTests.scala"
+@val enumTests = wd/'upickle/'test/"src-3"/'upickle/"EnumTests.scala"
 @val jvmExampleTests = wd/'upickle/'test/"src-jvm-2"/'upickle/'example/"JvmExampleTests.scala"
 @val macroTests = wd/'upickle/'test/'src/'upickle/"MacroTests.scala"
 
@@ -108,100 +110,121 @@
       @hl.scala
         import upickle.default._
 
+      @sect{Primitives}
+        @p
+          Booleans are serialized as JSON booleans
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"booleans\"", ""))
+
+        @p
+          Numbers are serialized as JSON numbers
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"numbers\"", ""))
+
+        @p
+          Except for @hl.scala{Long}s, which too large for Javascript. These are
+          serialized as JSON Strings, keeping the interchange format compatible
+           with the browser's own JSON parser, which provides the best
+            performance in Scala.js
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"longs\"", ""))
+
+        @p
+          Special values of @hl.scala{Double}s and @hl.scala{Float}s are also
+          serialized as Strings
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"specialNumbers\"", ""))
+
+
+
+        @p
+          Both @hl.scala{Char}s and @hl.scala{String}s are serialized as Strings
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"charStrings\"", ""))
+      @sect{Collections}
+        @p
+          @code{Array}s and most immutable collections are serialized as JSON lists
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"seqs\"", ""))
+
+        @p
+          @code{Option}s are serialized as JSON lists with 0 or 1 element
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"options\"", ""))
+
+
+        @p
+          Tuples of all sizes (1-22) are serialized as heterogenous JSON lists
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"tuples\"", ""))
+
+        @p
+          @code{Map}s with primitive keys are serialized into JSON dictionaries,
+          while @code{Map} with complex keys are serialized into lists of
+          2-element tuples
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"maps\"", ""))
+
+      @sect{Case Classes}
+        @p
+          Case classes of sizes 1-64 are serialized as JSON dictionaries with the
+          keys being the names of each field.
+          To begin with, you need to define a serializer in the Case Class's
+          companion object:
+
+        @hl.scala
+          import upickle.default.{ReadWriter => RW, macroRW}
+
+        @p
+          After that, you can begin serializing that case class.
+
+        @hl.ref(exampleTests, Seq("object Simple", ""))
+        @hl.ref(exampleTests, Seq("\"more\"", "\"caseClass\"", ""), "        }")
+
+        @p
+          Sealed hierarchies are serialized as tagged values, the serialized
+          object tagged with the full name of the instance's class:
+
+        @hl.ref(exampleTests, Seq("object Sealed", ""))
+        @hl.ref(exampleTests, Seq("\"more\"", "\"sealed\"", ""), "  }")
+
+        @p
+          Serializability is recursive; you can serialize a type only if all
+          its members are serializable. That means that collections, tuples and
+          case-classes made only of serializable members are themselves serializable
+
+        @hl.ref(exampleTests, Seq("object Recursive", ""))
+        @hl.ref(exampleTests, Seq("\"more\"", "\"recursive\"", ""), "  }")
+      @sect{Scala 3 Deriving}
+        @p
+          In Scala 3, you can use the @hl.scala{derives} keyword on standalone
+          @hl.scala{case class}es, @hl.scala{sealed trait} hierarchies, and
+          @hl.scala{enum}s:
+
+        @hl.ref(derivationTests, "case class Dog", "")
+        @hl.ref(derivationTests, Seq("\"example\"", "\"dog\"", ""))
+
+        @hl.ref(derivationTests, Seq("sealed trait Animal"), Seq("case object Cthulu", ""))
+        @hl.ref(derivationTests, Seq("\"example\"", "\"animal\"", ""))
+
+        @hl.ref(enumTests, "enum SimpleEnum", "end SimpleEnum")
+        @hl.ref(enumTests, Seq("example", "simple", ""))
+
+        @hl.ref(enumTests, "enum ColorEnum", "end ColorEnum")
+        @hl.ref(enumTests, Seq("example", "color", "Enclosing"))
       @p
-        Booleans are serialized as JSON booleans
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"booleans\"", ""))
-
-      @p
-        Numbers are serialized as JSON numbers
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"numbers\"", ""))
+        Note that you only need to put the @hl.scala{derives} keyword on the
+        @hl.scala{enum}s or @hl.scala{sealed trait}s, and not on all the
+        individual @hl.scala{case class}es or @hl.scala{case object}s.
 
       @p
-        Except for @hl.scala{Long}s, which too large for Javascript. These are
-        serialized as JSON Strings, keeping the interchange format compatible
-         with the browser's own JSON parser, which provides the best
-          performance in Scala.js
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"longs\"", ""))
-
-      @p
-        Special values of @hl.scala{Double}s and @hl.scala{Float}s are also
-        serialized as Strings
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"specialNumbers\"", ""))
-
-
-
-      @p
-        Both @hl.scala{Char}s and @hl.scala{String}s are serialized as Strings
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"charStrings\"", ""))
-
-      @p
-        @code{Array}s and most immutable collections are serialized as JSON lists
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"seqs\"", ""))
-
-      @p
-        @code{Option}s are serialized as JSON lists with 0 or 1 element
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"options\"", ""))
-
-
-      @p
-        Tuples of all sizes (1-22) are serialized as heterogenous JSON lists
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"tuples\"", ""))
-
-      @p
-        Case classes of sizes 1-64 are serialized as JSON dictionaries with the
-        keys being the names of each field.
-        To begin with, you need to define a serializer in the Case Class's
-        companion object:
-
-      @hl.scala
-        import upickle.default.{ReadWriter => RW, macroRW}
-
-      @p
-        After that, you can begin serializing that case class.
-
-      @hl.ref(exampleTests, Seq("object Simple", ""))
-      @hl.ref(exampleTests, Seq("\"more\"", "\"caseClass\"", ""), "        }")
-
-      @p
-        Sealed hierarchies are serialized as tagged values, the serialized
-        object tagged with the full name of the instance's class:
-
-      @hl.ref(exampleTests, Seq("object Sealed", ""))
-      @hl.ref(exampleTests, Seq("\"more\"", "\"sealed\"", ""), "  }")
-
-      @p
-        Serializability is recursive; you can serialize a type only if all
-        its members are serializable. That means that collections, tuples and
-        case-classes made only of serializable members are themselves serializable
-
-      @hl.ref(exampleTests, Seq("object Recursive", ""))
-      @hl.ref(exampleTests, Seq("\"more\"", "\"recursive\"", ""), "  }")
-
-      @p
-
-        Nulls serialize into JSON nulls, as you would expect
-
-      @hl.ref(exampleTests, Seq("\"more\"", "\"null\"", ""), "  }")
-
-      @p
-        uPickle only throws exceptions on unpickling; if a pickler is
-        properly defined, serializing a data structure to a @hl.scala{String}
-        should never throw an exception.
-
-      @p
-        All these examples can be similarly serialized to MessagePack-formatted
-        binaries, in the same way: JSON booleans become MessagePack booleans,
-        lists become MessagePack lists, and so on. Reading and writing
-        MessagePack binary data is typically significantly faster than reading
-        and writing JSON, and the serialized data is also significantly smaller.
+        Also, note that for @hl.scala{enum}s, the short un-qualified name is used
+        for the type key, rather than the fully qualified name with package path.
+        This is because unlike @hl.scala{sealed trait}s, @hl.scala{enum}s enforce
+        that every case is in the same flat namespace, and thus the short name is
+        enough to dis-ambiguate them. This behavior can be overriden with the
+        @hl.scala{@key("...")} annotation in both cases, if a different type key
+        is desired.
 
     @sect{Read/Writing Other Things}
 
@@ -219,6 +242,24 @@
         data to an arbitrary @code{java.io.Writer}/@code{java.io.OutputStream}:
         this can be streamed directly to files or over the network without having
         to accumulate the serialized JSON in memory.
+    @sect{Nulls}
+      @p
+      
+        Nulls serialize into JSON nulls, as you would expect
+      
+      @hl.ref(exampleTests, Seq("\"more\"", "\"null\"", ""), "  }")
+      
+      @p
+        uPickle only throws exceptions on unpickling; if a pickler is
+        properly defined, serializing a data structure to a @hl.scala{String}
+        should never throw an exception.
+      
+      @p
+        All these examples can be similarly serialized to MessagePack-formatted
+        binaries, in the same way: JSON booleans become MessagePack booleans,
+        lists become MessagePack lists, and so on. Reading and writing
+        MessagePack binary data is typically significantly faster than reading
+        and writing JSON, and the serialized data is also significantly smaller.
 
     @sect{Defaults}
 

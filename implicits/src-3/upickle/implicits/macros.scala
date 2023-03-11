@@ -2,7 +2,7 @@ package upickle.implicits.macros
 
 import scala.quoted.{ given, _ }
 import deriving._, compiletime._
-
+import upickle.implicits.ReadersVersionSpecific
 type IsInt[A <: Int] = A
 
 def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
@@ -172,18 +172,29 @@ def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
 
   val sym = TypeTree.of[T].symbol
 
-  extractKey(sym) match
-  case Some(name) => Expr(name)
-  case None =>
-    // In Scala 3 enums, we use the short name of each case as the tag, rather
-    // than the fully-qualified name. We can do this because we know that all
-    // enum cases are in the same `enum Foo` namespace with distinct short names,
-    // whereas sealed trait instances could be all over the place with identical
-    // short names only distinguishable by their prefix.
-    //
-    // Harmonizing these two cases further is TBD
-    if (sym.flags.is(Flags.Enum)) Expr(sym.name.filter(_ != '$'))
-    else Expr(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
+  Expr(
+    extractKey(sym) match
+    case Some(name) => name
+    case None =>
+      // In Scala 3 enums, we use the short name of each case as the tag, rather
+      // than the fully-qualified name. We can do this because we know that all
+      // enum cases are in the same `enum Foo` namespace with distinct short names,
+      // whereas sealed trait instances could be all over the place with identical
+      // short names only distinguishable by their prefix.
+      //
+      // Harmonizing these two cases further is TBD
+      if (TypeRepr.of[T] <:< TypeRepr.of[scala.reflect.Enum]) {
+        // Sometimes .symbol/.typeSymbol gives the wrong thing:
+        //
+        // - `.symbol.name` returns `<none>` for `LinkedList.Node[T]`
+        // - `.typeSymbol` returns `LinkedList` for `LinkedList.End`
+        //
+        // so we just mangle `.show` even though it's super gross
+        TypeRepr.of[T].show.split('.').last.takeWhile(_ != '[')
+      } else {
+        TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$')
+      }
+  )
 
 inline def isSingleton[T]: Boolean = ${ isSingletonImpl[T] }
 def isSingletonImpl[T](using Quotes, Type[T]): Expr[Boolean] =
@@ -198,3 +209,49 @@ def getSingletonImpl[T](using Quotes, Type[T]): Expr[T] =
     case tref: TypeRef => Ref(tref.classSymbol.get.companionModule).asExpr.asInstanceOf[Expr[T]]
     case v => '{valueOf[T]}
   }
+
+
+inline def defineEnumReaders[T0, T <: Tuple](prefix: Any): T0 = ${ defineEnumVisitorsImpl[T0, T]('prefix, "macroR") }
+inline def defineEnumWriters[T0, T <: Tuple](prefix: Any): T0 = ${ defineEnumVisitorsImpl[T0, T]('prefix, "macroW") }
+def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[Any], macroX: String)(using Quotes, Type[T0], Type[T]): Expr[T0] =
+  import quotes.reflect._
+
+  def handleType(tpe: TypeRepr, name: String, skipTrait: Boolean): Option[(ValDef, Symbol)] = {
+
+    val AppliedType(typePrefix, List(arg)) = tpe
+
+    if (skipTrait && arg.typeSymbol.flags.is(Flags.Trait)) None
+    else {
+      val sym = Symbol.newVal(
+        Symbol.spliceOwner,
+        name,
+        tpe,
+        Flags.Implicit | Flags.Lazy,
+        Symbol.noSymbol
+      )
+
+      val macroCall = TypeApply(
+        Select(prefix.asTerm, prefix.asTerm.tpe.typeSymbol.memberMethod(macroX).head),
+        List(TypeTree.of(using arg.asType))
+      )
+
+      val newDef = ValDef(sym, Some(macroCall))
+
+      Some((newDef, sym))
+    }
+  }
+
+  def getDefs(t: TypeRepr, defs: List[(ValDef, Symbol)]): List[(ValDef, Symbol)] = {
+    t match{
+      case AppliedType(prefix, args) =>
+        val defAndSymbol = handleType(args(0), "x" + defs.size, skipTrait = true)
+        getDefs(args(1), defAndSymbol.toList ::: defs)
+      case _ if t =:= TypeRepr.of[EmptyTuple] => defs
+    }
+  }
+  val subTypeDefs = getDefs(TypeRepr.of[T], Nil)
+  val topTraitDefs = handleType(TypeRepr.of[T0], "x" + subTypeDefs.size, skipTrait = false)
+  val allDefs = topTraitDefs.toList ::: subTypeDefs
+
+  Block(allDefs.map(_._1), Ident(allDefs.head._2.termRef)).asExprOf[T0]
+

@@ -8,11 +8,10 @@ trait MacroImplicits extends Readers with Writers with upickle.core.Annotator:
   this: upickle.core.Types =>
 
   inline def macroRW[T: ClassTag](using Mirror.Of[T]): ReadWriter[T] =
-    ReadWriter.join(
-      macroR[T],
-      macroW[T]
-    )
-  end macroRW
+    ReadWriter.join(macroR[T], macroW[T])
+
+  inline def macroRWAll[T: ClassTag](using Mirror.Of[T]): ReadWriter[T] =
+    ReadWriter.join(macroRAll[T], macroWAll[T])
 
 
   // Usually, we would use an extension method to add `derived` to ReadWriter's
@@ -47,7 +46,7 @@ trait MacroImplicits extends Readers with Writers with upickle.core.Annotator:
   // Until that is the case, we'll have to resort to using Scala 2's implicit
   // classes to emulate extension methods for deriving readers and writers.
   implicit class ReadWriterExtension(r: ReadWriter.type):
-    inline def derived[T](using Mirror.Of[T], ClassTag[T]): ReadWriter[T] = macroRW[T]
+    inline def derived[T](using Mirror.Of[T], ClassTag[T]): ReadWriter[T] = macroRWAll[T]
   end ReadWriterExtension
 
 end MacroImplicits

@@ -65,6 +65,7 @@ trait ReadersVersionSpecific extends MacrosCommon:
       else reader
 
     case m: Mirror.SumOf[T] =>
+
       val readers: List[Reader[_ <: T]] = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
         .toList
         .asInstanceOf[List[Reader[_ <: T]]]
@@ -72,10 +73,20 @@ trait ReadersVersionSpecific extends MacrosCommon:
       Reader.merge[T](readers: _*)
   }
 
-  inline given[T <: Singleton : Mirror.Of]: Reader[T] = macroR[T]
+  inline def macroRAll[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
+    case m: Mirror.ProductOf[T] => macroR[T]
+    case m: Mirror.SumOf[T] =>
+      macros.defineEnumReaders[Reader[T], Tuple.Map[m.MirroredElemTypes, Reader]](this)
+  }
+
+  inline given superTypeReader[T: Mirror.ProductOf, V >: T : Reader]: Reader[T] = {
+    val actual = implicitly[Reader[V]].asInstanceOf[TaggedReader[T]]
+    val tagName = macros.tagName[T]
+    new TaggedReader.Leaf(tagName, actual.findReader(tagName))
+  }
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here
   implicit class ReaderExtension(r: Reader.type):
-    inline def derived[T](using Mirror.Of[T]): Reader[T] = macroR[T]
+    inline def derived[T](using Mirror.Of[T]): Reader[T] = macroRAll[T]
   end ReaderExtension
 end ReadersVersionSpecific

@@ -172,6 +172,11 @@ object ExampleTests extends TestSuite {
         import collection.immutable.SortedSet
         write(SortedSet(1, 2, 3))         ==> "[1,2,3]"
       }
+      test("maps"){
+        write(Map(1 -> 2, 3 -> 4))         ==> """{"1":2,"3":4}"""
+        write(Map("hello" -> "world"))     ==> """{"hello":"world"}"""
+        write(Map(Seq(1, 2) -> Seq(3, 4))) ==> """[[[1,2],[3,4]]]"""
+      }
       test("options"){
         write(Some(1))                    ==> "[1]"
         write(None)                       ==> "[]"
