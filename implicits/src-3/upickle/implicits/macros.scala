@@ -2,7 +2,7 @@ package upickle.implicits.macros
 
 import scala.quoted.{ given, _ }
 import deriving._, compiletime._
-
+import upickle.implicits.ReadersVersionSpecific
 type IsInt[A <: Int] = A
 
 def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
@@ -209,3 +209,49 @@ def getSingletonImpl[T](using Quotes, Type[T]): Expr[T] =
     case tref: TypeRef => Ref(tref.classSymbol.get.companionModule).asExpr.asInstanceOf[Expr[T]]
     case v => '{valueOf[T]}
   }
+
+
+inline def defineEnumReaders[T0, T <: Tuple](prefix: Any): T0 = ${ defineEnumVisitorsImpl[T0, T]('prefix, "macroR") }
+inline def defineEnumWriters[T0, T <: Tuple](prefix: Any): T0 = ${ defineEnumVisitorsImpl[T0, T]('prefix, "macroW") }
+def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[Any], macroX: String)(using Quotes, Type[T0], Type[T]): Expr[T0] =
+  import quotes.reflect._
+
+  def handleType(tpe: TypeRepr, name: String, skipTrait: Boolean): Option[(ValDef, Symbol)] = {
+
+    val AppliedType(typePrefix, List(arg)) = tpe
+
+    if (skipTrait && arg.typeSymbol.flags.is(Flags.Trait)) None
+    else {
+      val sym = Symbol.newVal(
+        Symbol.spliceOwner,
+        name,
+        tpe,
+        Flags.Implicit | Flags.Lazy,
+        Symbol.noSymbol
+      )
+
+      val macroCall = TypeApply(
+        Select(prefix.asTerm, prefix.asTerm.tpe.typeSymbol.memberMethod(macroX).head),
+        List(TypeTree.of(using arg.asType))
+      )
+
+      val newDef = ValDef(sym, Some(macroCall))
+
+      Some((newDef, sym))
+    }
+  }
+
+  def getDefs(t: TypeRepr, defs: List[(ValDef, Symbol)]): List[(ValDef, Symbol)] = {
+    t match{
+      case AppliedType(prefix, args) =>
+        val defAndSymbol = handleType(args(0), "x" + defs.size, skipTrait = true)
+        getDefs(args(1), defAndSymbol.toList ::: defs)
+      case _ if t =:= TypeRepr.of[EmptyTuple] => defs
+    }
+  }
+  val subTypeDefs = getDefs(TypeRepr.of[T], Nil)
+  val topTraitDefs = handleType(TypeRepr.of[T0], "x" + subTypeDefs.size, skipTrait = false)
+  val allDefs = topTraitDefs.toList ::: subTypeDefs
+
+  Block(allDefs.map(_._1), Ident(allDefs.head._2.termRef)).asExprOf[T0]
+
