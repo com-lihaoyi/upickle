@@ -80,7 +80,9 @@ trait ReadersVersionSpecific extends MacrosCommon:
   }
 
   inline given superTypeReader[T: Mirror.ProductOf, V >: T : Reader]: Reader[T] = {
-    implicitly[Reader[V]].map(_.asInstanceOf[T])
+    val actual = implicitly[Reader[V]].asInstanceOf[TaggedReader[T]]
+    val tagName = macros.tagName[T]
+    new TaggedReader.Leaf(tagName, actual.findReader(tagName))
   }
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here

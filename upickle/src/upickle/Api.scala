@@ -277,7 +277,6 @@ trait AttributeTagged extends Api with Annotator{
         else if (fastPath) context.visitEnd(index).asInstanceOf[T]
         else{
           val x = context.visitEnd(index).asInstanceOf[IndexedValue.Obj]
-          println("x.value0 " + x.value0)
           val keyAttr = x.value0.find(_._1.toString == tagName).get._2
           val key = keyAttr.asInstanceOf[IndexedValue.Str].value0.toString
           val delegate = taggedReader.findReader(key)
