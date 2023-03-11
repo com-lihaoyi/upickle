@@ -2,7 +2,6 @@ package upickle.implicits
 
 import upickle.core.Annotator
 
-import compiletime.{summonInline}
 import deriving.Mirror
 import scala.reflect.ClassTag
 import upickle.core.{ Visitor, ObjVisitor, Annotator }
@@ -12,7 +11,7 @@ trait WritersVersionSpecific extends MacrosCommon:
 
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      def writer = new CaseW[T] {
+      def writer = new CaseClassWriter[T] {
         def length(v: T) = macros.writeLength[T](outerThis, v)
 
         def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R], v: T): Unit =
@@ -25,7 +24,7 @@ trait WritersVersionSpecific extends MacrosCommon:
       }
 
       inline if macros.isSingleton[T] then
-        annotate[T](SingletonW[T](null.asInstanceOf[T]), macros.tagName[T], Annotator.Checker.Val(macros.getSingleton[T]))
+        annotate[T](SingletonWriter[T](null.asInstanceOf[T]), macros.tagName[T], Annotator.Checker.Val(macros.getSingleton[T]))
       else if macros.isMemberOfSealedHierarchy[T] then
         annotate[T](writer, macros.tagName[T], Annotator.Checker.Cls(implicitly[ClassTag[T]].runtimeClass))
       else writer

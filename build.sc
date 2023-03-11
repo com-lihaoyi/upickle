@@ -211,7 +211,7 @@ object implicits extends Module {
        * Auto-generated picklers and unpicklers, used for creating the 22
        * versions of tuple-picklers and case-class picklers
        */
-      trait Generated extends upickle.core.Types{
+      trait Generated extends TupleCaseClassReadWriters{
         ${tuples.mkString("\n")}
       }
     """)

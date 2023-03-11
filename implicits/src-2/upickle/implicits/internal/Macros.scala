@@ -232,7 +232,7 @@ object Macros {
   abstract class Reading[M[_]] extends DeriveDefaults[M] {
     val c: scala.reflect.macros.blackbox.Context
     import c.universe._
-    def wrapObject(t: c.Tree) = q"new ${c.prefix}.SingletonR($t)"
+    def wrapObject(t: c.Tree) = q"new ${c.prefix}.SingletonReader($t)"
 
     def wrapCaseN(companion: c.Tree,
                   rawArgs: Seq[String],
@@ -250,8 +250,8 @@ object Macros {
           for (i <- rawArgs.indices)
           yield q"private[this] lazy val ${localReaders(i)} = implicitly[${c.prefix}.Reader[${argTypes(i)}]]"
         }
-        new ${c.prefix}.CaseR[$targetType]{
-          override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ${if (rawArgs.size <= 64) tq"CaseObjectContext" else tq"HugeCaseObjectContext"}(${rawArgs.size}){
+        new ${c.prefix}.CaseClassReader[$targetType]{
+          override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ${if (rawArgs.size <= 64) tq"_root_.upickle.implicits.CaseObjectContext[$targetType]" else tq"_root_.upickle.implicits.HugeCaseObjectContext[$targetType]"}(${rawArgs.size}){
             ..${
               for (i <- rawArgs.indices)
               yield q"private[this] var ${aggregates(i)}: ${argTypes(i)} = _"
@@ -318,7 +318,7 @@ object Macros {
   abstract class Writing[M[_]] extends DeriveDefaults[M] {
     val c: scala.reflect.macros.blackbox.Context
     import c.universe._
-    def wrapObject(obj: c.Tree) = q"new ${c.prefix}.SingletonW($obj)"
+    def wrapObject(obj: c.Tree) = q"new ${c.prefix}.SingletonWriter($obj)"
     def findUnapply(tpe: Type) = {
       val (companion, paramTypes, argSyms, hasDefaults) = getArgSyms(tpe).fold(
         errMsg => c.abort(c.enclosingPosition, errMsg),
@@ -357,7 +357,7 @@ object Macros {
         else q"""if ($serDfltVals || v.${TermName(rawArgs(i))} != ${defaults(i)}) $snippet"""
       }
       q"""
-        new ${c.prefix}.CaseW[$targetType]{
+        new ${c.prefix}.CaseClassWriter[$targetType]{
           def length(v: $targetType) = {
             ${
               Range(0, rawArgs.length)

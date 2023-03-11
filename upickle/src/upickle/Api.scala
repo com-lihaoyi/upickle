@@ -164,9 +164,9 @@ object default extends AttributeTagged{
  */
 object legacy extends LegacyApi
 trait LegacyApi extends Api with Annotator{
-  def annotate[V](rw: CaseR[V], n: String) = new TaggedReader.Leaf[V](n, rw)
+  def annotate[V](rw: Reader[V], n: String) = new TaggedReader.Leaf[V](n, rw)
 
-  def annotate[V](rw: CaseW[V], n: String, checker: Annotator.Checker): TaggedWriter[V] = {
+  def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] = {
     new TaggedWriter.Leaf[V](checker, n, rw)
   }
 
@@ -206,7 +206,7 @@ trait LegacyApi extends Api with Annotator{
     }
 
   }
-  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
+  def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(2, -1)
     ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tag), -1), -1)
 
@@ -223,11 +223,11 @@ trait LegacyApi extends Api with Annotator{
  */
 trait AttributeTagged extends Api with Annotator{
   def tagName = "$type"
-  def annotate[V](rw: CaseR[V], n: String) = {
+  def annotate[V](rw: Reader[V], n: String) = {
     new TaggedReader.Leaf[V](n, rw)
   }
 
-  def annotate[V](rw: CaseW[V], n: String, checker: Annotator.Checker): TaggedWriter[V] = {
+  def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] = {
     new TaggedWriter.Leaf[V](checker, n, rw)
   }
 
@@ -300,9 +300,9 @@ trait AttributeTagged extends Api with Annotator{
 
     }
   }
-  def taggedWrite[T, R](w: CaseW[T], tag: String, out: Visitor[_,  R], v: T): R = {
+  def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_,  R], v: T): R = {
 
-    if (w.isInstanceOf[SingletonW[_]]) out.visitString(tag, -1)
+    if (w.isInstanceOf[SingletonWriter[_]]) out.visitString(tag, -1)
     else {
       val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, true, -1)
       val keyVisitor = ctx.visitKey(-1)
