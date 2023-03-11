@@ -5,8 +5,11 @@ import deriving.Mirror
 import upickle.core.{Annotator, ObjVisitor, Visitor, Abort}
 import upickle.implicits.BaseCaseObjectContext
 
-trait ReadersVersionSpecific extends MacrosCommon:
-  this: upickle.core.Types with Readers with Annotator =>
+trait ReadersVersionSpecific
+  extends MacrosCommon
+    with upickle.core.Types
+    with Annotator
+    with CaseClassReadWriters:
 
   abstract class CaseClassReadereader[T](paramCount: Int, missingKeyCount: Long) extends CaseClassReader[T] {
     def visitors0: Product

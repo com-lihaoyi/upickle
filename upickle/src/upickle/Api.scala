@@ -18,6 +18,7 @@ trait Api
     extends upickle.core.Types
     with implicits.Readers
     with implicits.Writers
+    with implicits.CaseClassReadWriters
     with WebJson
     with JsReadWriters
     with MsgReadWriters

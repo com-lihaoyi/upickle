@@ -7,7 +7,7 @@ import upickle.core.{ Visitor, Annotator }
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Writers extends upickle.core.Types
-  with TupleCaseClassReadWriters
+  with TupleReadWriters
   with Generated
   with WritersVersionSpecific
   with LowPriWriters { this: Annotator =>

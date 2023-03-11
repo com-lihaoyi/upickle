@@ -6,11 +6,16 @@ import deriving.Mirror
 import scala.reflect.ClassTag
 import upickle.core.{ Visitor, ObjVisitor, Annotator }
 
-trait WritersVersionSpecific extends MacrosCommon:
-  outerThis: upickle.core.Types with Writers with Annotator =>
+trait WritersVersionSpecific
+  extends MacrosCommon
+    with upickle.core.Types
+    with Annotator
+    with CaseClassReadWriters:
 
+  val outerThis = this
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
+
       def writer = new CaseClassWriter[T] {
         def length(v: T) = macros.writeLength[T](outerThis, v)
 
@@ -52,4 +57,4 @@ trait WritersVersionSpecific extends MacrosCommon:
     inline def derived[T](using Mirror.Of[T], ClassTag[T]): Writer[T] = macroWAll[T]
   end WriterExtension
 
-end WritersVersionSpecific
+

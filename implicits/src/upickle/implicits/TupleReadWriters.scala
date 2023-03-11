@@ -1,10 +1,9 @@
 package upickle.implicits
 
-import upickle.core._
-
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.ClassTag
+import upickle.core.{Visitor, Abort, ArrVisitor, ObjVisitor, NoOpVisitor}
 
 /**
 * Basic functionality to be able to read and write objects. Kept as a trait so
