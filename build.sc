@@ -328,11 +328,6 @@ object ujson extends Module{
     object test extends Tests with CommonTestModule{
       override def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
     }
-    object testNonUtf8 extends Tests with CommonTestModule{
-      override def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
-
-      override def forkArgs = T{ Seq("-Dfile.encoding=US-ASCII") }
-    }
   }
 
   object native extends Cross[NativeModule](scalaNativeVersions:_*)
@@ -413,6 +408,12 @@ object upickle extends Module{
       override def scalacOptions = super.scalacOptions() ++ {
         if (isDotty) Seq("-Ximport-suggestion-timeout", "0")
         else Nil
+      }
+    }
+
+    object testNonUtf8 extends Tests with CommonTestModule {
+      override def forkArgs = T {
+        Seq("-Dfile.encoding=US-ASCII")
       }
     }
   }
