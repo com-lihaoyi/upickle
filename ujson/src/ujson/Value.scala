@@ -246,7 +246,7 @@ sealed abstract class Bool extends Value{
 }
 object Bool{
   def apply(value: Boolean): Bool = if (value) True else False
-  def unapply(bool: Bool): Option[Boolean] = Some(bool.value)
+  def unapply(bool: Bool): Some[Boolean] = Some(bool.value)
 }
 case object False extends Bool{
   def value = false

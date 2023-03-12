@@ -24,5 +24,10 @@ object BoolTests extends TestSuite {
         }
       }
     }
+    test("ujson.Bool pattern matching should be exhaustive") {
+      ujson.Bool(true) match {
+        case ujson.Bool(value) =>
+      }
+    }
   }
 }
