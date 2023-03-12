@@ -25,7 +25,7 @@
   )
 )
 
-@sect("uPickle 3.0.0-M2")
+@sect("uPickle 3.0.0")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -74,8 +74,8 @@
 
   @sect{Getting Started}
     @hl.scala
-      "com.lihaoyi" %% "upickle" % "3.0.0-M1" // SBT
-      ivy"com.lihaoyi::upickle:3.0.0-M1" // Mill
+      "com.lihaoyi" %% "upickle" % "3.0.0" // SBT
+      ivy"com.lihaoyi::upickle:3.0.0" // Mill
 
     @p
       And then you can immediately start writing and reading common Scala
@@ -93,8 +93,8 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        "com.lihaoyi" %%% "upickle" % "3.0.0-M1" // SBT
-        ivy"com.lihaoyi::upickle::3.0.0-M1" // Mill
+        "com.lihaoyi" %%% "upickle" % "3.0.0" // SBT
+        ivy"com.lihaoyi::upickle::3.0.0" // Mill
 
     @sect{Scala Versions}
       @p
