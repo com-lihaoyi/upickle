@@ -916,6 +916,9 @@
 
         @li
           Various library dependency updates
+        @li
+          Added readers and writers for the @hl.scala("java.lang") boxed versions
+          of primitive types @lnk("#462", "https://github.com/com-lihaoyi/upickle/pull/462")
 
     @sect{2.0.0}
       @ul
