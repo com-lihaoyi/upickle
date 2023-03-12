@@ -410,6 +410,12 @@ object upickle extends Module{
         else Nil
       }
     }
+
+    object testNonUtf8 extends Tests with CommonTestModule {
+      override def forkArgs = T {
+        Seq("-Dfile.encoding=US-ASCII")
+      }
+    }
   }
 
   object js extends Cross[JsModule](scalaJSVersions:_*)
