@@ -32,6 +32,7 @@ trait Readers extends upickle.core.Types
     override def visitNull(index: Int): Unit = ()
   }
 
+
   implicit val BooleanReader: Reader[Boolean] = new SimpleReader[Boolean] {
     override def expectedMsg = "expected boolean"
     override def visitTrue(index: Int) = true
@@ -65,8 +66,8 @@ trait Readers extends upickle.core.Types
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toDouble
     }
-
   }
+
   implicit val IntReader: Reader[Int] = new NumericReader[Int] {
     override def expectedMsg = "expected number"
     override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
@@ -93,7 +94,6 @@ trait Readers extends upickle.core.Types
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toFloat
     }
-
   }
 
   implicit val ShortReader: Reader[Short] = new NumericReader[Short]{
@@ -362,4 +362,17 @@ trait Readers extends upickle.core.Types
     EitherReader[T1, T2].narrow[Right[T1, T2]]
   implicit def LeftReader[T1: Reader, T2: Reader]: Reader[Left[T1, T2]] =
     EitherReader[T1, T2].narrow[Left[T1, T2]]
+
+  private case class JavaReader[T: Reader](){
+    def create[V] = implicitly[Reader[T]].asInstanceOf[Reader[V]]
+  }
+
+  implicit val JavaBooleanReader: Reader[java.lang.Boolean] = JavaReader[Boolean]().create
+  implicit val JavaByteReader: Reader[java.lang.Byte] = JavaReader[Byte]().create
+  implicit val JavaCharReader: Reader[java.lang.Character] = JavaReader[Char]().create
+  implicit val JavaShortReader: Reader[java.lang.Short] = JavaReader[Short]().create
+  implicit val JavaIntReader: Reader[java.lang.Integer] = JavaReader[Int]().create
+  implicit val JavaLongReader: Reader[java.lang.Long] = JavaReader[Long]().create
+  implicit val JavaFloatReader: Reader[java.lang.Float] = JavaReader[Float]().create
+  implicit val JavaDoubleReader: Reader[java.lang.Double] = JavaReader[Double]().create
 }

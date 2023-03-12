@@ -188,6 +188,19 @@ trait Writers extends upickle.core.Types
 
   implicit def LeftWriter[T1: Writer, T2: Writer]: Writer[Left[T1, T2]] =
     EitherWriter[T1, T2].narrow[Left[T1, T2]]
+
+  private case class JavaWriter[T: Writer]() {
+    def create[V] = implicitly[Writer[T]].asInstanceOf[Writer[V]]
+  }
+
+  implicit val JavaBooleanWriter: Writer[java.lang.Boolean] = JavaWriter[Boolean]().create
+  implicit val JavaByteWriter: Writer[java.lang.Byte] = JavaWriter[Byte]().create
+  implicit val JavaCharWriter: Writer[java.lang.Character] = JavaWriter[Char]().create
+  implicit val JavaShortWriter: Writer[java.lang.Short] = JavaWriter[Short]().create
+  implicit val JavaIntWriter: Writer[java.lang.Integer] = JavaWriter[Int]().create
+  implicit val JavaLongWriter: Writer[java.lang.Long] = JavaWriter[Long]().create
+  implicit val JavaFloatWriter: Writer[java.lang.Float] = JavaWriter[Float]().create
+  implicit val JavaDoubleWriter: Writer[java.lang.Double] = JavaWriter[Double]().create
 }
 
 /**
