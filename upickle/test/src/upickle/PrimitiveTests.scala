@@ -243,5 +243,54 @@ object PrimitiveTests extends TestSuite {
         }
       }
     }
+
+    test("java"){
+      test("bool"){
+        test("value") - rw(true: java.lang.Boolean, "true", "\"true\"", upack.True, upack.Str("true"))
+        test("null") - rw(null: java.lang.Boolean, "null", upack.Null)
+      }
+      test("byte"){
+        test("value") - rw((1: Byte): java.lang.Byte, "1", """ "1" """, upack.Int32(1), upack.Str("1"))
+        test("null") - rw(null: java.lang.Byte, "null", upack.Null)
+      }
+      test("char") {
+        test("value") - rwNoBinaryJson('f': java.lang.Character, """ "f" """, upack.Int32('f'))
+        test("null") - rw(null: java.lang.Character, "null", upack.Null)
+      }
+      test("short") {
+        test("value") - rw(
+          (25123: Short): java.lang.Short,
+          "25123", """ "25123" """,
+          upack.Int32(25123), upack.Str("25123")
+        )
+        test("null") - rw(null: java.lang.Short, "null", upack.Null)
+      }
+      test("int"){
+        test("value") - rw(1: java.lang.Integer, "1", """ "1" """, upack.Int32(1), upack.Str("1"))
+        test("null") - rw(null: java.lang.Integer, "null", upack.Null)
+      }
+
+      test("long") {
+        test("value") - rw(1: java.lang.Long, "1", """ "1" """, upack.Int64(1), upack.Str("1"))
+        test("null") - rw(null: java.lang.Long, "null", upack.Null)
+      }
+
+      test("float") {
+        test("value") - rw(
+          125.125f: java.lang.Float,
+          """125.125""", """ "125.125" """,
+          upack.Float32(125.125f), upack.Str("125.125")
+        )
+        test("null") - rw(null: java.lang.Float, "null", upack.Null)
+      }
+      test("double"){
+        test("value") - rw(
+          125123: java.lang.Double,
+          """125123""", """125123.0""",
+          upack.Float64(125123), upack.Str("125123.0")
+        )
+        test("null") - rw(null: java.lang.Double, "null", upack.Null)
+      }
+    }
   }
 }

@@ -134,7 +134,7 @@ sealed abstract class Bool extends Msg{
 }
 object Bool{
   def apply(value: Boolean): Bool = if (value) True else False
-  def unapply(bool: Bool): Option[Boolean] = Some(bool.value)
+  def unapply(bool: Bool): Some[Boolean] = Some(bool.value)
 }
 
 object Msg extends MsgVisitor[Msg, Msg]{

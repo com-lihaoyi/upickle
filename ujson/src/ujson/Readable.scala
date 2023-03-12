@@ -3,6 +3,9 @@ package ujson
 import java.nio.ByteBuffer
 import java.nio.channels.ReadableByteChannel
 import upickle.core.{Visitor, ObjArrVisitor}
+
+import scala.language.implicitConversions
+
 trait Readable {
   def transform[T](f: Visitor[_, T]): T
 }

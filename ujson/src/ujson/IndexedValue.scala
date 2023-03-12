@@ -1,6 +1,6 @@
 package ujson
 
-import upickle.core.Util.reject
+import upickle.core.ParseUtils.reject
 import scala.collection.mutable
 import upickle.core.{Visitor, ObjVisitor, ArrVisitor, Abort, AbortException}
 

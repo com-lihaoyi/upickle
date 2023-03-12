@@ -26,7 +26,7 @@ class WrapElemArrayCharSeq(arr: Array[Elem], start: Int, length0: Int) extends C
   override def toString = {
     if (toString0 != null) toString0
     else {
-      val res = new String(arr, start, length0)
+      val res = ElemOps.newString(arr, start, length0)
       toString0 = res
       res
     }

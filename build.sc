@@ -17,7 +17,8 @@ import com.github.lolgab.mill.mima._
 
 val scala212  = "2.12.17"
 val scala213  = "2.13.10"
-val scala3   = "3.1.3"
+
+val scala3   = "3.2.2"
 val scalaJS  = "1.13.0"
 val scalaNative = "0.4.10"
 val acyclic = "0.3.6"
@@ -31,12 +32,7 @@ val scalaJVMVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 val scalaJSVersions = scalaJVMVersions.map((_, scalaJS))
 val scalaNativeVersions = scalaJVMVersions.map((_, scalaNative))
 
-trait CommonModule extends ScalaModule {
-  override def scalacOptions = T{
-    super.scalacOptions() ++ {
-      if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil
-    }
-  }
+trait CommonBaseModule extends ScalaModule {
   def platformSegment: String
 
   override def sources = T.sources{
@@ -53,6 +49,19 @@ trait CommonModule extends ScalaModule {
   }
 }
 
+trait CommonModule extends CommonBaseModule {
+  override def scalacOptions = T{
+    super.scalacOptions() ++ {
+      if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil
+    } ++ Seq(
+      "-unchecked",
+      "-deprecation",
+      "-encoding", "utf8",
+      "-feature",
+      "-Xfatal-warnings"
+    )
+  }
+}
 
 trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule {
 
@@ -99,7 +108,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
   }
 }
 
-trait CommonTestModule extends CommonModule with TestModule.Utest{
+trait CommonTestModule extends CommonBaseModule with TestModule.Utest{
   override def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.1") ++ (
     if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
     else Agg(ivy"com.lihaoyi:::acyclic:$acyclic")
@@ -110,6 +119,11 @@ trait CommonTestModule extends CommonModule with TestModule.Utest{
     os.makeDir.all(javadocDir)
     mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
   }
+  override def scalacOptions = super.scalacOptions() ++
+    (if (isScala3(scalaVersion())) Seq(
+      "-Ximplicit-search-limit",
+      "200000"
+    ) else Seq.empty[String])
 }
 
 trait CommonJvmModule extends CommonPublishModule{
@@ -210,7 +224,7 @@ object implicits extends Module {
        * Auto-generated picklers and unpicklers, used for creating the 22
        * versions of tuple-picklers and case-class picklers
        */
-      trait Generated extends upickle.core.Types{
+      trait Generated extends TupleReadWriters{
         ${tuples.mkString("\n")}
       }
     """)
@@ -372,12 +386,6 @@ trait UpickleModule extends CommonPublishModule{
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
   )
   else Agg.empty[Dep]
-  override def scalacOptions = super.scalacOptions() ++ Seq(
-    "-unchecked",
-    "-deprecation",
-    "-encoding", "utf8",
-    "-feature",
-  )
 }
 
 
@@ -386,7 +394,7 @@ object upickle extends Module{
   class JvmModule(val crossScalaVersion: String) extends UpickleModule with CommonJvmModule{
     override def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
 
-    object test extends Tests with CommonModule{
+    object test extends Tests with CommonBaseModule{
       override def moduleDeps = {
         (super.moduleDeps :+ core.jvm().test) ++ (
           if (isDotty) Nil else Seq(
@@ -400,6 +408,12 @@ object upickle extends Module{
       override def scalacOptions = super.scalacOptions() ++ {
         if (isDotty) Seq("-Ximport-suggestion-timeout", "0")
         else Nil
+      }
+    }
+
+    object testNonUtf8 extends Tests with CommonTestModule {
+      override def forkArgs = T {
+        Seq("-Dfile.encoding=US-ASCII")
       }
     }
   }

@@ -70,7 +70,7 @@ object Custom2{
   class CustomThing2(val i: Int, val s: String)
   object CustomThing2 {
     implicit val rw: RW[CustomThing2] = upickle.default.readwriter[String].bimap[CustomThing2](
-      x => x.i + " " + x.s,
+      x => s"${x.i} ${x.s}",
       str => {
         val Array(i, s) = str.split(" ", 2)
         new CustomThing2(i.toInt, s)
@@ -171,6 +171,11 @@ object ExampleTests extends TestSuite {
         write(List(1, 2, 3))              ==> "[1,2,3]"
         import collection.immutable.SortedSet
         write(SortedSet(1, 2, 3))         ==> "[1,2,3]"
+      }
+      test("maps"){
+        write(Map(1 -> 2, 3 -> 4))         ==> """{"1":2,"3":4}"""
+        write(Map("hello" -> "world"))     ==> """{"hello":"world"}"""
+        write(Map(Seq(1, 2) -> Seq(3, 4))) ==> """[[[1,2],[3,4]]]"""
       }
       test("options"){
         write(Some(1))                    ==> "[1]"
@@ -288,8 +293,8 @@ object ExampleTests extends TestSuite {
             s.replaceAll("([A-Z])","#$1").split('#').map(_.toLowerCase).mkString("_")
           }
           def snakeToCamel(s: String) = {
-            val res = s.split("_", -1).map(x => x(0).toUpper + x.drop(1)).mkString
-            s(0).toLower + res.drop(1)
+            val res = s.split("_", -1).map(x => s"${x(0).toUpper}${x.drop(1)}").mkString
+            s"${s(0).toLower}${res.drop(1)}"
           }
 
           override def objectAttributeKeyReadMap(s: CharSequence) =

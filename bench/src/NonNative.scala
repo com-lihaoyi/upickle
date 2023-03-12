@@ -32,7 +32,7 @@ object NonNative{
     implicit def _w9: Encoder[ADT0] = deriveEncoder
 
     Common.bench[String](duration)(
-      decode[Seq[Data]](_).right.get,
+      decode[Seq[Data]](_).getOrElse(???),
       implicitly[Encoder[Seq[Data]]].apply(_).toString()
     )
 
@@ -92,7 +92,7 @@ object NonNative{
     implicit lazy val _w9: Encoder[ADT0] = deriveEncoder
 
     Common.bench[String](duration)(
-      decode[Seq[Data]](_).right.get,
+      decode[Seq[Data]](_).getOrElse(???),
       implicitly[Encoder[Seq[Data]]].apply(_).toString()
     )
   }

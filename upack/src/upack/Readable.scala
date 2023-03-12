@@ -2,6 +2,8 @@ package upack
 
 import upickle.core.Visitor
 
+import scala.language.implicitConversions
+
 trait Readable {
   def transform[T](f: Visitor[_, T]): T
 }

@@ -8,9 +8,11 @@ import upickle.core._
 import upickle.core.compat._
 import scala.collection.mutable
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 trait Readers extends upickle.core.Types
+  with TupleReadWriters
   with Generated
   with ReadersVersionSpecific { this: Annotator =>
   implicit val UnitReader: Reader[Unit] = new SimpleReader[Unit] {
@@ -29,6 +31,7 @@ trait Readers extends upickle.core.Types
 
     override def visitNull(index: Int): Unit = ()
   }
+
 
   implicit val BooleanReader: Reader[Boolean] = new SimpleReader[Boolean] {
     override def expectedMsg = "expected boolean"
@@ -56,15 +59,15 @@ trait Readers extends upickle.core.Types
     override def expectedMsg = "expected number"
     override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
     override def visitInt32(d: Int, index: Int) = d
-    override def visitInt64(d: Long, index: Int) = d
-    override def visitUInt64(d: Long, index: Int) = d
+    override def visitInt64(d: Long, index: Int) = d.toDouble
+    override def visitUInt64(d: Long, index: Int) = d.toDouble
     override def visitFloat32(d: Float, index: Int) = d
     override def visitFloat64(d: Double, index: Int) = d
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toDouble
     }
-
   }
+
   implicit val IntReader: Reader[Int] = new NumericReader[Int] {
     override def expectedMsg = "expected number"
     override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
@@ -74,7 +77,7 @@ trait Readers extends upickle.core.Types
     override def visitFloat32(d: Float, index: Int) = d.toInt
     override def visitFloat64(d: Double, index: Int) = d.toInt
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Util.parseIntegralNum(s, decIndex, expIndex, index).toInt
+      ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toInt
     }
 
   }
@@ -91,7 +94,6 @@ trait Readers extends upickle.core.Types
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       s.toString.toFloat
     }
-
   }
 
   implicit val ShortReader: Reader[Short] = new NumericReader[Short]{
@@ -103,7 +105,7 @@ trait Readers extends upickle.core.Types
     override def visitFloat32(d: Float, index: Int) = d.toShort
     override def visitFloat64(d: Double, index: Int) = d.toShort
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Util.parseIntegralNum(s, decIndex, expIndex, index).toShort
+      ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toShort
     }
 
   }
@@ -117,7 +119,7 @@ trait Readers extends upickle.core.Types
     override def visitFloat32(d: Float, index: Int) = d.toByte
     override def visitFloat64(d: Double, index: Int) = d.toByte
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Util.parseIntegralNum(s, decIndex, expIndex, index).toByte
+      ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toByte
     }
 
   }
@@ -158,7 +160,7 @@ trait Readers extends upickle.core.Types
     override def visitFloat32(d: Float, index: Int) = d.toChar
     override def visitFloat64(d: Double, index: Int) = d.toChar
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Util.parseIntegralNum(s, decIndex, expIndex, index).toChar
+      ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toChar
     }
 
   }
@@ -169,14 +171,14 @@ trait Readers extends upickle.core.Types
 
   implicit val LongReader: Reader[Long] = new NumericReader[Long] {
     override def expectedMsg = "expected number"
-    override def visitString(d: CharSequence, index: Int) = upickle.core.Util.parseLong(d, 0, d.length())
+    override def visitString(d: CharSequence, index: Int) = upickle.core.ParseUtils.parseLong(d, 0, d.length())
     override def visitInt32(d: Int, index: Int) = d.toLong
     override def visitInt64(d: Long, index: Int) = d.toLong
     override def visitUInt64(d: Long, index: Int) = d.toLong
     override def visitFloat32(d: Float, index: Int) = d.toLong
     override def visitFloat64(d: Double, index: Int) = d.toLong
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
-      Util.parseIntegralNum(s, decIndex, expIndex, index).toLong
+      ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toLong
     }
 
   }
@@ -325,7 +327,7 @@ trait Readers extends upickle.core.Types
         s.charAt(4) == 'f' &&
         s.length() == 5){
         Duration.Undefined
-      }else Duration(upickle.core.Util.parseLong(s, 0, s.length()), TimeUnit.NANOSECONDS)
+      }else Duration(upickle.core.ParseUtils.parseLong(s, 0, s.length()), TimeUnit.NANOSECONDS)
 
   }
 
@@ -360,4 +362,17 @@ trait Readers extends upickle.core.Types
     EitherReader[T1, T2].narrow[Right[T1, T2]]
   implicit def LeftReader[T1: Reader, T2: Reader]: Reader[Left[T1, T2]] =
     EitherReader[T1, T2].narrow[Left[T1, T2]]
+
+  private case class JavaReader[T: Reader](){
+    def create[V] = implicitly[Reader[T]].asInstanceOf[Reader[V]]
+  }
+
+  implicit val JavaBooleanReader: Reader[java.lang.Boolean] = JavaReader[Boolean]().create
+  implicit val JavaByteReader: Reader[java.lang.Byte] = JavaReader[Byte]().create
+  implicit val JavaCharReader: Reader[java.lang.Character] = JavaReader[Char]().create
+  implicit val JavaShortReader: Reader[java.lang.Short] = JavaReader[Short]().create
+  implicit val JavaIntReader: Reader[java.lang.Integer] = JavaReader[Int]().create
+  implicit val JavaLongReader: Reader[java.lang.Long] = JavaReader[Long]().create
+  implicit val JavaFloatReader: Reader[java.lang.Float] = JavaReader[Float]().create
+  implicit val JavaDoubleReader: Reader[java.lang.Double] = JavaReader[Double]().create
 }
