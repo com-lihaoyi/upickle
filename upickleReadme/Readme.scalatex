@@ -921,6 +921,10 @@
           Added readers and writers for the @hl.scala("java.lang") boxed versions
           of primitive types @lnk("#462", "https://github.com/com-lihaoyi/upickle/pull/462")
 
+        @li
+          Always use UTF-8 when reading JSON bytes regardless of JVM default charset
+          @lnk("#464", "https://github.com/com-lihaoyi/upickle/pull/464")
+
     @sect{2.0.0}
       @ul
         @li
