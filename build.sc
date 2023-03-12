@@ -328,6 +328,11 @@ object ujson extends Module{
     object test extends Tests with CommonTestModule{
       override def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
     }
+    object testNonUtf8 extends Tests with CommonTestModule{
+      override def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
+
+      override def forkArgs = T{ Seq("-Dfile.encoding=US-ASCII") }
+    }
   }
 
   object native extends Cross[NativeModule](scalaNativeVersions:_*)

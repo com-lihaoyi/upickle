@@ -50,7 +50,7 @@ class ElemBuilder(startSize: Int = 32) extends upickle.core.ElemAppendC{
     length += 1
   }
 
-  def makeString(): String = new String(arr, 0, length)
+  def makeString(): String = ElemOps.newString(arr, 0, length)
   def writeOutToIfLongerThan(writer: upickle.core.ElemOps.Output, threshold: Int): Unit = {
     if (length > threshold) {
       writer.write(arr, 0, length)
