@@ -171,7 +171,7 @@ trait Readers extends upickle.core.Types
 
   implicit val LongReader: Reader[Long] = new NumericReader[Long] {
     override def expectedMsg = "expected number"
-    override def visitString(d: CharSequence, index: Int) = upickle.core.ParseUtils.parseLong(d, 0, d.length())
+    override def visitString(d: CharSequence, index: Int) = visitFloat64String(d.toString, index)
     override def visitInt32(d: Int, index: Int) = d.toLong
     override def visitInt64(d: Long, index: Int) = d.toLong
     override def visitUInt64(d: Long, index: Int) = d.toLong
