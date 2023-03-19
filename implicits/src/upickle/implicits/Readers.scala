@@ -152,7 +152,7 @@ trait Readers extends upickle.core.Types
 
   implicit val CharReader: Reader[Char] = new NumericReader[Char] {
     override def expectedMsg = "expected char"
-    override def visitString(d: CharSequence, index: Int) = d.charAt(0)
+    override def visitString(d: CharSequence, index: Int) = d.toString.charAt(0)
     override def visitChar(d: Char, index: Int) = d
     override def visitInt32(d: Int, index: Int) = d.toChar
     override def visitInt64(d: Long, index: Int) = d.toChar
