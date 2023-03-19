@@ -167,8 +167,10 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
                                          expIndex: Int,
                                          i: Int,
                                          j: Int) = {
-    facade.visitFloat64StringParts(
-      unsafeNonUnicodeCharSeqForRange(i, j - i),
+    facade.visitFloat64ElemParts(
+      getBuffer,
+      i - getFirstIdx,
+      j - i,
       decIndex,
       expIndex,
       i

@@ -26,6 +26,8 @@ trait BufferingElemParser{
   private[this] var buffer: Array[Elem] = null
   private[this] var bufferGrowCount = 0
   private[this] var bufferCopyCount = 0
+  def getBuffer = buffer
+  def getFirstIdx = firstIdx
   def getBufferGrowCount() = bufferGrowCount
   def getBufferCopyCount() = bufferCopyCount
   def getBufferLength() = if (buffer == null) -1 else buffer.length

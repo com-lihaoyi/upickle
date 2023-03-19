@@ -103,4 +103,78 @@ object ElemUtils{
     i - 1
   }
 
+
+  def parseIntegralNum(arr: Array[Elem], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+    val expMul =
+      if (expIndex == -1) 1
+      else {
+        var mult = 1
+        val e = parseLong(arr, arrOffset + expIndex + 1, arrOffset + arrLength)
+        var i = 0
+        while (i < e) {
+          if (mult >= Long.MaxValue / 10) throw new Abort("expected integer")
+          mult = mult * 10
+          i += 1
+        }
+        mult
+      }
+
+    val intPortion = {
+      val end =
+        if (decIndex != -1) decIndex
+        else if (expIndex != -1) expIndex
+        else arrLength
+
+      parseLong(arr, arrOffset, arrOffset + end) * expMul
+    }
+
+    val decPortion =
+      if (decIndex == -1) 0
+      else {
+        val end = if (expIndex != -1) expIndex else arrLength
+        var value = parseLong(arr, arrOffset + decIndex + 1, arrOffset + end) * expMul
+        var i = end - (decIndex + 1)
+        while (i > 0) {
+          value = value / 10
+          i -= 1
+        }
+        if (arr(arrOffset) == '-') -value else value
+      }
+
+    intPortion + decPortion
+  }
+
+  def parseLong(cs: Array[Elem], start: Int, end: Int): Long = {
+
+    // we store the inverse of the positive sum, to ensure we don't
+    // incorrectly overflow on Long.MinValue. for positive numbers
+    // this inverse sum will be inverted before being returned.
+    var inverseSum: Long = 0L
+    var inverseSign: Long = -1L
+    var i: Int = start
+
+    if ((start | end | end - start) < 0) throw new IndexOutOfBoundsException
+
+    if (cs(start) == '-') {
+      inverseSign = 1L
+      i += 1
+    }
+
+    val size = end - i
+    if (size <= 0 || size > 19) throw new NumberFormatException(new String(cs, start, end))
+
+    while (i < end) {
+      val digit = cs(i).toInt - 48
+      if (digit < 0 || 9 < digit) throw new NumberFormatException(new String(cs, start, end))
+      inverseSum = inverseSum * 10L - digit
+      i += 1
+    }
+
+    // detect and throw on overflow
+    if (size == 19 && (inverseSum >= 0 || (inverseSum == Long.MinValue && inverseSign < 0))) {
+      throw new NumberFormatException(new String(cs, start, end))
+    }
+
+    inverseSum * inverseSign
+  }
 }
