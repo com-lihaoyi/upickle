@@ -66,7 +66,7 @@ trait CommonModule extends CommonBaseModule {
 trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule {
 
   def publishVersion = VcsVersion.vcsState().format()
-  override def mimaPreviousVersions = Seq("3.0.0-M2")
+  override def mimaPreviousVersions = Seq("3.0.0")
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -83,15 +83,16 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
     "info.releaseNotesURL" -> "https://com-lihaoyi.github.io/upickle/#VersionHistory"
   )
   override def versionScheme: T[Option[VersionScheme]] = T(Some(VersionScheme.SemVerSpec))
-  def templates = T.source(millSourcePath / "templates")
+  def templates = T.sources(millSourcePath / "templates", millSourcePath / s"templates-$platformSegment")
   override def generatedSources = T{
     for{
-      p <- if (os.exists(templates().path)) os.list(templates().path) else Nil
+      pathRef <- templates()
+      p <- if (os.exists(pathRef.path)) os.list(pathRef.path) else Nil
       rename <- Seq("Char", "Byte")
     }{
       os.write(
-        T.dest / p.last.replace("Elem", rename),
-        os.read(p).replace("Elem", rename)
+        T.dest / p.last.replace("Elem", rename).replace("elem", rename.toLowerCase),
+        os.read(p).replace("Elem", rename).replace("elem", rename.toLowerCase)
       )
     }
     Seq(PathRef(T.dest))
@@ -415,6 +416,9 @@ object upickle extends Module{
       override def forkArgs = T {
         Seq("-Dfile.encoding=US-ASCII")
       }
+    }
+    object testSlow extends Tests with CommonTestModule{
+      def moduleDeps = super.moduleDeps ++ Seq(JvmModule.this.test)
     }
   }
 

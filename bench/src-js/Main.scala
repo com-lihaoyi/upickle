@@ -8,33 +8,69 @@ import upickle.Recursive.{End, LL, Node}
 import scala.scalajs.js
 object Main{
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(2500, 5000, 10000, 10000, 10000, 10000)){
+    val allResults = collection.mutable.Buffer.empty[(String, Int)]
+    for((duration, save) <- Seq(2500 -> false, 5000 -> false, 10000 -> true, 10000 -> true, 10000 -> true)){
       println("RUN JS: " + duration)
       println()
 //      rawJsonParseSerialize(duration)
-      NonNative.playJson(duration)
-      NonNative.circe(duration)
-      Common.upickleDefault(duration)
-      Common.upickleDefaultByteArray(duration)
-      Common.upickleDefaultBinary(duration)
-      upickleWebDefault(duration)
+//      NonNative.playJson(duration)
+//      NonNative.circe(duration)
+//      Common.upickleDefault(duration)
+//      Common.upickleDefaultByteArray(duration)
+//      Common.upickleDefaultBinary(duration)
+//      upickleWebDefault(duration)
       //      Common.upickleLegacy(duration)
 //      Common.upickleBinaryLegacy(duration)
 //      Common.genCodec(duration)
 //      upickleWebDefault(duration)
 //      upickleWebLegacy(duration)
-      NonNative.playJsonCached(duration)
-      NonNative.circeCached(duration)
-      upickleWebDefaultCached(duration)
-      Common.upickleDefaultCached(duration)
-      Common.upickleDefaultByteArrayCached(duration)
-      Common.upickleDefaultBinaryCached(duration)
+//      NonNative.playJsonCached(duration)
+//      NonNative.circeCached(duration)
+//      upickleWebDefaultCached(duration)
+//      Common.upickleDefaultCached(duration)
+//      Common.upickleDefaultByteArrayCached(duration)
+//      Common.upickleDefaultBinaryCached(duration)
       //      Common.upickleLegacyCached(duration)
       //      Common.upickleLegacyBinaryCached(duration)
       //      Common.genCodecCached(duration)
 //      upickleWebLegacyCached(duration)
+      val results = Seq(
+        Common.upickleDefault(duration),
+        Common.upickleDefaultByteArray(duration),
+        Common.upickleDefaultBinary(duration),
+        Common.integers(duration),
+        Common.integersByteArray(duration),
+        Common.integersBinary(duration),
+
+        Common.doubles(duration),
+        Common.doublesByteArray(duration),
+        Common.doublesBinary(duration),
+
+        Common.sequences(duration),
+        Common.sequencesByteArray(duration),
+        Common.sequencesBinary(duration),
+
+        Common.shortStrings(duration),
+        Common.shortStringsByteArray(duration),
+        Common.shortStringsBinary(duration),
+
+        Common.longStrings(duration),
+        Common.longStringsByteArray(duration),
+        Common.longStringsBinary(duration),
+
+        Common.unicodeStrings(duration),
+        Common.unicodeStringsByteArray(duration),
+        Common.unicodeStringsBinary(duration),
+
+        Common.caseClasses(duration),
+        Common.caseClassesByteArray(duration),
+        Common.caseClassesBinary(duration)
+      )
+      println()
+      if (save) allResults.appendAll(results.flatten)
       println()
     }
+    Common.prettyPrintResults(allResults)
   }
 
   def rawJsonParseSerialize(duration: Int) = {
