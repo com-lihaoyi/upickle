@@ -20,9 +20,6 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   private[this] val elemOps = upickle.core.ElemOps
   private[this] val outputBuilder = new upickle.core.ElemBuilder()
 
-  def requestUntilOrThrow(i: Int) = {
-    if (requestUntil(i)) throw new IncompleteParseException("exhausted input")
-  }
   override def getElemSafe(i: Int): Elem = {
     requestUntilOrThrow(i)
     getElemUnsafe(i)
@@ -83,7 +80,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       true
     )
     val s = "%s got %s" format (msg, out.makeString())
-    throw ParseException(s, i)
+    throw upickle.core.ParseException(s, i)
   }
 
 

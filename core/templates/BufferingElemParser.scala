@@ -54,7 +54,7 @@ trait BufferingElemParser{
   def getLastIdx = lastIdx
 
   def getElemSafe(i: Int): Elem = {
-    requestUntil(i)
+    requestUntilOrThrow(i)
     buffer(i - firstIdx)
   }
   def getElemUnsafe(i: Int): Elem = {
@@ -62,13 +62,27 @@ trait BufferingElemParser{
   }
 
   def sliceString(i: Int, k: Int): String = {
-    requestUntil(k - 1)
+    requestUntilOrThrow(k - 1)
     ElemOps.newString(buffer, i - firstIdx, k - i)
   }
 
   def sliceArr(i: Int, n: Int): (Array[Elem], Int, Int) = {
-    requestUntil(i + n - 1)
+    requestUntilOrThrow(i + n - 1)
     (buffer, i - firstIdx, n)
+  }
+
+  /**
+   * A fast-path to check whether an index can be safely accessed, before calling
+   * [[getElemUnsafe]]. Together, it is similar to calling [[getElemSafe]], except
+   * this returns the new safeIndex which the caller can then use to call
+   * [[getElemUnsafe]] multiple times before needing to call this again.
+   *
+   */
+  def requestUntilOrThrow(j: Int):Unit = checkSafeIndex(j)
+  def checkSafeIndex(j: Int): Int = {
+    val newSafeIndex = requestUntilGetSafeIndex(j)
+    if (newSafeIndex == j) throw new IncompleteParseException("exhausted input")
+    newSafeIndex
   }
 
   /**
@@ -119,16 +133,34 @@ trait BufferingElemParser{
     else requestUntil0(until)
   }
 
+  /**
+   * Used to ask for data up to a certain index, as a best effort (unlike
+   * [[requestUntil]]), returning the "safe index" which it was actually able
+   * to fetch data for. This is used so the caller can use the safe index to
+   * know how far it is able to run [[getElemUnsafe]] calls without further
+   * checks, improving performance over calling [[getElemSafe]] every time
+   * which performs additional checks and logic
+   */
+  protected def requestUntilGetSafeIndex(until: Int): Int = {
+    if (until < lastIdx) lastIdx
+    else if (until >= knownEof) knownEof
+    else {
+      val newDone = requestUntil0(until)
+      if (newDone) knownEof
+      else lastIdx
+    }
+  }
+
   private def requestUntil0(until: Int) = {
     val untilBufferOffset = until - firstIdx
     if (buffer != null && untilBufferOffset >= buffer.length) growBuffer(until)
 
+
     val bufferOffset = lastIdx - firstIdx
     val (newBuffer, newDone, n) = readDataIntoBuffer(buffer, bufferOffset)
     buffer = newBuffer
-
-    lastIdx = lastIdx + n
-    if (newDone) knownEof = until
+    if (n != -1) lastIdx = lastIdx + n
+    if (newDone) knownEof = lastIdx
     newDone
   }
 
@@ -140,7 +172,6 @@ trait BufferingElemParser{
   def unsafeCharSeqForRange(start: Int, length: Int) = {
     new WrapElemArrayCharSeq(buffer, start - firstIdx, length)
   }
-
   def appendElemsToBuilder(elems: ElemBuilder, elemsStart: Int, elemsLength: Int) = {
     elems.appendAll(buffer, elemsStart - firstIdx, elemsLength)
   }
