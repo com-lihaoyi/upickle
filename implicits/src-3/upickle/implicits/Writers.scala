@@ -4,7 +4,7 @@ import upickle.core.Annotator
 
 import deriving.Mirror
 import scala.reflect.ClassTag
-import upickle.core.{ Visitor, ObjVisitor, Annotator }
+import upickle.core.{Annotator, ObjVisitor, Visitor}
 
 trait WritersVersionSpecific
   extends MacrosCommon
@@ -18,6 +18,20 @@ trait WritersVersionSpecific
 
       def writer = new CaseClassWriter[T] {
         def length(v: T) = macros.writeLength[T](outerThis, v)
+
+        override def write0[R](out: Visitor[_, R], v: V): R = {
+          if (v == null) out.visitNull(-1)
+          else {
+            val ctx = out.visitObject(length(v), true, -1)
+            macros.writeSnippets[R, T, Tuple.Map[m.MirroredElemTypes, Writer]](
+              outerThis,
+              this,
+              v,
+              ctx
+            )
+            ctx.visitEnd(-1)
+          }
+        }
 
         def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R], v: T): Unit =
           macros.writeSnippets[R, T, Tuple.Map[m.MirroredElemTypes, Writer]](

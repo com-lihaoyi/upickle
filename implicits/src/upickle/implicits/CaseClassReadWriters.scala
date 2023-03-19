@@ -21,6 +21,7 @@ trait CaseClassReadWriters extends upickle.core.Types{
   trait CaseClassWriter[V] extends ObjectWriter[V] {
     def length(v: V): Int
 
+    @deprecated("Not used, left for binary compatibility")
     def writeToObject[R](ctx: ObjVisitor[_, R], v: V): Unit
 
     def write0[R](out: Visitor[_, R], v: V): R = {

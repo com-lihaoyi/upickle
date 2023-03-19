@@ -369,6 +369,14 @@ object Macros {
                 .foldLeft[Tree](q"0"){case (prev, next) => q"$prev + $next"}
             }
           }
+          override def write0[R](out: _root_.upickle.core.Visitor[_, R], v: $targetType): R = {
+            if (v == null) out.visitNull(-1)
+            else {
+              val ctx = out.visitObject(length(v), true, -1)
+              ..${(0 until rawArgs.length).map(write)}
+              ctx.visitEnd(-1)
+            }
+          }
           def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R],
                                v: $targetType): Unit = {
             ..${(0 until rawArgs.length).map(write)}
