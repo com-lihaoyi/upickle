@@ -158,6 +158,9 @@ trait BufferingElemParser{
   def unsafeCharSeqForRange(start: Int, length: Int) = {
     new WrapElemArrayCharSeq(buffer, start - firstIdx, length)
   }
+  def unsafeNonUnicodeCharSeqForRange(start: Int, length: Int) = {
+    new WrapElemArrayCharSeq.NonUnicode(buffer, start - firstIdx, length)
+  }
   def appendElemsToBuilder(elems: ElemBuilder, elemsStart: Int, elemsLength: Int) = {
     elems.appendAll(buffer, elemsStart - firstIdx, elemsLength)
   }
