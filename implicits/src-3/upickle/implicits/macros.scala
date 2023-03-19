@@ -144,9 +144,8 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
           val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
           val snippet = '{
             ${self}.writeSnippet[R, tpe](
-              ${thisOuter}.objectAttributeKeyWriteMap,
               ${ctx},
-              ${Expr(label)},
+              ${thisOuter}.objectAttributeKeyWriteMap(${Expr(label)}),
               summonInline[Tuple.Elem[WS, index]],
               ${select},
             )

@@ -345,10 +345,9 @@ object Macros {
 
       def write(i: Int) = {
         val snippet = q"""
-          this.writeSnippet[R, ${argTypes(i)}](
-            ${c.prefix}.objectAttributeKeyWriteMap,
+          this.writeSnippetMappedName[R, ${argTypes(i)}](
              ctx,
-             ${mappedArgs(i)},
+             ${c.prefix}.objectAttributeKeyWriteMap(${mappedArgs(i)}),
              implicitly[${c.prefix}.Writer[${argTypes(i)}]],
              v.${TermName(rawArgs(i))}
            )
