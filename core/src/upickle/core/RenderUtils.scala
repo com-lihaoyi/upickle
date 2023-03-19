@@ -152,4 +152,39 @@ object RenderUtils{
     sb.ensureLength(naiveOutLen - i + 1); sb.appendUnsafeC('\\'); sb.appendUnsafeC(c)
   }
 
+  def intStringSize(x0: Int): Int = {
+    // Taken from java.lang.Int.stringSize
+    var x = x0
+    var d = 1
+    if (x >= 0) {
+      d = 0
+      x = -x
+    }
+    var p = -10
+    var i = 1
+    while (i <= 10) {
+      if (x > p) return i + d
+      p = 10 * p
+      i += 1
+    }
+    10 + d
+  }
+
+  def longStringSize(x0: Long): Int = {
+    // Taken from java.lang.Long.stringSize
+    var x = x0
+    var d = 1
+    if (x >= 0) {
+      d = 0
+      x = -x
+    }
+    var p: Long = -10
+    var i = 1
+    while (i <= 18) {
+      if (x > p) return i + d
+      p = 10 * p
+      i += 1
+    }
+    19 + d
+  }
 }
