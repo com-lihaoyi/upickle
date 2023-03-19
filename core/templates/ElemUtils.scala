@@ -145,6 +145,8 @@ object ElemUtils{
   }
 
   def parseLong(cs0: Array[Elem], start0: Int, end0: Int): Long = {
+    if ((start0 | end0 | end0 - start0 | (cs0.length - end0)) < 0) throw new IndexOutOfBoundsException
+
     // If we do not copy the data from `cs0` into our own local array before
     // parsing it, we take a significant performance penalty in the
     // `integers Read` benchmarks, but *only* when run together with the rest
