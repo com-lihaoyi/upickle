@@ -104,7 +104,7 @@ object ElemUtils{
   }
 
 
-  def parseIntegralNum(arr: Array[Elem], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+  def parseIntegralNum(arr: Array[Elem], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int) = {
     val expMul =
       if (expIndex == -1) 1
       else {
@@ -144,35 +144,46 @@ object ElemUtils{
     intPortion + decPortion
   }
 
-  def parseLong(cs: Array[Elem], start: Int, end: Int): Long = {
+  def parseLong(cs0: Array[Elem], start0: Int, end0: Int): Long = {
+    // If we do not copy the data from `cs0` into our own local array before
+    // parsing it, we take a significant performance penalty in the
+    // `integers Read` benchmarks, but *only* when run together with the rest
+    // of the benchmarks! When `integers Read` isrun alone, this does not
+    // happen, and is presumably something to do with the JIT compiler.
+
+    // Since any real world use case would exercise all sorts of code paths,
+    // it would more closely resemble the "all benchmarks together" case
+    // rather, and so we leave this copy in-place to optimize performance
+    // for that scenario.
+    val cs = new Array[Elem](end0 - start0)
+    System.arraycopy(cs0, start0, cs, 0, end0 - start0)
 
     // we store the inverse of the positive sum, to ensure we don't
     // incorrectly overflow on Long.MinValue. for positive numbers
     // this inverse sum will be inverted before being returned.
     var inverseSum: Long = 0L
     var inverseSign: Long = -1L
-    var i: Int = start
+    var i: Int = 0
+    val end = end0 - start0
 
-    if ((start | end | end - start) < 0) throw new IndexOutOfBoundsException
-
-    if (cs(start) == '-') {
+    if (cs(0) == '-') {
       inverseSign = 1L
       i += 1
     }
 
     val size = end - i
-    if (size <= 0 || size > 19) throw new NumberFormatException(new String(cs, start, end))
+    if (size <= 0 || size > 19) throw new NumberFormatException(new String(cs))
 
     while (i < end) {
       val digit = cs(i).toInt - 48
-      if (digit < 0 || 9 < digit) throw new NumberFormatException(new String(cs, start, end))
+      if (digit < 0 || 9 < digit) throw new NumberFormatException(new String(cs))
       inverseSum = inverseSum * 10L - digit
       i += 1
     }
 
     // detect and throw on overflow
     if (size == 19 && (inverseSum >= 0 || (inverseSum == Long.MinValue && inverseSign < 0))) {
-      throw new NumberFormatException(new String(cs, start, end))
+      throw new NumberFormatException(new String(cs))
     }
 
     inverseSum * inverseSign
