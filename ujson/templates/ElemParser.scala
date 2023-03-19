@@ -20,6 +20,21 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   private[this] val elemOps = upickle.core.ElemOps
   private[this] val outputBuilder = new upickle.core.ElemBuilder()
 
+  /**
+   * A fast-path to check whether an index can be safely accessed, before calling
+   * [[getElemUnsafe]]. Together, it is similar to calling [[getElemSafe]], except
+   * this returns the new safeIndex which the caller can then use to call
+   * [[getElemUnsafe]] multiple times before needing to call this again.
+   *
+   */
+  def requestUntilOrThrow(j: Int): Unit = checkSafeIndex(j)
+
+  def checkSafeIndex(j: Int): Int = {
+    val newSafeIndex = requestUntilGetSafeIndex(j)
+    if (newSafeIndex == j) throw new IncompleteParseException("exhausted input")
+    newSafeIndex
+  }
+
   override def getElemSafe(i: Int): Elem = {
     requestUntilOrThrow(i)
     getElemUnsafe(i)
@@ -80,7 +95,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       true
     )
     val s = "%s got %s" format (msg, out.makeString())
-    throw upickle.core.ParseException(s, i)
+    throw ujson.ParseException(s, i)
   }
 
 

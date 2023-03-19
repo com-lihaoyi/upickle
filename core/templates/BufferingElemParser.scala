@@ -54,7 +54,7 @@ trait BufferingElemParser{
   def getLastIdx = lastIdx
 
   def getElemSafe(i: Int): Elem = {
-    requestUntilOrThrow(i)
+    requestUntil(i)
     buffer(i - firstIdx)
   }
   def getElemUnsafe(i: Int): Elem = {
@@ -62,27 +62,13 @@ trait BufferingElemParser{
   }
 
   def sliceString(i: Int, k: Int): String = {
-    requestUntilOrThrow(k - 1)
+    requestUntil(k - 1)
     ElemOps.newString(buffer, i - firstIdx, k - i)
   }
 
   def sliceArr(i: Int, n: Int): (Array[Elem], Int, Int) = {
-    requestUntilOrThrow(i + n - 1)
+    requestUntil(i + n - 1)
     (buffer, i - firstIdx, n)
-  }
-
-  /**
-   * A fast-path to check whether an index can be safely accessed, before calling
-   * [[getElemUnsafe]]. Together, it is similar to calling [[getElemSafe]], except
-   * this returns the new safeIndex which the caller can then use to call
-   * [[getElemUnsafe]] multiple times before needing to call this again.
-   *
-   */
-  def requestUntilOrThrow(j: Int):Unit = checkSafeIndex(j)
-  def checkSafeIndex(j: Int): Int = {
-    val newSafeIndex = requestUntilGetSafeIndex(j)
-    if (newSafeIndex == j) throw new IncompleteParseException("exhausted input")
-    newSafeIndex
   }
 
   /**

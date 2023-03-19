@@ -2,7 +2,7 @@ package upickle
 
 import utest._
 import upickle.legacy.read
-import upickle.core.{IncompleteParseException, ParseException}
+import ujson.{IncompleteParseException, ParseException}
 import upickle.core.AbortException
 case class Fee(i: Int, s: String)
 object Fee{
