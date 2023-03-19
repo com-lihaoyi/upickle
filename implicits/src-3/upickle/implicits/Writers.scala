@@ -19,7 +19,7 @@ trait WritersVersionSpecific
       def writer = new CaseClassWriter[T] {
         def length(v: T) = macros.writeLength[T](outerThis, v)
 
-        override def write0[R](out: Visitor[_, R], v: V): R = {
+        override def write0[R](out: Visitor[_, R], v: T): R = {
           if (v == null) out.visitNull(-1)
           else {
             val ctx = out.visitObject(length(v), true, -1)
