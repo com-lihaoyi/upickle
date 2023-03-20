@@ -4,7 +4,8 @@ import upickle.core.Annotator
 
 import deriving.Mirror
 import scala.reflect.ClassTag
-import upickle.core.{ Visitor, ObjVisitor, Annotator }
+import scala.util.NotGiven
+import upickle.core.{Annotator, ObjVisitor, Visitor, CurrentlyDeriving}
 
 trait WritersVersionSpecific
   extends MacrosCommon
@@ -18,6 +19,20 @@ trait WritersVersionSpecific
 
       def writer = new CaseClassWriter[T] {
         def length(v: T) = macros.writeLength[T](outerThis, v)
+
+        override def write0[R](out: Visitor[_, R], v: T): R = {
+          if (v == null) out.visitNull(-1)
+          else {
+            val ctx = out.visitObject(length(v), true, -1)
+            macros.writeSnippets[R, T, Tuple.Map[m.MirroredElemTypes, Writer]](
+              outerThis,
+              this,
+              v,
+              ctx
+            )
+            ctx.visitEnd(-1)
+          }
+        }
 
         def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R], v: T): Unit =
           macros.writeSnippets[R, T, Tuple.Map[m.MirroredElemTypes, Writer]](
@@ -35,6 +50,7 @@ trait WritersVersionSpecific
       else writer
 
     case _: Mirror.SumOf[T] =>
+      implicit val currentlyDeriving: upickle.core.CurrentlyDeriving[T] = new upickle.core.CurrentlyDeriving()
       val writers: List[Writer[_ <: T]] = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Writer]]
         .toList
         .asInstanceOf[List[Writer[_ <: T]]]
@@ -48,7 +64,8 @@ trait WritersVersionSpecific
       macros.defineEnumWriters[Writer[T], Tuple.Map[m.MirroredElemTypes, Writer]](this)
   }
 
-  inline given superTypeWriter[T: Mirror.ProductOf : ClassTag, V >: T : Writer]: Writer[T] = {
+  inline given superTypeWriter[T: Mirror.ProductOf : ClassTag, V >: T : Writer : Mirror.SumOf]
+                              (using NotGiven[CurrentlyDeriving[V]]): Writer[T] = {
     implicitly[Writer[V]].comap[T](_.asInstanceOf[V])
   }
 

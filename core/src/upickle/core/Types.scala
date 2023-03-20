@@ -235,6 +235,13 @@ trait Types{ types =>
 }
 
 /**
+ * Implicit to indicate that we are currently deriving an implicit [[T]]. Used
+ * to avoid the implicit being derived from picking up its own definition,
+ * resulting in infinite looping/recursion
+ */
+class CurrentlyDeriving[T]
+
+/**
  * Wrap a CaseClassReader or CaseClassWriter reader/writer to handle $type tags during reading and writing.
  *
  * Note that Scala 3 singleton `enum` values do not have proper `ClassTag[V]`s

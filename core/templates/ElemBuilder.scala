@@ -14,8 +14,8 @@ package upickle.core
   *   let you push the data elsewhere with minimal unnecessary copying
   */
 class ElemBuilder(startSize: Int = 32) extends upickle.core.ElemAppendC{
-  private[this] var arr: Array[Elem] = new Array(startSize)
-  private[this] var length: Int = 0
+  var arr: Array[Elem] = new Array(startSize)
+  var length: Int = 0
   private def getArr = arr
   def getLength = length
   def reset(): Unit = length = 0

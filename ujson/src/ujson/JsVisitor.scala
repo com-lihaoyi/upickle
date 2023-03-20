@@ -29,14 +29,15 @@ trait JsVisitor[-T, +J] extends Visitor[T, J]{
 
   def visitInt32(i: Int, index: Int): J = visitFloat64(i, index)
   def visitInt64(i: Long, index: Int): J = {
-    if (math.abs(i) > math.pow(2, 53) || i == -9223372036854775808L) visitString(i.toString, index)
+    if (math.abs(i) > 9007199254740992L /*math.pow(2, 53)*/ ||
+        i == -9223372036854775808L /*Long.MinValue*/) visitString(i.toString, index)
     else visitFloat64(i.toDouble, index)
   }
   def visitUInt64(i: Long, index: Int): J = {
-    if (i > math.pow(2, 53) || i < 0) visitString(java.lang.Long.toUnsignedString(i), index)
+    if (i > 9007199254740992L /*math.pow(2, 53)*/ ||
+        i < 0) visitString(java.lang.Long.toUnsignedString(i), index)
     else visitFloat64(i.toDouble, index)
   }
-
   def visitFloat64String(s: String, index: Int): J = {
     visitFloat64StringParts(
       s,

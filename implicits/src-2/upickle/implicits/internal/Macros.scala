@@ -345,10 +345,9 @@ object Macros {
 
       def write(i: Int) = {
         val snippet = q"""
-          this.writeSnippet[R, ${argTypes(i)}](
-            ${c.prefix}.objectAttributeKeyWriteMap,
+          this.writeSnippetMappedName[R, ${argTypes(i)}](
              ctx,
-             ${mappedArgs(i)},
+             ${c.prefix}.objectAttributeKeyWriteMap(${mappedArgs(i)}),
              implicitly[${c.prefix}.Writer[${argTypes(i)}]],
              v.${TermName(rawArgs(i))}
            )
@@ -367,6 +366,14 @@ object Macros {
                   else q"""if ($serDfltVals || v.${TermName(rawArgs(i))} != ${defaults(i)}) 1 else 0"""
                 )
                 .foldLeft[Tree](q"0"){case (prev, next) => q"$prev + $next"}
+            }
+          }
+          override def write0[R](out: _root_.upickle.core.Visitor[_, R], v: $targetType): R = {
+            if (v == null) out.visitNull(-1)
+            else {
+              val ctx = out.visitObject(length(v), true, -1)
+              ..${(0 until rawArgs.length).map(write)}
+              ctx.visitEnd(-1)
             }
           }
           def writeToObject[R](ctx: _root_.upickle.core.ObjVisitor[_, R],

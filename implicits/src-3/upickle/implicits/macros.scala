@@ -143,10 +143,9 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
         case '[IsInt[index]] =>
           val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
           val snippet = '{
-            ${self}.writeSnippet[R, tpe](
-              ${thisOuter}.objectAttributeKeyWriteMap,
+            ${self}.writeSnippetMappedName[R, tpe](
               ${ctx},
-              ${Expr(label)},
+              ${thisOuter}.objectAttributeKeyWriteMap(${Expr(label)}),
               summonInline[Tuple.Elem[WS, index]],
               ${select},
             )
@@ -220,8 +219,13 @@ def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[Any], macroX: String)(us
 
     val AppliedType(typePrefix, List(arg)) = tpe: @unchecked
 
-    if (skipTrait && arg.typeSymbol.flags.is(Flags.Trait)) None
-    else {
+    if (skipTrait &&
+        (arg.typeSymbol.flags.is(Flags.Trait) ||
+          // Filter out `enum`s, because the `case`s of an enum are flagged as
+          // abstract enums for some reasons rather than as case classes
+          (arg.typeSymbol.flags.is(Flags.Abstract) && !arg.typeSymbol.flags.is(Flags.Enum)))){
+      None
+    } else {
       val sym = Symbol.newVal(
         Symbol.spliceOwner,
         name,
