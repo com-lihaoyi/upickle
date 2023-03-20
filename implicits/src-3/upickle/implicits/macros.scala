@@ -219,8 +219,11 @@ def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[Any], macroX: String)(us
 
     val AppliedType(typePrefix, List(arg)) = tpe: @unchecked
 
-    if (skipTrait && arg.typeSymbol.flags.is(Flags.Trait)) None
-    else {
+    if (skipTrait &&
+        (arg.typeSymbol.flags.is(Flags.Trait) ||
+          (arg.typeSymbol.flags.is(Flags.Abstract) && !arg.typeSymbol.flags.is(Flags.Enum)))){
+      None
+    } else {
       val sym = Symbol.newVal(
         Symbol.spliceOwner,
         name,

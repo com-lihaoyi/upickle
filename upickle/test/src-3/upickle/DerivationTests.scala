@@ -30,6 +30,13 @@ sealed trait Level3 extends Level2 derives ReadWriter
 case class Level3Cls(b: Boolean) extends Level3
 case object Level3Obj extends Level3
 
+
+sealed trait ShirtSize derives ReadWriter
+case object UnknownShirtSize extends ShirtSize
+sealed abstract class KnownShirtSize(val width: Int) extends ShirtSize derives ReadWriter
+case object XL extends KnownShirtSize(50)
+
+
 object DerivationTests extends TestSuite {
   val tests = Tests {
     test("example") {
@@ -120,8 +127,13 @@ object DerivationTests extends TestSuite {
       rw(Level3Obj: Level1, """"upickle.Level3Obj"""")
     }
 
-
-
+    test("abstractClass"){
+      rw(UnknownShirtSize, """ "upickle.UnknownShirtSize" """)
+      rw(UnknownShirtSize: ShirtSize, """ "upickle.UnknownShirtSize" """)
+      rw(XL, """ "upickle.XL" """)
+      rw(XL: ShirtSize, """ "upickle.XL" """)
+      rw(XL: KnownShirtSize, """ "upickle.XL" """)
+    }
     test("failures"){
       test("caseClassTaggedWrong") - {
         val e = intercept[upickle.core.AbortException] {
