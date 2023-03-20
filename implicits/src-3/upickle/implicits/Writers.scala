@@ -64,7 +64,7 @@ trait WritersVersionSpecific
       macros.defineEnumWriters[Writer[T], Tuple.Map[m.MirroredElemTypes, Writer]](this)
   }
 
-  inline given superTypeWriter[T: Mirror.ProductOf : ClassTag, V >: T : Writer]
+  inline given superTypeWriter[T: Mirror.ProductOf : ClassTag, V >: T : Writer : Mirror.SumOf]
                               (using NotGiven[CurrentlyDeriving[V]]): Writer[T] = {
     implicitly[Writer[V]].comap[T](_.asInstanceOf[V])
   }

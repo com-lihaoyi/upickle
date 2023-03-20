@@ -37,6 +37,19 @@ sealed abstract class KnownShirtSize(val width: Int) extends ShirtSize derives R
 case object XL extends KnownShirtSize(50)
 
 
+case class TopLevelElementWithReader(x: Int)
+object TopLevelElementWithReader{
+  implicit val r: upickle.default.Reader[TopLevelElementWithReader] = upickle.default.macroR
+}
+case class TopLevelElementWithWriter(y: String)
+object TopLevelElementWithWriter{
+  implicit val w: upickle.default.Writer[TopLevelElementWithWriter] = upickle.default.macroW
+}
+case class TopLevelElementWithReadWriter(z: Boolean)
+object TopLevelElementWithReadWriter{
+  implicit val rw: upickle.default.ReadWriter[TopLevelElementWithReadWriter] = upickle.default.macroRW
+}
+
 object DerivationTests extends TestSuite {
   val tests = Tests {
     test("example") {
@@ -160,6 +173,21 @@ object DerivationTests extends TestSuite {
       val wError = compileError("""given w: upickle.default.Writer[A] = upickle.default.macroW""")
       assert(rError.msg.contains("No given instance of type ReadersVersionSpecific_this.Reader[(A.B : A)] was found"))
       assert(wError.msg.contains("No given instance of type WritersVersionSpecific_this.Writer[(A.B : A)] was found"))
+    }
+    test("issue469"){
+      // Ensure that `import upickle.default.given` doesn't mess things up by
+      // causing implicits to fire when they shouldn't
+      import upickle.default.given
+
+      assert(
+        upickle.default.read[TopLevelElementWithReader]("""{"x":1}""") ==
+        TopLevelElementWithReader(1)
+      )
+      assert(
+        upickle.default.write(TopLevelElementWithWriter("hello")) ==
+          """{"y":"hello"}"""
+      )
+      rw(TopLevelElementWithReadWriter(true), """{"z":true}""")
     }
   }
 }

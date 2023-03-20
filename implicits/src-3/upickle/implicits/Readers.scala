@@ -84,7 +84,7 @@ trait ReadersVersionSpecific
       macros.defineEnumReaders[Reader[T], Tuple.Map[m.MirroredElemTypes, Reader]](this)
   }
 
-  inline given superTypeReader[T: Mirror.ProductOf, V >: T : Reader]
+  inline given superTypeReader[T: Mirror.ProductOf, V >: T : Reader : Mirror.SumOf]
                               (using NotGiven[CurrentlyDeriving[V]]): Reader[T] = {
     val actual = implicitly[Reader[V]].asInstanceOf[TaggedReader[T]]
     val tagName = macros.tagName[T]
