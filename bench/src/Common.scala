@@ -1,5 +1,7 @@
 package upickle
 
+import scala.annotation.nowarn
+
 object Common{
   import ADTs.ADT0
   import Defaults._
@@ -314,6 +316,70 @@ object Common{
 //    )
 //  }
 
+
+  def microBenchDefault[T: upickle.default.ReadWriter](duration: Int, v: T)(implicit n: sourcecode.Name) = {
+    Common.bench0[String, T](duration, upickle.default.write(v))(
+      upickle.default.read[T](_),
+      upickle.default.write(_),
+    )
+  }
+
+  def microBenchDefaultByteArray[T: upickle.default.ReadWriter](duration: Int, v: T)(implicit n: sourcecode.Name) = {
+    Common.bench0[Array[Byte], T](duration, upickle.default.writeToByteArray(v))(
+      upickle.default.read[T](_),
+      upickle.default.writeToByteArray(_),
+    )
+  }
+
+  def microBenchDefaultBinary[T: upickle.default.ReadWriter](duration: Int, v: T)(implicit n: sourcecode.Name) = {
+    Common.bench0[Array[Byte], T](duration, upickle.default.writeBinary(v))(
+      upickle.default.readBinary[T](_),
+      upickle.default.writeBinary(_),
+    )
+  }
+
+  def integers(duration: Int) = microBenchDefault(duration, Micro.integers)
+
+  def doubles(duration: Int) = microBenchDefault(duration, Micro.doubles)
+
+  def sequences(duration: Int) = microBenchDefault(duration, Micro.sequences)
+
+  def shortStrings(duration: Int) = microBenchDefault(duration, Micro.shortStrings)
+
+  def longStrings(duration: Int) = microBenchDefault(duration, Micro.longStrings)
+
+  def unicodeStrings(duration: Int) = microBenchDefault(duration, Micro.unicodeStrings)
+
+  def caseClasses(duration: Int) = microBenchDefault(duration, Micro.nestedCaseClasses)
+
+  def integersByteArray(duration: Int) = microBenchDefaultByteArray(duration, Micro.integers)
+
+  def doublesByteArray(duration: Int) = microBenchDefaultByteArray(duration, Micro.doubles)
+
+  def sequencesByteArray(duration: Int) = microBenchDefaultByteArray(duration, Micro.sequences)
+
+  def shortStringsByteArray(duration: Int) = microBenchDefaultByteArray(duration, Micro.shortStrings)
+
+  def longStringsByteArray(duration: Int) = microBenchDefaultByteArray(duration, Micro.longStrings)
+
+  def unicodeStringsByteArray(duration: Int) = microBenchDefaultByteArray(duration, Micro.unicodeStrings)
+
+  def caseClassesByteArray(duration: Int) = microBenchDefaultByteArray(duration, Micro.nestedCaseClasses)
+
+  def integersBinary(duration: Int) = microBenchDefaultBinary(duration, Micro.integers)
+
+  def doublesBinary(duration: Int) = microBenchDefaultBinary(duration, Micro.doubles)
+
+  def sequencesBinary(duration: Int) = microBenchDefaultBinary(duration, Micro.sequences)
+
+  def shortStringsBinary(duration: Int) = microBenchDefaultBinary(duration, Micro.shortStrings)
+
+  def longStringsBinary(duration: Int) = microBenchDefaultBinary(duration, Micro.longStrings)
+
+  def unicodeStringsBinary(duration: Int) = microBenchDefaultBinary(duration, Micro.unicodeStrings)
+
+  def caseClassesBinary(duration: Int) = microBenchDefaultBinary(duration, Micro.nestedCaseClasses)
+
   def bench[T](duration: Int)
               (f1: T => Seq[Data], f2: Seq[Data] => T, checkEqual: Boolean = true)
               (implicit name: sourcecode.Name) = {
@@ -335,7 +401,7 @@ object Common{
   def bench0[T, V](duration: Int, stringified: T)
                   (f1: T => V, f2: V => T)
                   (implicit name: sourcecode.Name)= {
-    {
+    val readResult = {
       var n = 0
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
@@ -343,11 +409,12 @@ object Common{
         n += 1
       }
       println(name.value + " Read " + n)
+      (name.value + " Read ", n)
     }
 
     val parsed = f1(stringified)
 
-    {
+    val writeResult = {
       var n = 0
       val start = System.currentTimeMillis()
       while(System.currentTimeMillis() < start + duration){
@@ -355,6 +422,31 @@ object Common{
         n += 1
       }
       println(name.value + " Write " + n)
+      (name.value + " Write ", n)
     }
+    Seq(readResult, writeResult)
+  }
+
+  def prettyPrintResults(allResults: collection.Seq[(String, Int)]): String = {
+    @nowarn("cat=deprecation")
+    val groupedResults = allResults
+      .map {
+        case (s"${n}ByteArray $rw", v) => (s"$n $rw", "JsonByteArray", v)
+        case (s"${n}Binary $rw", v) => (s"$n $rw", "MsgPack", v)
+        case (n, v) => (n, "JsonString", v)
+      }
+      .groupMap { case (name, tag, v) => (name, tag) }(_._3).mapValues(_.sorted.apply(1 /* get the median of 3*/))
+      .groupMap { case ((name, tag), v) => name } { case ((name, tag), v) => (tag, v) }.mapValues(_.toMap)
+
+    val tags = Seq("JsonString", "JsonByteArray", "MsgPack")
+    val lines = Seq(
+      "| Name | " + tags.mkString(" | ") + " |",
+      "|---:| " + tags.map(_ => "---:").mkString(" | ") + " |"
+    ) ++ (
+      for ((name, taggedValues) <- groupedResults.toList.sortBy(t => allResults.map(_._1).indexOf(t._1)))
+      yield s"| $name | " + tags.map(taggedValues.getOrElse(_, " ")).mkString(" | ") + " |"
+    )
+
+    lines.mkString("\n")
   }
 }

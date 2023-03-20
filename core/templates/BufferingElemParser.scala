@@ -26,6 +26,8 @@ trait BufferingElemParser{
   private[this] var buffer: Array[Elem] = null
   private[this] var bufferGrowCount = 0
   private[this] var bufferCopyCount = 0
+  def getBuffer = buffer
+  def getFirstIdx = firstIdx
   def getBufferGrowCount() = bufferGrowCount
   def getBufferCopyCount() = bufferCopyCount
   def getBufferLength() = if (buffer == null) -1 else buffer.length
@@ -119,16 +121,34 @@ trait BufferingElemParser{
     else requestUntil0(until)
   }
 
+  /**
+   * Used to ask for data up to a certain index, as a best effort (unlike
+   * [[requestUntil]]), returning the "safe index" which it was actually able
+   * to fetch data for. This is used so the caller can use the safe index to
+   * know how far it is able to run [[getElemUnsafe]] calls without further
+   * checks, improving performance over calling [[getElemSafe]] every time
+   * which performs additional checks and logic
+   */
+  protected def requestUntilGetSafeIndex(until: Int): Int = {
+    if (until < lastIdx) lastIdx
+    else if (until >= knownEof) knownEof
+    else {
+      val newDone = requestUntil0(until)
+      if (newDone) knownEof
+      else lastIdx
+    }
+  }
+
   private def requestUntil0(until: Int) = {
     val untilBufferOffset = until - firstIdx
     if (buffer != null && untilBufferOffset >= buffer.length) growBuffer(until)
 
+
     val bufferOffset = lastIdx - firstIdx
     val (newBuffer, newDone, n) = readDataIntoBuffer(buffer, bufferOffset)
     buffer = newBuffer
-
-    lastIdx = lastIdx + n
-    if (newDone) knownEof = until
+    if (n != -1) lastIdx = lastIdx + n
+    if (newDone) knownEof = lastIdx
     newDone
   }
 
@@ -140,7 +160,6 @@ trait BufferingElemParser{
   def unsafeCharSeqForRange(start: Int, length: Int) = {
     new WrapElemArrayCharSeq(buffer, start - firstIdx, length)
   }
-
   def appendElemsToBuilder(elems: ElemBuilder, elemsStart: Int, elemsLength: Int) = {
     elems.appendAll(buffer, elemsStart - firstIdx, elemsLength)
   }

@@ -5,8 +5,8 @@ import java.io.StringWriter
 import upickle.{TestUtil, default}
 import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
-import ujson.{IncompleteParseException, ParseException, Readable}
-import ujson.{BytesRenderer, Value, StringRenderer}
+import ujson.{IncompleteParseException, ParseException}
+import ujson.{BytesRenderer, Value, StringRenderer, Readable}
 import upickle.core.{NoOpVisitor, Visitor}
 
 object Simple {

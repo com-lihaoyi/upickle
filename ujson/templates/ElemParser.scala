@@ -20,9 +20,21 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   private[this] val elemOps = upickle.core.ElemOps
   private[this] val outputBuilder = new upickle.core.ElemBuilder()
 
-  def requestUntilOrThrow(i: Int) = {
-    if (requestUntil(i)) throw new IncompleteParseException("exhausted input")
+  /**
+   * A fast-path to check whether an index can be safely accessed, before calling
+   * [[getElemUnsafe]]. Together, it is similar to calling [[getElemSafe]], except
+   * this returns the new safeIndex which the caller can then use to call
+   * [[getElemUnsafe]] multiple times before needing to call this again.
+   *
+   */
+  def requestUntilOrThrow(j: Int): Unit = checkSafeIndex(j)
+
+  def checkSafeIndex(j: Int): Int = {
+    val newSafeIndex = requestUntilGetSafeIndex(j)
+    if (newSafeIndex == j) throw new IncompleteParseException("exhausted input")
+    newSafeIndex
   }
+
   override def getElemSafe(i: Int): Elem = {
     requestUntilOrThrow(i)
     getElemUnsafe(i)
@@ -79,11 +91,11 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       new upickle.core.CharBuilder(),
       out,
       CharBuffer.wrap(Array(elemOps.toInt(getElemSafe(i)).toChar)),
-      unicode = false,
+      escapeUnicode = false,
       true
     )
     val s = "%s got %s" format (msg, out.makeString())
-    throw ParseException(s, i)
+    throw ujson.ParseException(s, i)
   }
 
 
@@ -155,8 +167,10 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
                                          expIndex: Int,
                                          i: Int,
                                          j: Int) = {
-    facade.visitFloat64StringParts(
-      unsafeCharSeqForRange(i, j - i),
+    facade.visitFloat64ElemParts(
+      getBuffer,
+      i - getFirstIdx,
+      j - i,
       decIndex,
       expIndex,
       i
@@ -515,61 +529,73 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     * This method expects the data to be in UTF-16 and accesses it as
     * chars.
     */
-  protected[this] final def parseStringSimple(i: Int): Int = {
+  protected[this] final def parseStringSimple(i: Int): Int = parseStringSimple(i, 0)
+  protected[this] final def parseStringSimple(i: Int, safeIndex0: Int): Int = {
     var j = i
-    var c = elemOps.toUnsignedInt(getElemSafe(j))
-    while (c != '"') {
-      if (c < ' ') die(j, s"control char (${c}) in string")
-      if (c == '\\' || c > 127) return -1 - j
-      j += 1
-      c = elemOps.toUnsignedInt(getElemSafe(j))
+    var safeIndex = safeIndex0
+    while (true) {
+      // request batches of `Elem` at a time, so within each batch we can use
+      // `getElemUnsafe` to avoid making a `requestUntil` for every single
+      // element we fetch
+      if (j >= safeIndex) safeIndex = checkSafeIndex(j)
+      val c = getElemUnsafe(j)
+      (c: @switch) match {
+        case '"' => return j + 1
+        case 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+             10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 |
+             20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 |
+             30 | 31 => die(j, s"control char (${upickle.core.ElemOps.toUnsignedInt(c)}) in string")
+        case '\\' => return -1 - j
+        case _ => j += 1
+      }
     }
-    j + 1
+    ???
   }
 
   /**
     * Parse a string that is known to have escape sequences.
     */
-  protected[this] final def parseStringComplex(i0: Int): Int = {
+  protected[this] final def parseStringComplex(i0: Int): Int = parseStringComplex(i0, 0)
+  protected[this] final def parseStringComplex(i0: Int, safeIndex0: Int): Int = {
+    val elemOps = upickle.core.ElemOps
     var i = i0
-    var c = elemOps.toUnsignedInt(getElemSafe(i))
-    while (c != '"') {
-
-      if (c < ' ') die(i, s"control char (${c}) in string")
+    var safeIndex = safeIndex0
+    while (true) {
+      val c = elemOps.toUnsignedInt(getElemSafe(i))
+      if (c == '"') return i + 1
+      else if (c < ' ') die(i, s"control char (${c}) in string")
       else if (c == '\\') {
-        (getElemSafe(i + 1): @switch) match {
+        if (i + 1 >= safeIndex) safeIndex = checkSafeIndex(i + 1)
+        (getElemUnsafe(i + 1): @switch) match {
           case 'b' => { outputBuilder.append('\b'); i += 2 }
           case 'f' => { outputBuilder.append('\f'); i += 2 }
           case 'n' => { outputBuilder.append('\n'); i += 2 }
           case 'r' => { outputBuilder.append('\r'); i += 2 }
           case 't' => { outputBuilder.append('\t'); i += 2 }
-
           case '"' => { outputBuilder.append('"'); i += 2 }
           case '/' => { outputBuilder.append('/'); i += 2 }
           case '\\' => { outputBuilder.append('\\'); i += 2 }
 
           // if there's a problem then descape will explode
           case 'u' =>
-            val d = descape(i)
-            outputBuilder.appendC(d)
-
+            outputBuilder.appendC(descape(i))
             i += 6
 
           case c => die(i + 1, s"illegal escape sequence after \\")
         }
-      } else {
+      }else{
         // this case is for "normal" code points that are just one Char.
         //
         // we don't have to worry about surrogate pairs, since those
         // will all be in the ranges D800–DBFF (high surrogates) or
         // DC00–DFFF (low surrogates).
-        outputBuilder.append(c)
-        i += 1
+        val k = parseStringSimple(i, safeIndex)
+        val normalizedK = if (k >= 0) k else -k
+        appendElemsToBuilder(outputBuilder, i, normalizedK - i - 1)
+        i = normalizedK - 1
       }
-      c = elemOps.toUnsignedInt(getElemSafe(i))
     }
-
-    i + 1
+    ???
   }
 
   /**

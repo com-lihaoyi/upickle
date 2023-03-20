@@ -11,49 +11,109 @@ object Main{
   import Hierarchy._
   import Recursive._
   def main(args: Array[String]): Unit = {
-    for(duration <- Seq(2500, 5000, 10000, 10000, 10000, 10000)){
+    val allResults = collection.mutable.Buffer.empty[(String, Int)]
+    for((duration, save) <- Seq(2500 -> false, 5000 -> false, 10000 -> true, 10000 -> true, 10000 -> true)){
       println("RUN JVM: " + duration)
       println()
 
-//      Main.ujsonAst(duration)
-//      Main.upackAst(duration)
-//      Main.playJsonAst(duration)
-//      Main.uJsonPlayJsonAst(duration)
-//      Main.circeJsonAst(duration)
-//      Main.uJsonCirceJsonAst(duration)
-//      Main.argonautJsonAst(duration)
-//      Main.uJsonArgonautJsonAst(duration)
-//      Main.json4sJsonAst(duration)
-//      Main.uJsonJson4sJsonAst(duration)
+      //      Main.ujsonAst(duration)
+      //      Main.upackAst(duration)
+      //      Main.playJsonAst(duration)
+      //      Main.uJsonPlayJsonAst(duration)
+      //      Main.circeJsonAst(duration)
+      //      Main.uJsonCirceJsonAst(duration)
+      //      Main.argonautJsonAst(duration)
+      //      Main.uJsonArgonautJsonAst(duration)
+      //      Main.json4sJsonAst(duration)
+      //      Main.uJsonJson4sJsonAst(duration)
 
-//      Main.jacksonModuleScala(duration)
-      NonNative.playJson(duration)
-      NonNative.circe(duration)
-      Common.upickleDefault(duration)
-      Common.upickleDefaultByteArray(duration)
-      Common.upickleDefaultBinary(duration)
-      //      Common.upickleLegacy(duration)
-//      Common.upickleBinaryLegacy(duration)
-//      Common.genCodec(duration)
-      NonNative.playJsonCached(duration)
-      NonNative.circeCached(duration)
-      Common.upickleDefaultCached(duration)
-      Common.upickleDefaultByteArrayCached(duration)
-      Common.upickleDefaultBinaryCached(duration)
-      //      Common.upickleDefaultCachedReadable(duration)
-      //      Common.upickleDefaultCachedReadablePath(duration)
+      //      Main.jacksonModuleScala(duration)
 
-      //      Common.upickleLegacyCached(duration)
-//      Common.upickleDefaultBinaryCachedReadable(duration)
-//      Common.upickleLegacyBinaryCached(duration)
-//      Common.genCodecCached(duration)
-      benchParsingRendering(duration, bytes = true, strings = false, streams = false, msgpack = false)
-      benchParsingRendering(duration, bytes = false, strings = true, streams = false, msgpack = false)
-      benchParsingRendering(duration, bytes = false, strings = false, streams = true, msgpack = false)
-      benchParsingRendering(duration, bytes = false, strings = false, streams = false, msgpack = true)
+
+      val results = Seq(
+//        NonNative.playJson(duration),
+//        NonNative.circe(duration),
+        Common.upickleDefault(duration),
+        Common.upickleDefaultByteArray(duration),
+        Common.upickleDefaultBinary(duration),
+        //      Common.upickleLegacy(duration)
+        //      Common.upickleBinaryLegacy(duration)
+        //      Common.genCodec(duration)
+  //      NonNative.playJsonCached(duration)
+  //      NonNative.circeCached(duration)
+  //      Common.upickleDefaultCached(duration)
+  //      Common.upickleDefaultByteArrayCached(duration)
+  //      Common.upickleDefaultBinaryCached(duration)
+        //      Common.upickleDefaultCachedReadable(duration)
+        //      Common.upickleDefaultCachedReadablePath(duration)
+
+        //      Common.upickleLegacyCached(duration)
+        //      Common.upickleDefaultBinaryCachedReadable(duration)
+        //      Common.upickleLegacyBinaryCached(duration)
+        //      Common.genCodecCached(duration)
+  //      benchParsingRendering(duration, bytes = true, strings = false, streams = false, msgpack = false)
+  //      benchParsingRendering(duration, bytes = false, strings = true, streams = false, msgpack = false)
+  //      benchParsingRendering(duration, bytes = false, strings = false, streams = true, msgpack = false)
+  //      benchParsingRendering(duration, bytes = false, strings = false, streams = false, msgpack = true)
+        Common.integers(duration),
+        Common.integersByteArray(duration),
+        Common.integersBinary(duration),
+
+        Common.doubles(duration),
+        Common.doublesByteArray(duration),
+        Common.doublesBinary(duration),
+
+        Common.shortStrings(duration),
+        Common.shortStringsByteArray(duration),
+        Common.shortStringsBinary(duration),
+
+        Common.longStrings(duration),
+        Common.longStringsByteArray(duration),
+        Common.longStringsBinary(duration),
+
+        Common.unicodeStrings(duration),
+        Common.unicodeStringsByteArray(duration),
+        Common.unicodeStringsBinary(duration),
+
+        Common.caseClasses(duration),
+        Common.caseClassesByteArray(duration),
+        Common.caseClassesBinary(duration),
+
+        Common.sequences(duration),
+        Common.sequencesByteArray(duration),
+        Common.sequencesBinary(duration),
+      )
+
+      if (save) allResults.appendAll(results.flatten)
       println()
     }
+    val prettyResults = Common.prettyPrintResults(allResults)
+    println(prettyResults)
+    for(savePath <- args.headOption){
+      val p = java.nio.file.Paths.get(savePath)
+      if (!java.nio.file.Files.exists(p)) java.nio.file.Files.write(p, prettyResults.getBytes)
+      else {
+        val before = new String(java.nio.file.Files.readAllBytes(p))
+        def split(s: String) = s.linesIterator.map(_.drop(2).dropRight(2).split(" *\\| *")).toList
+        println(
+          split(prettyResults).zip(split(before)).zipWithIndex.map {
+            case ((afterLine, beforeLine), 0 | 1) => afterLine
+            case ((afterLine, beforeLine), _) =>
+              afterLine.zip(beforeLine) match {
+                case Array(head, tail@_*) =>
+                  Array(head._1) ++ tail.map { case (a, b) =>
+                    val percentChange = ((a.toDouble / b.toDouble - 1) * 100).toInt
+                    val sign =
+                      if (percentChange == 0) "" else if (percentChange < 0) "-" else if (percentChange > 0) "+"
+                    s"$b -> $a (${sign}${math.abs(percentChange)}%)"
+                  }
+              }
+          }.map(_.mkString("| ", " | ", " |")).mkString("\n")
+        )
+      }
+    }
   }
+
   @nowarn("cat=deprecation")
   def benchParsingRendering(duration: Int, bytes: Boolean, strings: Boolean, streams: Boolean, msgpack: Boolean) = {
     import java.nio.file.{Files, Paths}
@@ -163,57 +223,4 @@ object Main{
       ujson.json4s.Json4sJson.transform(_, ujson.StringRenderer()).toString
     )
   }
-//  def jacksonModuleScala(duration: Int) = {
-//    val mapper = new ObjectMapper() with ScalaObjectMapper
-//    val m = new SimpleModule
-//    mapper.registerModule(DefaultScalaModule)
-//
-//    // https://stackoverflow.com/questions/47955581/jackson-deserialize-json-to-scala-adt?rq=1
-//    m.addDeserializer(
-//      classOf[A],
-//      new StdDeserializer[A](classOf[A]) {
-//        def deserialize(jp: JsonParser, ctxt: DeserializationContext): A = {
-//          val tb = new TokenBuffer(jp, ctxt)
-//          tb.copyCurrentStructure(jp)
-//          val firstParser = tb.asParser
-//          firstParser.nextToken
-//          val curNode = firstParser.getCodec.readTree[JsonNode](firstParser)
-//          val objectParser = tb.asParser
-//          objectParser.nextToken()
-//          if (curNode.has("i")) {
-//            objectParser.readValueAs[B](classOf[B])
-//          } else if (curNode.has("s1")) {
-//            objectParser.readValueAs[C](classOf[C])
-//          } else ???
-//        }
-//      }
-//    )
-//    m.addDeserializer(
-//      classOf[LL],
-//      new StdDeserializer[LL](classOf[LL]) {
-//        def deserialize(jp: JsonParser, ctxt: DeserializationContext): LL = {
-//          val tb = new TokenBuffer(jp, ctxt)
-//          tb.copyCurrentStructure(jp)
-//          val firstParser = tb.asParser
-//          firstParser.nextToken
-//          val curNode = firstParser.getCodec.readTree[JsonNode](firstParser)
-//          val objectParser = tb.asParser
-//          objectParser.nextToken()
-//          if (curNode.has("c")) {
-//            objectParser.readValueAs[Node](classOf[Node])
-//          } else{
-//            End
-//          }
-//        }
-//      }
-//    )
-//    mapper.registerModule(m)
-//
-//    val jacksonType = new TypeReference[Common.Data] {}
-//
-//    Common.bench[String](duration)(
-//      mapper.readValue[Seq[Common.Data]](_, jacksonType),
-//      mapper.writeValueAsString(_)
-//    )
-//  }
 }

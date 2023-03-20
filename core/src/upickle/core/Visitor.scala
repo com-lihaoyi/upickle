@@ -55,6 +55,12 @@ trait Visitor[-T, +J] {
     * @param index    json source position at the start of the number being visited
     */
   def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): J
+  def visitFloat64ByteParts(s: Array[Byte], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int): J = {
+    visitFloat64StringParts(new String(s, arrOffset, arrLength), decIndex, expIndex, index)
+  }
+  def visitFloat64CharParts(s: Array[Char], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int): J = {
+    visitFloat64StringParts(new String(s, arrOffset, arrLength), decIndex, expIndex, index)
+  }
 
   /**
     * Optional handler for raw double values; can be overriden for performance

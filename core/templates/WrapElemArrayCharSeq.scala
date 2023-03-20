@@ -12,10 +12,10 @@ class WrapElemArrayCharSeq(arr: Array[Elem], start: Int, length0: Int) extends C
 //    start < arr.length && start + length0 <= arr.length && start >= 0 && length0 >= 0,
 //    s"WrapElemArrayCharSeq(${arr.length}, $start, $length0)"
 //  )
-  def length() = length0
+  def length() = toString.length
 
   def charAt(index: Int) = {
-    arr(index + start).toChar
+    toString.charAt(index)
   }
 
   def subSequence(newStart: Int, newEnd: Int) = {

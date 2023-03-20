@@ -80,6 +80,14 @@ trait Readers extends upickle.core.Types
       ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toInt
     }
 
+    override def visitFloat64ByteParts(s: Array[Byte], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+      ByteUtils.parseIntegralNum(s, arrOffset, arrLength, decIndex, expIndex).toInt
+    }
+
+    override def visitFloat64CharParts(s: Array[Char], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+      CharUtils.parseIntegralNum(s, arrOffset, arrLength, decIndex, expIndex).toInt
+    }
+
   }
 
   implicit val FloatReader: Reader[Float] = new NumericReader[Float] {
@@ -108,6 +116,15 @@ trait Readers extends upickle.core.Types
       ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toShort
     }
 
+    override def visitFloat64ByteParts(s: Array[Byte], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+      ByteUtils.parseIntegralNum(s, arrOffset, arrLength, decIndex, expIndex).toShort
+    }
+
+    override def visitFloat64CharParts(s: Array[Char], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+      CharUtils.parseIntegralNum(s, arrOffset, arrLength, decIndex, expIndex).toShort
+    }
+
+
   }
 
   implicit val ByteReader: Reader[Byte] = new NumericReader[Byte] {
@@ -121,6 +138,15 @@ trait Readers extends upickle.core.Types
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toByte
     }
+
+    override def visitFloat64ByteParts(s: Array[Byte], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+      ByteUtils.parseIntegralNum(s, arrOffset, arrLength, decIndex, expIndex).toByte
+    }
+
+    override def visitFloat64CharParts(s: Array[Char], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+      CharUtils.parseIntegralNum(s, arrOffset, arrLength, decIndex, expIndex).toByte
+    }
+
 
   }
 
@@ -152,7 +178,7 @@ trait Readers extends upickle.core.Types
 
   implicit val CharReader: Reader[Char] = new NumericReader[Char] {
     override def expectedMsg = "expected char"
-    override def visitString(d: CharSequence, index: Int) = d.charAt(0)
+    override def visitString(d: CharSequence, index: Int) = d.toString.charAt(0)
     override def visitChar(d: Char, index: Int) = d
     override def visitInt32(d: Int, index: Int) = d.toChar
     override def visitInt64(d: Long, index: Int) = d.toChar
@@ -171,7 +197,7 @@ trait Readers extends upickle.core.Types
 
   implicit val LongReader: Reader[Long] = new NumericReader[Long] {
     override def expectedMsg = "expected number"
-    override def visitString(d: CharSequence, index: Int) = upickle.core.ParseUtils.parseLong(d, 0, d.length())
+    override def visitString(d: CharSequence, index: Int) = visitFloat64String(d.toString, index)
     override def visitInt32(d: Int, index: Int) = d.toLong
     override def visitInt64(d: Long, index: Int) = d.toLong
     override def visitUInt64(d: Long, index: Int) = d.toLong
@@ -179,6 +205,14 @@ trait Readers extends upickle.core.Types
     override def visitFloat64(d: Double, index: Int) = d.toLong
     override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
       ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toLong
+    }
+
+    override def visitFloat64ByteParts(s: Array[Byte], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+      ByteUtils.parseIntegralNum(s, arrOffset, arrLength, decIndex, expIndex).toLong
+    }
+
+    override def visitFloat64CharParts(s: Array[Char], arrOffset: Int, arrLength: Int, decIndex: Int, expIndex: Int, index: Int) = {
+      CharUtils.parseIntegralNum(s, arrOffset, arrLength, decIndex, expIndex).toLong
     }
 
   }
