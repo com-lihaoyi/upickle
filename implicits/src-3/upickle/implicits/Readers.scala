@@ -2,7 +2,8 @@ package upickle.implicits
 
 import compiletime.summonInline
 import deriving.Mirror
-import upickle.core.{Annotator, ObjVisitor, Visitor, Abort}
+import scala.util.NotGiven
+import upickle.core.{Annotator, ObjVisitor, Visitor, Abort, CurrentlyDeriving}
 import upickle.implicits.BaseCaseObjectContext
 
 trait ReadersVersionSpecific
@@ -69,7 +70,7 @@ trait ReadersVersionSpecific
       else reader
 
     case m: Mirror.SumOf[T] =>
-
+      implicit val currentlyDeriving: upickle.core.CurrentlyDeriving[T] = new upickle.core.CurrentlyDeriving()
       val readers: List[Reader[_ <: T]] = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
         .toList
         .asInstanceOf[List[Reader[_ <: T]]]
@@ -83,7 +84,8 @@ trait ReadersVersionSpecific
       macros.defineEnumReaders[Reader[T], Tuple.Map[m.MirroredElemTypes, Reader]](this)
   }
 
-  inline given superTypeReader[T: Mirror.ProductOf, V >: T : Reader]: Reader[T] = {
+  inline given superTypeReader[T: Mirror.ProductOf, V >: T : Reader]
+                              (using NotGiven[CurrentlyDeriving[V]]): Reader[T] = {
     val actual = implicitly[Reader[V]].asInstanceOf[TaggedReader[T]]
     val tagName = macros.tagName[T]
     new TaggedReader.Leaf(tagName, actual.findReader(tagName))

@@ -326,7 +326,9 @@ trait Readers extends upickle.core.Types
       }
     }
   implicit def SeqLikeReader[C[_], T](implicit r: Reader[T],
-                                      factory: Factory[T, C[T]]): Reader[C[T]] = new SimpleReader[C[T]] {
+                                      factory: Factory[T, C[T]]): Reader[C[T]] = new SeqLikeReader[C, T]()
+  class SeqLikeReader[C[_], T](implicit r: Reader[T],
+                                      factory: Factory[T, C[T]]) extends SimpleReader[C[T]] {
     override def expectedMsg = "expected sequence"
     override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, C[T]] {
       val b = factory.newBuilder
