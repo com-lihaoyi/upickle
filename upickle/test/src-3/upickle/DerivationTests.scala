@@ -151,5 +151,15 @@ object DerivationTests extends TestSuite {
         assert(e.getMessage == "invalid tag for tagged object: upickle.Level1Cls at index 10")
       }
     }
+    test("issue468"){
+      enum A:
+        case B
+
+      val rwError = compileError("""given rw: upickle.default.ReadWriter[A] = upickle.default.macroRW""")
+      val rError = compileError("""given r: upickle.default.Reader[A] = upickle.default.macroR""")
+      val wError = compileError("""given w: upickle.default.Writer[A] = upickle.default.macroW""")
+      assert(rError.msg.contains("No given instance of type ReadersVersionSpecific_this.Reader[(A.B : A)] was found"))
+      assert(wError.msg.contains("No given instance of type WritersVersionSpecific_this.Writer[(A.B : A)] was found"))
+    }
   }
 }
