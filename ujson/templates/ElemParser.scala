@@ -529,7 +529,8 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     * This method expects the data to be in UTF-16 and accesses it as
     * chars.
     */
-  protected[this] final def parseStringSimple(i: Int, safeIndex0: Int = 0): Int = {
+  protected[this] final def parseStringSimple(i: Int): Int = parseStringSimple(i, 0)
+  protected[this] final def parseStringSimple(i: Int, safeIndex0: Int): Int = {
     var j = i
     var safeIndex = safeIndex0
     while (true) {
@@ -554,7 +555,8 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   /**
     * Parse a string that is known to have escape sequences.
     */
-  protected[this] final def parseStringComplex(i0: Int, safeIndex0: Int = 0): Int = {
+  protected[this] final def parseStringComplex(i0: Int): Int = parseStringComplex(i0, 0)
+  protected[this] final def parseStringComplex(i0: Int, safeIndex0: Int): Int = {
     val elemOps = upickle.core.ElemOps
     var i = i0
     var safeIndex = safeIndex0
