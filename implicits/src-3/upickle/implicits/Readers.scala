@@ -85,7 +85,7 @@ trait ReadersVersionSpecific
   }
 
   inline given superTypeReader[T: Mirror.ProductOf, V >: T : Reader]
-                              (using NotGiven[CurrentlyDeriving[V]]): Reader[T] = {
+                              (using NotGiven[CurrentlyDeriving[V]], NotGiven[T =:= V]): Reader[T] = {
     val actual = implicitly[Reader[V]].asInstanceOf[TaggedReader[T]]
     val tagName = macros.tagName[T]
     new TaggedReader.Leaf(tagName, actual.findReader(tagName))

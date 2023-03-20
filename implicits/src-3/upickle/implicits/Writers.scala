@@ -65,7 +65,7 @@ trait WritersVersionSpecific
   }
 
   inline given superTypeWriter[T: Mirror.ProductOf : ClassTag, V >: T : Writer]
-                              (using NotGiven[CurrentlyDeriving[V]]): Writer[T] = {
+                              (using NotGiven[CurrentlyDeriving[V]], NotGiven[T =:= V]): Writer[T] = {
     implicitly[Writer[V]].comap[T](_.asInstanceOf[V])
   }
 
