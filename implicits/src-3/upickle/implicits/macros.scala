@@ -221,6 +221,8 @@ def defineEnumVisitorsImpl[T0, T <: Tuple](prefix: Expr[Any], macroX: String)(us
 
     if (skipTrait &&
         (arg.typeSymbol.flags.is(Flags.Trait) ||
+          // Filter out `enum`s, because the `case`s of an enum are flagged as
+          // abstract enums for some reasons rather than as case classes
           (arg.typeSymbol.flags.is(Flags.Abstract) && !arg.typeSymbol.flags.is(Flags.Enum)))){
       None
     } else {
