@@ -189,7 +189,12 @@ def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
         // - `.typeSymbol` returns `LinkedList` for `LinkedList.End`
         //
         // so we just mangle `.show` even though it's super gross
-        TypeRepr.of[T].show.split('.').last.takeWhile(_ != '[')
+        TypeRepr.of[T] match{
+          case TermRef(prefix, value) => value
+          case TypeRef(prefix, value) => value
+          case AppliedType(TermRef(prefix, value), _) => value
+          case AppliedType(TypeRef(prefix, value), _) => value
+        }
       } else {
         TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$')
       }
