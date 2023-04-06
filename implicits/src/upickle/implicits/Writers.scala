@@ -141,16 +141,33 @@ trait Writers extends upickle.core.Types
     }
   }
 
-  implicit def MapWriter1[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[collection.Map[K, V]] = {
+  implicit def MapWriter1[K: Writer, V: Writer]: Writer[collection.Map[K, V]] = {
     MapWriter0[collection.Map, K, V]
   }
 
-  implicit def MapWriter2[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[collection.immutable.Map[K, V]] = {
+  implicit def MapWriter2[K: Writer, V: Writer]: Writer[collection.immutable.Map[K, V]] = {
     MapWriter0[collection.immutable.Map, K, V]
   }
 
-  implicit def MapWriter3[K, V](implicit kw: Writer[K], vw: Writer[V]): Writer[collection.mutable.Map[K, V]] = {
+  implicit def MapWriter3[K: Writer, V: Writer]: Writer[collection.mutable.Map[K, V]] = {
     MapWriter0[collection.mutable.Map, K, V]
+  }
+
+  implicit def MapWriter4[K: Writer, V: Writer]: Writer[collection.mutable.LinkedHashMap[K, V]] = {
+    MapWriter0[collection.mutable.LinkedHashMap, K, V]
+  }
+
+  implicit def MapWriter5[K: Writer, V: Writer]: Writer[collection.mutable.SortedMap[K, V]] = {
+    MapWriter0[collection.mutable.SortedMap, K, V]
+  }
+
+  implicit def MapWriter6[K: Writer, V: Writer]: Writer[collection.immutable.SortedMap[K, V]] = {
+    MapWriter0[collection.immutable.SortedMap, K, V]
+  }
+
+
+  implicit def MapWriter7[K: Writer, V: Writer]: Writer[collection.SortedMap[K, V]] = {
+    MapWriter0[collection.SortedMap, K, V]
   }
 
   implicit val DurationWriter: Writer[Duration] = new SimpleMapKeyWriter[Duration]{
