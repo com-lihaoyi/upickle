@@ -257,19 +257,51 @@ trait Readers extends upickle.core.Types
     }
   }
 
-  implicit def MapReader1[K, V](implicit k: Reader[K], v: Reader[V]): Reader[collection.Map[K, V]] = {
+  implicit def MapReader1[K: Reader, V: Reader]: Reader[collection.Map[K, V]] = {
     MapReader0[collection.Map, K, V](_.toMap)
   }
-  implicit def MapReader2[K, V](implicit k: Reader[K], v: Reader[V]): Reader[collection.immutable.Map[K, V]] = {
+  implicit def MapReader2[K: Reader, V: Reader]: Reader[collection.immutable.Map[K, V]] = {
     MapReader0[collection.immutable.Map, K, V]{seq =>
       val b = collection.immutable.Map.newBuilder[K, V]
       seq.foreach(b += _)
       b.result()
     }
   }
-  implicit def MapReader3[K, V](implicit k: Reader[K], v: Reader[V]): Reader[collection.mutable.Map[K, V]] = {
+  implicit def MapReader3[K: Reader, V: Reader]: Reader[collection.mutable.Map[K, V]] = {
     MapReader0[collection.mutable.Map, K, V]{seq =>
       val b = collection.mutable.Map.newBuilder[K, V]
+      seq.foreach(b += _)
+      b.result()
+    }
+  }
+
+  implicit def MapReader4[K: Reader, V: Reader]: Reader[collection.mutable.LinkedHashMap[K, V]] = {
+    MapReader0[collection.mutable.LinkedHashMap, K, V]{seq =>
+      val b = collection.mutable.LinkedHashMap.newBuilder[K, V]
+      seq.foreach(b += _)
+      b.result()
+    }
+  }
+
+  implicit def SortedMapReader[K: Reader: Ordering, V: Reader]: Reader[collection.mutable.SortedMap[K, V]] = {
+    MapReader0[collection.mutable.SortedMap, K, V]{seq =>
+      val b = collection.mutable.SortedMap.newBuilder[K, V]
+      seq.foreach(b += _)
+      b.result()
+    }
+  }
+
+  implicit def MapReader6[K: Reader: Ordering, V: Reader]: Reader[collection.immutable.SortedMap[K, V]] = {
+    MapReader0[collection.immutable.SortedMap, K, V]{seq =>
+      val b = collection.immutable.SortedMap.newBuilder[K, V]
+      seq.foreach(b += _)
+      b.result()
+    }
+  }
+
+  implicit def MapReader7[K: Reader: Ordering, V: Reader]: Reader[collection.SortedMap[K, V]] = {
+    MapReader0[collection.SortedMap, K, V]{seq =>
+      val b = collection.SortedMap.newBuilder[K, V]
       seq.foreach(b += _)
       b.result()
     }

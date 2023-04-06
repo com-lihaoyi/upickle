@@ -29,6 +29,11 @@ enum LinkedList[+T] derives ReadWriter:
   case Node(value: T, next: LinkedList[T]) // direct recursion
   case Node2(value: T, next: Node[T]) // indirect recursion
 
+enum Domain derives ReadWriter :
+  case Something,`reddit.com`
+
+case class ADomain(d: Domain) derives ReadWriter
+
 object EnumTests extends TestSuite {
 
 
@@ -89,6 +94,11 @@ object EnumTests extends TestSuite {
         """{"$type": "Node2", "value": 1, "next": {"$type": "Node", "value": 2, "next": "End"}}"""
       )
     }
+    test("specialChars"){
+      rw(ADomain(Domain.Something), """ {"d": "Something"} """)
+      rw(ADomain(Domain.`reddit.com`), """ {"d": "reddit.com"} """)
+    }
   }
 }
+
 
