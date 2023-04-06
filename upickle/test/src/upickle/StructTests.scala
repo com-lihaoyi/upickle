@@ -384,6 +384,63 @@ object StructTests extends TestSuite {
           upack.Arr(upack.Arr(upack.Str("abc"), upack.Str("def")))
         )
       }
+
+      test("variants"){
+        test("LinkedHashMap") - rw(
+          scala.collection.mutable.LinkedHashMap("Hello" -> List(1), "World" -> List(1, 2, 3)),
+          """{"Hello":[1],"World":[1,2,3]}""",
+          """[["Hello",[1]],["World",[1,2,3]]]""",
+          upack.Obj(
+            upack.Str("Hello") -> upack.Arr(upack.Int32(1)),
+            upack.Str("World") -> upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3))
+          ),
+          upack.Arr(
+            upack.Arr(upack.Str("Hello"), upack.Arr(upack.Int32(1))),
+            upack.Arr(upack.Str("World"), upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3)))
+          )
+        )
+        test("SortedMap"){
+          test("immutable") - rw(
+            scala.collection.immutable.SortedMap("Hello" -> List(1), "World" -> List(1, 2, 3)),
+            """{"Hello":[1],"World":[1,2,3]}""",
+            """[["Hello",[1]],["World",[1,2,3]]]""",
+            upack.Obj(
+              upack.Str("Hello") -> upack.Arr(upack.Int32(1)),
+              upack.Str("World") -> upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3))
+            ),
+            upack.Arr(
+              upack.Arr(upack.Str("Hello"), upack.Arr(upack.Int32(1))),
+              upack.Arr(upack.Str("World"), upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3)))
+            )
+          )
+          test("mutable") - rw(
+            scala.collection.mutable.SortedMap("Hello" -> List(1), "World" -> List(1, 2, 3)),
+            """{"Hello":[1],"World":[1,2,3]}""",
+            """[["Hello",[1]],["World",[1,2,3]]]""",
+            upack.Obj(
+              upack.Str("Hello") -> upack.Arr(upack.Int32(1)),
+              upack.Str("World") -> upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3))
+            ),
+            upack.Arr(
+              upack.Arr(upack.Str("Hello"), upack.Arr(upack.Int32(1))),
+              upack.Arr(upack.Str("World"), upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3)))
+            )
+          )
+          test("collection") - rw(
+            scala.collection.SortedMap("Hello" -> List(1), "World" -> List(1, 2, 3)),
+            """{"Hello":[1],"World":[1,2,3]}""",
+            """[["Hello",[1]],["World",[1,2,3]]]""",
+            upack.Obj(
+              upack.Str("Hello") -> upack.Arr(upack.Int32(1)),
+              upack.Str("World") -> upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3))
+            ),
+            upack.Arr(
+              upack.Arr(upack.Str("Hello"), upack.Arr(upack.Int32(1))),
+              upack.Arr(upack.Str("World"), upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3)))
+            )
+          )
+        }
+      }
     }
 
     test("option"){
