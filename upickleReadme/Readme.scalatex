@@ -900,6 +900,9 @@
         @li
           Fix ClassCastException on @hl.scala{import given}
           @lnk("#472", "https://github.com/com-lihaoyi/upickle/pull/472")
+        @li
+          Added readwriters for @code{SortedMap} and @code{LinkedHashMap}
+          @lnk("#479", "https://github.com/com-lihaoyi/upickle/pull/479")
     @sect{3.0.0}
       @ul
         @li
