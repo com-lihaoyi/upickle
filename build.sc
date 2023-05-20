@@ -239,16 +239,6 @@ object ujson extends Module{
   }
 }
 
-trait UpickleModule extends CommonPublishModule{
-  def compileIvyDeps =
-    if (isDotty) Agg.empty[Dep]
-    else Agg(
-      ivy"com.lihaoyi:::acyclic:$acyclic",
-      ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
-      ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
-    )
-}
-
 object upickle extends Module{  
   object core extends Module {
     trait CommonCoreModule extends CommonPublishModule {
@@ -344,6 +334,16 @@ object upickle extends Module{
     }
   }
 
+  trait UpickleModule extends CommonPublishModule {
+    def compileIvyDeps =
+      if (isDotty) Agg.empty[Dep]
+      else Agg(
+        ivy"com.lihaoyi:::acyclic:$acyclic",
+        ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
+        ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
+      )
+  }
+
   object jvm extends Cross[JvmModule](scalaVersions)
   trait JvmModule extends UpickleModule with CommonJvmModule{
     def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
@@ -390,7 +390,7 @@ object upickle extends Module{
 
 def exampleJson = T.source(millSourcePath / "exampleJson")
 
-trait BenchModule extends CommonModule{
+trait BenchModule extends CommonPlatformModule{
   def scalaVersion = scala213
   def ivyDeps = Agg(
     ivy"io.circe::circe-core::0.14.5",
