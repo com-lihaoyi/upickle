@@ -1,6 +1,6 @@
 // plugins
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1-6-e80da7`
-import $ivy.`com.github.lolgab::mill-mima::0.0.20`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1-8-37c08a`
+import $ivy.`com.github.lolgab::mill-mima::0.0.21`
 
 // imports
 import mill._
@@ -27,23 +27,12 @@ val dottyCustomVersion = Option(sys.props("dottyVersion"))
 val scala2JVMVersions = Seq(scala212, scala213)
 val scalaVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
-trait CommonModule extends ScalaModule
-
 trait CommonPlatformModule extends ScalaModule with PlatformScalaModule{
 
-  def platformSegment = millModuleSegments
-    .value
-    .collect { case l: mill.define.Segment.Label => l.value }
-    .last
-
   def sources = T.sources {
-
     super.sources() ++
-    Seq(PathRef(millSourcePath / s"src-$platformSegment")) ++
-    (if (scalaVersion() != scala212) {
-      Seq(PathRef(millSourcePath / "src-2.13+"))
-    } else Seq()) ++
-    (platformSegment match {
+    Option.when(scalaVersion() != scala212)(PathRef(millSourcePath / "src-2.13+")) ++
+    (platformScalaSuffix match {
       case "jvm" => Seq(PathRef(millSourcePath / "src-jvm-native"))
       case "native" => Seq(PathRef(millSourcePath / "src-js-native"), PathRef(millSourcePath / "src-jvm-native"))
       case "js" => Seq(PathRef(millSourcePath / "src-js-native"))
@@ -52,7 +41,7 @@ trait CommonPlatformModule extends ScalaModule with PlatformScalaModule{
 }
 
 trait CommonPublishModule
-  extends CommonModule with PublishModule with Mima with CrossScalaModule { outer =>
+  extends ScalaModule with PublishModule with Mima with CrossScalaModule { outer =>
 
   def publishVersion = VcsVersion.vcsState().format()
   def mimaPreviousVersions = Seq("3.0.0")
@@ -95,33 +84,21 @@ trait CommonPublishModule
   }
 
   def scalacOptions = T {
-    (if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil) ++
-      Seq(
-        "-unchecked",
-        "-deprecation",
-        "-encoding", "utf8",
-        "-feature",
-        // https://github.com/com-lihaoyi/mill/pull/2531
-//        "-Xfatal-warnings"
-      )
+    Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-feature", "-Xfatal-warnings") ++
+    Agg.when(!isScala3(scalaVersion()))("-opt:l:method").toSeq
   }
 
   trait CommonTestModule0 extends ScalaModule with TestModule.Utest {
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.1") ++ (
-      if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
-      else Agg(ivy"com.lihaoyi:::acyclic:$acyclic")
-      )
+    def ivyDeps = {
+      Agg(ivy"com.lihaoyi::utest::0.8.1") ++
+      Option.when(!isScala3(scalaVersion()))(ivy"com.lihaoyi:::acyclic:$acyclic")
+    }
 
     def scalacOptions = super.scalacOptions() ++
-      (if (isScala3(scalaVersion())) Seq(
+      Agg.when(isScala3(scalaVersion())) (
         "-Ximplicit-search-limit",
         "200000"
-      ) else Seq.empty[String])
-
-    def sources = T.sources {
-      for (src <- outer.sources())
-      yield PathRef(this.millSourcePath / src.path.relativeTo(outer.millSourcePath))
-    }
+      )
   }
 }
 
@@ -264,8 +241,7 @@ object upickle extends Module{
   object implicits extends Module {
     trait ImplicitsModule extends CommonPublishModule{
       def compileIvyDeps = T{
-        if (isDotty) Agg.empty[Dep]
-        else Agg(
+        Agg.when(!isDotty)(
           ivy"com.lihaoyi:::acyclic:$acyclic",
           ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
         )
@@ -336,8 +312,7 @@ object upickle extends Module{
 
   trait UpickleModule extends CommonPublishModule {
     def compileIvyDeps =
-      if (isDotty) Agg.empty[Dep]
-      else Agg(
+      Agg.when(!isDotty)(
         ivy"com.lihaoyi:::acyclic:$acyclic",
         ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
         ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
@@ -352,11 +327,9 @@ object upickle extends Module{
       def moduleDeps =
         super.moduleDeps ++
         Seq(core.jvm().test) ++
-        (
-          if (isDotty) Nil
-          else Seq(ujson.argonaut(), ujson.circe(), ujson.json4s(), ujson.play())
+        Agg.when(!isDotty)(
+          ujson.argonaut(), ujson.circe(), ujson.json4s(), ujson.play()
         )
-
     }
 
     object testNonUtf8 extends CommonTestModule {
