@@ -327,8 +327,9 @@ object upickle extends Module{
       def moduleDeps =
         super.moduleDeps ++
         Seq(core.jvm().test) ++
-        Agg.when(!isDotty)(
-          ujson.argonaut(), ujson.circe(), ujson.json4s(), ujson.play()
+        (
+          if (isDotty) Nil
+          else Seq(ujson.argonaut(), ujson.circe(), ujson.json4s(), ujson.play())
         )
     }
 
