@@ -35,7 +35,7 @@ val scalaNativeVersions = scalaJVMVersions.map((_, scalaNative))
 trait CommonBaseModule extends ScalaModule {
   def platformSegment: String
 
-  override def sources = T.sources{
+  def sources = T.sources{
     super.sources() ++
     Seq(PathRef(millSourcePath / s"src-$platformSegment")) ++
     (if (scalaVersion() != scala212) {
@@ -50,7 +50,7 @@ trait CommonBaseModule extends ScalaModule {
 }
 
 trait CommonModule extends CommonBaseModule {
-  override def scalacOptions = T{
+  def scalacOptions = T{
     super.scalacOptions() ++ {
       if (scalaVersion() == scala212) Seq("-opt:l:method") else Nil
     } ++ Seq(
@@ -66,7 +66,7 @@ trait CommonModule extends CommonBaseModule {
 trait CommonPublishModule extends CommonModule with PublishModule with Mima with CrossScalaModule {
 
   def publishVersion = VcsVersion.vcsState().format()
-  override def mimaPreviousVersions = Seq("3.0.0")
+  def mimaPreviousVersions = Seq("3.0.0")
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -79,12 +79,12 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
     )
   )
 
-  override def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
+  def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
     "info.releaseNotesURL" -> "https://com-lihaoyi.github.io/upickle/#VersionHistory"
   )
-  override def versionScheme: T[Option[VersionScheme]] = T(Some(VersionScheme.SemVerSpec))
+  def versionScheme: T[Option[VersionScheme]] = T(Some(VersionScheme.SemVerSpec))
   def templates = T.sources(millSourcePath / "templates", millSourcePath / s"templates-$platformSegment")
-  override def generatedSources = T{
+  def generatedSources = T{
     for{
       pathRef <- templates()
       p <- if (os.exists(pathRef.path)) os.list(pathRef.path) else Nil
@@ -97,7 +97,7 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
     }
     Seq(PathRef(T.dest))
   }
-  override def docJar = {
+  def docJar = {
     if (isScala3(crossScalaVersion)) T {
       val outDir = T.ctx().dest
       val javadocDir = outDir / "javadoc"
@@ -110,17 +110,17 @@ trait CommonPublishModule extends CommonModule with PublishModule with Mima with
 }
 
 trait CommonTestModule extends CommonBaseModule with TestModule.Utest{
-  override def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.1") ++ (
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.1") ++ (
     if (isScala3(scalaVersion())) Agg.empty[mill.scalalib.Dep]
     else Agg(ivy"com.lihaoyi:::acyclic:$acyclic")
   )
-  override def docJar = T {
+  def docJar = T {
     val outDir = T.ctx().dest
     val javadocDir = outDir / "javadoc"
     os.makeDir.all(javadocDir)
     mill.modules.Jvm.createJar(Agg(javadocDir))(outDir)
   }
-  override def scalacOptions = super.scalacOptions() ++
+  def scalacOptions = super.scalacOptions() ++
     (if (isScala3(scalaVersion())) Seq(
       "-Ximplicit-search-limit",
       "200000"
@@ -129,7 +129,7 @@ trait CommonTestModule extends CommonBaseModule with TestModule.Utest{
 
 trait CommonJvmModule extends CommonPublishModule{
   def platformSegment = "jvm"
-  override def millSourcePath = super.millSourcePath / os.up
+  def millSourcePath = super.millSourcePath / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "jvm"
   }
@@ -148,12 +148,12 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule{
         s"$sourcesOptionName:${T.workspace.toIO.toURI}->$baseUrl/$tag/"
     }
   }
-  override def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
+  def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
 
-  override def millSourcePath = super.millSourcePath / os.up / os.up
+  def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "js"
-    override def scalaJSVersion = crossScalaJSVersion
+    def scalaJSVersion = crossScalaJSVersion
   }
 }
 
@@ -161,16 +161,16 @@ trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule{
   def platformSegment = "native"
   def crossScalaNativeVersion: String
   def scalaNativeVersion = crossScalaNativeVersion
-  override def millSourcePath = super.millSourcePath / os.up / os.up
+  def millSourcePath = super.millSourcePath / os.up / os.up
   trait Tests extends super.Tests with CommonTestModule{
     def platformSegment = "native"
-    override def scalaNativeVersion = crossScalaNativeVersion
+    def scalaNativeVersion = crossScalaNativeVersion
   }
 }
 
 trait CommonCoreModule extends CommonPublishModule {
-  override def artifactName = "upickle-core"
-  override def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.0.0")
+  def artifactName = "upickle-core"
+  def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.0.0")
 }
 object core extends Module {
   object js extends Cross[CoreJsModule](scalaJSVersions:_*)
@@ -193,7 +193,7 @@ object core extends Module {
 object implicits extends Module {
 
   trait ImplicitsModule extends CommonPublishModule{
-    override def compileIvyDeps = if (!isDotty) Agg(
+    def compileIvyDeps = if (!isDotty) Agg(
       ivy"com.lihaoyi:::acyclic:$acyclic",
       ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
     )
@@ -236,11 +236,11 @@ object implicits extends Module {
   object js extends Cross[JsModule](scalaJSVersions:_*)
 
   class JsModule(val crossScalaVersion: String, val crossScalaJSVersion: String) extends ImplicitsModule with CommonJsModule{
-    override def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
-    override def artifactName = "upickle-implicits"
+    def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
+    def artifactName = "upickle-implicits"
 
     object test extends Tests {
-      override def moduleDeps = super.moduleDeps ++ Seq(
+      def moduleDeps = super.moduleDeps ++ Seq(
         ujson.js(crossScalaVersion, crossScalaJSVersion).test,
         core.js(crossScalaVersion, crossScalaJSVersion).test
       )
@@ -249,21 +249,21 @@ object implicits extends Module {
 
   object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends ImplicitsModule with CommonJvmModule{
-    override def moduleDeps = Seq(core.jvm())
-    override def artifactName = "upickle-implicits"
+    def moduleDeps = Seq(core.jvm())
+    def artifactName = "upickle-implicits"
     object test extends Tests {
-      override def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test, core.jvm().test)
+      def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test, core.jvm().test)
     }
   }
 
   object native extends Cross[NativeModule](scalaNativeVersions:_*)
 
   class NativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends ImplicitsModule with CommonNativeModule{
-    override def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
-    override def artifactName = "upickle-implicits"
+    def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
+    def artifactName = "upickle-implicits"
 
     object test extends Tests {
-      override def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
+      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
     }
   }
 }
@@ -273,8 +273,8 @@ object upack extends Module {
   object js extends Cross[JsModule](scalaJSVersions:_*)
 
   class JsModule(val crossScalaVersion: String, val crossScalaJSVersion: String) extends CommonJsModule {
-    override def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
-    override def artifactName = "upack"
+    def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
+    def artifactName = "upack"
 
     object test extends Tests {
       def moduleDeps = super.moduleDeps ++ Seq(
@@ -286,21 +286,21 @@ object upack extends Module {
 
   object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends CommonJvmModule {
-    override def moduleDeps = Seq(core.jvm())
-    override def artifactName = "upack"
+    def moduleDeps = Seq(core.jvm())
+    def artifactName = "upack"
     object test extends Tests {
-      override def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test, core.jvm().test)
+      def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test, core.jvm().test)
     }
   }
 
   object native extends Cross[NativeModule](scalaNativeVersions:_*)
 
   class NativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends CommonNativeModule {
-    override def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
-    override def artifactName = "upack"
+    def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
+    def artifactName = "upack"
 
     object test extends Tests {
-      override def moduleDeps = super.moduleDeps ++ Seq(
+      def moduleDeps = super.moduleDeps ++ Seq(
         ujson.native(crossScalaVersion, crossScalaNativeVersion).test,
         core.native(crossScalaVersion, crossScalaNativeVersion).test
       )
@@ -311,48 +311,48 @@ object upack extends Module {
 
 object ujson extends Module{
   trait JsonModule extends CommonPublishModule{
-    override def artifactName = "ujson"
+    def artifactName = "ujson"
   }
 
   object js extends Cross[JsModule](scalaJSVersions:_*)
   class JsModule(val crossScalaVersion: String, val crossScalaJSVersion: String) extends JsonModule with CommonJsModule{
-    override def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
+    def moduleDeps = Seq(core.js(crossScalaVersion, crossScalaJSVersion))
 
     object test extends Tests with CommonTestModule{
-      override def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
+      def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
     }
   }
 
   object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends JsonModule with CommonJvmModule{
-    override def moduleDeps = Seq(core.jvm())
+    def moduleDeps = Seq(core.jvm())
     object test extends Tests with CommonTestModule{
-      override def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
+      def moduleDeps = super.moduleDeps ++ Seq(core.jvm().test)
     }
   }
 
   object native extends Cross[NativeModule](scalaNativeVersions:_*)
   class NativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends JsonModule with CommonNativeModule{
-    override def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
+    def moduleDeps = Seq(core.native(crossScalaVersion, crossScalaNativeVersion))
 
     object test extends Tests with CommonTestModule{
-      override def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
+      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
     }
   }
 
   object argonaut extends Cross[ArgonautModule](scala2JVMVersions:_*)
   class ArgonautModule(val crossScalaVersion: String) extends CommonPublishModule{
-    override def artifactName = "ujson-argonaut"
+    def artifactName = "ujson-argonaut"
     def platformSegment = "jvm"
-    override def moduleDeps = Seq(ujson.jvm())
-    override def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.6")
+    def moduleDeps = Seq(ujson.jvm())
+    def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.6")
   }
   object json4s extends Cross[Json4sModule](scalaJVMVersions:_*)
   class Json4sModule(val crossScalaVersion: String) extends CommonPublishModule{
-    override def artifactName = "ujson-json4s"
+    def artifactName = "ujson-json4s"
     def platformSegment = "jvm"
-    override def moduleDeps = Seq(ujson.jvm())
-    override def ivyDeps = Agg(
+    def moduleDeps = Seq(ujson.jvm())
+    def ivyDeps = Agg(
       ivy"org.json4s::json4s-ast:4.0.6",
       ivy"org.json4s::json4s-native:4.0.6"
     )
@@ -360,28 +360,28 @@ object ujson extends Module{
 
   object circe extends Cross[CirceModule](scalaJVMVersions:_*)
   class CirceModule(val crossScalaVersion: String) extends CommonPublishModule{
-    override def artifactName = "ujson-circe"
+    def artifactName = "ujson-circe"
     def platformSegment = "jvm"
-    override def moduleDeps = Seq(ujson.jvm())
+    def moduleDeps = Seq(ujson.jvm())
     val circeVersion = "0.14.5"
-    override def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
+    def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
   }
 
   object play extends Cross[PlayModule](scala2JVMVersions:_*)
   class PlayModule(val crossScalaVersion: String) extends CommonPublishModule{
-    override def artifactName = "ujson-play"
+    def artifactName = "ujson-play"
     def platformSegment = "jvm"
-    override def moduleDeps = Seq(ujson.jvm())
+    def moduleDeps = Seq(ujson.jvm())
     val playJsonVersion = "2.9.4"
-    override def ivyDeps = Agg(
+    def ivyDeps = Agg(
       ivy"com.typesafe.play::play-json:$playJsonVersion"
     )
   }
 }
 
 trait UpickleModule extends CommonPublishModule{
-  override def artifactName = "upickle"
-  override def compileIvyDeps = if (!isDotty) Agg(
+  def artifactName = "upickle"
+  def compileIvyDeps = if (!isDotty) Agg(
     ivy"com.lihaoyi:::acyclic:$acyclic",
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
@@ -393,10 +393,10 @@ trait UpickleModule extends CommonPublishModule{
 object upickle extends Module{
   object jvm extends Cross[JvmModule](scalaJVMVersions:_*)
   class JvmModule(val crossScalaVersion: String) extends UpickleModule with CommonJvmModule{
-    override def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
+    def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
 
     object test extends Tests with CommonBaseModule{
-      override def moduleDeps = {
+      def moduleDeps = {
         (super.moduleDeps :+ core.jvm().test) ++ (
           if (isDotty) Nil else Seq(
           ujson.argonaut(),
@@ -406,14 +406,14 @@ object upickle extends Module{
         ))
       }
 
-      override def scalacOptions = super.scalacOptions() ++ {
+      def scalacOptions = super.scalacOptions() ++ {
         if (isDotty) Seq("-Ximport-suggestion-timeout", "0")
         else Nil
       }
     }
 
     object testNonUtf8 extends Tests with CommonTestModule {
-      override def forkArgs = T {
+      def forkArgs = T {
         Seq("-Dfile.encoding=US-ASCII")
       }
     }
@@ -424,26 +424,26 @@ object upickle extends Module{
 
   object js extends Cross[JsModule](scalaJSVersions:_*)
   class JsModule(val crossScalaVersion: String, val crossScalaJSVersion: String) extends UpickleModule with CommonJsModule {
-    override def moduleDeps = Seq(
+    def moduleDeps = Seq(
       ujson.js(crossScalaVersion, crossScalaJSVersion),
       upack.js(crossScalaVersion, crossScalaJSVersion),
       implicits.js(crossScalaVersion, crossScalaJSVersion)
     )
 
     object test extends Tests with CommonModule{
-      override def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
+      def moduleDeps = super.moduleDeps ++ Seq(core.js(crossScalaVersion, crossScalaJSVersion).test)
     }
   }
   object native extends Cross[NativeModule](scalaNativeVersions:_*)
   class NativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends UpickleModule with CommonNativeModule {
-    override def moduleDeps = Seq(
+    def moduleDeps = Seq(
       ujson.native(crossScalaVersion, crossScalaNativeVersion),
       upack.native(crossScalaVersion, crossScalaNativeVersion),
       implicits.native(crossScalaVersion, crossScalaNativeVersion)
     )
     object test extends Tests with CommonTestModule{
-      override def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
-      override def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "DurationsTests.scala"))
+      def moduleDeps = super.moduleDeps ++ Seq(core.native(crossScalaVersion, crossScalaNativeVersion).test)
+      def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "DurationsTests.scala"))
     }
   }
 }
@@ -451,7 +451,7 @@ def exampleJson = T.source(millSourcePath / "exampleJson")
 trait BenchModule extends CommonModule{
   def scalaVersion = scala213
   def millSourcePath = build.millSourcePath / "bench"
-  override def ivyDeps = Agg(
+  def ivyDeps = Agg(
     ivy"io.circe::circe-core::0.14.5",
     ivy"io.circe::circe-generic::0.14.5",
     ivy"io.circe::circe-parser::0.14.5",
@@ -466,8 +466,8 @@ object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
     def scalaJSVersion = scalaJSVersions.last._2
     def platformSegment = "js"
-    override def moduleDeps = Seq(upickle.js(scala213, scalaJS).test)
-    override def run(args: String*) = T.command {
+    def moduleDeps = Seq(upickle.js(scala213, scalaJS).test)
+    def run(args: String*) = T.command {
       finalMainClassOpt() match{
         case Left(err) => mill.api.Result.Failure(err)
         case Right(_) =>
@@ -483,16 +483,16 @@ object bench extends Module {
 
   object jvm extends BenchModule {
     def platformSegment = "jvm"
-    override def moduleDeps = Seq(upickle.jvm(scala213).test)
+    def moduleDeps = Seq(upickle.jvm(scala213).test)
   }
 
   object native extends BenchModule with ScalaNativeModule {
     def platformSegment = "native"
     def scalaNativeVersion = scalaNative
-    override def moduleDeps = Seq(upickle.native(scala213, scalaNative).test)
-    override def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::$sourcecode")
-    override def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "NonNative.scala"))
-    override def releaseMode = ReleaseMode.ReleaseFast
-    override def nativeLTO = LTO.Thin
+    def moduleDeps = Seq(upickle.native(scala213, scalaNative).test)
+    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::$sourcecode")
+    def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "NonNative.scala"))
+    def releaseMode = ReleaseMode.ReleaseFast
+    def nativeLTO = LTO.Thin
   }
 }
