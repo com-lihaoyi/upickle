@@ -103,7 +103,7 @@ trait CommonPublishModule
 }
 
 trait CommonJvmModule extends CommonPublishModule with CommonPlatformModule{
-  trait CommonTestModule extends Tests with CommonTestModule0
+  trait CommonTestModule extends ScalaModuleTests with CommonTestModule0
 }
 
 trait CommonJsModule extends CommonPublishModule with ScalaJSModule with CommonPlatformModule {
@@ -121,13 +121,13 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule with CommonP
 
   def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
 
-  trait CommonTestModule extends Tests with CommonTestModule0
+  trait CommonTestModule extends ScalaJSModuleTests with CommonTestModule0
 }
 
 trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule with CommonPlatformModule {
   def scalaNativeVersion = "0.4.10"
 
-  trait CommonTestModule extends Tests with CommonTestModule0
+  trait CommonTestModule extends ScalaNativeModuleTests with CommonTestModule0
 }
 
 object upack extends Module {
