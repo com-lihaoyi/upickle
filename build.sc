@@ -1,6 +1,6 @@
 // plugins
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1-8-37c08a`
-import $ivy.`com.github.lolgab::mill-mima::0.0.21`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1-14-7e2bd2`
+import $ivy.`com.github.lolgab::mill-mima::0.0.22`
 
 // imports
 import mill._
