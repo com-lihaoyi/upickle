@@ -69,7 +69,6 @@ trait CommonPublishModule
       PathRef(src.path / os.up / s"templates$rest")
     }
   }
-
   def generatedSources = T{
     for{
       pathRef <- templates()
@@ -108,7 +107,7 @@ trait CommonJvmModule extends CommonPublishModule with CommonPlatformModule{
 
 trait CommonJsModule extends CommonPublishModule with ScalaJSModule with CommonPlatformModule {
   def scalaJSVersion = "1.13.0"
-  
+
   private def sourceMapOptions = T.task {
     val vcsState = VcsVersion.vcsState()
     vcsState.lastTag.collect {
