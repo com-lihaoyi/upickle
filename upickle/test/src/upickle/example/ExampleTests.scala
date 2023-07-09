@@ -178,6 +178,7 @@ object ExampleTests extends TestSuite {
         write(Map(1 -> 2, 3 -> 4))         ==> """{"1":2,"3":4}"""
         write(Map("hello" -> "world"))     ==> """{"hello":"world"}"""
         write(Map(Seq(1, 2) -> Seq(3, 4))) ==> """[[[1,2],[3,4]]]"""
+        write(Map(Seq.empty[Int] -> Seq.empty[Int])) ==> """[[[],[]]]"""
         write(Map.empty[Int, Int])         ==> """{}"""
 
         write(Map(1 -> 2, 3 -> 4), indent = 4) ==>
@@ -185,6 +186,14 @@ object ExampleTests extends TestSuite {
           |    "1": 2,
           |    "3": 4
           |}""".stripMargin
+
+        write(Map(Seq.empty[Int] -> Seq.empty[Int]), indent = 4) ==>
+        """[
+          |    [
+          |        [],
+          |        []
+          |    ]
+          |]""".stripMargin
 
         write(Map.empty[Int, Int], indent = 4) ==> """{}"""
       }
