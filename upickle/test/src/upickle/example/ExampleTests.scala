@@ -156,9 +156,11 @@ object ExampleTests extends TestSuite {
         write("omg")                      ==> "\"omg\""
       }
       test("seqs"){
+        write(Array.empty[Int])           ==> "[]"
         write(Array(1, 2, 3))             ==> "[1,2,3]"
 
         // You can pass in an `indent` parameter to format it nicely
+        write(Array.empty[Int], indent = 4)  ==> "[]"
         write(Array(1, 2, 3), indent = 4)  ==>
           """[
             |    1,
@@ -176,6 +178,18 @@ object ExampleTests extends TestSuite {
         write(Map(1 -> 2, 3 -> 4))         ==> """{"1":2,"3":4}"""
         write(Map("hello" -> "world"))     ==> """{"hello":"world"}"""
         write(Map(Seq(1, 2) -> Seq(3, 4))) ==> """[[[1,2],[3,4]]]"""
+        write(Map.empty[Int, Int])         ==> """{}"""
+        write(Map(Seq.empty[Int] -> Seq.empty[Int])) ==> """[[[],[]]]"""
+
+        write(Map(Seq.empty[Int] -> Seq.empty[Int]), indent = 4) ==>
+        """[
+          |    [
+          |        [],
+          |        []
+          |    ]
+          |]""".stripMargin
+
+        write(Map.empty[Int, Int], indent = 4) ==> """{}"""
       }
       test("options"){
         write(Some(1))                    ==> "[1]"
@@ -227,7 +241,6 @@ object ExampleTests extends TestSuite {
 
         write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3)))) ==>
           """{"name":"bearrr","foos":[{"i":1},{"i":2},{"i":3}]}"""
-
       }
       test("null"){
         write(Bar(null, Seq(Foo(1), null, Foo(3)))) ==>
