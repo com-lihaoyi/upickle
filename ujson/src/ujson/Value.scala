@@ -180,7 +180,9 @@ object Value extends AstTransformer[Value]{
 
   override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int) = {
     ujson.Num(
-      if (decIndex != -1 || expIndex != -1) s.toString.toDouble
+      if (decIndex != -1 || expIndex != -1 || s.length() >= 19 /*digit count of largest positive long*/) {
+        s.toString.toDouble
+      }
       else ParseUtils.parseIntegralNum(s, decIndex, expIndex, index).toDouble
     )
   }

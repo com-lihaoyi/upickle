@@ -23,6 +23,50 @@ object SmallJsonTests extends TestSuite {
 
       }
     }
+    test("largeDouble"){
+      test("longMaxValue") {
+        assert(
+          ujson.read("9223372036854775807").num ==
+          "9223372036854775807".toDouble
+        )
+      }
+      test("longMinValue") {
+        assert(
+          ujson.read("-9223372036854775808").num ==
+          "-9223372036854775808".toDouble
+        )
+      }
+      test("longMaxValuePlusOne") {
+        assert(
+          ujson.read("9223372036854775808").num ==
+          "9223372036854775808".toDouble
+        )
+      }
+      test("longMinValueMinusOne") {
+        assert(
+          ujson.read("-9223372036854775809").num ==
+          "-9223372036854775809".toDouble
+        )
+      }
+      test("issue240"){
+        assert(
+          ujson.read("28291041994989161181883157038606177750").num ==
+            "28291041994989161181883157038606177750".toDouble
+        )
+      }
+      test("largeDecimalPoint"){
+        assert(
+          ujson.read("28291041994989161181883157038606177750.28291041994989161181883157038606177750").num ==
+            "28291041994989161181883157038606177750.28291041994989161181883157038606177750".toDouble
+        )
+      }
+      test("largeDecimalPointExponent"){
+        assert(
+          ujson.read("28291041994989161181883157038606177750.28291041994989161181883157038606177750E123456789").num ==
+            "28291041994989161181883157038606177750.28291041994989161181883157038606177750E123456789".toDouble
+        )
+      }
+    }
     test("inputsEu"){
       TestUtil.checkParse(
         """{
