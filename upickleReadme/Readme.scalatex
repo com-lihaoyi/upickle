@@ -25,7 +25,7 @@
   )
 )
 
-@sect("uPickle 3.1.0")
+@sect("uPickle 3.1.1")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -74,8 +74,8 @@
 
   @sect{Getting Started}
     @hl.scala
-      "com.lihaoyi" %% "upickle" % "3.1.0" // SBT
-      ivy"com.lihaoyi::upickle:3.1.0" // Mill
+      "com.lihaoyi" %% "upickle" % "3.1.1" // SBT
+      ivy"com.lihaoyi::upickle:3.1.1" // Mill
 
     @p
       And then you can immediately start writing and reading common Scala
@@ -93,8 +93,8 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        "com.lihaoyi" %%% "upickle" % "3.1.0" // SBT
-        ivy"com.lihaoyi::upickle::3.1.0" // Mill
+        "com.lihaoyi" %%% "upickle" % "3.1.1" // SBT
+        ivy"com.lihaoyi::upickle::3.1.1" // Mill
 
     @sect{Scala Versions}
       @p
@@ -886,6 +886,19 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{3.1.1}
+      @ul
+        @li
+          Bumped Scala versions: 3.3.0, @lnk("#492", "https://github.com/com-lihaoyi/upickle/pull/492"),
+          2.13.11 @lnk("#497", "https://github.com/com-lihaoyi/upickle/pull/497"),
+          2.12.18 @lnk("#496", "https://github.com/com-lihaoyi/upickle/pull/492"),
+        @li
+          Make empty arrays and dictionaries render compactly even when indent > 0
+          @lnk("#501", "https://github.com/com-lihaoyi/upickle/pull/501"),
+        @li
+          Improve @code{expected tagged dictionary} error message and make it work for
+          non-empty dicts @lnk("#502", "https://github.com/com-lihaoyi/upickle/pull/502"),
+
     @sect{3.1.0}
       @ul
         @li
