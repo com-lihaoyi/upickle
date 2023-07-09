@@ -14,12 +14,13 @@ import mill.scalanativelib.api.{LTO, ReleaseMode}
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
-val scala212  = "2.12.17"
+val scala212  = "2.12.18"
 val scala213  = "2.13.10"
 
 val scala3   = "3.3.0"
 val scalaNative = "0.4.14"
-val acyclic = "0.3.6"
+val acyclic = "0.3.8"
+
 val sourcecode = "0.3.0"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
