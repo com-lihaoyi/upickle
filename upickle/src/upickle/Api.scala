@@ -274,7 +274,7 @@ trait AttributeTagged extends Api with Annotator{
         }
       }
       def visitEnd(index: Int) = {
-        def missingKeyMsg = s"Missing key \"$tagName\" for tagged dictionary"
+        def missingKeyMsg = s"""Missing key "$tagName" for tagged dictionary"""
         if (context == null) throw new Abort(missingKeyMsg)
         else if (fastPath) context.visitEnd(index).asInstanceOf[T]
         else{
