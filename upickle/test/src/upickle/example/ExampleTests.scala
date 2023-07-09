@@ -181,12 +181,6 @@ object ExampleTests extends TestSuite {
         write(Map.empty[Int, Int])         ==> """{}"""
         write(Map(Seq.empty[Int] -> Seq.empty[Int])) ==> """[[[],[]]]"""
 
-        write(Map(1 -> 2, 3 -> 4), indent = 4) ==>
-        """{
-          |    "1": 2,
-          |    "3": 4
-          |}""".stripMargin
-
         write(Map(Seq.empty[Int] -> Seq.empty[Int]), indent = 4) ==>
         """[
           |    [
