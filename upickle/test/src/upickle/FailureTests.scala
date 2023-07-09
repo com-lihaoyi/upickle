@@ -227,7 +227,8 @@ object FailureTests extends TestSuite {
           test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "omg"}""", "invalid tag for tagged object: omg at index 1")
           test - assertErrorMsgDefault[Fi](""""omg"""", "invalid tag for tagged object: omg at index 0")
           test - assertErrorMsgDefault[Fi]("""{"$type": "omg"}""", "invalid tag for tagged object: omg at index 1")
-          test - assertErrorMsgDefault[Fi]("""{}""", "expected tagged dictionary")
+          test - assertErrorMsgDefault[Fi]("""{}""", """Missing key "$type" for tagged dictionary at index 1""")
+          test - assertErrorMsgDefault[Fi]("""{"mispelledTypeTag": "omg"}""", """Missing key "$type" for tagged dictionary at index 26""")
         }
 
         test("taggedInvalidBody"){
