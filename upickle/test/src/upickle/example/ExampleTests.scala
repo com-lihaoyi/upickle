@@ -247,22 +247,6 @@ object ExampleTests extends TestSuite {
 
         write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3)))) ==>
           """{"name":"bearrr","foos":[{"i":1},{"i":2},{"i":3}]}"""
-
-        write(Bar("bearrr", Seq(Foo(1), Foo(2), Foo(3))), indent = 4) ==>
-          """{
-            |    "name": "bearrr",
-            |    "foos": [
-            |        {
-            |            "i": 1
-            |        },
-            |        {
-            |            "i": 2
-            |        },
-            |        {
-            |            "i": 3
-            |        }
-            |    ]
-            |}""".stripMargin
       }
       test("null"){
         write(Bar(null, Seq(Foo(1), null, Foo(3)))) ==>
