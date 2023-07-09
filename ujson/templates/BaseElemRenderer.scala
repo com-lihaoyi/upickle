@@ -28,7 +28,7 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
   private[this] var visitingKey = false
 
   private[this] var commaBuffered = false
-  private[this] var newNestingBuffered = false
+  private[this] var indentBuffered = false
   private[this] var quoteBuffered = false
 
   def flushBuffer() = {
@@ -36,8 +36,8 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
       commaBuffered = false
       elemBuilder.append(',')
     }
-    if (newNestingBuffered){
-      newNestingBuffered = false
+    if (indentBuffered){
+      indentBuffered = false
       renderIndent()
     }
     if (quoteBuffered) {
@@ -51,21 +51,21 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     elemBuilder.append('[')
 
     depth += 1
-    newNestingBuffered = true
+    indentBuffered = true
 
     def subVisitor = BaseElemRenderer.this
 
     def visitValue(v: T, index: Int): Unit = {
       flushBuffer()
       commaBuffered = true
-      newNestingBuffered = true
+      indentBuffered = true
     }
 
     def visitEnd(index: Int) = {
       depth -= 1
-      if (newNestingBuffered && commaBuffered) renderIndent()
+      if (indentBuffered && commaBuffered) renderIndent()
       commaBuffered = false
-      newNestingBuffered = false
+      indentBuffered = false
       elemBuilder.append(']')
       flushElemBuilder()
       out
@@ -76,7 +76,7 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     flushBuffer()
     elemBuilder.append('{')
     depth += 1
-    newNestingBuffered = true
+    indentBuffered = true
 
     def subVisitor = BaseElemRenderer.this
     def visitKey(index: Int) = {
@@ -94,14 +94,14 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
 
     def visitValue(v: T, index: Int): Unit = {
       commaBuffered = true
-      newNestingBuffered = true
+      indentBuffered = true
     }
 
     def visitEnd(index: Int) = {
       depth -= 1
-      if (newNestingBuffered && commaBuffered) renderIndent()
+      if (indentBuffered && commaBuffered) renderIndent()
       commaBuffered = false
-      newNestingBuffered = false
+      indentBuffered = false
       elemBuilder.append('}')
       flushElemBuilder()
       out
