@@ -156,7 +156,7 @@ object ExampleTests extends TestSuite {
         write("omg")                      ==> "\"omg\""
       }
       test("seqs"){
-        write(Array.empty[Int])             ==> "[]"
+        write(Array.empty[Int])           ==> "[]"
         write(Array(1, 2, 3))             ==> "[1,2,3]"
 
         // You can pass in an `indent` parameter to format it nicely
@@ -178,8 +178,8 @@ object ExampleTests extends TestSuite {
         write(Map(1 -> 2, 3 -> 4))         ==> """{"1":2,"3":4}"""
         write(Map("hello" -> "world"))     ==> """{"hello":"world"}"""
         write(Map(Seq(1, 2) -> Seq(3, 4))) ==> """[[[1,2],[3,4]]]"""
-        write(Map(Seq.empty[Int] -> Seq.empty[Int])) ==> """[[[],[]]]"""
         write(Map.empty[Int, Int])         ==> """{}"""
+        write(Map(Seq.empty[Int] -> Seq.empty[Int])) ==> """[[[],[]]]"""
 
         write(Map(1 -> 2, 3 -> 4), indent = 4) ==>
         """{
