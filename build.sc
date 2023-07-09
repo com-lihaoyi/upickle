@@ -125,7 +125,7 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule with CommonP
 }
 
 trait CommonNativeModule extends CommonPublishModule with ScalaNativeModule with CommonPlatformModule {
-  def scalaNativeVersion = "0.4.10"
+  def scalaNativeVersion = scalaNative
 
   trait CommonTestModule extends ScalaNativeTests with CommonTestModule0
 }
