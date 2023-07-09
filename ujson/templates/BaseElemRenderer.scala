@@ -28,12 +28,16 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
   private[this] var visitingKey = false
 
   private[this] var commaBuffered = false
+  private[this] var newNestingBuffered = false
   private[this] var quoteBuffered = false
 
   def flushBuffer() = {
     if (commaBuffered) {
       commaBuffered = false
       elemBuilder.append(',')
+    }
+    if (newNestingBuffered){
+      newNestingBuffered = false
       renderIndent()
     }
     if (quoteBuffered) {
@@ -47,16 +51,21 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     elemBuilder.append('[')
 
     depth += 1
-    renderIndent()
+    newNestingBuffered = true
+
     def subVisitor = BaseElemRenderer.this
+
     def visitValue(v: T, index: Int): Unit = {
       flushBuffer()
       commaBuffered = true
+      newNestingBuffered = true
     }
+
     def visitEnd(index: Int) = {
-      commaBuffered = false
       depth -= 1
-      renderIndent()
+      if (newNestingBuffered && commaBuffered) renderIndent()
+      commaBuffered = false
+      newNestingBuffered = false
       elemBuilder.append(']')
       flushElemBuilder()
       out
@@ -67,26 +76,32 @@ class BaseElemRenderer[T <: upickle.core.ElemOps.Output]
     flushBuffer()
     elemBuilder.append('{')
     depth += 1
-    renderIndent()
+    newNestingBuffered = true
+
     def subVisitor = BaseElemRenderer.this
     def visitKey(index: Int) = {
       quoteBuffered = true
       visitingKey = true
       BaseElemRenderer.this
     }
+
     def visitKeyValue(s: Any): Unit = {
       elemBuilder.append('"')
       visitingKey = false
       elemBuilder.append(':')
       if (indent != -1) elemBuilder.append(' ')
     }
+
     def visitValue(v: T, index: Int): Unit = {
       commaBuffered = true
+      newNestingBuffered = true
     }
+
     def visitEnd(index: Int) = {
-      commaBuffered = false
       depth -= 1
-      renderIndent()
+      if (newNestingBuffered && commaBuffered) renderIndent()
+      commaBuffered = false
+      newNestingBuffered = false
       elemBuilder.append('}')
       flushElemBuilder()
       out
