@@ -174,7 +174,10 @@ object ElemUtils{
     }
 
     val size = end - i
-    if (size <= 0 || size > 19) throw new NumberFormatException(new String(cs))
+
+    if (size <= 0 || size > 19 /*digit count of largest positive long*/) {
+      throw new NumberFormatException(new String(cs))
+    }
 
     while (i < end) {
       val digit = cs(i).toInt - 48
