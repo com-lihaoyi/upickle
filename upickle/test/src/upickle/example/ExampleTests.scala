@@ -330,7 +330,7 @@ object ExampleTests extends TestSuite {
         upickle.default.write(Long.MaxValue) ==> "\"9223372036854775807\""
 
         object StringLongs extends upickle.AttributeTagged{
-          override implicit val LongWriter = new Writer[Long] {
+          override implicit val LongWriter: Writer[Long] = new Writer[Long] {
             def write0[V](out: Visitor[_, V], v: Long) = out.visitString(v.toString, -1)
           }
         }
@@ -339,7 +339,7 @@ object ExampleTests extends TestSuite {
         StringLongs.write(Long.MaxValue) ==> "\"9223372036854775807\""
 
         object NumLongs extends upickle.AttributeTagged{
-          override implicit val LongWriter = new Writer[Long] {
+          override implicit val LongWriter: Writer[Long] = new Writer[Long] {
             def write0[V](out: Visitor[_, V], v: Long) = out.visitFloat64String(v.toString, -1)
           }
         }
