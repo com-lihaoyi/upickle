@@ -274,11 +274,14 @@ trait AttributeTagged extends Api with Annotator{
         }
       }
       def visitEnd(index: Int) = {
-        if (context == null) throw new Abort("expected tagged dictionary")
+        def missingKeyMsg = s"""Missing key "$tagName" for tagged dictionary"""
+        if (context == null) throw new Abort(missingKeyMsg)
         else if (fastPath) context.visitEnd(index).asInstanceOf[T]
         else{
           val x = context.visitEnd(index).asInstanceOf[IndexedValue.Obj]
-          val keyAttr = x.value0.find(_._1.toString == tagName).get._2
+          val keyAttr = x.value0.find(_._1.toString == tagName)
+            .getOrElse(throw new Abort(missingKeyMsg))
+            ._2
           val key = keyAttr.asInstanceOf[IndexedValue.Str].value0.toString
           val delegate = taggedReader.findReader(key)
           if (delegate == null){
