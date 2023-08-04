@@ -1,0 +1,5 @@
+before_install:
+  - chmod +x ./mill
+  - mkdir -p ~/.m2/
+install:
+  - ./mill -j 0 __.publishM2Local

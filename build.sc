@@ -14,10 +14,9 @@ import mill.scalanativelib.api.{LTO, ReleaseMode}
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
-val scala212  = "2.12.18"
-val scala213  = "2.13.11"
+val scala213  = "2.13.10"
 
-val scala3   = "3.3.0"
+val scala3   = "3.2.2"
 val scalaNative = "0.4.14"
 val acyclic = "0.3.8"
 
@@ -25,14 +24,14 @@ val sourcecode = "0.3.0"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
-val scala2JVMVersions = Seq(scala212, scala213)
+val scala2JVMVersions = Seq(scala213)
 val scalaVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 trait CommonPlatformModule extends ScalaModule with PlatformScalaModule{
 
   def sources = T.sources {
     super.sources() ++
-    Option.when(scalaVersion() != scala212)(PathRef(millSourcePath / "src-2.13+")) ++
+    Seq(PathRef(millSourcePath / "src-2.13+")) ++
     (platformScalaSuffix match {
       case "jvm" => Seq(PathRef(millSourcePath / "src-jvm-native"))
       case "native" => Seq(PathRef(millSourcePath / "src-js-native"), PathRef(millSourcePath / "src-jvm-native"))
@@ -49,7 +48,7 @@ trait CommonPublishModule
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
-    organization = "com.lihaoyi",
+    organization = "com.github.deal-engine",
     url = "https://github.com/lihaoyi/upickle",
     licenses = Seq(License.MIT),
     versionControl = VersionControl.github(owner = "com-lihaoyi", repo = "upickle"),
@@ -284,7 +283,7 @@ object upickle extends Module{
 
     object js extends Cross[JsModule](scalaVersions)
     trait JsModule extends ImplicitsModule with CommonJsModule {
-      def moduleDeps = Seq(core.js())
+      def compileModuleDeps = Seq(core.js())
 
       object test extends CommonTestModule{
         def moduleDeps = super.moduleDeps ++ Seq(ujson.js().test, core.js().test)
@@ -293,7 +292,7 @@ object upickle extends Module{
 
     object jvm extends Cross[JvmModule](scalaVersions)
     trait JvmModule extends ImplicitsModule with CommonJvmModule{
-      def moduleDeps = Seq(core.jvm())
+      def compileModuleDeps = Seq(core.jvm())
 
       object test extends CommonTestModule{
         def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test, core.jvm().test)
@@ -302,7 +301,7 @@ object upickle extends Module{
 
     object native extends Cross[NativeModule](scalaVersions)
     trait NativeModule extends ImplicitsModule with CommonNativeModule {
-      def moduleDeps = Seq(core.native())
+      def compileModuleDeps = Seq(core.native())
 
       object test extends CommonTestModule{
         def moduleDeps = super.moduleDeps ++ Seq(ujson.native().test, core.native().test)
@@ -321,7 +320,8 @@ object upickle extends Module{
 
   object jvm extends Cross[JvmModule](scalaVersions)
   trait JvmModule extends UpickleModule with CommonJvmModule{
-    def moduleDeps = Seq(ujson.jvm(), upack.jvm(), implicits.jvm())
+    def compileModuleDeps = Seq(implicits.jvm())
+    def moduleDeps = Seq(ujson.jvm(), upack.jvm())
 
     object test extends CommonTestModule{
       def moduleDeps =
@@ -344,7 +344,8 @@ object upickle extends Module{
 
   object js extends Cross[JsModule](scalaVersions)
   trait JsModule extends UpickleModule with CommonJsModule {
-    def moduleDeps = Seq(ujson.js(), upack.js(), implicits.js())
+    def compileModuleDeps = Seq(implicits.js())
+    def moduleDeps = Seq(ujson.js(), upack.js())
 
     object test extends CommonTestModule{
       def moduleDeps = super.moduleDeps ++ Seq(core.js().test)
@@ -353,7 +354,8 @@ object upickle extends Module{
 
   object native extends Cross[NativeModule](scalaVersions)
   trait NativeModule extends UpickleModule with CommonNativeModule {
-    def moduleDeps = Seq(ujson.native(), upack.native(), implicits.native())
+    def compileModuleDeps = Seq(implicits.native())
+    def moduleDeps = Seq(ujson.native(), upack.native())
 
     object test extends CommonTestModule{
       def moduleDeps = super.moduleDeps ++ Seq(core.native().test)
