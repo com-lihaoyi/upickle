@@ -107,7 +107,7 @@ trait CommonJvmModule extends CommonPublishModule with CommonPlatformModule{
 }
 
 trait CommonJsModule extends CommonPublishModule with ScalaJSModule with CommonPlatformModule {
-  def scalaJSVersion = "1.13.0"
+  def scalaJSVersion = "1.13.1"
 
   private def sourceMapOptions = T.task {
     val vcsState = VcsVersion.vcsState()

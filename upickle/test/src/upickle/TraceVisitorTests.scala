@@ -49,10 +49,10 @@ object TraceVisitorTests extends TestSuite {
       test("upickleFailures") - {
         test - assertPathFailure("""666""", "$") // yes, empty string. https://tools.ietf.org/html/rfc6901#section-5
         test - assertPathFailure("""{"foo": -666, "s": "", "i": 5, "b": true}""", "$['foo']")
-        test - assertPathFailure("""{"foo": [-666], "s": "", "i": 5, "b": true}""", "$['foo'][0]")
-        test - assertPathFailure("""{"foo": ["", -666], "s": "", "i": 5, "b": true}""", "$['foo'][1]")
-        test - assertPathFailure("""{"foo": ["", -666, ""], "s": "", "i": 5, "b": true}""", "$['foo'][1]")
-        test - assertPathFailure("""{"foo": [], "s": -666, "i": 5, "b": true}""", "$['s']")
+        test - assertPathFailure("""{"foo": [[]]], "s": "", "i": 5, "b": true}""", "$['foo'][0]")
+        test - assertPathFailure("""{"foo": ["", []]], "s": "", "i": 5, "b": true}""", "$['foo'][1]")
+        test - assertPathFailure("""{"foo": ["", {}}, ""], "s": "", "i": 5, "b": true}""", "$['foo'][1]")
+        test - assertPathFailure("""{"foo": [], "s": {}}, "i": 5, "b": true}""", "$['s']")
         test - assertPathFailure("""{"foo": [], "s": "", "i": "-666a", "b": true}""", "$['i']")
         test - assertPathFailure("""{"foo": [], "s": "", "i": 5, "b": -666}""", "$['b']")
         test - assertPathFailure("""{"foo": [], "s": "", "i": 5}""", "$")

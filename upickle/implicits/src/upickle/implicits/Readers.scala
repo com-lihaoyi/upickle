@@ -164,6 +164,10 @@ trait Readers extends upickle.core.Types
       val i = d.toInt
       if (d == i) i.toString else d.toString
     }
+
+    override def visitFloat64StringParts(s: CharSequence, decIndex: Int, expIndex: Int, index: Int): String =
+      s.toString
+
     override def visitTrue(index: Int) = "true"
     override def visitFalse(index: Int) = "false"
     override def visitChar(s: Char, index: Int) = s.toString
