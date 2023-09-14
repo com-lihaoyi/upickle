@@ -34,6 +34,10 @@ object PrimitiveTests extends TestSuite {
         assert(upickle.default.read[String]("1") == "1")
         assert(upickle.default.read[String]("true") == "true")
         assert(upickle.default.read[Seq[String]]("[1, 2, 3]") == Seq("1", "2", "3"))
+        assert(
+          upickle.default.read[Map[String, String]]("""{"a":11111111111111111111111111111111}""") ==
+          Map("a" -> "11111111111111111111111111111111")
+        )
       }
     }
     test("Long"){
