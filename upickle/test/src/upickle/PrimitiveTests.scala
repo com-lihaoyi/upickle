@@ -30,6 +30,15 @@ object PrimitiveTests extends TestSuite {
           rw(i.toString)
         }
       }
+      test("others"){
+        assert(upickle.default.read[String]("1") == "1")
+        assert(upickle.default.read[String]("true") == "true")
+        assert(upickle.default.read[Seq[String]]("[1, 2, 3]") == Seq("1", "2", "3"))
+        assert(
+          upickle.default.read[Map[String, String]]("""{"a":11111111111111111111111111111111}""") ==
+          Map("a" -> "11111111111111111111111111111111")
+        )
+      }
     }
     test("Long"){
       test("small") - rwNum(1: Long, "1", """ "1" """, upack.Int64(1), upack.Str("1"))
