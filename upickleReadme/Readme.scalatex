@@ -152,6 +152,12 @@
 
         @hl.ref(exampleTests, Seq("\"more\"", "\"options\"", ""))
 
+        @p
+          @code{Either}s are serialized as JSON lists with 2 elements, with the first
+          element a number indicating @code{Left} (0) or @code{Right} (1), and the second
+          containing the value.
+
+        @hl.ref(exampleTests, Seq("\"more\"", "\"either\"", ""))
 
         @p
           Tuples of all sizes (1-22) are serialized as heterogenous JSON lists
