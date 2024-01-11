@@ -633,7 +633,7 @@
         Each example parses JSON from a string into that particular library's
         JSON AST, manipulates the AST using that library, un-pickles it into
         Scala data types, then serializes those data types first into that
-        library's AST then back to a st.ring
+        library's AST then back to a string.
 
       @sect{Argonaut}
         @b{Maven Coordinates}
