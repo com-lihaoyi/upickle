@@ -280,7 +280,6 @@ object Macros {
                 }
                 case _ =>
                   ${
-                    println(allowUnknownKeysAnnotation)
                     allowUnknownKeysAnnotation match {
                       case None =>
                         q"""
