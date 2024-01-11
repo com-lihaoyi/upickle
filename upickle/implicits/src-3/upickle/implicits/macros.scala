@@ -41,6 +41,18 @@ def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
     .find(_.tpe =:= TypeRepr.of[upickle.implicits.key])
     .map{case Apply(_, Literal(StringConstant(s)) :: Nil) => s}
 
+inline def extractIgnoreUnknownKeys[T](): List[Boolean] = ${extractIgnoreUnknownKeysImpl[T]}
+def extractIgnoreUnknownKeysImpl[T](using Quotes, Type[T]): Expr[List[Boolean]] =
+  import quotes.reflect._
+  Expr.ofList(
+    TypeRepr.of[T].typeSymbol
+      .annotations
+      .find(_.tpe =:= TypeRepr.of[upickle.implicits.allowUnknownKeys])
+      .map{case Apply(_, Literal(BooleanConstant(b)) :: Nil) => b}
+      .map(Expr(_))
+      .toList
+    )
+
 inline def paramsCount[T]: Int = ${paramsCountImpl[T]}
 def paramsCountImpl[T](using Quotes, Type[T]) = {
   Expr(fieldLabelsImpl0[T].size)

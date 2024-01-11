@@ -11,7 +11,7 @@ import upickle.core.{Abort, AbortException, ArrVisitor, NoOpVisitor, ObjVisitor,
 * package to form the public API1
 */
 trait CaseClassReadWriters extends upickle.core.Types{
-
+  def allowUnknownKeys: Boolean = true
   abstract class CaseClassReader[V] extends SimpleReader[V] {
     override def expectedMsg = "expected dictionary"
 
