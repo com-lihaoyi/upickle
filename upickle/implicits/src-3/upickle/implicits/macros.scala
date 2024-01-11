@@ -7,7 +7,8 @@ type IsInt[A <: Int] = A
 
 def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
   import quotes.reflect._
-  val sym = TypeTree.of[T].symbol
+  val unwrapped = TypeRepr.of[T] match{case AppliedType(p, v) => p case t => t}
+  val sym = unwrapped.typeSymbol
 
   if (!sym.isClassDef) Map.empty
   else
@@ -23,13 +24,15 @@ def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
 
     val body = comp.tree.asInstanceOf[ClassDef].body
 
-    val idents: List[Ref] =
+    val idents: List[Term] =
       for case deff @ DefDef(name, _, _, _) <- body
       if name.startsWith("$lessinit$greater$default")
-      yield Ref(deff.symbol)
+      yield TypeRepr.of[T] match{ // Fix copied from https://github.com/circe/circe/issues/2093
+        case AppliedType(p, v) => Ref(deff.symbol).appliedToTypes(TypeRepr.of[T].typeArgs)
+        case t => Ref(deff.symbol)
+      }
 
     names.zip(idents.map(_.asExpr).map(e => '{$e.asInstanceOf[AnyRef]})).toMap
-
 
 def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
   import quotes.reflect._
