@@ -68,6 +68,16 @@ object SpecialChars{
   implicit def rw: RW[SpecialChars] = default.macroRW
 }
 
+object GenericIssue545{
+  case class Person(id: Int, name: String = "test")
+
+  implicit val personRw: upickle.default.ReadWriter[Person] = upickle.default.macroRW[Person]
+
+  case class ApiResult[T](data: Option[T] = None, @upickle.implicits.key("total_count") totalCount: Int)
+
+  implicit def apiResultRw[T: upickle.default.ReadWriter]: upickle.default.ReadWriter[ApiResult[T]] = upickle.default.macroRW[ApiResult[T]]
+}
+
 object MacroTests extends TestSuite {
 
   // Doesn't work :(
@@ -563,6 +573,18 @@ object MacroTests extends TestSuite {
       rw(SpecialChars.`+1`(1), """{"$type": "upickle.SpecialChars.+1", "+1": 1}""")
       rw(SpecialChars.`-1`(), """{"$type": "upickle.SpecialChars.-1"}""")
       rw(SpecialChars.`-1`(1), """{"$type": "upickle.SpecialChars.-1", "-1": 1}""")
+    }
+
+    test("genericIssue545"){
+      // Make sure case class default values are properly picked up for
+      // generic case classes in Scala 3
+      import upickle.implicits.key
+
+      upickle.default.read[GenericIssue545.Person]("{\"id\":1}") ==>
+        GenericIssue545.Person(1)
+
+      upickle.default.read[GenericIssue545.ApiResult[GenericIssue545.Person]]("{\"total_count\": 10}") ==>
+        GenericIssue545.ApiResult[GenericIssue545.Person](None, 10)
     }
   }
 }
