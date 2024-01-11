@@ -47,7 +47,7 @@ def extractIgnoreUnknownKeysImpl[T](using Quotes, Type[T]): Expr[List[Boolean]] 
   Expr.ofList(
     TypeRepr.of[T].typeSymbol
       .annotations
-      .find(_.tpe =:= TypeRepr.of[upickle.implicits.ignoreUnknownKeys])
+      .find(_.tpe =:= TypeRepr.of[upickle.implicits.allowUnknownKeys])
       .map{case Apply(_, Literal(BooleanConstant(b)) :: Nil) => b}
       .map(Expr(_))
       .toList

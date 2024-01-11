@@ -84,20 +84,20 @@ object UnknownKeys{
   implicit val defaultRw: upickle.default.ReadWriter[Default] = upickle.default.macroRW[Default]
   implicit val defaultRw2: DisallowPickler.ReadWriter[Default] = DisallowPickler.macroRW[Default]
 
-  @upickle.implicits.ignoreUnknownKeys(false)
+  @upickle.implicits.allowUnknownKeys(false)
   case class DisAllow(id: Int, name: String)
 
   implicit val disAllowRw: upickle.default.ReadWriter[DisAllow] = upickle.default.macroRW[DisAllow]
   implicit val disAllowRw2: DisallowPickler.ReadWriter[DisAllow] = DisallowPickler.macroRW[DisAllow]
 
-  @upickle.implicits.ignoreUnknownKeys(true)
+  @upickle.implicits.allowUnknownKeys(true)
   case class Allow(id: Int, name: String)
 
   implicit val allowRw: upickle.default.ReadWriter[Allow] = upickle.default.macroRW[Allow]
   implicit val allowRw2: DisallowPickler.ReadWriter[Allow] = DisallowPickler.macroRW[Allow]
 
   object DisallowPickler extends upickle.AttributeTagged {
-    override def ignoreUnknownKeys = false
+    override def allowUnknownKeys = false
   }
 }
 object MacroTests extends TestSuite {
@@ -609,7 +609,7 @@ object MacroTests extends TestSuite {
 
     test("unknownKeys"){
       // For upickle default, we defualt to allowing unknown keys, and explicitly annotating
-      // `@ignoreUnknownKeys(true)` does nothing, but `@ignoreUnknownKeys(false)` makes unknown
+      // `@allowUnknownKeys(true)` does nothing, but `@allowUnknownKeys(false)` makes unknown
       // keys an error (just for the annotated class)
       upickle.default.read[UnknownKeys.Default]("""{"id":1, "name":"x", "omg": "wtf"}""") ==>
         UnknownKeys.Default(1, "x")
@@ -621,8 +621,8 @@ object MacroTests extends TestSuite {
         upickle.default.read[UnknownKeys.DisAllow]("""{"id":1, "name":"x", "omg": "wtf"}""")
       }
 
-      // If the upickle API sets `override def ignoreUnknownKeys = false`, we default to treating unknown keys
-      // as an error, `@ignoreUnknownKeys(false)` does nothing, but `@ignoreUnknownKeys(true)` makes unknown
+      // If the upickle API sets `override def allowUnknownKeys = false`, we default to treating unknown keys
+      // as an error, `@allowUnknownKeys(false)` does nothing, but `@allowUnknownKeys(true)` makes unknown
       // keys get ignored (just for the annotated class)
       intercept[upickle.core.AbortException] {
         UnknownKeys.DisallowPickler.read[UnknownKeys.Default]("""{"id":1, "name":"x", "omg": "wtf"}""") ==>

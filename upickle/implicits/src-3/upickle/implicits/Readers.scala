@@ -14,7 +14,7 @@ trait ReadersVersionSpecific
 
   abstract class CaseClassReadereader[T](paramCount: Int,
                                          missingKeyCount: Long,
-                                         ignoreUnknownKeys: Boolean) extends CaseClassReader[T] {
+                                         allowUnknownKeys: Boolean) extends CaseClassReader[T] {
     // Bincompat stub
     def this(paramCount: Int, missingKeyCount: Long) = this(paramCount, missingKeyCount, true)
 
@@ -36,7 +36,7 @@ trait ReadersVersionSpecific
       def visitKeyValue(v: Any): Unit =
         val k = objectAttributeKeyReadMap(v.toString).toString
         currentIndex = keyToIndex(k)
-        if (currentIndex == -1 && !ignoreUnknownKeys) {
+        if (currentIndex == -1 && !allowUnknownKeys) {
           throw new upickle.core.Abort("Unknown Key: " + k.toString)
         }
 
@@ -66,7 +66,7 @@ trait ReadersVersionSpecific
       val reader = new CaseClassReadereader[T](
         macros.paramsCount[T],
         macros.checkErrorMissingKeysCount[T](),
-        macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.ignoreUnknownKeys)
+        macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.allowUnknownKeys)
       ){
         override def visitors0 = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
         override def fromProduct(p: Product): T = m.fromProduct(p)

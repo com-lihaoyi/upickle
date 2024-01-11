@@ -244,7 +244,7 @@ object Macros {
                   varargs: Boolean) = {
       val allowUnknownKeysAnnotation = targetType.typeSymbol
         .annotations
-        .find(_.tpe == typeOf[upickle.implicits.ignoreUnknownKeys])
+        .find(_.tpe == typeOf[upickle.implicits.allowUnknownKeys])
         .flatMap(_.scalaArgs.headOption)
         .map { case Literal(Constant(b)) => b.asInstanceOf[Boolean] }
         .headOption
@@ -283,7 +283,7 @@ object Macros {
                     allowUnknownKeysAnnotation match {
                       case None =>
                         q"""
-                           if (${c.prefix}.ignoreUnknownKeys) -1
+                           if (${c.prefix}.allowUnknownKeys) -1
                            else throw new _root_.upickle.core.Abort("Unknown Key: " + s.toString)
                          """
                       case Some(false) => q"""throw new _root_.upickle.core.Abort("Unknown Key: " + s.toString)"""
