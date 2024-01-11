@@ -576,6 +576,8 @@ object MacroTests extends TestSuite {
     }
 
     test("genericIssue545"){
+      // Make sure case class default values are properly picked up for
+      // generic case classes in Scala 3
       import upickle.implicits.key
 
       upickle.default.read[GenericIssue545.Person]("{\"id\":1}") ==>
