@@ -12,7 +12,9 @@ trait ReadersVersionSpecific
     with Annotator
     with CaseClassReadWriters:
 
-  abstract class CaseClassReadereader[T](paramCount: Int, missingKeyCount: Long) extends CaseClassReader[T] {
+  abstract class CaseClassReadereader[T](paramCount: Int,
+                                         missingKeyCount: Long,
+                                         ignoreUnknownKeys: Boolean) extends CaseClassReader[T] {
     def visitors0: Product
     lazy val visitors = visitors0
     def fromProduct(p: Product): T
@@ -31,6 +33,9 @@ trait ReadersVersionSpecific
       def visitKeyValue(v: Any): Unit =
         val k = objectAttributeKeyReadMap(v.toString).toString
         currentIndex = keyToIndex(k)
+        if (currentIndex == -1 && !ignoreUnknownKeys) {
+          throw new upickle.core.Abort("Unknown Key: " + k.toString)
+        }
 
       def visitEnd(index: Int): T =
         storeDefaults(this)
@@ -55,7 +60,11 @@ trait ReadersVersionSpecific
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val reader = new CaseClassReadereader[T](macros.paramsCount[T], macros.checkErrorMissingKeysCount[T]()){
+      val reader = new CaseClassReadereader[T](
+        macros.paramsCount[T],
+        macros.checkErrorMissingKeysCount[T](),
+        macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.ignoreUnknownKeys)
+      ){
         override def visitors0 = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
         override def fromProduct(p: Product): T = m.fromProduct(p)
         override def keyToIndex(x: String): Int = macros.keyToIndex[T](x)

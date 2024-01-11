@@ -242,6 +242,13 @@ object Macros {
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type,
                   varargs: Boolean) = {
+      val allowUnknownKeysAnnotation = targetType.typeSymbol
+        .annotations
+        .find(_.tpe == typeOf[upickle.implicits.ignoreUnknownKeys])
+        .flatMap(_.scalaArgs.headOption)
+        .map { case Literal(Constant(b)) => b.asInstanceOf[Boolean] }
+        .headOption
+
       val defaults = deriveDefaults(companion, hasDefaults)
 
       val localReaders = for (i <- rawArgs.indices) yield TermName("localReader" + i)
@@ -271,7 +278,19 @@ object Macros {
                   for(i <- mappedArgs.indices)
                   yield cq"${mappedArgs(i)} => $i"
                 }
-                case _ => -1
+                case _ =>
+                  ${
+                    println(allowUnknownKeysAnnotation)
+                    allowUnknownKeysAnnotation match {
+                      case None =>
+                        q"""
+                           if (${c.prefix}.ignoreUnknownKeys) -1
+                           else throw new upickle.core.Abort("Unknown Key: " + s.toString)
+                         """
+                      case Some(false) => q"""throw new upickle.core.Abort("Unknown Key: " + s.toString)"""
+                      case Some(true) => q"-1"
+                    }
+                  }
               }
             }
 
