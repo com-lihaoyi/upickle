@@ -609,6 +609,36 @@ object StructTests extends TestSuite {
       test("false") - rw(ujson.Bool(false), """false""")
       test("null") - rw(ujson.Null, """null""")
     }
+    test("sortKeys") {
+      val raw = """{"d": [{"c": 0, "b": 1}], "a": []}"""
+      val sorted =
+        """{
+          |    "a": [],
+          |    "d": [
+          |        {
+          |            "b": 1,
+          |            "c": 0
+          |        }
+          |    ]
+          |}""".stripMargin
+      val struct = upickle.default.read[Map[String, Seq[Map[String, Int]]]](raw)
+
+      upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
+
+      val baos = new java.io.ByteArrayOutputStream
+      upickle.default.writeToOutputStream(struct, baos, indent = 4, sortKeys = true)
+      baos.toString ==> sorted
+
+      val writer = new java.io.StringWriter
+      upickle.default.writeTo(struct, writer, indent = 4, sortKeys = true)
+      writer.toString ==> sorted
+
+      new String(upickle.default.writeToByteArray(struct, indent = 4, sortKeys = true)) ==> sorted
+
+      val baos2 = new java.io.ByteArrayOutputStream
+      upickle.default.stream(struct, indent = 4, sortKeys = true).writeBytesTo(baos2)
+      baos2.toString() ==> sorted
+    }
   }
 }
 

@@ -23,6 +23,11 @@ trait Api
     with MsgReadWriters
     with Annotator{
 
+  private def maybeSortKeysTransform[T: Writer, V](t: T,
+                                                   sortKeys: Boolean,
+                                                   f: Visitor[_, V]): V = {
+    BufferedValue.maybeSortKeysTransform(implicitly[Writer[T]], t, sortKeys, f)
+  }
   /**
     * Reads the given MessagePack input into a Scala value
     */
@@ -77,23 +82,6 @@ trait Api
     */
   def writeMsg[T: Writer](t: T): upack.Msg = transform(t).to[upack.Msg]
 
-  private def maybeSortKeysTransform[T: Writer, V](t: T, sortKeys: Boolean, f: Visitor[_, V]): V = {
-    def rec(x: BufferedValue): Unit = {
-      x match{
-        case BufferedValue.Arr(i, items) => items.map(rec)
-        case BufferedValue.Obj(i, jsonableKeys, items) =>
-          items.sortInPlaceBy(_._1.toString).foreach{case (c, v) => (c, rec(v))}
-        case v =>
-      }
-    }
-    if (sortKeys) {
-      val buffered = transform(t).to(BufferedValue.Builder)
-      rec(buffered)
-      BufferedValue.transform(buffered, f)
-    }else{
-      transform(t).to(f)
-    }
-  }
   /**
     * Write the given Scala value as a JSON string to the given Writer
     */
