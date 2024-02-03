@@ -63,9 +63,17 @@ class TestUtil[Api <: upickle.Api](val api: Api){
                  checkBinaryJson: Boolean = true)
                 (implicit r: api.Reader[T], w: api.Writer[T])= {
     val writtenT = api.write(t)
+    val writtenTSorted = api.write(t, sortKeys = true)
     val writtenJsT = api.writeJs(t)
     val writtenTMsg = api.writeMsg(t)
     val writtenBytesT = api.writeToByteArray(t)
+    val writtenBytesTMsg = api.writeBinaryToByteArray(t)
+    val writtenBytesTMsgSorted = api.writeBinaryToByteArray(t, sortKeys = true)
+    val writeToDest = new java.io.StringWriter
+    val writeBinaryToDest = new java.io.ByteArrayOutputStream
+
+    api.writeTo(t, writeToDest)
+    api.writeBinaryTo(t, writeBinaryToDest)
 
     // Test JSON round tripping
     val strings = values.collect{case s: TestValue.Json => s.value.trim}
@@ -85,8 +93,10 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       utest.assert(normalizedReadString == normalizedValue)
     }
 
-
     val normalizedReadWrittenT = normalize(api.read[T](writtenT))
+    val normalizedReadWrittenToT = normalize(api.read[T](writeToDest.toString))
+    val normalizedReadWrittenTSorted = normalize(api.read[T](writtenTSorted))
+
     val normalizedReadWrittenJsT = normalize(api.read[T](writtenJsT))
     val normalizedReadByteArrayWrittenT = normalize(
       api.read[T](writtenT.getBytes(StandardCharsets.UTF_8))
@@ -119,8 +129,12 @@ class TestUtil[Api <: upickle.Api](val api: Api){
       utest.assert(ujson.reformat(strings.head) == writtenT)
       utest.assert(ujson.reformat(strings.head) == writtenJsT.render())
     }
-    if (msgs.nonEmpty) utest.assert(msgs.head == writtenTMsg)
+    if (msgs.nonEmpty) {
+      utest.assert(msgs.head == writtenTMsg)
+    }
     utest.assert(normalizedReadWrittenT == normalizedT)
+    utest.assert(normalizedReadWrittenToT == normalizedT)
+    utest.assert(normalizedReadWrittenT == normalizedReadWrittenTSorted)
     utest.assert(normalizedReadWrittenT == normalizedReadWrittenJsT)
     utest.assert(normalizedReadByteArrayWrittenT == normalizedT)
     utest.assert(normalizedReadStreamWrittenT == normalizedT)
@@ -133,20 +147,29 @@ class TestUtil[Api <: upickle.Api](val api: Api){
     // Test MessagePack round tripping
     val writtenBinary = api.writeBinary(t)
     // println(upickle.core.Util.bytesToString(writtenBinary))
-    val roundTrippedBinary = api.readBinary[T](writtenBinary)
-    (roundTrippedBinary, t) match{
-      case (lhs: Array[_], rhs: Array[_]) => assert(lhs.toSeq == rhs.toSeq)
-      case _ => utest.assert(roundTrippedBinary == t)
+    val cases = Seq(
+      writtenBinary -> false,
+      writtenBytesTMsg -> false,
+      writtenBytesTMsgSorted -> true,
+      writeBinaryToDest.toByteArray -> false
+    )
+    for((b, isSorted) <- cases){
+      val roundTrippedBinary = api.readBinary[T](b)
+      (roundTrippedBinary, t) match{
+        case (lhs: Array[_], rhs: Array[_]) => assert(lhs.toSeq == rhs.toSeq)
+        case _ => utest.assert(roundTrippedBinary == t)
+      }
+
+      // Test binary-JSON equivalence
+      if (!isSorted && checkBinaryJson){
+        val rewrittenBinary = api.writeBinary(roundTrippedBinary)
+
+        val writtenBinaryStr = upickle.core.ParseUtils.bytesToString(writtenBinary)
+        val rewrittenBinaryStr = upickle.core.ParseUtils.bytesToString(rewrittenBinary)
+        utest.assert(writtenBinaryStr == rewrittenBinaryStr)
+      }
     }
 
-    // Test binary-JSON equivalence
-    if (checkBinaryJson){
-      val rewrittenBinary = api.writeBinary(roundTrippedBinary)
-
-      val writtenBinaryStr = upickle.core.ParseUtils.bytesToString(writtenBinary)
-      val rewrittenBinaryStr = upickle.core.ParseUtils.bytesToString(rewrittenBinary)
-      utest.assert(writtenBinaryStr == rewrittenBinaryStr)
-    }
   }
 
   def rwNum[T: Numeric: api.Reader: api.Writer](t: T, values: TestValue*) = {

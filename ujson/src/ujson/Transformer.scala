@@ -1,7 +1,6 @@
 package ujson
 import upickle.core.Visitor
 
-trait Transformer[I] {
-  def transform[T](j: I, f: Visitor[_, T]): T
+trait Transformer[I] extends upickle.core.Transformer[I]{
   def transformable[T](j: I) = Readable.fromTransformer(j, this)
 }

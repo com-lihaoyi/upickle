@@ -6,7 +6,6 @@ import language.experimental.macros
 import language.higherKinds
 import upickle.core._
 import scala.reflect.ClassTag
-import ujson.IndexedValue
 
 /**
  * An instance of the upickle API. There's a default instance at
@@ -45,15 +44,28 @@ trait Api
     */
   def write[T: Writer](t: T,
                        indent: Int = -1,
-                       escapeUnicode: Boolean = false): String = {
-    transform(t).to(ujson.StringRenderer(indent, escapeUnicode)).toString
+                       escapeUnicode: Boolean = false,
+                       sortKeys: Boolean = false): String = {
+    maybeSortKeysTransform(t, sortKeys, ujson.StringRenderer(indent, escapeUnicode)).toString
   }
+
+  // Binary Compatibility Stub
+  def write[T: Writer](t: T,
+                       indent: Int,
+                       escapeUnicode: Boolean): String = {
+    write(t, indent, escapeUnicode, sortKeys = false)
+  }
+
   /**
     * Write the given Scala value as a MessagePack binary
     */
-  def writeBinary[T: Writer](t: T): Array[Byte] = {
-    transform(t).to(new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
+  def writeBinary[T: Writer](t: T,
+                             sortKeys: Boolean = false): Array[Byte] = {
+    maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
   }
+
+  // Binary Compatibility Stub
+  def writeBinary[T: Writer](t: T): Array[Byte] = writeBinary(t, sortKeys = false)
 
   /**
     * Write the given Scala value as a JSON struct
@@ -65,56 +77,126 @@ trait Api
     */
   def writeMsg[T: Writer](t: T): upack.Msg = transform(t).to[upack.Msg]
 
+  private def maybeSortKeysTransform[T: Writer, V](t: T, sortKeys: Boolean, f: Visitor[_, V]): V = {
+    def rec(x: BufferedValue): Unit = {
+      x match{
+        case BufferedValue.Arr(i, items) => items.map(rec)
+        case BufferedValue.Obj(i, jsonableKeys, items) =>
+          items.sortInPlaceBy(_._1.toString).foreach{case (c, v) => (c, rec(v))}
+        case v =>
+      }
+    }
+    if (sortKeys) {
+      val buffered = transform(t).to(BufferedValue.Builder)
+      rec(buffered)
+      BufferedValue.transform(buffered, f)
+    }else{
+      transform(t).to(f)
+    }
+  }
   /**
     * Write the given Scala value as a JSON string to the given Writer
     */
   def writeTo[T: Writer](t: T,
                          out: java.io.Writer,
                          indent: Int = -1,
-                         escapeUnicode: Boolean = false): Unit = {
-    transform(t).to(new ujson.Renderer(out, indent = indent, escapeUnicode))
+                         escapeUnicode: Boolean = false,
+                         sortKeys: Boolean = false): Unit = {
+    maybeSortKeysTransform(t, sortKeys, new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
+
+  // Binary Compatibility Stub
+  def writeTo[T: Writer](t: T,
+                         out: java.io.Writer,
+                         indent: Int,
+                         escapeUnicode: Boolean): Unit = writeTo(t, out, indent, escapeUnicode, sortKeys = false)
+
   def writeToOutputStream[T: Writer](t: T,
                                      out: java.io.OutputStream,
                                      indent: Int = -1,
-                                     escapeUnicode: Boolean = false): Unit = {
-    transform(t).to(new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
+                                     escapeUnicode: Boolean = false,
+                                     sortKeys: Boolean = false): Unit = {
+    maybeSortKeysTransform(t, sortKeys, new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
   }
+
+  // Binary Compatibility Stub
+  def writeToOutputStream[T: Writer](t: T,
+                                     out: java.io.OutputStream,
+                                     indent: Int,
+                                     escapeUnicode: Boolean): Unit = {
+    writeToOutputStream(t, out, indent, escapeUnicode, sortKeys = false)
+  }
+
   def writeToByteArray[T: Writer](t: T,
                                   indent: Int = -1,
-                                  escapeUnicode: Boolean = false) = {
+                                  escapeUnicode: Boolean = false,
+                                  sortKeys: Boolean = false): Array[Byte] = {
     val out = new java.io.ByteArrayOutputStream()
-    writeToOutputStream(t, out, indent, escapeUnicode)
+    writeToOutputStream(t, out, indent, escapeUnicode, sortKeys)
     out.toByteArray
+  }
+
+  // Binary Compatibility Stub
+  def writeToByteArray[T: Writer](t: T,
+                                  indent: Int,
+                                  escapeUnicode: Boolean): Array[Byte] = {
+    writeToByteArray[T](t, indent, escapeUnicode, sortKeys = false)
   }
   /**
     * Write the given Scala value as a JSON string via a `geny.Writable`
     */
   def stream[T: Writer](t: T,
                         indent: Int = -1,
-                        escapeUnicode: Boolean = false): geny.Writable = new geny.Writable{
+                        escapeUnicode: Boolean = false,
+                        sortKeys: Boolean = false): geny.Writable = new geny.Writable{
     override def httpContentType = Some("application/json")
     def writeBytesTo(out: java.io.OutputStream) = {
-      transform(t).to(new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
+      maybeSortKeysTransform(t, sortKeys, new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
     }
+  }
+
+  // Binary Compatibility Stub
+  def stream[T: Writer](t: T,
+                        indent: Int,
+                        escapeUnicode: Boolean): geny.Writable = {
+    stream(t, indent, escapeUnicode, sortKeys = false)
   }
   /**
     * Write the given Scala value as a MessagePack binary to the given OutputStream
     */
-  def writeBinaryTo[T: Writer](t: T, out: java.io.OutputStream): Unit = {
-    streamBinary[T](t).writeBytesTo(out)
+  def writeBinaryTo[T: Writer](t: T,
+                               out: java.io.OutputStream,
+                               sortKeys: Boolean = false): Unit = {
+    streamBinary[T](t, sortKeys = sortKeys).writeBytesTo(out)
   }
-  def writeBinaryToByteArray[T: Writer](t: T) = {
+  // Binary Compatibility Stub
+  def writeBinaryTo[T: Writer](t: T,
+                               out: java.io.OutputStream): Unit = {
+    writeBinaryTo(t, out, sortKeys = false)
+  }
+
+  def writeBinaryToByteArray[T: Writer](t: T,
+                                        sortKeys: Boolean = false): Array[Byte] = {
     val out = new java.io.ByteArrayOutputStream()
-    streamBinary[T](t).writeBytesTo(out)
+    streamBinary[T](t, sortKeys = sortKeys).writeBytesTo(out)
     out.toByteArray
+  }
+
+  // Binary Compatibility Stub
+  def writeBinaryToByteArray[T: Writer](t: T): Array[Byte] = {
+    writeBinaryToByteArray(t, sortKeys = false)
   }
   /**
     * Write the given Scala value as a MessagePack binary via a `geny.Writable`
     */
-  def streamBinary[T: Writer](t: T): geny.Writable = new geny.Writable{
+  def streamBinary[T: Writer](t: T, sortKeys: Boolean = false): geny.Writable = new geny.Writable{
     override def httpContentType = Some("application/octet-stream")
-    def writeBytesTo(out: java.io.OutputStream) = transform(t).to(new upack.MsgPackWriter(out))
+    def writeBytesTo(out: java.io.OutputStream) = maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(out))
+  }
+
+  // Binary Compatibility Stub
+  def streamBinary[T: Writer](t: T): geny.Writable = {
+    streamBinary(t, sortKeys = false)
   }
 
   def writer[T: Writer] = implicitly[Writer[T]]
@@ -241,6 +323,11 @@ trait AttributeTagged extends Api with Annotator{
   }
 
   def taggedExpectedMsg = "expected dictionary"
+  private def isTagName(i: Any) = i match{
+    case s: BufferedValue.Str => s.value0.toString == tagName
+    case s: CharSequence => s.toString == tagName
+    case _ => false
+  }
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
     new ObjVisitor[Any, T]{
       private[this] var fastPath = false
@@ -256,10 +343,10 @@ trait AttributeTagged extends Api with Annotator{
       def visitKeyValue(s: Any): Unit = {
         if (context != null) context.visitKeyValue(s)
         else {
-          if (s.toString == tagName) () //do nothing
+          if (isTagName(s)) () //do nothing
           else {
             // otherwise, go slow path
-            val slowCtx = IndexedValue.Builder.visitObject(-1, true, index).narrow
+            val slowCtx = BufferedValue.Builder.visitObject(-1, true, index).narrow
             val keyVisitor = slowCtx.visitKey(index)
             val xxx = keyVisitor.visitString(s.toString, index)
             slowCtx.visitKeyValue(xxx)
@@ -286,11 +373,11 @@ trait AttributeTagged extends Api with Annotator{
         if (context == null) throw new Abort(missingKeyMsg)
         else if (fastPath) context.visitEnd(index).asInstanceOf[T]
         else{
-          val x = context.visitEnd(index).asInstanceOf[IndexedValue.Obj]
-          val keyAttr = x.value0.find(_._1.toString == tagName)
+          val x = context.visitEnd(index).asInstanceOf[BufferedValue.Obj]
+          val keyAttr = x.value0.find(t => isTagName(t._1))
             .getOrElse(throw new Abort(missingKeyMsg))
             ._2
-          val key = keyAttr.asInstanceOf[IndexedValue.Str].value0.toString
+          val key = keyAttr.asInstanceOf[BufferedValue.Str].value0.toString
           val delegate = taggedReader.findReader(key)
           if (delegate == null){
             throw new AbortException("invalid tag for tagged object: " + key, keyAttr.index, -1, -1, null)
@@ -298,12 +385,12 @@ trait AttributeTagged extends Api with Annotator{
           val ctx2 = delegate.visitObject(-1, true, -1)
           for (p <- x.value0) {
             val (k0, v) = p
-            val k = k0.toString
-            if (k != tagName){
+            val k = k0
+            if (!isTagName(k)){
               val keyVisitor = ctx2.visitKey(-1)
 
-              ctx2.visitKeyValue(keyVisitor.visitString(k, -1))
-              ctx2.visitValue(IndexedValue.transform(v, ctx2.subVisitor), -1)
+              ctx2.visitKeyValue(BufferedValue.transform(k, keyVisitor))
+              ctx2.visitValue(BufferedValue.transform(v, ctx2.subVisitor), -1)
             }
           }
           ctx2.visitEnd(index)
