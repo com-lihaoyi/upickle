@@ -10,10 +10,12 @@ import upickle.core.{Visitor, ObjVisitor, ArrVisitor, Abort, AbortException}
   * want to work with an AST but still provide source-index error positions if
   * something goes wrong
   */
+@Deprecated("Left for binary compatibility, use upickle.core.BufferedValue instead")
 sealed trait IndexedValue {
   def index: Int
 }
 
+@Deprecated("Left for binary compatibility, use upickle.core.BufferedValue instead")
 object IndexedValue extends Transformer[IndexedValue]{
   
   case class Str(index: Int, value0: java.lang.CharSequence) extends IndexedValue
