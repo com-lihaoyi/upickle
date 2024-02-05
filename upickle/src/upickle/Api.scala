@@ -54,7 +54,7 @@ trait Api
     maybeSortKeysTransform(t, sortKeys, ujson.StringRenderer(indent, escapeUnicode)).toString
   }
 
-  // Binary Compatibility Stub
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def write[T: Writer](t: T,
                        indent: Int,
                        escapeUnicode: Boolean): String = {
@@ -69,7 +69,7 @@ trait Api
     maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
   }
 
-  // Binary Compatibility Stub
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def writeBinary[T: Writer](t: T): Array[Byte] = writeBinary(t, sortKeys = false)
 
   /**
@@ -93,7 +93,8 @@ trait Api
     maybeSortKeysTransform(t, sortKeys, new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
 
-  // Binary Compatibility Stub
+
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def writeTo[T: Writer](t: T,
                          out: java.io.Writer,
                          indent: Int,
@@ -107,7 +108,7 @@ trait Api
     maybeSortKeysTransform(t, sortKeys, new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
   }
 
-  // Binary Compatibility Stub
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def writeToOutputStream[T: Writer](t: T,
                                      out: java.io.OutputStream,
                                      indent: Int,
@@ -124,7 +125,7 @@ trait Api
     out.toByteArray
   }
 
-  // Binary Compatibility Stub
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def writeToByteArray[T: Writer](t: T,
                                   indent: Int,
                                   escapeUnicode: Boolean): Array[Byte] = {
@@ -143,7 +144,7 @@ trait Api
     }
   }
 
-  // Binary Compatibility Stub
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def stream[T: Writer](t: T,
                         indent: Int,
                         escapeUnicode: Boolean): geny.Writable = {
@@ -157,7 +158,8 @@ trait Api
                                sortKeys: Boolean = false): Unit = {
     streamBinary[T](t, sortKeys = sortKeys).writeBytesTo(out)
   }
-  // Binary Compatibility Stub
+
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def writeBinaryTo[T: Writer](t: T,
                                out: java.io.OutputStream): Unit = {
     writeBinaryTo(t, out, sortKeys = false)
@@ -170,7 +172,7 @@ trait Api
     out.toByteArray
   }
 
-  // Binary Compatibility Stub
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def writeBinaryToByteArray[T: Writer](t: T): Array[Byte] = {
     writeBinaryToByteArray(t, sortKeys = false)
   }
@@ -182,7 +184,7 @@ trait Api
     def writeBytesTo(out: java.io.OutputStream) = maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(out))
   }
 
-  // Binary Compatibility Stub
+  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
   def streamBinary[T: Writer](t: T): geny.Writable = {
     streamBinary(t, sortKeys = false)
   }
