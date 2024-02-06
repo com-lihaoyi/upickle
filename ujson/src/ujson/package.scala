@@ -8,7 +8,7 @@ package object ujson{
     BufferedValue.maybeSortKeysTransform(Readable, t, sortKeys, v)
   }
 
-//  @deprecated("Binary Compatibility Stub", "After 3.1.4")
+//  @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def transform[T](t: Readable,
                    v: upickle.core.Visitor[_, T]): T = transform(t, v, sortKeys = false)
   /**
@@ -31,7 +31,7 @@ package object ujson{
     writer.toString
   }
 
-  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
+  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def write(t: Value.Value,
             indent: Int,
             escapeUnicode: Boolean): String = {
@@ -49,7 +49,7 @@ package object ujson{
     transform(t, Renderer(out, indent, escapeUnicode), sortKeys)
   }
 
-  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
+  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def writeTo(t: Value.Value,
               out: java.io.Writer,
               indent: Int,
@@ -65,7 +65,7 @@ package object ujson{
     transform(t, new BaseByteRenderer(out, indent, escapeUnicode), sortKeys)
   }
 
-  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
+  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def writeToOutputStream(t: Value.Value,
                           out: java.io.OutputStream,
                           indent: Int,
@@ -82,7 +82,7 @@ package object ujson{
     baos.toByteArray
   }
 
-  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
+  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def writeToByteArray(t: Value.Value,
                        indent: Int,
                        escapeUnicode: Boolean): Array[Byte] = {
@@ -106,7 +106,7 @@ package object ujson{
     writer.toString
   }
 
-  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
+  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def reformat(s: Readable,
                indent: Int,
                escapeUnicode: Boolean): String = {
@@ -124,7 +124,7 @@ package object ujson{
     transform(s, Renderer(out, indent, escapeUnicode), sortKeys)
   }
 
-  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
+  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def reformatTo(s: Readable,
                  out: java.io.Writer,
                  indent: Int,
@@ -143,7 +143,7 @@ package object ujson{
     transform(s, new BaseByteRenderer(out, indent, escapeUnicode), sortKeys)
   }
 
-  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
+  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def reformatToOutputStream(s: Readable,
                              out: java.io.OutputStream,
                              indent: Int,
@@ -160,7 +160,7 @@ package object ujson{
     baos.toByteArray
   }
 
-  // @deprecated("Binary Compatibility Stub", "After 3.1.4")
+  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
   def reformatToByteArray(s: Readable,
                           indent: Int,
                           escapeUnicode: Boolean): Array[Byte] = {
