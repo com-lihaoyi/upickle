@@ -6,6 +6,7 @@ import language.experimental.macros
 import language.higherKinds
 import upickle.core._
 import scala.reflect.ClassTag
+import unroll.Unroll
 
 /**
  * An instance of the upickle API. There's a default instance at
@@ -50,27 +51,17 @@ trait Api
   def write[T: Writer](t: T,
                        indent: Int = -1,
                        escapeUnicode: Boolean = false,
-                       sortKeys: Boolean = false): String = {
+                       @Unroll sortKeys: Boolean = false): String = {
     maybeSortKeysTransform(t, sortKeys, ujson.StringRenderer(indent, escapeUnicode)).toString
-  }
-
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def write[T: Writer](t: T,
-                       indent: Int,
-                       escapeUnicode: Boolean): String = {
-    write(t, indent, escapeUnicode, sortKeys = false)
   }
 
   /**
     * Write the given Scala value as a MessagePack binary
     */
   def writeBinary[T: Writer](t: T,
-                             sortKeys: Boolean = false): Array[Byte] = {
+                             @Unroll sortKeys: Boolean = false): Array[Byte] = {
     maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
   }
-
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeBinary[T: Writer](t: T): Array[Byte] = writeBinary(t, sortKeys = false)
 
   /**
     * Write the given Scala value as a JSON struct
@@ -89,105 +80,64 @@ trait Api
                          out: java.io.Writer,
                          indent: Int = -1,
                          escapeUnicode: Boolean = false,
-                         sortKeys: Boolean = false): Unit = {
+                         @Unroll sortKeys: Boolean = false): Unit = {
     maybeSortKeysTransform(t, sortKeys, new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
-
-
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeTo[T: Writer](t: T,
-                         out: java.io.Writer,
-                         indent: Int,
-                         escapeUnicode: Boolean): Unit = writeTo(t, out, indent, escapeUnicode, sortKeys = false)
 
   def writeToOutputStream[T: Writer](t: T,
                                      out: java.io.OutputStream,
                                      indent: Int = -1,
                                      escapeUnicode: Boolean = false,
-                                     sortKeys: Boolean = false): Unit = {
+                                     @Unroll sortKeys: Boolean = false): Unit = {
     maybeSortKeysTransform(t, sortKeys, new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
-  }
-
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeToOutputStream[T: Writer](t: T,
-                                     out: java.io.OutputStream,
-                                     indent: Int,
-                                     escapeUnicode: Boolean): Unit = {
-    writeToOutputStream(t, out, indent, escapeUnicode, sortKeys = false)
   }
 
   def writeToByteArray[T: Writer](t: T,
                                   indent: Int = -1,
                                   escapeUnicode: Boolean = false,
-                                  sortKeys: Boolean = false): Array[Byte] = {
+                                  @Unroll sortKeys: Boolean = false): Array[Byte] = {
     val out = new java.io.ByteArrayOutputStream()
     writeToOutputStream(t, out, indent, escapeUnicode, sortKeys)
     out.toByteArray
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeToByteArray[T: Writer](t: T,
-                                  indent: Int,
-                                  escapeUnicode: Boolean): Array[Byte] = {
-    writeToByteArray[T](t, indent, escapeUnicode, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a JSON string via a `geny.Writable`
     */
   def stream[T: Writer](t: T,
                         indent: Int = -1,
                         escapeUnicode: Boolean = false,
-                        sortKeys: Boolean = false): geny.Writable = new geny.Writable{
+                        @Unroll sortKeys: Boolean = false): geny.Writable = new geny.Writable{
     override def httpContentType = Some("application/json")
     def writeBytesTo(out: java.io.OutputStream) = {
       maybeSortKeysTransform(t, sortKeys, new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
     }
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def stream[T: Writer](t: T,
-                        indent: Int,
-                        escapeUnicode: Boolean): geny.Writable = {
-    stream(t, indent, escapeUnicode, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a MessagePack binary to the given OutputStream
     */
   def writeBinaryTo[T: Writer](t: T,
                                out: java.io.OutputStream,
-                               sortKeys: Boolean = false): Unit = {
+                               @Unroll sortKeys: Boolean = false): Unit = {
     streamBinary[T](t, sortKeys = sortKeys).writeBytesTo(out)
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeBinaryTo[T: Writer](t: T,
-                               out: java.io.OutputStream): Unit = {
-    writeBinaryTo(t, out, sortKeys = false)
-  }
-
   def writeBinaryToByteArray[T: Writer](t: T,
-                                        sortKeys: Boolean = false): Array[Byte] = {
+                                        @Unroll sortKeys: Boolean = false): Array[Byte] = {
     val out = new java.io.ByteArrayOutputStream()
     streamBinary[T](t, sortKeys = sortKeys).writeBytesTo(out)
     out.toByteArray
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeBinaryToByteArray[T: Writer](t: T): Array[Byte] = {
-    writeBinaryToByteArray(t, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a MessagePack binary via a `geny.Writable`
     */
-  def streamBinary[T: Writer](t: T, sortKeys: Boolean = false): geny.Writable = new geny.Writable{
+  def streamBinary[T: Writer](t: T, @Unroll sortKeys: Boolean = false): geny.Writable = new geny.Writable{
     override def httpContentType = Some("application/octet-stream")
     def writeBytesTo(out: java.io.OutputStream) = maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(out))
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def streamBinary[T: Writer](t: T): geny.Writable = {
-    streamBinary(t, sortKeys = false)
-  }
 
   def writer[T: Writer] = implicitly[Writer[T]]
 

@@ -15,18 +15,18 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
 val scala212  = "2.12.18"
-val scala213  = "2.13.11"
+val scala213  = "2.13.12"
 
 val scala3   = "3.3.0"
 val scalaNative = "0.4.14"
-val acyclic = "0.3.8"
+val acyclic = "0.3.9"
 
 val sourcecode = "0.3.0"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
 val scala2JVMVersions = Seq(scala212, scala213)
-val scalaVersions = scala2JVMVersions// ++ Seq(scala3) ++ dottyCustomVersion
+val scalaVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 trait CommonPlatformModule extends ScalaModule with PlatformScalaModule{
 
@@ -58,6 +58,10 @@ trait CommonPublishModule
     )
   )
 
+  def scalacPluginIvyDeps =
+    super.scalacPluginIvyDeps() ++ Agg(ivy"com.lihaoyi::unroll-plugin:0.1.3")
+
+
   def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
     "info.releaseNotesURL" -> "https://com-lihaoyi.github.io/upickle/#VersionHistory"
   )
@@ -84,7 +88,7 @@ trait CommonPublishModule
   }
 
   def scalacOptions = T {
-    Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-feature", "-Xfatal-warnings") ++
+    Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-feature", "-Xfatal-warnings", "-Xplugin-require:unroll") ++
     Agg.when(!isScala3(scalaVersion()))("-opt:l:method").toSeq
   }
 
@@ -219,7 +223,10 @@ object ujson extends Module{
 object upickle extends Module{  
   object core extends Module {
     trait CommonCoreModule extends CommonPublishModule {
-      def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.0.0")
+      def ivyDeps = Agg(
+        ivy"com.lihaoyi::geny::1.0.0",
+        ivy"com.lihaoyi::unroll-annotation:0.1.3"
+      )
     }
 
     object js extends Cross[CoreJsModule](scalaVersions)
