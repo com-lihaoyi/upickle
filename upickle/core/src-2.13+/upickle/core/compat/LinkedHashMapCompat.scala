@@ -1,7 +1,7 @@
 package upickle.core.compat
 
-import upickle.core.compat.Factory
 import upickle.core.LinkedHashMap
+import upickle.core.compat.Factory
 
 import scala.collection.mutable
 

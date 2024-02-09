@@ -114,5 +114,32 @@ object JsonTests extends TestSuite {
       reader.getBufferCopyCount() ==> 0
       reader.getBufferLength() ==> bytes.length
     }
+    test("sortKeys"){
+      val raw = """{"d": [{"c": 0, "b": 1}], "a": 2}"""
+      val sorted = """{
+                     |    "a": 2,
+                     |    "d": [
+                     |        {
+                     |            "b": 1,
+                     |            "c": 0
+                     |        }
+                     |    ]
+                     |}""".stripMargin
+      ujson.reformat(raw, indent = 4, sortKeys = true) ==> sorted
+      
+      ujson.write(ujson.read(raw), indent = 4, sortKeys = true) ==> sorted
+      
+      val baos = new java.io.ByteArrayOutputStream
+      ujson.writeToOutputStream(ujson.read(raw), baos, indent = 4, sortKeys = true)
+      baos.toString ==> sorted
+      
+      val writer = new java.io.StringWriter
+      ujson.writeTo(ujson.read(raw), writer, indent = 4, sortKeys = true)
+      writer.toString ==> sorted
+      
+      new String(ujson.writeToByteArray(ujson.read(raw), indent = 4, sortKeys = true)) ==> sorted
+      
+      new String(ujson.reformatToByteArray(raw, indent = 4, sortKeys = true)) ==> sorted
+    }
   }
 }

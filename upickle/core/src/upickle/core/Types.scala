@@ -115,7 +115,7 @@ trait Types{ types =>
     * Generally nothing more than a way of applying the [[T]] to
     * a [[Visitor]], along with some utility methods
     */
-  trait Writer[T] {
+  trait Writer[T] extends Transformer[T]{
     /**
      * Whether or not the type being written can be used as a key in a JSON dictionary.
      * Opt-in, and only applicable to writers that write primitive types like

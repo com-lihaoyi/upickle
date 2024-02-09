@@ -218,6 +218,18 @@ object ExampleTests extends TestSuite {
             |        "myFieldB": ""
             |    }
             |}""".stripMargin
+        
+        write(Big(1, true, "lol", 'Z', Thing(7, "")), indent = 4, sortKeys = true) ==>
+          """{
+            |    "b": true,
+            |    "c": "Z",
+            |    "i": 1,
+            |    "str": "lol",
+            |    "t": {
+            |        "myFieldA": 7,
+            |        "myFieldB": ""
+            |    }
+            |}""".stripMargin
         }
 
 

@@ -10,7 +10,10 @@ trait Readable {
   def transform[T](f: Visitor[_, T]): T
 }
 
-object Readable extends ReadableLowPri{
+object Readable extends ReadableLowPri with Transformer[Readable]{
+  def transform[T](j: ujson.Readable, f: upickle.core.Visitor[_, T]): T = {
+    j.transform(f) 
+  }
   case class fromTransformer[T](t: T, w: Transformer[T]) extends Readable{
     def transform[T](f: Visitor[_, T]): T = {
       w.transform(t, f)

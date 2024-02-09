@@ -5,7 +5,7 @@ import upickle.core.compat._
 
 import scala.language.higherKinds
 
-trait AstTransformer[I] extends Transformer[I] with JsVisitor[I, I]{
+trait AstTransformer[I] extends ujson.Transformer[I] with JsVisitor[I, I]{
   def apply(t: Readable): I = t.transform(this)
 
   def transformArray[T](f: Visitor[_, T], items: Iterable[I]) = {

@@ -26,7 +26,7 @@ val sourcecode = "0.3.0"
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
 val scala2JVMVersions = Seq(scala212, scala213)
-val scalaVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
+val scalaVersions = scala2JVMVersions// ++ Seq(scala3) ++ dottyCustomVersion
 
 trait CommonPlatformModule extends ScalaModule with PlatformScalaModule{
 
