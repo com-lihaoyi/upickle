@@ -59,7 +59,7 @@ trait CommonPublishModule
   )
 
   def scalacPluginIvyDeps =
-    super.scalacPluginIvyDeps() ++ Agg(ivy"com.lihaoyi::unroll-plugin:0.1.3")
+    super.scalacPluginIvyDeps() ++ Agg(ivy"com.lihaoyi::unroll-plugin:0.1.7")
 
 
   def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
@@ -88,7 +88,7 @@ trait CommonPublishModule
   }
 
   def scalacOptions = T {
-    Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-feature", "-Xfatal-warnings", "-Xplugin-require:unroll") ++
+    Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-feature", "-Xfatal-warnings") ++
     Agg.when(!isScala3(scalaVersion()))("-opt:l:method").toSeq
   }
 
@@ -225,7 +225,7 @@ object upickle extends Module{
     trait CommonCoreModule extends CommonPublishModule {
       def ivyDeps = Agg(
         ivy"com.lihaoyi::geny::1.0.0",
-        ivy"com.lihaoyi::unroll-annotation:0.1.3"
+        ivy"com.lihaoyi::unroll-annotation:0.1.7"
       )
     }
 
