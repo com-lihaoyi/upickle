@@ -17,7 +17,7 @@ import com.github.lolgab.mill.mima._
 val scala212  = "2.12.18"
 val scala213  = "2.13.12"
 
-val scala3   = "3.3.0"
+val scala3   = "3.3.1"
 val scalaNative = "0.4.14"
 val acyclic = "0.3.9"
 
@@ -59,7 +59,7 @@ trait CommonPublishModule
   )
 
   def scalacPluginIvyDeps =
-    super.scalacPluginIvyDeps() ++ Agg(ivy"com.lihaoyi::unroll-plugin:0.1.7")
+    super.scalacPluginIvyDeps() ++ Agg(ivy"com.lihaoyi::unroll-plugin:0.1.9")
 
 
   def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
@@ -225,7 +225,7 @@ object upickle extends Module{
     trait CommonCoreModule extends CommonPublishModule {
       def ivyDeps = Agg(
         ivy"com.lihaoyi::geny::1.0.0",
-        ivy"com.lihaoyi::unroll-annotation:0.1.7"
+        ivy"com.lihaoyi::unroll-annotation:0.1.9"
       )
     }
 
