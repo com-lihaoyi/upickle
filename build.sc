@@ -59,7 +59,7 @@ trait CommonPublishModule
   )
 
   def scalacPluginIvyDeps =
-    super.scalacPluginIvyDeps() ++ Agg(ivy"com.lihaoyi::unroll-plugin:0.1.9")
+    super.scalacPluginIvyDeps() ++ Agg(ivy"com.lihaoyi::unroll-plugin:0.1.10")
 
 
   def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
@@ -225,7 +225,7 @@ object upickle extends Module{
     trait CommonCoreModule extends CommonPublishModule {
       def ivyDeps = Agg(
         ivy"com.lihaoyi::geny::1.0.0",
-        ivy"com.lihaoyi::unroll-annotation:0.1.9"
+        ivy"com.lihaoyi::unroll-annotation:0.1.10"
       )
     }
 
@@ -386,7 +386,7 @@ trait BenchModule extends CommonPlatformModule{
 
 object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
-    def scalaJSVersion = "1.13.0"
+    def scalaJSVersion = "1.13.1"
     def moduleDeps = Seq(upickle.js(scala213).test)
   }
 
