@@ -610,34 +610,101 @@ object StructTests extends TestSuite {
       test("null") - rw(ujson.Null, """null""")
     }
     test("sortKeys") {
-      val raw = """{"d": [{"c": 0, "b": 1}], "a": []}"""
-      val sorted =
-        """{
-          |    "a": [],
-          |    "d": [
-          |        {
-          |            "b": 1,
-          |            "c": 0
-          |        }
-          |    ]
-          |}""".stripMargin
-      val struct = upickle.default.read[Map[String, Seq[Map[String, Int]]]](raw)
+      test("streaming") {
+        val raw = """{"d": [{"c": 0, "b": 1}], "a": []}"""
+        val sorted =
+          """{
+            |    "a": [],
+            |    "d": [
+            |        {
+            |            "b": 1,
+            |            "c": 0
+            |        }
+            |    ]
+            |}""".stripMargin
+        val struct = upickle.default.read[Map[String, Seq[Map[String, Int]]]](raw)
 
-      upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
+        upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
 
-      val baos = new java.io.ByteArrayOutputStream
-      upickle.default.writeToOutputStream(struct, baos, indent = 4, sortKeys = true)
-      baos.toString ==> sorted
+        val baos = new java.io.ByteArrayOutputStream
+        upickle.default.writeToOutputStream(struct, baos, indent = 4, sortKeys = true)
+        baos.toString ==> sorted
 
-      val writer = new java.io.StringWriter
-      upickle.default.writeTo(struct, writer, indent = 4, sortKeys = true)
-      writer.toString ==> sorted
+        val writer = new java.io.StringWriter
+        upickle.default.writeTo(struct, writer, indent = 4, sortKeys = true)
+        writer.toString ==> sorted
 
-      new String(upickle.default.writeToByteArray(struct, indent = 4, sortKeys = true)) ==> sorted
+        new String(upickle.default.writeToByteArray(struct, indent = 4, sortKeys = true)) ==> sorted
 
-      val baos2 = new java.io.ByteArrayOutputStream
-      upickle.default.stream(struct, indent = 4, sortKeys = true).writeBytesTo(baos2)
-      baos2.toString() ==> sorted
+        val baos2 = new java.io.ByteArrayOutputStream
+        upickle.default.stream(struct, indent = 4, sortKeys = true).writeBytesTo(baos2)
+        baos2.toString() ==> sorted
+      }
+
+      test("ints") {
+        val raw = """{"27": [{"10": 0, "2": 1}], "3": []}"""
+        val sorted =
+          """{
+            |    "3": [],
+            |    "27": [
+            |        {
+            |            "2": 1,
+            |            "10": 0
+            |        }
+            |    ]
+            |}""".stripMargin
+        val struct = upickle.default.read[Map[Int, Seq[Map[Int, Int]]]](raw)
+
+        upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
+      }
+      test("longs") {
+        val raw = """{"27": [{"10": 0, "2": 1}], "300": []}"""
+        val sorted =
+          """{
+            |    "27": [
+            |        {
+            |            "2": 1,
+            |            "10": 0
+            |        }
+            |    ],
+            |    "300": []
+            |}""".stripMargin
+        val struct = upickle.default.read[Map[Long, Seq[Map[Long, Int]]]](raw)
+
+        upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
+      }
+      test("floats") {
+        val raw = """{"27.5": [{"10.5": 0, "2.5": 1}], "3.5": []}"""
+        val sorted =
+          """{
+            |    "3.5": [],
+            |    "27.5": [
+            |        {
+            |            "2.5": 1,
+            |            "10.5": 0
+            |        }
+            |    ]
+            |}""".stripMargin
+        val struct = upickle.default.read[Map[Float, Seq[Map[Float, Int]]]](raw)
+
+        upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
+      }
+      test("doubles") {
+        val raw = """{"27.5": [{"10.5": 0, "2.5": 1}], "3.5": []}"""
+        val sorted =
+          """{
+            |    "3.5": [],
+            |    "27.5": [
+            |        {
+            |            "2.5": 1,
+            |            "10.5": 0
+            |        }
+            |    ]
+            |}""".stripMargin
+        val struct = upickle.default.read[Map[Double, Seq[Map[Double, Int]]]](raw)
+
+        upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
+      }
     }
   }
 }
