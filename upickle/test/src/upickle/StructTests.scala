@@ -705,6 +705,24 @@ object StructTests extends TestSuite {
 
         upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
       }
+      test("strings") {
+        // Make sure that when we treat things as Strings, they are sorted
+        // as strings, unlike the above cases where they are treated as numbers
+        val raw = """{"27.5": [{"10.5": 0, "2.5": 1}], "3.5": []}"""
+        val sorted =
+          """{
+            |    "27.5": [
+            |        {
+            |            "10.5": 0,
+            |            "2.5": 1
+            |        }
+            |    ],
+            |    "3.5": []
+            |}""".stripMargin
+        val struct = upickle.default.read[Map[String, Seq[Map[String, Int]]]](raw)
+
+        upickle.default.write(struct, indent = 4, sortKeys = true) ==> sorted
+      }
     }
   }
 }
