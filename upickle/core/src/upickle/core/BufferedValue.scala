@@ -2,6 +2,7 @@ package upickle.core
 
 import upickle.core.ParseUtils.reject
 import scala.collection.mutable
+import upickle.core.compat.{SortInPlace, DistinctBy}
 
 /**
   * A reified version of [[Visitor]], allowing visitor method calls to be buffered up,
@@ -13,35 +14,55 @@ sealed trait BufferedValue {
 
 object BufferedValue extends Transformer[BufferedValue]{
   def valueToSortKey(b: BufferedValue): String = b match{
-    case BufferedValue.Null(i) => "00"
-    case BufferedValue.True(i) => "01" + "true"
-    case BufferedValue.False(i) => "02" + "false"
-    case BufferedValue.Str(s, i) => "03" +  s.toString
-    case BufferedValue.Num(s, _, _, i) => "04" + s.toString
-    case BufferedValue.Char(c, i) => "05" + c.toString
-    case BufferedValue.Binary(bytes, o, l, _) => "06" + new String(bytes, o, l)
-    case BufferedValue.Ext(tag, bytes, o, l, i) => "07" + tag.toString + new String(bytes, o, l)
-    case BufferedValue.Float32(f, i) => "08" + f.toString
-    case BufferedValue.Float64String(s, i) => "09" + s
-    case BufferedValue.Int32(n, i) => "10" + n.toString
-    case BufferedValue.Int64(n, i) => "11" + n.toString
-    case BufferedValue.NumRaw(d, i) => "12" + d.toString
-    case BufferedValue.UInt64(n, i) => "13" + n.toString
-    case BufferedValue.Arr(vs, i) => "14" + vs.map(valueToSortKey).mkString
-    case BufferedValue.Obj(kvs, _, i) => "15" + kvs.map{case (k, v) => valueToSortKey(k) + valueToSortKey(v)}.mkString
+    case BufferedValue.Null(i) => "null"
+    case BufferedValue.True(i) => "true"
+    case BufferedValue.False(i) => "false"
+    case BufferedValue.Str(s, i) => s.toString
+    case BufferedValue.Num(s, _, _, i) => s.toString
+    case BufferedValue.Char(c, i) => c.toString
+    case BufferedValue.Binary(bytes, o, l, _) => new String(bytes, o, l)
+    case BufferedValue.Ext(tag, bytes, o, l, i) => tag.toString + new String(bytes, o, l)
+    case BufferedValue.Float32(f, i) => f.toString
+    case BufferedValue.Float64String(s, i) => s
+    case BufferedValue.Int32(n, i) => n.toString
+    case BufferedValue.Int64(n, i) => n.toString
+    case BufferedValue.NumRaw(d, i) => d.toString
+    case BufferedValue.UInt64(n, i) => n.toString
+    case BufferedValue.Arr(vs, i) => vs.map(valueToSortKey).mkString
+    case BufferedValue.Obj(kvs, _, i) => kvs.map{case (k, v) => valueToSortKey(k) + valueToSortKey(v)}.mkString
   }
 
   def maybeSortKeysTransform[T, V](tr: Transformer[T],
                                    t: T,
                                    sortKeys: Boolean,
                                    f: Visitor[_, V]): V = {
+
     def rec(x: BufferedValue): Unit = {
       x match {
         case BufferedValue.Arr(items, i) => items.map(rec)
         case BufferedValue.Obj(items, jsonableKeys, i) =>
-          upickle.core.compat.SortInPlace[(BufferedValue, BufferedValue), String](items) {
-            case (k, v) => valueToSortKey(k)
+
+          // Special case handling for objects whose keys are all numbers
+          DistinctBy(items)(_._1.getClass) match{
+            case collection.Seq((_: BufferedValue.Num, _)) =>
+              SortInPlace(items) { case (k: BufferedValue.Num, v) => k.s.toString.toDouble}
+            case collection.Seq((_: BufferedValue.Float32, _)) =>
+              SortInPlace(items) {  case (k: BufferedValue.Float32, v) => k.d }
+            case collection.Seq((_: BufferedValue.Float64String, _)) =>
+              SortInPlace(items) { case (k: BufferedValue.Float64String, v) => k.s.toDouble }
+            case collection.Seq((_: BufferedValue.Int32, _)) =>
+              SortInPlace(items) { case (k: BufferedValue.Int32, v) => k.i }
+            case collection.Seq((_: BufferedValue.Int64, _)) =>
+              SortInPlace(items) { case (k: BufferedValue.Int64, v) => k.i }
+            case collection.Seq((_: BufferedValue.NumRaw, _)) =>
+              SortInPlace(items) { case (k: BufferedValue.NumRaw, v) => k.d }
+            case collection.Seq((_: BufferedValue.UInt64, _)) =>
+              SortInPlace(items) { case (k: BufferedValue.UInt64, v) => k.i }
+            case _ =>
+              // Fall back to generic string-based sorting routine
+              SortInPlace(items) { case (k, v) => valueToSortKey(k)}
           }
+
           items.foreach { case (c, v) => (c, rec(v)) }
         case v =>
       }
