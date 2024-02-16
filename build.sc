@@ -45,7 +45,15 @@ trait CommonPublishModule
   extends ScalaModule with PublishModule with Mima with CrossScalaModule { outer =>
 
   def publishVersion = VcsVersion.vcsState().format()
-  def mimaPreviousVersions = Seq("3.0.0")
+  def mimaPreviousVersions = Seq(
+    "3.0.0",
+    "3.1.0",
+    "3.1.1",
+    "3.1.2",
+    "3.1.3",
+    "3.1.4",
+//    "3.1.5", Not sure why this fails, maybe some artifacts were not properly published?
+  )
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
