@@ -99,7 +99,7 @@ trait CommonPublishModule
         "-Ximplicit-search-limit",
         "200000",
         "-Xmax-inlines",
-        "150"
+        "155"
       )
   }
 }
