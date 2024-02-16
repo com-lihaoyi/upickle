@@ -17,7 +17,7 @@ import com.github.lolgab.mill.mima._
 val scala212  = "2.12.18"
 val scala213  = "2.13.11"
 
-val scala3   = "3.3.0"
+val scala3   = "3.3.1"
 val scalaNative = "0.4.14"
 val acyclic = "0.3.8"
 
@@ -26,7 +26,7 @@ val sourcecode = "0.3.0"
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
 val scala2JVMVersions = Seq(scala212, scala213)
-val scalaVersions = scala2JVMVersions// ++ Seq(scala3) ++ dottyCustomVersion
+val scalaVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 trait CommonPlatformModule extends ScalaModule with PlatformScalaModule{
 
@@ -97,7 +97,9 @@ trait CommonPublishModule
     def scalacOptions = super.scalacOptions() ++
       Agg.when(isScala3(scalaVersion())) (
         "-Ximplicit-search-limit",
-        "200000"
+        "200000",
+        "-Xmax-inlines",
+        "155"
       )
   }
 }
