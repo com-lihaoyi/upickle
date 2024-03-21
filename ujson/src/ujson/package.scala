@@ -1,10 +1,10 @@
 import upickle.core.NoOpVisitor
 import upickle.core.BufferedValue
-import unroll.Unroll
+import scala.annotation.unroll
 package object ujson{
   def transform[T](t: Readable,
                    v: upickle.core.Visitor[_, T],
-                   @Unroll sortKeys: Boolean = false): T = {
+                   @unroll sortKeys: Boolean = false): T = {
     BufferedValue.maybeSortKeysTransform(Readable, t, sortKeys, v)
   }
 
@@ -22,7 +22,7 @@ package object ujson{
   def write(t: Value.Value,
             indent: Int = -1,
             escapeUnicode: Boolean = false,
-            @Unroll sortKeys: Boolean = false): String = {
+            @unroll sortKeys: Boolean = false): String = {
     val writer = new java.io.StringWriter
     writeTo(t, writer, indent, escapeUnicode, sortKeys)
     writer.toString
@@ -35,7 +35,7 @@ package object ujson{
               out: java.io.Writer,
               indent: Int = -1,
               escapeUnicode: Boolean = false,
-              @Unroll sortKeys: Boolean = false): Unit = {
+              @unroll sortKeys: Boolean = false): Unit = {
     transform(t, Renderer(out, indent, escapeUnicode), sortKeys)
   }
 
@@ -43,14 +43,14 @@ package object ujson{
                           out: java.io.OutputStream,
                           indent: Int = -1,
                           escapeUnicode: Boolean = false,
-                          @Unroll sortKeys: Boolean = false): Unit = {
+                          @unroll sortKeys: Boolean = false): Unit = {
     transform(t, new BaseByteRenderer(out, indent, escapeUnicode), sortKeys)
   }
 
   def writeToByteArray(t: Value.Value,
                        indent: Int = -1,
                        escapeUnicode: Boolean = false,
-                       @Unroll sortKeys: Boolean = false): Array[Byte] = {
+                       @unroll sortKeys: Boolean = false): Array[Byte] = {
     val baos = new java.io.ByteArrayOutputStream
     writeToOutputStream(t, baos, indent, escapeUnicode, sortKeys)
     baos.toByteArray
@@ -67,7 +67,7 @@ package object ujson{
   def reformat(s: Readable,
                indent: Int = -1,
                escapeUnicode: Boolean = false,
-               @Unroll sortKeys: Boolean = false): String = {
+               @unroll sortKeys: Boolean = false): String = {
     val writer = new java.io.StringWriter()
     reformatTo(s, writer, indent, escapeUnicode, sortKeys)
     writer.toString
@@ -81,7 +81,7 @@ package object ujson{
                  out: java.io.Writer,
                  indent: Int = -1,
                  escapeUnicode: Boolean = false,
-                 @Unroll sortKeys: Boolean = false): Unit = {
+                 @unroll sortKeys: Boolean = false): Unit = {
     transform(s, Renderer(out, indent, escapeUnicode), sortKeys)
   }
 
@@ -93,14 +93,14 @@ package object ujson{
                              out: java.io.OutputStream,
                              indent: Int = -1,
                              escapeUnicode: Boolean = false,
-                             @Unroll sortKeys: Boolean = false): Unit = {
+                             @unroll sortKeys: Boolean = false): Unit = {
     transform(s, new BaseByteRenderer(out, indent, escapeUnicode), sortKeys)
   }
 
   def reformatToByteArray(s: Readable,
                           indent: Int = -1,
                           escapeUnicode: Boolean = false,
-                          @Unroll sortKeys: Boolean = false): Array[Byte] = {
+                          @unroll sortKeys: Boolean = false): Array[Byte] = {
     val baos = new java.io.ByteArrayOutputStream
     reformatToOutputStream(s, baos, indent, escapeUnicode, sortKeys)
     baos.toByteArray
