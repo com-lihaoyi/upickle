@@ -15,11 +15,11 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
 val scala212  = "2.12.18"
-val scala213  = "2.13.11"
+val scala213  = "2.13.12"
 
 val scala3   = "3.3.1"
 val scalaNative = "0.4.14"
-val acyclic = "0.3.8"
+val acyclic = "0.3.9"
 
 val sourcecode = "0.3.0"
 
@@ -65,6 +65,10 @@ trait CommonPublishModule
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
     )
   )
+
+  def scalacPluginIvyDeps =
+    super.scalacPluginIvyDeps() ++ Agg(ivy"com.lihaoyi::unroll-plugin:0.1.12")
+
 
   def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
     "info.releaseNotesURL" -> "https://com-lihaoyi.github.io/upickle/#VersionHistory"
@@ -229,7 +233,10 @@ object ujson extends Module{
 object upickle extends Module{  
   object core extends Module {
     trait CommonCoreModule extends CommonPublishModule {
-      def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.0.0")
+      def ivyDeps = Agg(
+        ivy"com.lihaoyi::geny::1.0.0",
+        ivy"com.lihaoyi::unroll-annotation:0.1.12"
+      )
     }
 
     object js extends Cross[CoreJsModule](scalaVersions)
@@ -389,7 +396,7 @@ trait BenchModule extends CommonPlatformModule{
 
 object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
-    def scalaJSVersion = "1.13.0"
+    def scalaJSVersion = "1.13.1"
     def moduleDeps = Seq(upickle.js(scala213).test)
   }
 
