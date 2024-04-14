@@ -45,9 +45,9 @@ trait CommonPublishModule
   extends ScalaModule with PublishModule with Mima with CrossScalaModule { outer =>
 
   def publishVersion = VcsVersion.vcsState().format()
-  def mimaReportBinaryIssues =
+  def mimaReportBinaryIssues() =
     if (this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) T.command()
-    else super.mimaReportBinaryIssues
+    else super.mimaReportBinaryIssues()
 
   def mimaPreviousVersions = Seq(
     "3.0.0",
