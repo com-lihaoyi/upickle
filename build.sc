@@ -18,10 +18,10 @@ val scala212  = "2.12.18"
 val scala213  = "2.13.11"
 
 val scala3   = "3.3.1"
-val scalaNative = "0.4.14"
-val acyclic = "0.3.8"
+val scalaNative = "0.5.0"
+val acyclic = "0.3.9"
 
-val sourcecode = "0.3.0"
+val sourcecode = "0.4.0"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
@@ -98,7 +98,7 @@ trait CommonPublishModule
 
   trait CommonTestModule0 extends ScalaModule with TestModule.Utest {
     def ivyDeps = {
-      Agg(ivy"com.lihaoyi::utest::0.8.1") ++
+      Agg(ivy"com.lihaoyi::utest::0.8.3") ++
       Option.when(!isScala3(scalaVersion()))(ivy"com.lihaoyi:::acyclic:$acyclic")
     }
 
@@ -229,7 +229,7 @@ object ujson extends Module{
 object upickle extends Module{  
   object core extends Module {
     trait CommonCoreModule extends CommonPublishModule {
-      def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.0.0")
+      def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.1.0")
     }
 
     object js extends Cross[CoreJsModule](scalaVersions)
