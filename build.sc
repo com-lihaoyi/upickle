@@ -218,7 +218,7 @@ object ujson extends Module{
   object circe extends Cross[CirceModule](scalaVersions)
   trait CirceModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
-    val circeVersion = "0.14.5"
+    val circeVersion = "0.14.6"
     def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
   }
 
@@ -381,9 +381,9 @@ def exampleJson = T.source(millSourcePath / "exampleJson")
 trait BenchModule extends CommonPlatformModule{
   def scalaVersion = scala213
   def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.14.5",
-    ivy"io.circe::circe-generic::0.14.5",
-    ivy"io.circe::circe-parser::0.14.5",
+    ivy"io.circe::circe-core::0.14.6",
+    ivy"io.circe::circe-generic::0.14.6",
+    ivy"io.circe::circe-parser::0.14.6",
     ivy"com.typesafe.play::play-json::2.9.4",
     ivy"io.argonaut::argonaut:6.2.6",
     ivy"org.json4s::json4s-ast:3.6.12",
