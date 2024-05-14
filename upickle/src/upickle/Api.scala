@@ -245,11 +245,20 @@ object default extends AttributeTagged{
  */
 object legacy extends LegacyApi
 trait LegacyApi extends Api with Annotator{
-  def annotate[V](rw: Reader[V], key: String, value: String) = new TaggedReader.Leaf[V](key, value, rw)
-
-  def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] = {
-    new TaggedWriter.Leaf[V](checker, key, value, rw)
+  override def annotate[V](rw: Reader[V], key: String, value: String) = {
+    new TaggedReader.Leaf[V](key, value, rw)
   }
+
+  @deprecated("Not used, left for binary compatibility")
+  override final def annotate[V](rw: Reader[V], n: String) =
+    annotate(rw, Annotator.defaultTagKey, n)
+
+  override def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] =
+    new TaggedWriter.Leaf[V](checker, key, value, rw)
+
+  @deprecated("Not used, left for binary compatibility")
+  override final def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] =
+    annotate(rw, Annotator.defaultTagKey, n, checker)
 
   def taggedExpectedMsg = "expected sequence"
   sealed trait TaggedReaderState
@@ -287,7 +296,7 @@ trait LegacyApi extends Api with Annotator{
     }
 
   }
-  def taggedWrite[T, R](w: ObjectWriter[T], tagKey: String, tagValue: String, out: Visitor[_,  R], v: T): R = {
+  override def taggedWrite[T, R](w: ObjectWriter[T], tagKey: String, tagValue: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(2, -1)
     ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tagValue), -1), -1)
 
@@ -295,6 +304,9 @@ trait LegacyApi extends Api with Annotator{
 
     ctx.visitEnd(-1)
   }
+  @deprecated("Not used, left for binary compatibility")
+  final def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_,  R], v: T): R =
+    taggedWrite(w, Annotator.defaultTagKey, tag, out, v)
 }
 
 /**
@@ -303,13 +315,22 @@ trait LegacyApi extends Api with Annotator{
  * of the attribute is.
  */
 trait AttributeTagged extends Api with Annotator{
-  def annotate[V](rw: Reader[V], key: String, value: String) = {
+  @deprecated("Not used, left for binary compatibility")
+  def tagName = Annotator.defaultTagKey
+
+  override def annotate[V](rw: Reader[V], key: String, value: String) = {
     new TaggedReader.Leaf[V](key, value, rw)
   }
+  @deprecated("Not used, left for binary compatibility")
+  override final def annotate[V](rw: Reader[V], n: String) =
+    annotate(rw, Annotator.defaultTagKey, n)
 
-  def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] = {
+  override def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] = {
     new TaggedWriter.Leaf[V](checker, key, value, rw)
   }
+  @deprecated("Not used, left for binary compatibility")
+  override final def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] =
+    annotate(rw, Annotator.defaultTagKey, n, checker)
 
   def taggedExpectedMsg = "expected dictionary"
   private def isTagName(tagKey: String, i: Any) = i match{
@@ -388,7 +409,7 @@ trait AttributeTagged extends Api with Annotator{
 
     }
   }
-  def taggedWrite[T, R](w: ObjectWriter[T], tagKey: String, tagValue: String, out: Visitor[_,  R], v: T): R = {
+  override def taggedWrite[T, R](w: ObjectWriter[T], tagKey: String, tagValue: String, out: Visitor[_,  R], v: T): R = {
 
     if (w.isInstanceOf[SingletonWriter[_]]) out.visitString(tagValue, -1)
     else {
@@ -402,4 +423,7 @@ trait AttributeTagged extends Api with Annotator{
       res
     }
   }
+  @deprecated("Not used, left for binary compatibility")
+  final def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_,  R], v: T): R =
+    taggedWrite(w, Annotator.defaultTagKey, tag, out, v)
 }
