@@ -10,8 +10,10 @@ object Fee{
 }
 sealed trait Fi
 object Fi{
-  implicit def rw1: upickle.legacy.ReadWriter[Fi] = upickle.legacy.ReadWriter.merge(Fo.rw1, Fum.rw1)
-  implicit def rw2: upickle.default.ReadWriter[Fi] = upickle.default.ReadWriter.merge(Fo.rw2, Fum.rw2)
+  implicit def rw1: upickle.legacy.ReadWriter[Fi] =
+    upickle.legacy.ReadWriter.merge(core.Annotator.defaultTagKey, Fo.rw1, Fum.rw1)
+  implicit def rw2: upickle.default.ReadWriter[Fi] =
+    upickle.default.ReadWriter.merge(core.Annotator.defaultTagKey, Fo.rw2, Fum.rw2)
   case class Fo(i: Int) extends Fi
   object Fo{
     implicit def rw1: upickle.legacy.ReadWriter[Fo] = upickle.legacy.macroRW

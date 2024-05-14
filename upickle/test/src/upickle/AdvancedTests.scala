@@ -31,6 +31,7 @@ object All {
   sealed trait Outers
   object Outers{
     implicit def rw: upickle.default.ReadWriter[Outers] = upickle.default.ReadWriter.merge(
+      core.Annotator.defaultTagKey,
       Out1.rw
     )
   }
@@ -44,6 +45,7 @@ object All {
   sealed trait Inners extends Outers
   object Inners{
     implicit def rw: upickle.default.ReadWriter[Inners] = upickle.default.ReadWriter.merge(
+      core.Annotator.defaultTagKey,
       Inner1.rw,
       Inner2.rw
     )

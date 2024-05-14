@@ -245,10 +245,10 @@ object default extends AttributeTagged{
  */
 object legacy extends LegacyApi
 trait LegacyApi extends Api with Annotator{
-  def annotate[V](rw: Reader[V], n: String) = new TaggedReader.Leaf[V](n, rw)
+  def annotate[V](rw: Reader[V], key: String, value: String) = new TaggedReader.Leaf[V](key, value, rw)
 
-  def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] = {
-    new TaggedWriter.Leaf[V](checker, n, rw)
+  def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] = {
+    new TaggedWriter.Leaf[V](checker, key, value, rw)
   }
 
   def taggedExpectedMsg = "expected sequence"
@@ -287,9 +287,9 @@ trait LegacyApi extends Api with Annotator{
     }
 
   }
-  def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_,  R], v: T): R = {
+  def taggedWrite[T, R](w: ObjectWriter[T], tagKey: String, tagValue: String, out: Visitor[_,  R], v: T): R = {
     val ctx = out.asInstanceOf[Visitor[Any, R]].visitArray(2, -1)
-    ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tag), -1), -1)
+    ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tagValue), -1), -1)
 
     ctx.visitValue(w.write(ctx.subVisitor, v), -1)
 
@@ -303,19 +303,18 @@ trait LegacyApi extends Api with Annotator{
  * of the attribute is.
  */
 trait AttributeTagged extends Api with Annotator{
-  def tagName = "$type"
-  def annotate[V](rw: Reader[V], n: String) = {
-    new TaggedReader.Leaf[V](n, rw)
+  def annotate[V](rw: Reader[V], key: String, value: String) = {
+    new TaggedReader.Leaf[V](key, value, rw)
   }
 
-  def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] = {
-    new TaggedWriter.Leaf[V](checker, n, rw)
+  def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] = {
+    new TaggedWriter.Leaf[V](checker, key, value, rw)
   }
 
   def taggedExpectedMsg = "expected dictionary"
-  private def isTagName(i: Any) = i match{
-    case s: BufferedValue.Str => s.value0.toString == tagName
-    case s: CharSequence => s.toString == tagName
+  private def isTagName(tagKey: String, i: Any) = i match{
+    case s: BufferedValue.Str => s.value0.toString == tagKey
+    case s: CharSequence => s.toString == tagKey
     case _ => false
   }
   override def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int) = {
@@ -333,7 +332,7 @@ trait AttributeTagged extends Api with Annotator{
       def visitKeyValue(s: Any): Unit = {
         if (context != null) context.visitKeyValue(s)
         else {
-          if (isTagName(s)) () //do nothing
+          if (isTagName(taggedReader.tagKey, s)) () //do nothing
           else {
             // otherwise, go slow path
             val slowCtx = BufferedValue.Builder.visitObject(-1, true, index).narrow
@@ -359,12 +358,12 @@ trait AttributeTagged extends Api with Annotator{
         }
       }
       def visitEnd(index: Int) = {
-        def missingKeyMsg = s"""Missing key "$tagName" for tagged dictionary"""
+        def missingKeyMsg = s"""Missing key "${taggedReader.tagKey}" for tagged dictionary"""
         if (context == null) throw new Abort(missingKeyMsg)
         else if (fastPath) context.visitEnd(index).asInstanceOf[T]
         else{
           val x = context.visitEnd(index).asInstanceOf[BufferedValue.Obj]
-          val keyAttr = x.value0.find(t => isTagName(t._1))
+          val keyAttr = x.value0.find(t => isTagName(taggedReader.tagKey, t._1))
             .getOrElse(throw new Abort(missingKeyMsg))
             ._2
           val key = keyAttr.asInstanceOf[BufferedValue.Str].value0.toString
@@ -376,7 +375,7 @@ trait AttributeTagged extends Api with Annotator{
           for (p <- x.value0) {
             val (k0, v) = p
             val k = k0
-            if (!isTagName(k)){
+            if (!isTagName(taggedReader.tagKey, k)){
               val keyVisitor = ctx2.visitKey(-1)
 
               ctx2.visitKeyValue(BufferedValue.transform(k, keyVisitor))
@@ -389,15 +388,15 @@ trait AttributeTagged extends Api with Annotator{
 
     }
   }
-  def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_,  R], v: T): R = {
+  def taggedWrite[T, R](w: ObjectWriter[T], tagKey: String, tagValue: String, out: Visitor[_,  R], v: T): R = {
 
-    if (w.isInstanceOf[SingletonWriter[_]]) out.visitString(tag, -1)
+    if (w.isInstanceOf[SingletonWriter[_]]) out.visitString(tagValue, -1)
     else {
       val ctx = out.asInstanceOf[Visitor[Any, R]].visitObject(w.length(v) + 1, true, -1)
       val keyVisitor = ctx.visitKey(-1)
 
-      ctx.visitKeyValue(keyVisitor.visitString(tagName, -1))
-      ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tag), -1), -1)
+      ctx.visitKeyValue(keyVisitor.visitString(tagKey, -1))
+      ctx.visitValue(ctx.subVisitor.visitString(objectTypeKeyWriteMap(tagValue), -1), -1)
       w.writeToObject(ctx, v)
       val res = ctx.visitEnd(-1)
       res

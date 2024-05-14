@@ -172,13 +172,23 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
     '{()}
   )
 
-inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
-def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
+private def sealedHierarchyParent[T](using Quotes, Type[T]): Option[quotes.reflect.Symbol] =
   import quotes.reflect._
 
   val parents = TypeRepr.of[T].baseClasses
 
-  Expr(parents.exists { p => p.flags.is(Flags.Sealed) })
+  // TODO - what if there are multiple?
+  parents.find(_.flags.is(Flags.Sealed))
+
+inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
+def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
+  Expr(sealedHierarchyParent[T].isDefined)
+
+inline def tagKey[T]: String = ${ tagKeyImpl[T] }
+def tagKeyImpl[T](using Quotes, Type[T]): Expr[String] =
+  import quotes.reflect._
+
+  Expr(sealedHierarchyParent[T].flatMap(extractKey).getOrElse(upickle.core.Annotator.defaultTagKey))
 
 inline def tagName[T]: String = ${ tagNameImpl[T] }
 def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =

@@ -31,8 +31,8 @@ trait Types{ types =>
     abstract class Delegate[T](other: Visitor[Any, T])
       extends Visitor.Delegate[Any, T](other) with ReadWriter[T]
 
-    def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
-      new TaggedReadWriter.Node(rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
+    def merge[T](tagKey: String, rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
+      new TaggedReadWriter.Node(tagKey, rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
 
     implicit def join[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T] = (r0, w0) match{
@@ -45,6 +45,7 @@ trait Types{ types =>
 
       case (r1: TaggedReader[T], w1: TaggedWriter[T]) =>
         new TaggedReadWriter[T] {
+          private[upickle] def tagKey = r1.tagKey
           override def isJsonDictKey = w0.isJsonDictKey
           def findReader(s: String) = r1.findReader(s)
           def findWriter(v: Any) = w1.findWriter(v)
@@ -104,8 +105,8 @@ trait Types{ types =>
 
       override def visitArray(length: Int, index: Int) = super.visitArray(length, index).asInstanceOf[ArrVisitor[Any, Z]]
     }
-    def merge[T](readers0: Reader[_ <: T]*) = {
-      new TaggedReader.Node(readers0.asInstanceOf[Seq[TaggedReader[T]]]:_*)
+    def merge[T](tagKey: String, readers0: Reader[_ <: T]*) = {
+      new TaggedReader.Node(tagKey, readers0.asInstanceOf[Seq[TaggedReader[T]]]:_*)
     }
   }
 
@@ -147,6 +148,8 @@ trait Types{ types =>
   }
 
   trait TaggedReader[T] extends SimpleReader[T]{
+    private[upickle] def tagKey: String
+
     def findReader(s: String): Reader[T]
 
     override def expectedMsg = taggedExpectedMsg
@@ -160,34 +163,34 @@ trait Types{ types =>
     }
   }
   object TaggedReader{
-    class Leaf[T](tag: String, r: Reader[T]) extends TaggedReader[T]{
-      def findReader(s: String) = if (s == tag) r else null
+    class Leaf[T](private[upickle] val tagKey: String, tagValue: String, r: Reader[T]) extends TaggedReader[T]{
+      def findReader(s: String) = if (s == tagValue) r else null
     }
-    class Node[T](rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
+    class Node[T](private[upickle] val tagKey: String, rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
       def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
     }
   }
 
   trait TaggedWriter[T] extends Writer[T]{
-    def findWriter(v: Any): (String, ObjectWriter[T])
+    def findWriter(v: Any): (String, String, ObjectWriter[T])
     def write0[R](out: Visitor[_, R], v: T): R = {
-      val (tag, w) = findWriter(v)
-      taggedWrite(w, tag, out, v)
+      val (tagKey, tagValue, w) = findWriter(v)
+      taggedWrite(w, tagKey, tagValue, out, v)
 
     }
   }
   object TaggedWriter{
-    class Leaf[T](checker: Annotator.Checker, tag: String, r: ObjectWriter[T]) extends TaggedWriter[T]{
+    class Leaf[T](checker: Annotator.Checker, tagKey: String, tagValue: String, r: ObjectWriter[T]) extends TaggedWriter[T]{
       def findWriter(v: Any) = {
         checker match{
-          case Annotator.Checker.Cls(c) if c.isInstance(v) => tag -> r
-          case Annotator.Checker.Val(v0) if v0 == v => tag -> r
+          case Annotator.Checker.Cls(c) if c.isInstance(v) => (tagKey, tagValue, r)
+          case Annotator.Checker.Val(v0) if v0 == v => (tagKey, tagValue, r)
           case _ => null
         }
       }
     }
     class Node[T](rs: TaggedWriter[_ <: T]*) extends TaggedWriter[T]{
-      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, ObjectWriter[T])]
+      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, String, ObjectWriter[T])]
     }
   }
 
@@ -197,16 +200,16 @@ trait Types{ types =>
 
   }
   object TaggedReadWriter{
-    class Leaf[T](c: ClassTag[_], tag: String, r: ObjectWriter[T] with Reader[T]) extends TaggedReadWriter[T]{
-      def findReader(s: String) = if (s == tag) r else null
+    class Leaf[T](c: ClassTag[_], private[upickle] val tagKey: String, tagValue: String, r: ObjectWriter[T] with Reader[T]) extends TaggedReadWriter[T]{
+      def findReader(s: String) = if (s == tagValue) r else null
       def findWriter(v: Any) = {
-        if (c.runtimeClass.isInstance(v)) (tag -> r)
+        if (c.runtimeClass.isInstance(v)) (tagKey, tagValue, r)
         else null
       }
     }
-    class Node[T](rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
+    class Node[T](private[upickle] val tagKey: String, rs: TaggedReadWriter[_ <: T]*) extends TaggedReadWriter[T]{
       def findReader(s: String) = scanChildren(rs)(_.findReader(s)).asInstanceOf[Reader[T]]
-      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, ObjectWriter[T])]
+      def findWriter(v: Any) = scanChildren(rs)(_.findWriter(v)).asInstanceOf[(String, String, ObjectWriter[T])]
     }
   }
 
@@ -216,7 +219,7 @@ trait Types{ types =>
 
   def taggedObjectContext[T](taggedReader: TaggedReader[T], index: Int): ObjVisitor[Any, T] = throw new Abort(taggedExpectedMsg)
 
-  def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_, R], v: T): R
+  def taggedWrite[T, R](w: ObjectWriter[T], tagKey: String, tagValue: String, out: Visitor[_, R], v: T): R
 
   private[this] def scanChildren[T, V](xs: Seq[T])(f: T => V) = {
     var x: V = null.asInstanceOf[V]
@@ -249,12 +252,14 @@ class CurrentlyDeriving[T]
  * for `.equals` equality during writes to determine which tag to use.
  */
 trait Annotator { this: Types =>
-  def annotate[V](rw: Reader[V], n: String): TaggedReader[V]
-  def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V]
-  def annotate[V](rw: ObjectWriter[V], n: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
-    annotate(rw, n, Annotator.Checker.Cls(ct.runtimeClass))
+  def annotate[V](rw: Reader[V], key: String, value: String): TaggedReader[V]
+  def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V]
+  def annotate[V](rw: ObjectWriter[V], key: String, value: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
+    annotate(rw, key, value, Annotator.Checker.Cls(ct.runtimeClass))
 }
 object Annotator{
+  def defaultTagKey = "$type"
+
   sealed trait Checker
   object Checker{
     case class Cls(c: Class[_]) extends Checker

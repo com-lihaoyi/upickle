@@ -4,6 +4,7 @@ import scala.annotation.{nowarn, StaticAnnotation}
 import scala.language.experimental.macros
 import compat._
 import acyclic.file
+import upickle.core.Annotator
 import upickle.implicits.key
 
 import language.higherKinds
@@ -102,7 +103,7 @@ object Macros {
       annotate(tpe)(wrapObject(mod2))
 
     }
-    def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
+    def mergeTrait(tagKey: String, subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
 
     def derive(tpe: c.Type) = {
       if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) {
@@ -125,11 +126,12 @@ object Macros {
             "https://com-lihaoyi.github.io/upickle/#ManualSealedTraitPicklers"
         fail(tpe, msg)
       }else{
+        val tagKey = customKey(clsSymbol).getOrElse(Annotator.defaultTagKey)
         val subTypes = fleshedOutSubtypes(tpe).toSeq.sortBy(_.typeSymbol.fullName)
         //    println("deriveTrait")
         val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
         //    println(Console.GREEN + "subDerives " + Console.RESET + subDrivess)
-        val merged = mergeTrait(subDerives, subTypes, tpe)
+        val merged = mergeTrait(tagKey, subDerives, subTypes, tpe)
         merged
       }
     }
@@ -205,10 +207,10 @@ object Macros {
     def annotate(tpe: c.Type)(derived: c.universe.Tree) = {
       val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
       sealedParent.fold(derived) { parent =>
+        val tagKey = customKey(parent).getOrElse(Annotator.defaultTagKey)
+        val tagValue = customKey(tpe.typeSymbol).getOrElse(TypeName(tpe.typeSymbol.fullName).decodedName.toString)
 
-        val index = customKey(tpe.typeSymbol).getOrElse(TypeName(tpe.typeSymbol.fullName).decodedName.toString)
-
-        q"${c.prefix}.annotate($derived, $index)"
+        q"${c.prefix}.annotate($derived, $tagKey, $tagValue)"
       }
     }
 
@@ -329,8 +331,8 @@ object Macros {
         }
       """
     }
-    def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
-      q"${c.prefix}.Reader.merge[$targetType](..$subtrees)"
+    def mergeTrait(tagKey: String, subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
+      q"${c.prefix}.Reader.merge[$targetType]($tagKey, ..$subtrees)"
     }
   }
 
@@ -401,7 +403,7 @@ object Macros {
         }
        """
     }
-    def mergeTrait(subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
+    def mergeTrait(tagKey: String, subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       q"${c.prefix}.Writer.merge[$targetType](..$subtree)"
     }
   }

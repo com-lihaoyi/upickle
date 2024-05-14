@@ -55,7 +55,7 @@ object ADTs {
 object Hierarchy {
   sealed trait A
   object A{
-    implicit def rw: upickle.default.ReadWriter[A] = RW.merge(B.rw, C.rw)
+    implicit def rw: upickle.default.ReadWriter[A] = RW.merge(core.Annotator.defaultTagKey, B.rw, C.rw)
   }
   case class B(i: Int) extends A
   object B{
@@ -68,6 +68,7 @@ object Hierarchy {
 
   object Z{
     implicit def rw: upickle.default.ReadWriter[Z] = RW.merge(
+      core.Annotator.defaultTagKey,
       implicitly[upickle.default.ReadWriter[AnZ.type]]
     )
   }
@@ -79,7 +80,7 @@ object Hierarchy {
 object DeepHierarchy {
   sealed abstract class A
   object A{
-    implicit def rw: RW[A] = RW.merge(B.rw, C.rw)
+    implicit def rw: RW[A] = RW.merge(core.Annotator.defaultTagKey, B.rw, C.rw)
   }
   case class B(i: Int) extends A
 
@@ -90,7 +91,7 @@ object DeepHierarchy {
   sealed trait C extends A
 
   object C{
-    implicit def rw: RW[C] = RW.merge(D.rw, E.rw, F.rw)
+    implicit def rw: RW[C] = RW.merge(core.Annotator.defaultTagKey, D.rw, E.rw, F.rw)
   }
   case class D(s: String) extends C
 
@@ -106,7 +107,7 @@ object DeepHierarchy {
   sealed trait Q //new line
 
   object Q{
-    implicit def rw: RW[Q] = RW.merge(AnQ.rw)
+    implicit def rw: RW[Q] = RW.merge(core.Annotator.defaultTagKey, AnQ.rw)
   }
   case class AnQ(i: Int) extends Q //new line
 
@@ -125,6 +126,7 @@ object Singletons{
 
   object AA{
     implicit def rw: RW[AA] = RW.merge(
+      core.Annotator.defaultTagKey,
       default.macroRW[BB.type],
       default.macroRW[CC.type]
    )
@@ -154,7 +156,7 @@ object Generic{
 object Recursive{
   sealed trait LL
   object LL{
-    implicit def rw: RW[LL] = RW.merge(default.macroRW[End.type], default.macroRW[Node])
+    implicit def rw: RW[LL] = RW.merge(core.Annotator.defaultTagKey, default.macroRW[End.type], default.macroRW[Node])
   }
   case object End  extends LL
   case class Node(c: Int, next: LL) extends LL
@@ -167,7 +169,7 @@ object Recursive{
   }
   sealed trait SingleTree
   object SingleTree{
-    implicit def rw: RW[SingleTree] = RW.merge(default.macroRW[SingleNode])
+    implicit def rw: RW[SingleTree] = RW.merge(core.Annotator.defaultTagKey, default.macroRW[SingleNode])
   }
   case class SingleNode(value: Int, children: List[SingleTree]) extends SingleTree
   object SingleNode{
@@ -177,7 +179,7 @@ object Recursive{
 object Annotated {
   sealed trait A
   object A{
-    implicit def rw: RW[A] = RW.merge(default.macroRW[B], default.macroRW[C])
+    implicit def rw: RW[A] = RW.merge(core.Annotator.defaultTagKey, default.macroRW[B], default.macroRW[C])
   }
   @key("0") case class B(@key("omg") i: Int) extends A
   object B{
@@ -312,7 +314,7 @@ object Exponential{
 object GenericADTs{
   sealed trait Small[A]
   object Small{
-    implicit def rw[A: R: W]: RW[Small[A]] = RW.merge(Small1.rw[A])
+    implicit def rw[A: R: W]: RW[Small[A]] = RW.merge(core.Annotator.defaultTagKey, Small1.rw[A])
   }
   case class Small1[A](key: A) extends Small[A]
   object Small1{
@@ -322,7 +324,10 @@ object GenericADTs{
   sealed trait Delta[+A, +B]
   object Delta {
     implicit def rw[A: R: W, B: R: W]: RW[Delta[A, B]] = RW.merge(
-      Insert.rw[A, B], Remove.rw[A], Clear.rw
+      core.Annotator.defaultTagKey,
+      Insert.rw[A, B],
+      Remove.rw[A],
+      Clear.rw
    )
 
     case class Insert[A, B](key: A, value: B) extends Delta[A, B]
@@ -341,7 +346,10 @@ object GenericADTs{
   sealed trait DeltaInvariant[A, B]
   object DeltaInvariant {
     implicit def rw[A: R: W, B: R: W]: RW[DeltaInvariant[A, B]] = RW.merge(
-      Insert.rw[A, B], Remove.rw[A, B], Clear.rw[A, B]
+      core.Annotator.defaultTagKey,
+      Insert.rw[A, B],
+      Remove.rw[A, B],
+      Clear.rw[A, B]
    )
     case class Insert[A, B](key: A, value: B) extends DeltaInvariant[A, B]
     object Insert{
@@ -420,7 +428,7 @@ sealed trait Ast{
  * sealed traits, which aren't a strict hierarchy
  */
 object Ast{
-  implicit def rw: RW[Ast] = RW.merge(Block.rw, Header.rw)
+  implicit def rw: RW[Ast] = RW.merge(core.Annotator.defaultTagKey, Block.rw, Header.rw)
   /**
    * @param parts The various bits of text and other things which make up this block
    * @param offset
@@ -430,7 +438,7 @@ object Ast{
     implicit def rw: RW[Block] = default.macroRW
     sealed trait Sub extends Ast
     object Sub{
-      implicit def rw: RW[Sub] = RW.merge(Text.rw, For.rw, IfElse.rw, Block.rw, Header.rw)
+      implicit def rw: RW[Sub] = RW.merge(core.Annotator.defaultTagKey, Text.rw, For.rw, IfElse.rw, Block.rw, Header.rw)
     }
     case class Text(offset: Int, txt: String) extends Block.Sub
     object Text{
@@ -460,7 +468,7 @@ object Ast{
     implicit def rw: RW[Chain] = default.macroRW
     sealed trait Sub extends Ast
     object Sub{
-      implicit def rw: RW[Sub] = RW.merge(Prop.rw, TypeArgs.rw, Args.rw, Block.rw, Header.rw)
+      implicit def rw: RW[Sub] = RW.merge(core.Annotator.defaultTagKey, Prop.rw, TypeArgs.rw, Args.rw, Block.rw, Header.rw)
     }
     case class Prop(offset: Int, str: String) extends Sub
     object Prop{
