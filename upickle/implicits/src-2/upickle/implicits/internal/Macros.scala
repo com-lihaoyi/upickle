@@ -5,7 +5,7 @@ import scala.language.experimental.macros
 import compat._
 import acyclic.file
 import upickle.core.Annotator
-import upickle.implicits.key
+import upickle.implicits.{MacrosCommon, key}
 
 import language.higherKinds
 import language.existentials
@@ -205,9 +205,17 @@ object Macros {
       * representation with a class label.
       */
     def annotate(tpe: c.Type)(derived: c.universe.Tree) = {
-      val sealedParent = tpe.baseClasses.find(_.asClass.isSealed)
-      sealedParent.fold(derived) { parent =>
-        val tagKey = customKey(parent).getOrElse(Annotator.defaultTagKey)
+      val sealedParents = tpe.baseClasses.filter(_.asClass.isSealed)
+
+      if (sealedParents.isEmpty) derived
+      else {
+        val tagKey = MacrosCommon.tagKeyFromParents(
+          tpe.typeSymbol.name.toString,
+          sealedParents,
+          customKey,
+          (_: c.Symbol).name.toString,
+          fail(tpe, _),
+        )
         val tagValue = customKey(tpe.typeSymbol).getOrElse(TypeName(tpe.typeSymbol.fullName).decodedName.toString)
 
         q"${c.prefix}.annotate($derived, $tagKey, $tagValue)"

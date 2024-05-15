@@ -2,7 +2,7 @@ package upickle.implicits.macros
 
 import scala.quoted.{ given, _ }
 import deriving._, compiletime._
-import upickle.implicits.ReadersVersionSpecific
+import upickle.implicits.{MacrosCommon, ReadersVersionSpecific}
 type IsInt[A <: Int] = A
 
 def getDefaultParamsImpl0[T](using Quotes, Type[T]): Map[String, Expr[AnyRef]] =
@@ -172,23 +172,30 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
     '{()}
   )
 
-private def sealedHierarchyParent[T](using Quotes, Type[T]): Option[quotes.reflect.Symbol] =
+private def sealedHierarchyParents[T](using Quotes, Type[T]): List[quotes.reflect.Symbol] =
   import quotes.reflect._
 
-  val parents = TypeRepr.of[T].baseClasses
-
-  // TODO - what if there are multiple?
-  parents.find(_.flags.is(Flags.Sealed))
+  TypeRepr.of[T].baseClasses.filter(_.flags.is(Flags.Sealed))
 
 inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyImpl[T] }
 def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
-  Expr(sealedHierarchyParent[T].isDefined)
+  Expr(sealedHierarchyParents[T].nonEmpty)
 
 inline def tagKey[T]: String = ${ tagKeyImpl[T] }
 def tagKeyImpl[T](using Quotes, Type[T]): Expr[String] =
   import quotes.reflect._
 
-  Expr(sealedHierarchyParent[T].flatMap(extractKey).getOrElse(upickle.core.Annotator.defaultTagKey))
+  // `case object`s extend from `Mirror`, which is `sealed` and will never have a `@key` annotation
+  // so we need to filter it out to ensure it doesn't trigger an error in `tagKeyFromParents`
+  val mirrorType = Symbol.requiredClass("scala.deriving.Mirror")
+
+  Expr(MacrosCommon.tagKeyFromParents(
+    Type.show[T],
+    sealedHierarchyParents[T].filterNot(_ == mirrorType),
+    extractKey,
+    (_: Symbol).name,
+    report.errorAndAbort,
+  ))
 
 inline def tagName[T]: String = ${ tagNameImpl[T] }
 def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
