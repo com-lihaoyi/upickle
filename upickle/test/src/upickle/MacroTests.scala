@@ -13,6 +13,31 @@ object KeyedPerson {
   implicit val rw: RW[KeyedPerson] = upickle.default.macroRW
 }
 
+@upickle.implicits.key("customKey")
+sealed trait KeyedADT
+object KeyedADT {
+  implicit val rw: RW[KeyedADT] = upickle.default.macroRW
+
+  case object Foo extends KeyedADT {
+    implicit val rw: RW[Foo.type] = upickle.default.macroRW
+  }
+  case class Bar(i: Int) extends KeyedADT
+  object Bar {
+    implicit val rw: RW[Bar] = upickle.default.macroRW
+  }
+}
+
+@upickle.implicits.key("customKey1")
+sealed trait MultiKeyedADT1
+@upickle.implicits.key("customKey2")
+sealed trait MultiKeyedADT2
+case object MultiKeyedObj extends MultiKeyedADT1 with MultiKeyedADT2
+
+@upickle.implicits.key("customKey")
+sealed trait SomeMultiKeyedADT1
+sealed trait SomeMultiKeyedADT2
+case object SomeMultiKeyedObj extends SomeMultiKeyedADT1 with SomeMultiKeyedADT2
+
 object Custom {
   trait ThingBase{
     val i: Int
@@ -638,6 +663,24 @@ object MacroTests extends TestSuite {
       intercept[upickle.core.AbortException]{
         UnknownKeys.DisallowPickler.read[UnknownKeys.DisAllow]("""{"id":1, "name":"x", "omg": "wtf"}""")
       }
+    }
+
+    test("keyedADT") {
+      val fooJson = "\"upickle.KeyedADT.Foo\""
+      upickle.default.read[KeyedADT](fooJson) ==> KeyedADT.Foo
+      upickle.default.write[KeyedADT](KeyedADT.Foo) ==> fooJson
+
+      val barJson = """{"customKey":"upickle.KeyedADT.Bar","i":1}"""
+      upickle.default.read[KeyedADT](barJson) ==> KeyedADT.Bar(1)
+      upickle.default.write[KeyedADT](KeyedADT.Bar(1)) ==> barJson
+    }
+
+    test("multiKeyedADT") {
+      compileError("upickle.default.macroRW[upickle.MultiKeyedObj.type]")
+        .check("", "inherits from multiple parent types with different `@key` annotations")
+
+      compileError("upickle.default.macroRW[upickle.SomeMultiKeyedObj.type]")
+        .check("", "inherits from multiple parent types with different `@key` annotations")
     }
   }
 }
