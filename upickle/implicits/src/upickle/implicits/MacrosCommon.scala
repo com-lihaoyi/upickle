@@ -32,9 +32,11 @@ object MacrosCommon {
       case keys @ (key :: _) if keys.length == sealedParents.length && keys.distinct.length == 1 => key
       case keys =>
         fail(
-          s"Type $typeName inherits from multiple parent types with different `@key` annotations:\n" +
+          s"Type $typeName inherits from multiple parent types with different discriminator keys:\n\n" +
             s"  parents: ${sealedParents.map(getName).sorted.mkString(", ")}\n" +
-            s"  keys: ${keys.sorted.mkString(", ")}"
+            s"  keys: ${keys.sorted.mkString(", ")}\n\n" +
+            "To resolve this, either remove the `@key` annotations from all parents of the type,\n" +
+            "or make sure all the parents pass the same value to `@key`"
         )
     }
 }

@@ -674,10 +674,10 @@ object MacroTests extends TestSuite {
 
     test("multiKeyedADT") {
       compileError("upickle.default.macroRW[upickle.MultiKeyedObj.type]")
-        .check("", "inherits from multiple parent types with different `@key` annotations")
+        .check("", "inherits from multiple parent types with different discriminator keys")
 
       compileError("upickle.default.macroRW[upickle.SomeMultiKeyedObj.type]")
-        .check("", "inherits from multiple parent types with different `@key` annotations")
+        .check("", "inherits from multiple parent types with different discriminator keys")
     }
   }
 }
