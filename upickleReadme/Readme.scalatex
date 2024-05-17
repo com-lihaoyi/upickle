@@ -410,6 +410,18 @@
           you try to tackle the resource issue (bandwidth, storage, CPU) because
           FQNs might get quite long
 
+      @p
+        You can also use @hl.scala{@@key} to change the key used when pickling a
+        member of a sealed hierarchy. The default key is @hl.scala{$type}, as seen
+        above, but you can change it by annotating the @hl.scala{sealed trait}:
+
+      @hl.ref(exampleTests, Seq("object KeyedTagKey", ""))
+      @hl.ref(exampleTests, Seq("\"keyed\"", "\"tagKey\"", ""))
+
+      @p
+        This is useful in cases where you need to override uPickle's default
+        behavior, for example to preserve compatibility with another JSON library.
+
     @sect{JSON Dictionary Formats}
       @p
         By default, serializing a @hl.scala{Map[K, V]} generates a nested

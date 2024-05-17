@@ -44,9 +44,19 @@ trait WritersVersionSpecific
       }
 
       inline if macros.isSingleton[T] then
-        annotate[T](SingletonWriter[T](null.asInstanceOf[T]), macros.tagName[T], Annotator.Checker.Val(macros.getSingleton[T]))
+        annotate[T](
+          SingletonWriter[T](null.asInstanceOf[T]),
+          macros.tagKey[T],
+          macros.tagName[T],
+          Annotator.Checker.Val(macros.getSingleton[T]),
+        )
       else if macros.isMemberOfSealedHierarchy[T] then
-        annotate[T](writer, macros.tagName[T], Annotator.Checker.Cls(implicitly[ClassTag[T]].runtimeClass))
+        annotate[T](
+          writer,
+          macros.tagKey[T],
+          macros.tagName[T],
+          Annotator.Checker.Cls(implicitly[ClassTag[T]].runtimeClass),
+        )
       else writer
 
     case _: Mirror.SumOf[T] =>
