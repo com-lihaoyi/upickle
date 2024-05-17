@@ -35,7 +35,6 @@ trait Types{ types =>
       new TaggedReadWriter.Node(tagKey, rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
 
-    @deprecated("Not used, left for binary compatibility")
     def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = merge(Annotator.defaultTagKey, rws:_*)
 
     implicit def join[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T] = (r0, w0) match{
@@ -114,7 +113,6 @@ trait Types{ types =>
       new TaggedReader.Node(tagKey, readers0.asInstanceOf[Seq[TaggedReader[T]]]:_*)
     }
 
-    @deprecated("Not used, left for binary compatibility")
     def merge[T](readers0: Reader[_ <: T]*): TaggedReader.Node[T] = merge(Annotator.defaultTagKey, readers0:_*)
   }
 

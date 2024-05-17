@@ -7,7 +7,7 @@ import utest._
 import upickle.default.{macroRW, ReadWriter => RW}
 import ujson.{IncompleteParseException, ParseException}
 import ujson.{BytesRenderer, Value, StringRenderer, Readable}
-import upickle.core.{Annotator, NoOpVisitor, Visitor}
+import upickle.core.{NoOpVisitor, Visitor}
 
 object Simple {
   case class Thing(myFieldA: Int, myFieldB: String)
@@ -22,7 +22,7 @@ object Simple {
 object Sealed{
   sealed trait IntOrTuple
   object IntOrTuple{
-    implicit val rw: RW[IntOrTuple] = RW.merge(Annotator.defaultTagKey, IntThing.rw, TupleThing.rw)
+    implicit val rw: RW[IntOrTuple] = RW.merge(IntThing.rw, TupleThing.rw)
   }
   case class IntThing(i: Int) extends IntOrTuple
   object IntThing{
@@ -58,7 +58,7 @@ object Keyed{
 object KeyedTag{
   sealed trait A
   object A{
-    implicit val rw: RW[A] = RW.merge(Annotator.defaultTagKey, B.rw, macroRW[C.type])
+    implicit val rw: RW[A] = RW.merge(B.rw, macroRW[C.type])
   }
   @upickle.implicits.key("Bee") case class B(i: Int) extends A
   object B{

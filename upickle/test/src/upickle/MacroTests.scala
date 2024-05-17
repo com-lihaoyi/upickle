@@ -74,10 +74,7 @@ sealed trait TypedFoo
 object TypedFoo{
   import upickle.default._
   implicit val readWriter: ReadWriter[TypedFoo] = ReadWriter.merge(
-    core.Annotator.defaultTagKey,
-    macroRW[Bar],
-    macroRW[Baz],
-    macroRW[Quz],
+    macroRW[Bar], macroRW[Baz], macroRW[Quz],
   )
 
   case class Bar(i: Int) extends TypedFoo

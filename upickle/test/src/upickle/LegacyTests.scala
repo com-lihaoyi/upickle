@@ -57,7 +57,7 @@ object LegacyTests extends TestSuite {
       import Hierarchy._
       implicit def Brw: RW[B] = upickle.legacy.macroRW
       implicit def Crw: RW[C] = upickle.legacy.macroRW
-      implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(core.Annotator.defaultTagKey, Crw, Brw)
+      implicit def Arw: RW[A] = upickle.legacy.ReadWriter.merge(Crw, Brw)
       implicit def AnZrw: RW[AnZ.type] = upickle.legacy.macroRW
       implicit def Zrw: RW[Z] = upickle.legacy.macroRW
       test("shallow"){
