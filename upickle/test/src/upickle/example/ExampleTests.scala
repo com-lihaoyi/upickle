@@ -66,6 +66,14 @@ object KeyedTag{
   }
   case object C extends A
 }
+object KeyedTagKey {
+  @upickle.implicits.key("_tag")
+  sealed trait Tag
+  case class ATag(i: Int) extends Tag
+  object ATag {
+    implicit val rw: RW[ATag] = macroRW
+  }
+}
 object Custom2{
   class CustomThing2(val i: Int, val s: String)
   object CustomThing2 {
@@ -87,6 +95,7 @@ object Generic {
 
 
 import KeyedTag._
+import KeyedTagKey._
 import Keyed._
 import Sealed._
 import Simple._
@@ -311,6 +320,13 @@ object ExampleTests extends TestSuite {
       test("tag"){
         write(B(10))                          ==> """{"$type":"Bee","i":10}"""
         read[B]("""{"$type":"Bee","i":10}""") ==> B(10)
+      }
+      test("tagKey"){
+        write(ATag(11)) ==>
+          """{"_tag":"upickle.example.KeyedTagKey.ATag","i":11}"""
+
+        read[ATag]("""{"_tag":"upickle.example.KeyedTagKey.ATag","i":11}""") ==>
+          ATag(11)
       }
       test("snakeCase"){
         object SnakePickle extends upickle.AttributeTagged{
