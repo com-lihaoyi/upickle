@@ -69,7 +69,7 @@ object ElemUtils{
       if (i >= len) false
       else {
         val c2 = s.charAt(i)
-        if (c2 < ' ' | c2 == '"' | c2 == '\\') false
+        if (c2 < ' ' || c2 == '"' || c2 == '\\') false
         else {
           arr(arrOffset + i - i0) = c2.toElem
           i += 1
