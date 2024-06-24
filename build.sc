@@ -233,7 +233,7 @@ object ujson extends Module{
 object upickle extends Module{  
   object core extends Module {
     trait CommonCoreModule extends CommonPublishModule {
-      def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.1.0")
+      def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.1.1")
     }
 
     object js extends Cross[CoreJsModule](scalaVersions)
