@@ -4,7 +4,6 @@ import LegacyTestUtil.rw
 
 import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
 object LegacyTests extends TestSuite {
-
   val tests = Tests {
     test("simpleAdt"){
       implicit def ADT0rw: RW[ADTs.ADT0] = upickle.legacy.macroRW
