@@ -245,6 +245,9 @@ object default extends AttributeTagged{
  */
 object legacy extends LegacyApi
 trait LegacyApi extends Api with Annotator{
+  @deprecated("Not used, left for binary compatibility")
+  override def annotate[V](rw: Reader[V], key: String, value: String) =  annotate(rw, key, value, value)
+
   override def annotate[V](rw: Reader[V], key: String, value: String, shortValue: String) = {
     new TaggedReader.Leaf[V](key, value, shortValue, rw)
   }
@@ -252,6 +255,10 @@ trait LegacyApi extends Api with Annotator{
   @deprecated("Not used, left for binary compatibility")
   override final def annotate[V](rw: Reader[V], n: String) =
     annotate(rw, Annotator.defaultTagKey, n, n)
+
+  @deprecated("Not used, left for binary compatibility")
+  override def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] =
+    annotate(rw, key, value, value, checker)
 
   override def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] =
     new TaggedWriter.Leaf[V](checker, key, value, shortValue, rw)
@@ -318,12 +325,20 @@ trait AttributeTagged extends Api with Annotator{
   @deprecated("Not used, left for binary compatibility")
   def tagName = Annotator.defaultTagKey
 
+  @deprecated("Not used, left for binary compatibility")
+  override def annotate[V](rw: Reader[V], key: String, value: String) = annotate(rw, key, value, value)
+
   override def annotate[V](rw: Reader[V], key: String, value: String, shortValue: String) = {
     new TaggedReader.Leaf[V](key, value, shortValue, rw)
   }
   @deprecated("Not used, left for binary compatibility")
   override final def annotate[V](rw: Reader[V], n: String) =
     annotate(rw, Annotator.defaultTagKey, n, n)
+
+  @deprecated("Not used, left for binary compatibility")
+  override def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] = {
+    annotate(rw, key, value, value, checker)
+  }
 
   override def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] = {
     new TaggedWriter.Leaf[V](checker, key, value, shortValue, rw)

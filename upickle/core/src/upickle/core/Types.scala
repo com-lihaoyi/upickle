@@ -323,23 +323,22 @@ trait Annotator { this: Types =>
   @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: Reader[V], n: String): TaggedReader[V]
 
-  // Calling deprecated method to maintain binary compatibility
-  @annotation.nowarn("msg=deprecated")
+  @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: Reader[V], key: String, value: String): TaggedReader[V] = annotate(rw, value, value)
+
   def annotate[V](rw: Reader[V], key: String, value: String, shortValue: String): TaggedReader[V] = annotate(rw, value)
 
   @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V]
 
-
+  @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] =
     annotate(rw, key, value, value, checker)
 
-  // Calling deprecated method to maintain binary compatibility
-  @annotation.nowarn("msg=deprecated")
   def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] =
     annotate(rw, value, checker)
 
+  @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: ObjectWriter[V], key: String, value: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
     annotate(rw, key, value, value)(ct)
 
