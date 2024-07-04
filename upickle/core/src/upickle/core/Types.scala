@@ -208,27 +208,24 @@ trait Types{ types =>
     class Leaf[T](checker: Annotator.Checker,
                   tagKey: String,
                   tagValue: String,
-                  tagShortValue: String,
                   r: ObjectWriter[T]) extends TaggedWriter[T]{
       @deprecated("Not used, left for binary compatibility")
       def this(checker: Annotator.Checker, tag: String, r: ObjectWriter[T]) =
-        this(checker, Annotator.defaultTagKey, tag, tag, r)
-      def this(checker: Annotator.Checker, tagKey: String, tagValue: String, r: ObjectWriter[T]) =
-        this(checker, tagKey, tagValue, tagValue, r)
+        this(checker, Annotator.defaultTagKey, tag, r)
 
       @deprecated("Not used, left for binary compatibility")
       def findWriter(v: Any) = {
         checker match{
-          case Annotator.Checker.Cls(c) if c.isInstance(v) => tagShortValue -> r
-          case Annotator.Checker.Val(v0) if v0 == v => tagShortValue -> r
+          case Annotator.Checker.Cls(c) if c.isInstance(v) => tagValue -> r
+          case Annotator.Checker.Val(v0) if v0 == v => tagValue -> r
           case _ => null
         }
       }
 
       override def findWriterWithKey(v: Any) = {
         checker match{
-          case Annotator.Checker.Cls(c) if c.isInstance(v) => (tagKey, tagShortValue, r)
-          case Annotator.Checker.Val(v0) if v0 == v => (tagKey, tagShortValue, r)
+          case Annotator.Checker.Cls(c) if c.isInstance(v) => (tagKey, tagValue, r)
+          case Annotator.Checker.Val(v0) if v0 == v => (tagKey, tagValue, r)
           case _ => null
         }
       }
@@ -244,10 +241,12 @@ trait Types{ types =>
   trait TaggedReadWriter[T] extends ReadWriter[T] with TaggedReader[T] with TaggedWriter[T] with SimpleReader[T]{
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
     override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = taggedObjectContext(this, index)
-
   }
+
   object TaggedReadWriter{
-    class Leaf[T](c: ClassTag[_], private[upickle] override val tagKey: String, tagValue: String, r: ObjectWriter[T] with Reader[T]) extends TaggedReadWriter[T]{
+    class Leaf[T](c: ClassTag[_],
+                  private[upickle] override val tagKey: String,
+                  tagValue: String, r: ObjectWriter[T] with Reader[T]) extends TaggedReadWriter[T]{
       @deprecated("Not used, left for binary compatibility")
       def this(c: ClassTag[_], tag: String, r: ObjectWriter[T] with Reader[T]) = this(c, Annotator.defaultTagKey, tag, r)
 
@@ -320,6 +319,7 @@ class CurrentlyDeriving[T]
  */
 @scala.annotation.nowarn("msg=deprecated")
 trait Annotator { this: Types =>
+
   @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: Reader[V], n: String): TaggedReader[V]
 

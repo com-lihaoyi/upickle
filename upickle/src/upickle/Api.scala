@@ -261,7 +261,7 @@ trait LegacyApi extends Api with Annotator{
     annotate(rw, key, value, value, checker)
 
   override def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] =
-    new TaggedWriter.Leaf[V](checker, key, value, shortValue, rw)
+    new TaggedWriter.Leaf[V](checker, key, if (objectTypeKeyWriteFullyQualified) value else shortValue, rw)
 
   @deprecated("Not used, left for binary compatibility")
   override final def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] =
@@ -341,8 +341,9 @@ trait AttributeTagged extends Api with Annotator{
   }
 
   override def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] = {
-    new TaggedWriter.Leaf[V](checker, key, value, shortValue, rw)
+    new TaggedWriter.Leaf[V](checker, key, if (objectTypeKeyWriteFullyQualified) value else shortValue, rw)
   }
+
   @deprecated("Not used, left for binary compatibility")
   override final def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] =
     annotate(rw, Annotator.defaultTagKey, n, n, checker)
