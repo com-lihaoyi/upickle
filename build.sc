@@ -56,7 +56,9 @@ trait CommonPublishModule
     "3.1.2",
     "3.1.3",
     "3.1.4",
-//    "3.1.5", Not sure why this fails, maybe some artifacts were not properly published?
+    "3.2.0",
+    "3.3.0",
+    "3.3.1",
   )
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(

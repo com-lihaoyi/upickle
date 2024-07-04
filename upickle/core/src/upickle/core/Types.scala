@@ -175,6 +175,7 @@ trait Types{ types =>
                   r: Reader[T]) extends TaggedReader[T]{
       @deprecated("Not used, left for binary compatibility")
       def this(tag: String, r: Reader[T]) = this(Annotator.defaultTagKey, tag, tag, r)
+      def this(tagKey: String, tagValue: String, r: Reader[T]) = this(tagKey, tagValue, tagValue, r)
 
       def findReader(s: String) = if (s == tagValue || s == tagShortValue) r else null
     }
@@ -212,6 +213,8 @@ trait Types{ types =>
       @deprecated("Not used, left for binary compatibility")
       def this(checker: Annotator.Checker, tag: String, r: ObjectWriter[T]) =
         this(checker, Annotator.defaultTagKey, tag, tag, r)
+      def this(checker: Annotator.Checker, tagKey: String, tagValue: String, r: ObjectWriter[T]) =
+        this(checker, tagKey, tagValue, tagValue, r)
 
       @deprecated("Not used, left for binary compatibility")
       def findWriter(v: Any) = {
@@ -315,21 +318,30 @@ class CurrentlyDeriving[T]
  * like Scala 2 `case object`s do, so we instead use a `Checker.Val` to check
  * for `.equals` equality during writes to determine which tag to use.
  */
+@scala.annotation.nowarn("msg=deprecated")
 trait Annotator { this: Types =>
   @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: Reader[V], n: String): TaggedReader[V]
 
   // Calling deprecated method to maintain binary compatibility
   @annotation.nowarn("msg=deprecated")
+  def annotate[V](rw: Reader[V], key: String, value: String): TaggedReader[V] = annotate(rw, value, value)
   def annotate[V](rw: Reader[V], key: String, value: String, shortValue: String): TaggedReader[V] = annotate(rw, value)
 
   @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V]
 
+
+  def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] =
+    annotate(rw, key, value, value, checker)
+
   // Calling deprecated method to maintain binary compatibility
   @annotation.nowarn("msg=deprecated")
   def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] =
     annotate(rw, value, checker)
+
+  def annotate[V](rw: ObjectWriter[V], key: String, value: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
+    annotate(rw, key, value, value)(ct)
 
   def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
     annotate(rw, key, value, shortValue, Annotator.Checker.Cls(ct.runtimeClass))
