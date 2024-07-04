@@ -61,14 +61,14 @@ object LegacyTests extends TestSuite {
       implicit def AnZrw: RW[AnZ.type] = upickle.legacy.macroRW
       implicit def Zrw: RW[Z] = upickle.legacy.macroRW
       test("shallow"){
-        test - rw(B(1), """["upickle.Hierarchy.B",{"i":1}]""")
-        test - rw(C("a", "b"), """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+        test - rw(B(1), """["B",{"i":1}]""")
+        test - rw(C("a", "b"), """["C",{"s1":"a","s2":"b"}]""")
 
-        test - rw(AnZ: Z, """["upickle.Hierarchy.AnZ",{}]""")
-        test - rw(AnZ, """["upickle.Hierarchy.AnZ",{}]""")
+        test - rw(AnZ: Z, """["AnZ",{}]""")
+        test - rw(AnZ, """["AnZ",{}]""")
 
-        test - rw(Hierarchy.B(1): Hierarchy.A, """["upickle.Hierarchy.B", {"i":1}]""")
-        test - rw(C("a", "b"): A, """["upickle.Hierarchy.C",{"s1":"a","s2":"b"}]""")
+        test - rw(Hierarchy.B(1): Hierarchy.A, """["B", {"i":1}]""")
+        test - rw(C("a", "b"): A, """["C",{"s1":"a","s2":"b"}]""")
       }
 
       test("deep"){
@@ -81,20 +81,20 @@ object LegacyTests extends TestSuite {
         implicit def Drw: RW[D] = upickle.legacy.macroRW
         implicit def Erw: RW[E] = upickle.legacy.macroRW
         implicit def Frw: RW[F] = upickle.legacy.macroRW
-        test - rw(B(1), """["upickle.DeepHierarchy.B",{"i":1}]""")
-        test - rw(B(1): A, """["upickle.DeepHierarchy.B",{"i":1}]""")
-        test - rw(AnQ(1): Q, """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
-        test - rw(AnQ(1), """["upickle.DeepHierarchy.AnQ",{"i":1}]""")
+        test - rw(B(1), """["B",{"i":1}]""")
+        test - rw(B(1): A, """["B",{"i":1}]""")
+        test - rw(AnQ(1): Q, """["AnQ",{"i":1}]""")
+        test - rw(AnQ(1), """["AnQ",{"i":1}]""")
 
-        test - rw(F(AnQ(1)), """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":1}]}]""")
-        test - rw(F(AnQ(2)): A, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":2}]}]""")
-        test - rw(F(AnQ(3)): C, """["upickle.DeepHierarchy.F",{"q":["upickle.DeepHierarchy.AnQ",{"i":3}]}]""")
-        test - rw(D("1"), """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-        test - rw(D("1"): C, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-        test - rw(D("1"): A, """["upickle.DeepHierarchy.D",{"s":"1"}]""")
-        test - rw(E(true), """["upickle.DeepHierarchy.E",{"b":true}]""")
-        test - rw(E(true): C, """["upickle.DeepHierarchy.E",{"b":true}]""")
-        test - rw(E(true): A, """["upickle.DeepHierarchy.E",{"b":true}]""")
+        test - rw(F(AnQ(1)), """["F",{"q":["AnQ",{"i":1}]}]""")
+        test - rw(F(AnQ(2)): A, """["F",{"q":["AnQ",{"i":2}]}]""")
+        test - rw(F(AnQ(3)): C, """["F",{"q":["AnQ",{"i":3}]}]""")
+        test - rw(D("1"), """["D",{"s":"1"}]""")
+        test - rw(D("1"): C, """["D",{"s":"1"}]""")
+        test - rw(D("1"): A, """["D",{"s":"1"}]""")
+        test - rw(E(true), """["E",{"b":true}]""")
+        test - rw(E(true): C, """["E",{"b":true}]""")
+        test - rw(E(true): A, """["E",{"b":true}]""")
       }
     }
     test("singleton"){
@@ -103,10 +103,10 @@ object LegacyTests extends TestSuite {
       implicit def AArw: RW[AA] = legacy.macroRW
       implicit def BBrw: RW[BB.type] = legacy.macroRW
       implicit def CCrw: RW[CC.type] = legacy.macroRW
-      rw(BB, """["upickle.Singletons.BB",{}]""")
-      rw(CC, """["upickle.Singletons.CC",{}]""")
-      rw(BB: AA, """["upickle.Singletons.BB",{}]""")
-      rw(CC: AA, """["upickle.Singletons.CC",{}]""")
+      rw(BB, """["BB",{}]""")
+      rw(CC, """["CC",{}]""")
+      rw(BB: AA, """["BB",{}]""")
+      rw(CC: AA, """["CC",{}]""")
     }
     test("robustnessAgainstVaryingSchemas"){
       test("renameKeysViaAnnotations"){
@@ -151,34 +151,32 @@ object LegacyTests extends TestSuite {
     test("generics"){
       import GenericADTs._
       test - {
-        val pref1 = "upickle.GenericADTs.Delta"
         val D1 = Delta
         implicit def Insertrw[A: R: W, B: R: W]: RW[D1.Insert[A, B]] = upickle.legacy.macroRW
         implicit def Removerw[A: R: W]: RW[D1.Remove[A]] = upickle.legacy.macroRW
         implicit def Clearrw: RW[D1.Clear] = upickle.legacy.macroRW
         implicit def D1rw[A: R: W, B: R: W]: RW[D1[A, B]] = upickle.legacy.macroRW
         type D1[+A, +B] = Delta[A, B]
-        rw(D1.Insert(1, 1), s"""["$pref1.Insert",{"key":1,"value":1}]""")
-        rw(D1.Insert(1, 1): D1[Int, Int], s"""["$pref1.Insert",{"key":1,"value":1}]""")
-        rw(D1.Remove(1), s"""["$pref1.Remove",{"key":1}]""")
-        rw(D1.Remove(1): D1[Int, Int], s"""["$pref1.Remove",{"key":1}]""")
-        rw(D1.Clear(), s"""["$pref1.Clear",{}]""")
-        rw(D1.Clear(): D1[Int, Int], s"""["$pref1.Clear",{}]""")
+        rw(D1.Insert(1, 1), s"""["Insert",{"key":1,"value":1}]""")
+        rw(D1.Insert(1, 1): D1[Int, Int], s"""["Insert",{"key":1,"value":1}]""")
+        rw(D1.Remove(1), s"""["Remove",{"key":1}]""")
+        rw(D1.Remove(1): D1[Int, Int], s"""["Remove",{"key":1}]""")
+        rw(D1.Clear(), s"""["Clear",{}]""")
+        rw(D1.Clear(): D1[Int, Int], s"""["Clear",{}]""")
       }
       test - {
-        val pref2 = "upickle.GenericADTs.DeltaInvariant"
         val D2 = DeltaInvariant
         type D2[A, B] = DeltaInvariant[A, B]
         implicit def Insertrw[A: R: W, B: R: W]: RW[D2.Insert[A, B]] = upickle.legacy.macroRW
         implicit def Removerw[A: R: W, B]: RW[D2.Remove[A, B]] = upickle.legacy.macroRW
         implicit def Clearrw[A, B]: RW[D2.Clear[A, B]] = upickle.legacy.macroRW
         implicit def D2rw[A: R: W, B: R: W]: RW[D2[A, B]] = upickle.legacy.macroRW
-        rw(D2.Insert(1, 1), s"""["$pref2.Insert",{"key":1,"value":1}]""")
-        rw(D2.Insert(1, 1): D2[Int, Int], s"""["$pref2.Insert",{"key":1,"value":1}]""")
-        rw(D2.Remove(1), s"""["$pref2.Remove",{"key":1}]""")
-        rw(D2.Remove(1): D2[Int, Int], s"""["$pref2.Remove",{"key":1}]""")
-        rw(D2.Clear(), s"""["$pref2.Clear",{}]""")
-        rw(D2.Clear(): D2[Int, Int], s"""["$pref2.Clear",{}]""")
+        rw(D2.Insert(1, 1), s"""["Insert",{"key":1,"value":1}]""")
+        rw(D2.Insert(1, 1): D2[Int, Int], s"""["Insert",{"key":1,"value":1}]""")
+        rw(D2.Remove(1), s"""["Remove",{"key":1}]""")
+        rw(D2.Remove(1): D2[Int, Int], s"""["Remove",{"key":1}]""")
+        rw(D2.Clear(), s"""["Clear",{}]""")
+        rw(D2.Clear(): D2[Int, Int], s"""["Clear",{}]""")
       }
     }
     test("recursiveDataTypes"){
@@ -200,15 +198,15 @@ object LegacyTests extends TestSuite {
       )
       rw(
         SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))),
-        """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
+        """["SingleNode",{"value":123,"children":[["SingleNode",{"value":456,"children":[]}],["SingleNode",{"value":789,"children":[]}]]}]"""
       )
       rw(
         SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))): SingleTree,
-        """["upickle.Recursive.SingleNode",{"value":123,"children":[["upickle.Recursive.SingleNode",{"value":456,"children":[]}],["upickle.Recursive.SingleNode",{"value":789,"children":[]}]]}]"""
+        """["SingleNode",{"value":123,"children":[["SingleNode",{"value":456,"children":[]}],["SingleNode",{"value":789,"children":[]}]]}]"""
       )
-      rw(End: LL, """["upickle.Recursive.End",{}]""")
-      rw(Node(3, End): LL, """["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]""")
-      rw(Node(6, Node(3, End)), """["upickle.Recursive.Node",{"c":6,"next":["upickle.Recursive.Node",{"c":3,"next":["upickle.Recursive.End",{}]}]}]""")
+      rw(End: LL, """["End",{}]""")
+      rw(Node(3, End): LL, """["Node",{"c":3,"next":["End",{}]}]""")
+      rw(Node(6, Node(3, End)), """["Node",{"c":6,"next":["Node",{"c":3,"next":["End",{}]}]}]""")
 
     }
     test("varargs"){
@@ -253,12 +251,12 @@ object LegacyTests extends TestSuite {
         implicit def rw12: RW[Ast.Chain.Args] = legacy.macroRW
         val block = Ast.Block(1, Seq(Ast.Block.Text(2, "hello")))
         val blockText = """[
-          "upickle.Ast.Block",
+          "Block",
           {
             "offset":1,
             "parts":[
               [
-                "upickle.Ast.Block.Text",
+                "Block.Text",
                 {
                   "offset":2,
                   "txt":"hello"
@@ -274,7 +272,7 @@ object LegacyTests extends TestSuite {
 
         val header = Ast.Header(0, "Hello", block)
         val headerText = s"""[
-          "upickle.Ast.Header",
+          "Header",
           {
             "offset": 0,
             "front": "Hello",
