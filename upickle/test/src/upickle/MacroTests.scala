@@ -817,7 +817,7 @@ object MacroTests extends TestSuite {
         override def objectTypeKeyWriteFullyQualified = true
       }
 
-      val testutil = new TestUtil(customPickler)
+      val customPicklerTest = new TestUtil(customPickler)
 
       implicit def rwA: customPickler.ReadWriter[upickle.Hierarchy.A] = customPickler.macroRW
       implicit def rwB: customPickler.ReadWriter[upickle.Hierarchy.B] = customPickler.macroRW
@@ -826,11 +826,27 @@ object MacroTests extends TestSuite {
       // Make sure both custom pickler and default pickler can read both long and short `$type` tags,
       // but that the custom pickler generates the long `$type` tag while the default pickler
       // generates the short one
-      testutil.rw(new Hierarchy.B(1), """{"$type": "upickle.Hierarchy.B"}""", """{"$type": "B"}""")
-      rw(new Hierarchy.B(1), """{"$type": "B"}""", """{"$type": "upickle.Hierarchy.B"}""")
+      customPicklerTest.rw(
+        new Hierarchy.B(1),
+        """{"$type": "upickle.Hierarchy.B", "i": 1}""",
+        """{"$type": "B", "i": 1}"""
+      )
+      rw(
+        new Hierarchy.B(1),
+        """{"$type": "B", "i": 1}""",
+        """{"$type": "upickle.Hierarchy.B", "i": 1}"""
+      )
 
-      testutil.rw(new Hierarchy.C("x", "y"), """{"$type": "upickle.Hierarchy.C"}""", """{"$type": "C"}""")
-      rw(new Hierarchy.C("x", "y"), """{"$type": "C"}""", """{"$type": "upickle.Hierarchy.C"}""")
+      customPicklerTest.rw(
+        new Hierarchy.C("x", "y"),
+        """{"$type": "upickle.Hierarchy.C", "s1": "x", "s2": "y"}""",
+         """{"$type": "C", "s1": "x", "s2": "y"}"""
+      )
+      rw(
+        new Hierarchy.C("x", "y"),
+        """{"$type": "C", "s1": "x", "s2": "y"}""",
+        """{"$type": "upickle.Hierarchy.C", "s1": "x", "s2": "y"}"""
+      )
 
     }
   }
