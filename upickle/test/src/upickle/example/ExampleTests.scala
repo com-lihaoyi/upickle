@@ -14,6 +14,10 @@ object Simple {
   object Thing{
     implicit val rw: RW[Thing] = macroRW
   }
+  case class OptionThing(myFieldA: Option[Int] = None, myFieldB: Option[String] = None)
+  object OptionThing{
+    implicit val rw: RW[OptionThing] = macroRW
+  }
   case class Big(i: Int, b: Boolean, str: String, c: Char, t: Thing)
   object Big{
     implicit val rw: RW[Big] = macroRW
@@ -239,8 +243,16 @@ object ExampleTests extends TestSuite {
             |        "myFieldB": ""
             |    }
             |}""".stripMargin
-        }
+      }
 
+      test("caseClassOption"){
+        import upickle._
+        write(OptionThing(Some(1), Some("gg")))             ==> """{"myFieldA":1,"myFieldB":"gg"}"""
+        read[OptionThing]("""{"myFieldA":1,"myFieldB":"gg"}""") ==> OptionThing(Some(1), Some("gg"))
+
+        write(OptionThing(Some(1), None))             ==> """{"myFieldA":1}"""
+        read[OptionThing]("""{"myFieldA":1}""") ==> OptionThing(Some(1), None)
+      }
 
       test("sealed"){
         write(IntThing(1)) ==> """{"$type":"upickle.example.Sealed.IntThing","i":1}"""
