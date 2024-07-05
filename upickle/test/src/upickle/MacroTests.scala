@@ -803,5 +803,35 @@ object MacroTests extends TestSuite {
       compileError("upickle.default.macroRW[upickle.SomeMultiKeyedObj.type]")
         .check("", "inherits from multiple parent types with different discriminator keys")
     }
+
+    test("multiKeyedADT") {
+      compileError("upickle.default.macroRW[upickle.MultiKeyedObj.type]")
+        .check("", "inherits from multiple parent types with different discriminator keys")
+
+      compileError("upickle.default.macroRW[upickle.SomeMultiKeyedObj.type]")
+        .check("", "inherits from multiple parent types with different discriminator keys")
+    }
+
+    test("objectTypeKeyWriteFullyQualified") {
+      object customPickler extends upickle.AttributeTagged {
+        override def objectTypeKeyWriteFullyQualified = true
+      }
+
+      val testutil = new TestUtil(customPickler)
+
+      implicit def rwA: customPickler.ReadWriter[upickle.Hierarchy.A] = customPickler.macroRW
+      implicit def rwB: customPickler.ReadWriter[upickle.Hierarchy.B] = customPickler.macroRW
+      implicit def rwC: customPickler.ReadWriter[upickle.Hierarchy.C] = customPickler.macroRW
+
+      // Make sure both custom pickler and default pickler can read both long and short `$type` tags,
+      // but that the custom pickler generates the long `$type` tag while the default pickler
+      // generates the short one
+      testutil.rw(new Hierarchy.B(1), """{"$type": "upickle.Hierarchy.B"}""", """{"$type": "B"}""")
+      rw(new Hierarchy.B(1), """{"$type": "B"}""", """{"$type": "upickle.Hierarchy.B"}""")
+
+      testutil.rw(new Hierarchy.C("x", "y"), """{"$type": "upickle.Hierarchy.C"}""", """{"$type": "C"}""")
+      rw(new Hierarchy.C("x", "y"), """{"$type": "C"}""", """{"$type": "upickle.Hierarchy.C"}""")
+
+    }
   }
 }
