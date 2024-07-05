@@ -201,8 +201,8 @@ object ExampleTests extends TestSuite {
         write(Map.empty[Int, Int], indent = 4) ==> """{}"""
       }
       test("options"){
-        write(Some(1))                    ==> "[1]"
-        write(None)                       ==> "[]"
+        write(Some(1))                    ==> "1"
+        write(None)                       ==> "null"
       }
       test("tuples"){
         write((1, "omg"))                 ==> """[1,"omg"]"""

@@ -11,6 +11,7 @@ trait MacrosCommon {
   def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
   def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
 
+  def optionsAsNulls: Boolean = true
 }
 
 object MacrosCommon {

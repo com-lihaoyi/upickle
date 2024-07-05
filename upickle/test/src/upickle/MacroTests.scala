@@ -210,7 +210,7 @@ object MacroTests extends TestSuite {
 
         test - rw(
           ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
-          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}""",
+          """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[null]}""",
           upack.Obj(
             upack.Str("i") -> upack.Int32(1),
             upack.Str("s") -> upack.Str("lol"),
@@ -221,7 +221,7 @@ object MacroTests extends TestSuite {
               upack.Float64(2.1),
               upack.Float64(3.14)
             ),
-            upack.Str("o") -> upack.Arr(upack.Arr())
+            upack.Str("o") -> upack.Arr(upack.Null)
           )
         )
         val chunks = for (i <- 1 to 18) yield {

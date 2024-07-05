@@ -33,7 +33,7 @@ object LegacyTests extends TestSuite {
 
       test - rw(
         ADTs.ADTf(1, "lol", (1.1, 1.2), ADTs.ADTa(1), List(1.2, 2.1, 3.14), Some(None)),
-        """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[[]]}"""
+        """{"i":1,"s":"lol","t":[1.1,1.2],"a":{"i":1},"q":[1.2,2.1,3.14],"o":[null]}"""
       )
       val chunks = for (i <- 1 to 18) yield {
         val rhs = if (i % 2 == 1) "1" else "\"1\""

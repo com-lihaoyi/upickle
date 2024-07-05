@@ -335,7 +335,7 @@ object AdvancedTests extends TestSuite {
       //      }
 
       test("issue-371") {
-        val input = """{"head":"a","tail":[{"head":"b","tail":[]}]}"""
+        val input = """{"head":"a","tail":{"head":"b","tail":null}}"""
         val expected = Node371("a", Some(Node371("b", None)))
         val result = upickle.default.read[Node371](input)
         assert(result == expected)
