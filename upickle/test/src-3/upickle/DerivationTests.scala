@@ -110,9 +110,9 @@ object DerivationTests extends TestSuite {
     }
 
     test("recursive"){
-      case class Recur(recur: Option[Recur]) derives ReadWriter
-      rw(Recur(None), """{"recur":[]}""")
-      rw(Recur(Some(Recur(None))), """{"recur":[{"recur": []}]}""")
+      case class Recur(recur: Option[Recur] = None) derives ReadWriter
+      rw(Recur(None), """{}""")
+      rw(Recur(Some(Recur(None))), """{"recur":{}}""")
     }
     test("multilevel"){
       rw(Level1Cls(1), """{"$type": "upickle.Level1Cls", "i": 1}""")
