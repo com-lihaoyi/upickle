@@ -255,14 +255,14 @@ object ExampleTests extends TestSuite {
       }
 
       test("sealed"){
-        write(IntThing(1)) ==> """{"$type":"upickle.example.Sealed.IntThing","i":1}"""
+        write(IntThing(1)) ==> """{"$type":"IntThing","i":1}"""
 
         write(TupleThing("naeem", (1, 2))) ==>
-          """{"$type":"upickle.example.Sealed.TupleThing","name":"naeem","t":[1,2]}"""
+          """{"$type":"TupleThing","name":"naeem","t":[1,2]}"""
 
         // You can read tagged value without knowing its
         // type in advance, just use type of the sealed trait
-        read[IntOrTuple]("""{"$type":"upickle.example.Sealed.IntThing","i":1}""") ==> IntThing(1)
+        read[IntOrTuple]("""{"$type":"IntThing","i":1}""") ==> IntThing(1)
 
       }
       test("recursive"){
@@ -335,9 +335,9 @@ object ExampleTests extends TestSuite {
       }
       test("tagKey"){
         write(ATag(11)) ==>
-          """{"_tag":"upickle.example.KeyedTagKey.ATag","i":11}"""
+          """{"_tag":"ATag","i":11}"""
 
-        read[ATag]("""{"_tag":"upickle.example.KeyedTagKey.ATag","i":11}""") ==>
+        read[ATag]("""{"_tag":"ATag","i":11}""") ==>
           ATag(11)
       }
       test("snakeCase"){

@@ -223,9 +223,31 @@ object Macros {
           (_: c.Symbol).name.toString,
           fail(tpe, _),
         )
-        val tagValue = customKey(tpe.typeSymbol).getOrElse(TypeName(tpe.typeSymbol.fullName).decodedName.toString)
 
-        q"${c.prefix}.annotate($derived, $tagKey, $tagValue)"
+
+        val segments =
+          sealedParents
+            .flatMap(_.asClass.knownDirectSubclasses)
+            .map(_.fullName.split('.'))
+
+        // -1 because even if there is only one subclass, and so no name segments
+        // are needed to differentiate between them, we want to keep at least
+        // the rightmost name segment
+        val identicalSegmentCount = Range(0, segments.map(_.length).max - 1)
+          .takeWhile(i => segments.map(_.lift(i)).distinct.size == 1)
+          .length
+
+        val tagValue = customKey(tpe.typeSymbol)
+          .getOrElse(TypeName(tpe.typeSymbol.fullName).decodedName.toString)
+
+        val shortTagValue = customKey(tpe.typeSymbol)
+          .getOrElse(
+            TypeName(
+              tpe.typeSymbol.fullName.split('.').drop(identicalSegmentCount).mkString(".")
+            ).decodedName.toString
+          )
+
+        q"${c.prefix}.annotate($derived, $tagKey, $tagValue, $shortTagValue)"
       }
     }
 

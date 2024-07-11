@@ -59,13 +59,13 @@ object DerivationTests extends TestSuite {
       }
       test("animal"){
         upickle.default.write(Person("Peter", "Ave 10")) ==>
-          """{"$type":"upickle.Person","name":"Peter","address":"Ave 10"}"""
+          """{"$type":"Person","name":"Peter","address":"Ave 10"}"""
 
-        upickle.default.read[Animal]("""{"$type":"upickle.Person","name":"Peter","address":"Ave 10"}""") ==>
+        upickle.default.read[Animal]("""{"$type":"Person","name":"Peter","address":"Ave 10"}""") ==>
           Person("Peter", "Ave 10")
 
-        upickle.default.write(Cthulu) ==> "\"upickle.Cthulu\""
-        upickle.default.read[Animal]("\"upickle.Cthulu\"") ==> Cthulu
+        upickle.default.write(Cthulu) ==> "\"Cthulu\""
+        upickle.default.read[Animal]("\"Cthulu\"") ==> Cthulu
       }
     }
 
@@ -76,36 +76,36 @@ object DerivationTests extends TestSuite {
     test("caseClassTagged") - {
       rw[Person](
         Person("Peter", "Avenue 10 Zurich", 20),
-        """{"$type":"upickle.Person","name":"Peter","address":"Avenue 10 Zurich"}"""
+        """{"$type":"Person","name":"Peter","address":"Avenue 10 Zurich"}"""
       )
     }
 
     test("trait") - {
       rw[Animal](
         Person("Peter", "Avenue 10 Zurich" ,20),
-        """{"$type":"upickle.Person","name":"Peter","address":"Avenue 10 Zurich"}"""
+        """{"$type":"Person","name":"Peter","address":"Avenue 10 Zurich"}"""
       )
       rw[Animal](
         Person("Peter", "Avenue 10 Zurich"),
-        """{"$type":"upickle.Person","name":"Peter","address":"Avenue 10 Zurich"}"""
+        """{"$type":"Person","name":"Peter","address":"Avenue 10 Zurich"}"""
       )
     }
 
     test("caseObjectWriter") - {
-      rw[Animal](Cthulu, """"upickle.Cthulu"""", """{"$type":"upickle.Cthulu"}""")
-      rw[Cthulu.type](Cthulu, """"upickle.Cthulu"""", """{"$type":"upickle.Cthulu"}""")
+      rw[Animal](Cthulu, """"Cthulu"""", """{"$type":"Cthulu"}""")
+      rw[Cthulu.type](Cthulu, """"Cthulu"""", """{"$type":"Cthulu"}""")
     }
 
     test("caseObjectWriterImplicit") - {
       rw[AnimalImplicit](
         CthuluImplicit,
-        """"upickle.CthuluImplicit"""",
-         """{"$type":"upickle.CthuluImplicit"}"""
+        """"CthuluImplicit"""",
+         """{"$type":"CthuluImplicit"}"""
       )
       rw[CthuluImplicit.type](
         CthuluImplicit,
-         """"upickle.CthuluImplicit"""",
-         """{"$type":"upickle.CthuluImplicit"}"""
+         """"CthuluImplicit"""",
+         """{"$type":"CthuluImplicit"}"""
       )
     }
 
@@ -115,53 +115,53 @@ object DerivationTests extends TestSuite {
       rw(Recur(Some(Recur(None))), """{"recur":{}}""")
     }
     test("multilevel"){
-      rw(Level1Cls(1), """{"$type": "upickle.Level1Cls", "i": 1}""")
-      rw(Level1Cls(1): Level1, """{"$type": "upickle.Level1Cls", "i": 1}""")
+      rw(Level1Cls(1), """{"$type": "Level1Cls", "i": 1}""")
+      rw(Level1Cls(1): Level1, """{"$type": "Level1Cls", "i": 1}""")
 
-      rw(Level1Obj, """"upickle.Level1Obj"""")
-      rw(Level1Obj: Level1, """"upickle.Level1Obj"""")
+      rw(Level1Obj, """"Level1Obj"""")
+      rw(Level1Obj: Level1, """"Level1Obj"""")
 
-      rw(Level2Cls("str"), """{"$type": "upickle.Level2Cls", "s": "str"}""")
-      rw(Level2Cls("str"): Level2, """{"$type": "upickle.Level2Cls", "s": "str"}""")
-      rw(Level2Cls("str"): Level1, """{"$type": "upickle.Level2Cls", "s": "str"}""")
+      rw(Level2Cls("str"), """{"$type": "Level2Cls", "s": "str"}""")
+      rw(Level2Cls("str"): Level2, """{"$type": "Level2Cls", "s": "str"}""")
+      rw(Level2Cls("str"): Level1, """{"$type": "Level2Cls", "s": "str"}""")
 
-      rw(Level2Obj, """"upickle.Level2Obj"""")
-      rw(Level2Obj: Level2, """"upickle.Level2Obj"""")
-      rw(Level2Obj: Level1, """"upickle.Level2Obj"""")
+      rw(Level2Obj, """"Level2Obj"""")
+      rw(Level2Obj: Level2, """"Level2Obj"""")
+      rw(Level2Obj: Level1, """"Level2Obj"""")
 
-      rw(Level3Cls(true), """{"$type": "upickle.Level3Cls", "b": true}""")
-      rw(Level3Cls(true): Level3, """{"$type": "upickle.Level3Cls", "b": true}""")
-      rw(Level3Cls(true): Level2, """{"$type": "upickle.Level3Cls", "b": true}""")
-      rw(Level3Cls(true): Level1, """{"$type": "upickle.Level3Cls", "b": true}""")
+      rw(Level3Cls(true), """{"$type": "Level3Cls", "b": true}""")
+      rw(Level3Cls(true): Level3, """{"$type": "Level3Cls", "b": true}""")
+      rw(Level3Cls(true): Level2, """{"$type": "Level3Cls", "b": true}""")
+      rw(Level3Cls(true): Level1, """{"$type": "Level3Cls", "b": true}""")
 
-      rw(Level3Obj, """"upickle.Level3Obj"""")
-      rw(Level3Obj: Level3, """"upickle.Level3Obj"""")
-      rw(Level3Obj: Level2, """"upickle.Level3Obj"""")
-      rw(Level3Obj: Level1, """"upickle.Level3Obj"""")
+      rw(Level3Obj, """"Level3Obj"""")
+      rw(Level3Obj: Level3, """"Level3Obj"""")
+      rw(Level3Obj: Level2, """"Level3Obj"""")
+      rw(Level3Obj: Level1, """"Level3Obj"""")
     }
 
     test("abstractClass"){
-      rw(UnknownShirtSize, """ "upickle.UnknownShirtSize" """)
-      rw(UnknownShirtSize: ShirtSize, """ "upickle.UnknownShirtSize" """)
-      rw(XL, """ "upickle.XL" """)
-      rw(XL: ShirtSize, """ "upickle.XL" """)
-      rw(XL: KnownShirtSize, """ "upickle.XL" """)
+      rw(UnknownShirtSize, """ "UnknownShirtSize" """)
+      rw(UnknownShirtSize: ShirtSize, """ "UnknownShirtSize" """)
+      rw(XL, """ "XL" """)
+      rw(XL: ShirtSize, """ "XL" """)
+      rw(XL: KnownShirtSize, """ "XL" """)
     }
     test("failures"){
       test("caseClassTaggedWrong") - {
         val e = intercept[upickle.core.AbortException] {
           upickle.default.read[Person](
-            """{"$type":"upickle.Cat","name":"Peter","owner":{"$type":"upickle.Person","name": "bob", "address": "Avenue 10 Zurich"}}"""
+            """{"$type":"Cat","name":"Peter","owner":{"$type":"Person","name": "bob", "address": "Avenue 10 Zurich"}}"""
           )
         }
-        assert(e.getMessage == "invalid tag for tagged object: upickle.Cat at index 9")
+        assert(e.getMessage == "invalid tag for tagged object: Cat at index 9")
       }
 
       test("multilevelTaggedWrong") - {
         val e = intercept[upickle.core.AbortException] {
-          upickle.default.read[Level2]("""{"$type": "upickle.Level1Cls", "i": 1}""")
+          upickle.default.read[Level2]("""{"$type": "Level1Cls", "i": 1}""")
         }
-        assert(e.getMessage == "invalid tag for tagged object: upickle.Level1Cls at index 10")
+        assert(e.getMessage == "invalid tag for tagged object: Level1Cls at index 10")
       }
     }
     test("issue468"){

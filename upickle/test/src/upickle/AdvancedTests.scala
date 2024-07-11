@@ -138,26 +138,24 @@ object AdvancedTests extends TestSuite {
       test("ADT"){
         import GenericADTs._
         test - {
-          val pref1 = "upickle.GenericADTs.Delta"
           val D1 = Delta
           type D1[+A, +B] = Delta[A, B]
-          rw(D1.Insert(1, 1), s"""{"$$type":"$pref1.Insert","key":1,"value":1}""")
-          rw(D1.Insert(1, 1): D1[Int, Int], s"""{"$$type":"$pref1.Insert","key":1,"value":1}""")
-          rw(D1.Remove(1), s"""{"$$type":"$pref1.Remove","key":1}""")
-          rw(D1.Remove(1): D1[Int, Int], s"""{"$$type":"$pref1.Remove","key":1}""")
-          rw(D1.Clear(), s"""{"$$type":"$pref1.Clear"}""")
-          rw(D1.Clear(): D1[Int, Int], s"""{"$$type":"$pref1.Clear"}""")
+          rw(D1.Insert(1, 1), s"""{"$$type":"Insert","key":1,"value":1}""")
+          rw(D1.Insert(1, 1): D1[Int, Int], s"""{"$$type":"Insert","key":1,"value":1}""")
+          rw(D1.Remove(1), s"""{"$$type":"Remove","key":1}""")
+          rw(D1.Remove(1): D1[Int, Int], s"""{"$$type":"Remove","key":1}""")
+          rw(D1.Clear(), s"""{"$$type":"Clear"}""")
+          rw(D1.Clear(): D1[Int, Int], s"""{"$$type":"Clear"}""")
         }
         test - {
-          val pref2 = "upickle.GenericADTs.DeltaInvariant"
           val D2 = DeltaInvariant
           type D2[A, B] = DeltaInvariant[A, B]
-          rw(D2.Insert(1, 1), s"""{"$$type":"$pref2.Insert","key":1,"value":1}""")
-          rw(D2.Insert(1, 1): D2[Int, Int], s"""{"$$type":"$pref2.Insert","key":1,"value":1}""")
-          rw(D2.Remove(1), s"""{"$$type":"$pref2.Remove","key":1}""")
-          rw(D2.Remove(1): D2[Int, Int], s"""{"$$type":"$pref2.Remove","key":1}""")
-          rw(D2.Clear(), s"""{"$$type":"$pref2.Clear"}""")
-          rw(D2.Clear(): D2[Int, Int], s"""{"$$type":"$pref2.Clear"}""")
+          rw(D2.Insert(1, 1), s"""{"$$type":"Insert","key":1,"value":1}""")
+          rw(D2.Insert(1, 1): D2[Int, Int], s"""{"$$type":"Insert","key":1,"value":1}""")
+          rw(D2.Remove(1), s"""{"$$type":"Remove","key":1}""")
+          rw(D2.Remove(1): D2[Int, Int], s"""{"$$type":"Remove","key":1}""")
+          rw(D2.Clear(), s"""{"$$type":"Clear"}""")
+          rw(D2.Clear(): D2[Int, Int], s"""{"$$type":"Clear"}""")
         }
       }
     }
@@ -177,16 +175,16 @@ object AdvancedTests extends TestSuite {
       rw(
         SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))),
         """{
-          "$type": "upickle.Recursive.SingleNode",
+          "$type": "SingleNode",
           "value": 123,
           "children": [
             {
-              "$type": "upickle.Recursive.SingleNode",
+              "$type": "SingleNode",
               "value": 456,
               "children": []
             },
             {
-              "$type": "upickle.Recursive.SingleNode",
+              "$type": "SingleNode",
               "value":789,
               "children":[]
             }
@@ -196,54 +194,54 @@ object AdvancedTests extends TestSuite {
       rw(
         SingleNode(123, List(SingleNode(456, Nil), SingleNode(789, Nil))): SingleTree,
         """{
-          "$type": "upickle.Recursive.SingleNode",
+          "$type": "SingleNode",
           "value": 123,
           "children": [
             {
-              "$type": "upickle.Recursive.SingleNode",
+              "$type": "SingleNode",
               "value": 456,
               "children": []
             },
             {
-              "$type": "upickle.Recursive.SingleNode",
+              "$type": "SingleNode",
               "value":789,
               "children":[]
             }
           ]
         }"""
       )
-      rw(End: LL, """ "upickle.Recursive.End" """, """{"$type":"upickle.Recursive.End"}""")
+      rw(End: LL, """ "End" """, """{"$type":"End"}""")
       rw(Node(3, End): LL,
         """{
-          "$type": "upickle.Recursive.Node",
+          "$type": "Node",
           "c": 3,
-          "next": "upickle.Recursive.End"
+          "next": "End"
         }""",
         """{
-          "$type": "upickle.Recursive.Node",
+          "$type": "Node",
           "c": 3,
-          "next": {"$type":"upickle.Recursive.End"}
+          "next": {"$type":"End"}
         }"""
       )
 
       rw(
         Node(6, Node(3, End)),
         """{
-          "$type": "upickle.Recursive.Node",
+          "$type": "Node",
           "c": 6,
           "next": {
-            "$type": "upickle.Recursive.Node",
+            "$type": "Node",
             "c":3,
-            "next": "upickle.Recursive.End"
+            "next": "End"
           }
         }""",
         """{
-          "$type": "upickle.Recursive.Node",
+          "$type": "Node",
           "c": 6,
           "next": {
-            "$type": "upickle.Recursive.Node",
+            "$type": "Node",
             "c":3,
-            "next":{"$type":"upickle.Recursive.End"}
+            "next":{"$type":"End"}
           }
         }"""
       )
@@ -251,24 +249,24 @@ object AdvancedTests extends TestSuite {
     }
     test("gadt"){
       test("simple"){
-        test - rw(Gadt.Exists("hello"), """{"$type":"upickle.Gadt.Exists","path":"hello"}""")
-//        test - rw(Gadt.Exists("hello"): Gadt[_], """{"$type":"upickle.Gadt.Exists","path":"hello"}""")
-        test - rw(Gadt.IsDir(" "), """{"$type":"upickle.Gadt.IsDir","path":" "}""")
-//        test - rw(Gadt.IsDir(" "): Gadt[_], """{"$type":"upickle.Gadt.IsDir","path":" "}""")
-        test - rw(Gadt.ReadBytes("\""), """{"$type":"upickle.Gadt.ReadBytes","path":"\""}""")
-//        test - rw(Gadt.ReadBytes("\""): Gadt[_], """{"$type":"upickle.Gadt.ReadBytes","path":"\""}""")
-        test - rw(Gadt.CopyOver(Seq(1, 2, 3), ""), """{"$type":"upickle.Gadt.CopyOver","src":[1,2,3],"path":""}""")
-//        test - rw(Gadt.CopyOver(Seq(1, 2, 3), ""): Gadt[_], """{"$type":"upickle.Gadt.CopyOver","src":[1,2,3],"path":""}""")
+        test - rw(Gadt.Exists("hello"), """{"$type":"Exists","path":"hello"}""")
+//        test - rw(Gadt.Exists("hello"): Gadt[_], """{"$type":"Exists","path":"hello"}""")
+        test - rw(Gadt.IsDir(" "), """{"$type":"IsDir","path":" "}""")
+//        test - rw(Gadt.IsDir(" "): Gadt[_], """{"$type":"IsDir","path":" "}""")
+        test - rw(Gadt.ReadBytes("\""), """{"$type":"ReadBytes","path":"\""}""")
+//        test - rw(Gadt.ReadBytes("\""): Gadt[_], """{"$type":"ReadBytes","path":"\""}""")
+        test - rw(Gadt.CopyOver(Seq(1, 2, 3), ""), """{"$type":"CopyOver","src":[1,2,3],"path":""}""")
+//        test - rw(Gadt.CopyOver(Seq(1, 2, 3), ""): Gadt[_], """{"$type":"CopyOver","src":[1,2,3],"path":""}""")
       }
       test("partial"){
-        test - rw(Gadt2.Exists("hello"), """{"$type":"upickle.Gadt2.Exists","v":"hello"}""")
-//        test - rw(Gadt2.Exists("hello"): Gadt2[_, String], """{"$type":"upickle.Gadt2.Exists","v":"hello"}""")
-        test - rw(Gadt2.IsDir(123), """{"$type":"upickle.Gadt2.IsDir","v":123}""")
-//        test - rw(Gadt2.IsDir(123): Gadt2[_, Int], """{"$type":"upickle.Gadt2.IsDir","v":123}""")
-        test - rw(Gadt2.ReadBytes('h'), """{"$type":"upickle.Gadt2.ReadBytes","v":"h"}""")
-//        test - rw(Gadt2.ReadBytes('h'): Gadt2[_, Char], """{"$type":"upickle.Gadt2.ReadBytes","v":"h"}""")
-        test - rw(Gadt2.CopyOver(Seq(1, 2, 3), ""), """{"$type":"upickle.Gadt2.CopyOver","src":[1,2,3],"v":""}""")
-//        test - rw(Gadt2.CopyOver(Seq(1, 2, 3), ""): Gadt2[_, Unit], """{"$type":"upickle.Gadt2.CopyOver","src":[1,2,3],"v":""}""")
+        test - rw(Gadt2.Exists("hello"), """{"$type":"Exists","v":"hello"}""")
+//        test - rw(Gadt2.Exists("hello"): Gadt2[_, String], """{"$type":"Exists","v":"hello"}""")
+        test - rw(Gadt2.IsDir(123), """{"$type":"IsDir","v":123}""")
+//        test - rw(Gadt2.IsDir(123): Gadt2[_, Int], """{"$type":"IsDir","v":123}""")
+        test - rw(Gadt2.ReadBytes('h'), """{"$type":"ReadBytes","v":"h"}""")
+//        test - rw(Gadt2.ReadBytes('h'): Gadt2[_, Char], """{"$type":"ReadBytes","v":"h"}""")
+        test - rw(Gadt2.CopyOver(Seq(1, 2, 3), ""), """{"$type":"CopyOver","src":[1,2,3],"v":""}""")
+//        test - rw(Gadt2.CopyOver(Seq(1, 2, 3), ""): Gadt2[_, Unit], """{"$type":"CopyOver","src":[1,2,3],"v":""}""")
       }
     }
     test("issues"){
@@ -290,11 +288,11 @@ object AdvancedTests extends TestSuite {
       test("scalatex"){
         val block = Ast.Block(1, Seq(Ast.Block.Text(2, "hello")))
         val blockText = """{
-            "$type":"upickle.Ast.Block",
+            "$type":"Block",
             "offset":1,
             "parts":[
               {
-                "$type": "upickle.Ast.Block.Text",
+                "$type": "Block.Text",
                 "offset":2,
                 "txt":"hello"
               }
@@ -307,7 +305,7 @@ object AdvancedTests extends TestSuite {
 
         val header = Ast.Header(0, "Hello", block)
         val headerText = s"""{
-          "$$type": "upickle.Ast.Header",
+          "$$type": "Header",
           "offset": 0,
           "front": "Hello",
           "block": $blockText
