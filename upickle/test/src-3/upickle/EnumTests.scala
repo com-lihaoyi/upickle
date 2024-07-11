@@ -22,7 +22,9 @@ enum ColorEnum(val rgb: Int) derives ReadWriter:
 end ColorEnum
 
 
-case class Enclosing(str: String, simple1: SimpleEnum, simple2: Option[SimpleEnum]) derives ReadWriter
+case class Enclosing(str: String,
+                     simple1: SimpleEnum,
+                     simple2: Option[SimpleEnum] = None) derives ReadWriter
 
 enum LinkedList[+T] derives ReadWriter:
   case End
@@ -65,7 +67,7 @@ object EnumTests extends TestSuite {
       test("enclosingWrite") - {
         rw(
           Enclosing("test", SimpleEnum.A, Some(SimpleEnum.B)),
-          """{"str":"test","simple1":"A","simple2":["B"]}"""
+          """{"str":"test","simple1":"A","simple2":"B"}"""
         )
       }
     }

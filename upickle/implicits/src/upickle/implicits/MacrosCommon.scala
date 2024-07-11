@@ -1,6 +1,5 @@
 package upickle.implicits
 
-// Common things for derivation
 trait MacrosCommon extends upickle.core.Config
 
 object MacrosCommon {
