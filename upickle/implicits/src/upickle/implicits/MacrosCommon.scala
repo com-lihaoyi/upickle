@@ -28,7 +28,7 @@ trait MacrosCommon {
 
   /**
    * Map the name of Scala `case class` type names to JSON `$type` field value during
-   * serialization. Must be kept in sync with [[objectTypeKeyWriteMap]]
+   * serialization. Must be kept in sync with [[objectTypeKeyReadMap]]
    */
   def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
 
