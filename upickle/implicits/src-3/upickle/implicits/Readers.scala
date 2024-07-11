@@ -12,9 +12,9 @@ trait ReadersVersionSpecific
     with Annotator
     with CaseClassReadWriters:
 
-  abstract class CaseClassReadereader[T](paramCount: Int,
-                                         missingKeyCount: Long,
-                                         allowUnknownKeys: Boolean) extends CaseClassReader[T] {
+  abstract class CaseClassReader[T](paramCount: Int,
+                                    missingKeyCount: Long,
+                                    allowUnknownKeys: Boolean) extends CaseClassReader[T] {
     // Bincompat stub
     def this(paramCount: Int, missingKeyCount: Long) = this(paramCount, missingKeyCount, true)
 
@@ -63,7 +63,7 @@ trait ReadersVersionSpecific
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val reader = new CaseClassReadereader[T](
+      val reader = new CaseClassReader[T](
         macros.paramsCount[T],
         macros.checkErrorMissingKeysCount[T](),
         macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.allowUnknownKeys)
