@@ -12,10 +12,9 @@ trait ReadersVersionSpecific
     with Annotator
     with CaseClassReadWriters:
 
-  abstract class CaseClassReader[T](paramCount: Int,
-                                    missingKeyCount: Long,
-                                    allowUnknownKeys: Boolean) extends CaseReader[T] {
-
+  abstract class CaseClassReader3[T](paramCount: Int,
+                                     missingKeyCount: Long,
+                                     allowUnknownKeys: Boolean) extends CaseClassReader[T] {
     def visitors0: Product
     lazy val visitors = visitors0
     def fromProduct(p: Product): T
@@ -61,7 +60,7 @@ trait ReadersVersionSpecific
 
   inline def macroR[T](using m: Mirror.Of[T]): Reader[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
-      val reader = new CaseClassReader[T](
+      val reader = new CaseClassReader3[T](
         macros.paramsCount[T],
         macros.checkErrorMissingKeysCount[T](),
         macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.allowUnknownKeys)

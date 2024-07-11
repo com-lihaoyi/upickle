@@ -12,7 +12,7 @@ import upickle.core.{Abort, AbortException, ArrVisitor, NoOpVisitor, ObjVisitor,
 */
 trait CaseClassReadWriters extends upickle.core.Types{
   def allowUnknownKeys: Boolean = true
-  abstract class CaseReader[V] extends SimpleReader[V] {
+  abstract class CaseClassReader[V] extends SimpleReader[V] {
     override def expectedMsg = "expected dictionary"
 
     override def visitString(s: CharSequence, index: Int) = visitObject(0, true, index).visitEnd(index)
@@ -43,7 +43,7 @@ trait CaseClassReadWriters extends upickle.core.Types{
     }
   }
 
-  class SingletonReader[T](t: T) extends CaseReader[T] {
+  class SingletonReader[T](t: T) extends CaseClassReader[T] {
     override def expectedMsg = "expected string or dictionary"
 
     override def visitString(s: CharSequence, index: Int) = t
