@@ -104,7 +104,7 @@ object Macros {
 
     }
 
-    def mergeTrait(tagKey: String, subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
+    def mergeTrait(tagKey: Option[String], subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
 
     def derive(tpe: c.Type) = {
       if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) {
@@ -127,7 +127,7 @@ object Macros {
             "https://com-lihaoyi.github.io/upickle/#ManualSealedTraitPicklers"
         fail(tpe, msg)
       }else{
-        val tagKey = customKey(clsSymbol).getOrElse(Annotator.defaultTagKey)
+        val tagKey = customKey(clsSymbol)
         val subTypes = fleshedOutSubtypes(tpe).toSeq.sortBy(_.typeSymbol.fullName)
         //    println("deriveTrait")
         val subDerives = subTypes.map(subCls => q"implicitly[${typeclassFor(subCls)}]")
@@ -363,8 +363,12 @@ object Macros {
       """
     }
 
-    override def mergeTrait(tagKey: String, subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
-      q"${c.prefix}.Reader.merge[$targetType]($tagKey, ..$subtrees)"
+    override def mergeTrait(tagKey: Option[String], subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
+      val tagKeyExpr = tagKey match {
+        case Some(v) => q"$v"
+        case None => q"${c.prefix}.tagName"
+      }
+      q"${c.prefix}.Reader.merge[$targetType]($tagKeyExpr, ..$subtrees)"
     }
   }
 
@@ -436,7 +440,7 @@ object Macros {
        """
     }
 
-    override def mergeTrait(tagKey: String, subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
+    override def mergeTrait(tagKey: Option[String], subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       q"${c.prefix}.Writer.merge[$targetType](..$subtree)"
     }
   }

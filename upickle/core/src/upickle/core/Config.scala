@@ -2,7 +2,13 @@ package upickle.core
 
 // Common things for derivation
 trait Config {
+  /**
+   * Specifies the name of the field used to distinguish different `case class`es under
+   * a `sealed trait`. Defaults to `$type`, but can be configured globally by overriding
+   * [[tagName]], or on a per-`sealed trait` basis via the `@key` annotation
+   */
   def tagName = Annotator.defaultTagKey
+
   /**
    * Whether to use the fully-qualified name of `case class`es and `case object`s which
    * are part of `sealed trait` hierarchies when serializing them and writing their `$type`
