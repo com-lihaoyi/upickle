@@ -14,9 +14,7 @@ trait ReadersVersionSpecific
 
   abstract class CaseClassReader[T](paramCount: Int,
                                     missingKeyCount: Long,
-                                    allowUnknownKeys: Boolean) extends CaseClassReader[T] {
-    // Bincompat stub
-    def this(paramCount: Int, missingKeyCount: Long) = this(paramCount, missingKeyCount, true)
+                                    allowUnknownKeys: Boolean) extends CaseReader[T] {
 
     def visitors0: Product
     lazy val visitors = visitors0
