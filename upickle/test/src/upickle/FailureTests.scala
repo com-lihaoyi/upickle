@@ -37,6 +37,26 @@ object WrongTag {
 
 }
 
+object TaggedCustomSerializer{
+
+  sealed trait BooleanOrInt
+
+  object BooleanOrInt {
+    implicit val rw: upickle.default.ReadWriter[BooleanOrInt] = upickle.default.macroRW
+  }
+
+  case class IsBoolean(val value: Boolean) extends BooleanOrInt
+
+  object IsBoolean {
+    implicit val rw: upickle.default.ReadWriter[IsBoolean] = upickle.default.readwriter[Boolean].bimap[IsBoolean](_.value, IsBoolean(_))
+  }
+
+  case class IsInt(val value: Int) extends BooleanOrInt
+
+  object IsInt {
+    implicit val rw: upickle.default.ReadWriter[IsInt] = upickle.default.readwriter[Int].bimap[IsInt](_.value, IsInt(_))
+  }
+}
 /**
 * Generally, every failure should be a Invalid.Json or a
 * InvalidData. If any assertion errors, match errors, number
@@ -272,6 +292,16 @@ object FailureTests extends TestSuite {
 //      upickle.default.read[Char]("10e-1") ==> 1
 //      upickle.default.read[Int]("10e-1") ==> 1
 //      upickle.default.read[Long]("10e-1") ==> 1
+    }
+    test("taggedCustomSerializer"){
+      import upickle.default._
+      
+      val error = intercept[java.lang.AssertionError] {
+        val x: TaggedCustomSerializer.BooleanOrInt = TaggedCustomSerializer.IsBoolean(false);
+        upickle.default.write(x)
+      }
+
+      assert(error.getMessage.startsWith("assertion failed: Can only merge Readers of case classes"))
     }
   }
 }
