@@ -322,8 +322,6 @@ trait LegacyApi extends Api with Annotator{
  * of the attribute is.
  */
 trait AttributeTagged extends Api with Annotator{
-  @deprecated("Not used, left for binary compatibility")
-  def tagName = Annotator.defaultTagKey
 
   @deprecated("Not used, left for binary compatibility")
   override def annotate[V](rw: Reader[V], key: String, value: String) = annotate(rw, key, value, value)
