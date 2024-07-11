@@ -212,8 +212,8 @@ object ujson extends Module{
   trait Json4sModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
     def ivyDeps = Agg(
-      ivy"org.json4s::json4s-ast:4.0.6",
-      ivy"org.json4s::json4s-native:4.0.6"
+      ivy"org.json4s::json4s-ast:4.0.7",
+      ivy"org.json4s::json4s-native:4.0.7"
     )
   }
 
