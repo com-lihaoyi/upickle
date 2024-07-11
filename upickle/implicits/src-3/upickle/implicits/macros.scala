@@ -199,6 +199,9 @@ def tagKeyImpl[T](using Quotes, Type[T]): Expr[String] =
 
 inline def tagName[T]: String = ${ tagNameImpl[T] }
 def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
+  tagNameImpl0(identity)
+
+def tagNameImpl0[T](transform: String => String)(using Quotes, Type[T]): Expr[String] =
   import quotes.reflect._
 
   val sym = TypeTree.of[T].symbol
@@ -228,9 +231,24 @@ def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
           case AppliedType(TypeRef(prefix, value), _) => value
         }
       } else {
-        TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$')
+        transform(TypeTree.of[T].tpe.typeSymbol.fullName.filter(_ != '$'))
       }
   )
+inline def shortTagName[T]: String = ${ shortTagNameImpl[T] }
+def shortTagNameImpl[T](using Quotes, Type[T]): Expr[String] =
+  import quotes.reflect._
+  val sym = TypeTree.of[T].symbol
+  val segments = TypeRepr.of[T].baseClasses
+    .filter(_.flags.is(Flags.Sealed))
+    .flatMap(_.children)
+    .filter(_.flags.is(Flags.Case))
+    .map(_.fullName.split('.'))
+
+  val identicalSegmentCount = Range(0, segments.map(_.length).max - 1)
+    .takeWhile(i => segments.map(_.lift(i)).distinct.size == 1)
+    .length
+
+  tagNameImpl0(_.split('.').drop(identicalSegmentCount).mkString("."))
 
 inline def isSingleton[T]: Boolean = ${ isSingletonImpl[T] }
 def isSingletonImpl[T](using Quotes, Type[T]): Expr[Boolean] =

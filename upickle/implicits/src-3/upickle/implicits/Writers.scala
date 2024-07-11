@@ -48,6 +48,7 @@ trait WritersVersionSpecific
           SingletonWriter[T](null.asInstanceOf[T]),
           macros.tagKey[T],
           macros.tagName[T],
+          macros.shortTagName[T],
           Annotator.Checker.Val(macros.getSingleton[T]),
         )
       else if macros.isMemberOfSealedHierarchy[T] then
@@ -55,6 +56,7 @@ trait WritersVersionSpecific
           writer,
           macros.tagKey[T],
           macros.tagName[T],
+          macros.shortTagName[T],
           Annotator.Checker.Cls(implicitly[ClassTag[T]].runtimeClass),
         )
       else writer

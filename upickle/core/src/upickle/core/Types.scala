@@ -169,11 +169,15 @@ trait Types{ types =>
     }
   }
   object TaggedReader{
-    class Leaf[T](private[upickle] override val tagKey: String, tagValue: String, r: Reader[T]) extends TaggedReader[T]{
+    class Leaf[T](private[upickle] override val tagKey: String,
+                  tagValue: String,
+                  tagShortValue: String,
+                  r: Reader[T]) extends TaggedReader[T]{
       @deprecated("Not used, left for binary compatibility")
-      def this(tag: String, r: Reader[T]) = this(Annotator.defaultTagKey, tag, r)
+      def this(tag: String, r: Reader[T]) = this(Annotator.defaultTagKey, tag, tag, r)
+      def this(tagKey: String, tagValue: String, r: Reader[T]) = this(tagKey, tagValue, tagValue, r)
 
-      def findReader(s: String) = if (s == tagValue) r else null
+      def findReader(s: String) = if (s == tagValue || s == tagShortValue) r else null
     }
     class Node[T](private[upickle] override val tagKey: String, rs: TaggedReader[_ <: T]*) extends TaggedReader[T]{
       @deprecated("Not used, left for binary compatibility")
@@ -201,7 +205,10 @@ trait Types{ types =>
     }
   }
   object TaggedWriter{
-    class Leaf[T](checker: Annotator.Checker, tagKey: String, tagValue: String, r: ObjectWriter[T]) extends TaggedWriter[T]{
+    class Leaf[T](checker: Annotator.Checker,
+                  tagKey: String,
+                  tagValue: String,
+                  r: ObjectWriter[T]) extends TaggedWriter[T]{
       @deprecated("Not used, left for binary compatibility")
       def this(checker: Annotator.Checker, tag: String, r: ObjectWriter[T]) =
         this(checker, Annotator.defaultTagKey, tag, r)
@@ -234,10 +241,12 @@ trait Types{ types =>
   trait TaggedReadWriter[T] extends ReadWriter[T] with TaggedReader[T] with TaggedWriter[T] with SimpleReader[T]{
     override def visitArray(length: Int, index: Int) = taggedArrayContext(this, index)
     override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = taggedObjectContext(this, index)
-
   }
+
   object TaggedReadWriter{
-    class Leaf[T](c: ClassTag[_], private[upickle] override val tagKey: String, tagValue: String, r: ObjectWriter[T] with Reader[T]) extends TaggedReadWriter[T]{
+    class Leaf[T](c: ClassTag[_],
+                  private[upickle] override val tagKey: String,
+                  tagValue: String, r: ObjectWriter[T] with Reader[T]) extends TaggedReadWriter[T]{
       @deprecated("Not used, left for binary compatibility")
       def this(c: ClassTag[_], tag: String, r: ObjectWriter[T] with Reader[T]) = this(c, Annotator.defaultTagKey, tag, r)
 
@@ -308,28 +317,37 @@ class CurrentlyDeriving[T]
  * like Scala 2 `case object`s do, so we instead use a `Checker.Val` to check
  * for `.equals` equality during writes to determine which tag to use.
  */
+@scala.annotation.nowarn("msg=deprecated")
 trait Annotator { this: Types =>
+
   @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: Reader[V], n: String): TaggedReader[V]
 
-  // Calling deprecated method to maintain binary compatibility
-  @annotation.nowarn("msg=deprecated")
-  def annotate[V](rw: Reader[V], key: String, value: String): TaggedReader[V] = annotate(rw, value)
+  @deprecated("Not used, left for binary compatibility")
+  def annotate[V](rw: Reader[V], key: String, value: String): TaggedReader[V] = annotate(rw, value, value)
+
+  def annotate[V](rw: Reader[V], key: String, value: String, shortValue: String): TaggedReader[V] = annotate(rw, value)
 
   @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V]
 
-  // Calling deprecated method to maintain binary compatibility
-  @annotation.nowarn("msg=deprecated")
+  @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] =
+    annotate(rw, key, value, value, checker)
+
+  def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] =
     annotate(rw, value, checker)
 
+  @deprecated("Not used, left for binary compatibility")
   def annotate[V](rw: ObjectWriter[V], key: String, value: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
-    annotate(rw, key, value, Annotator.Checker.Cls(ct.runtimeClass))
+    annotate(rw, key, value, value)(ct)
+
+  def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
+    annotate(rw, key, value, shortValue, Annotator.Checker.Cls(ct.runtimeClass))
 
   @deprecated("Not used, left for binary compatibility")
   final def annotate[V](rw: ObjectWriter[V], n: String)(implicit ct: ClassTag[V]): TaggedWriter[V] =
-    annotate(rw, Annotator.defaultTagKey, n, Annotator.Checker.Cls(ct.runtimeClass))
+    annotate(rw, Annotator.defaultTagKey, n, n, Annotator.Checker.Cls(ct.runtimeClass))
 }
 object Annotator{
   def defaultTagKey = "$type"

@@ -76,9 +76,19 @@ trait ReadersVersionSpecific
       }
 
       inline if macros.isSingleton[T] then
-        annotate[T](SingletonReader[T](macros.getSingleton[T]), macros.tagKey[T], macros.tagName[T])
+        annotate[T](
+          SingletonReader[T](macros.getSingleton[T]),
+          macros.tagKey[T],
+          macros.tagName[T],
+          macros.shortTagName[T]
+        )
       else if macros.isMemberOfSealedHierarchy[T] then
-        annotate[T](reader, macros.tagKey[T], macros.tagName[T])
+        annotate[T](
+          reader,
+          macros.tagKey[T],
+          macros.tagName[T],
+          macros.shortTagName[T],
+        )
       else reader
 
     case m: Mirror.SumOf[T] =>
@@ -101,7 +111,8 @@ trait ReadersVersionSpecific
     val actual = implicitly[Reader[V]].asInstanceOf[TaggedReader[T]]
     val tagKey = macros.tagKey[T]
     val tagName = macros.tagName[T]
-    new TaggedReader.Leaf(tagKey, tagName, actual.findReader(tagName))
+    val shortTagName = macros.shortTagName[T]
+    new TaggedReader.Leaf(tagKey, tagName, shortTagName, actual.findReader(tagName))
   }
 
   // see comment in MacroImplicits as to why Dotty's extension methods aren't used here

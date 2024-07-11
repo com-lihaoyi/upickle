@@ -20,16 +20,16 @@ object AdvancedTestsScala2Only extends TestSuite {
 
     test("gadt"){
       test("simple"){
-        test - rw(Gadt.Exists("hello"): Gadt[_], """{"$type":"upickle.Gadt.Exists","path":"hello"}""")
-        test - rw(Gadt.IsDir(" "): Gadt[_], """{"$type":"upickle.Gadt.IsDir","path":" "}""")
-        test - rw(Gadt.ReadBytes("\""): Gadt[_], """{"$type":"upickle.Gadt.ReadBytes","path":"\""}""")
-        test - rw(Gadt.CopyOver(Seq(1, 2, 3), ""): Gadt[_], """{"$type":"upickle.Gadt.CopyOver","src":[1,2,3],"path":""}""")
+        test - rw(Gadt.Exists("hello"): Gadt[_], """{"$type":"Exists","path":"hello"}""")
+        test - rw(Gadt.IsDir(" "): Gadt[_], """{"$type":"IsDir","path":" "}""")
+        test - rw(Gadt.ReadBytes("\""): Gadt[_], """{"$type":"ReadBytes","path":"\""}""")
+        test - rw(Gadt.CopyOver(Seq(1, 2, 3), ""): Gadt[_], """{"$type":"CopyOver","src":[1,2,3],"path":""}""")
       }
       test("partial"){
-        test - rw(Gadt2.Exists("hello"): Gadt2[_, String], """{"$type":"upickle.Gadt2.Exists","v":"hello"}""")
-        test - rw(Gadt2.IsDir(123): Gadt2[_, Int], """{"$type":"upickle.Gadt2.IsDir","v":123}""")
-        test - rw(Gadt2.ReadBytes('h'): Gadt2[_, Char], """{"$type":"upickle.Gadt2.ReadBytes","v":"h"}""")
-        test - rw(Gadt2.CopyOver(Seq(1, 2, 3), ""): Gadt2[_, Unit], """{"$type":"upickle.Gadt2.CopyOver","src":[1,2,3],"v":""}""")
+        test - rw(Gadt2.Exists("hello"): Gadt2[_, String], """{"$type":"Exists","v":"hello"}""")
+        test - rw(Gadt2.IsDir(123): Gadt2[_, Int], """{"$type":"IsDir","v":123}""")
+        test - rw(Gadt2.ReadBytes('h'): Gadt2[_, Char], """{"$type":"ReadBytes","v":"h"}""")
+        test - rw(Gadt2.CopyOver(Seq(1, 2, 3), ""): Gadt2[_, Unit], """{"$type":"CopyOver","src":[1,2,3],"v":""}""")
       }
     }
 

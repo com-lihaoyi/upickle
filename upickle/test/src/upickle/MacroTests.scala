@@ -252,8 +252,13 @@ object MacroTests extends TestSuite {
         test("shallow"){
           test - rw(
             B(1),
+            """{"$type": "B", "i":1}""",
             """{"$type": "upickle.Hierarchy.B", "i":1}""",
             """{"i":1, "$type": "upickle.Hierarchy.B"}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("B"),
+              upack.Str("i") -> upack.Int32(1)
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.Hierarchy.B"),
               upack.Str("i") -> upack.Int32(1)
@@ -265,8 +270,14 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             C("a", "b"),
+            """{"$type": "C", "s1":"a","s2":"b"}""",
             """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""",
             """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("C"),
+              upack.Str("s1") -> upack.Str("a"),
+              upack.Str("s2") -> upack.Str("b")
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.Hierarchy.C"),
               upack.Str("s1") -> upack.Str("a"),
@@ -280,22 +291,31 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             AnZ: Z,
+            """ "AnZ" """,
             """ "upickle.Hierarchy.AnZ" """,
             """{"$type": "upickle.Hierarchy.AnZ"}""",
+            upack.Str("AnZ"),
             upack.Str("upickle.Hierarchy.AnZ"),
             upack.Obj(upack.Str("$type") -> upack.Str("upickle.Hierarchy.AnZ"))
           )
           test - rw(
             AnZ,
+            """ "AnZ" """,
             """ "upickle.Hierarchy.AnZ" """,
             """{"$type": "upickle.Hierarchy.AnZ"}""",
+            upack.Str("AnZ"),
             upack.Str("upickle.Hierarchy.AnZ"),
             upack.Obj(upack.Str("$type") -> upack.Str("upickle.Hierarchy.AnZ"))
           )
           test - rw(
             Hierarchy.B(1): Hierarchy.A,
+            """{"$type": "B", "i":1}""",
             """{"$type": "upickle.Hierarchy.B", "i":1}""",
             """{"i":1, "$type": "upickle.Hierarchy.B"}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("B"),
+              upack.Str("i") -> upack.Int32(1)
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.Hierarchy.B"),
               upack.Str("i") -> upack.Int32(1)
@@ -307,8 +327,14 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             C("a", "b"): A,
+            """{"$type": "C", "s1":"a","s2":"b"}""",
             """{"$type": "upickle.Hierarchy.C", "s1":"a","s2":"b"}""",
             """{"s1":"a","s2":"b", "$type": "upickle.Hierarchy.C"}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("C"),
+              upack.Str("s1") -> upack.Str("a"),
+              upack.Str("s2") -> upack.Str("b")
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.Hierarchy.C"),
               upack.Str("s1") -> upack.Str("a"),
@@ -327,7 +353,12 @@ object MacroTests extends TestSuite {
 
           test - rw(
             B(1),
+            """{"$type": "B", "i":1}""",
             """{"$type": "upickle.DeepHierarchy.B", "i":1}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("B"),
+              upack.Str("i") -> upack.Int32(1)
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.B"),
               upack.Str("i") -> upack.Int32(1)
@@ -335,7 +366,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             B(1): A,
+            """{"$type": "B", "i":1}""",
             """{"$type": "upickle.DeepHierarchy.B", "i":1}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("B"),
+              upack.Str("i") -> upack.Int32(1)
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.B"),
               upack.Str("i") -> upack.Int32(1)
@@ -343,7 +379,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             AnQ(1): Q,
+            """{"$type": "AnQ", "i":1}""",
             """{"$type": "upickle.DeepHierarchy.AnQ", "i":1}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("AnQ"),
+              upack.Str("i") -> upack.Int32(1)
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.AnQ"),
               upack.Str("i") -> upack.Int32(1)
@@ -351,7 +392,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             AnQ(1),
+            """{"$type": "AnQ","i":1}""",
             """{"$type": "upickle.DeepHierarchy.AnQ","i":1}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("AnQ"),
+              upack.Str("i") -> upack.Int32(1)
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.AnQ"),
               upack.Str("i") -> upack.Int32(1)
@@ -360,7 +406,15 @@ object MacroTests extends TestSuite {
 
           test - rw(
             F(AnQ(1)),
+            """{"$type": "F","q":{"$type":"AnQ", "i":1}}""",
             """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":1}}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("F"),
+              upack.Str("q") -> upack.Obj(
+                upack.Str("$type") -> upack.Str("AnQ"),
+                upack.Str("i") -> upack.Int32(1)
+              )
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.F"),
               upack.Str("q") -> upack.Obj(
@@ -371,7 +425,15 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             F(AnQ(2)): A,
+            """{"$type": "F","q":{"$type":"AnQ", "i":2}}""",
             """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":2}}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("F"),
+              upack.Str("q") -> upack.Obj(
+                upack.Str("$type") -> upack.Str("AnQ"),
+                upack.Str("i") -> upack.Int32(2)
+              )
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.F"),
               upack.Str("q") -> upack.Obj(
@@ -382,7 +444,15 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             F(AnQ(3)): C,
+            """{"$type": "F","q":{"$type":"AnQ", "i":3}}""",
             """{"$type": "upickle.DeepHierarchy.F","q":{"$type":"upickle.DeepHierarchy.AnQ", "i":3}}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("F"),
+              upack.Str("q") -> upack.Obj(
+                upack.Str("$type") -> upack.Str("AnQ"),
+                upack.Str("i") -> upack.Int32(3)
+              )
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.F"),
               upack.Str("q") -> upack.Obj(
@@ -393,7 +463,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             D("1"),
+            """{"$type": "D", "s":"1"}""",
             """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("D"),
+              upack.Str("s") -> upack.Str("1")
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.D"),
               upack.Str("s") -> upack.Str("1")
@@ -401,7 +476,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             D("1"): C,
+            """{"$type": "D", "s":"1"}""",
             """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("D"),
+              upack.Str("s") -> upack.Str("1")
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.D"),
               upack.Str("s") -> upack.Str("1")
@@ -409,7 +489,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             D("1"): A,
+            """{"$type": "D", "s":"1"}""",
             """{"$type": "upickle.DeepHierarchy.D", "s":"1"}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("D"),
+              upack.Str("s") -> upack.Str("1")
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.D"),
               upack.Str("s") -> upack.Str("1")
@@ -417,7 +502,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             E(true),
+            """{"$type": "E", "b":true}""",
             """{"$type": "upickle.DeepHierarchy.E", "b":true}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("E"),
+              upack.Str("b") -> upack.True
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.E"),
               upack.Str("b") -> upack.True
@@ -425,7 +515,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             E(true): C,
+            """{"$type": "E","b":true}""",
             """{"$type": "upickle.DeepHierarchy.E","b":true}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("E"),
+              upack.Str("b") -> upack.True
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.E"),
               upack.Str("b") -> upack.True
@@ -433,7 +528,12 @@ object MacroTests extends TestSuite {
           )
           test - rw(
             E(true): A,
+            """{"$type": "E", "b":true}""",
             """{"$type": "upickle.DeepHierarchy.E", "b":true}""",
+            upack.Obj(
+              upack.Str("$type") -> upack.Str("E"),
+              upack.Str("b") -> upack.True
+            ),
             upack.Obj(
               upack.Str("$type") -> upack.Str("upickle.DeepHierarchy.E"),
               upack.Str("b") -> upack.True
@@ -446,29 +546,37 @@ object MacroTests extends TestSuite {
 
         rw(
           BB,
+          """ "BB" """,
           """ "upickle.Singletons.BB" """,
           """{"$type":"upickle.Singletons.BB"}""",
+          upack.Str("BB"),
           upack.Str("upickle.Singletons.BB"),
           upack.Obj(upack.Str("$type") -> upack.Str("upickle.Singletons.BB"))
         )
         rw(
           CC,
+          """ "CC" """,
           """ "upickle.Singletons.CC" """,
           """{"$type":"upickle.Singletons.CC"}""",
+          upack.Str("CC"),
           upack.Str("upickle.Singletons.CC"),
           upack.Obj(upack.Str("$type") -> upack.Str("upickle.Singletons.CC"))
         )
         rw(
           BB: AA,
+          """ "BB" """,
           """ "upickle.Singletons.BB" """,
           """{"$type":"upickle.Singletons.BB"}""",
+          upack.Str("BB"),
           upack.Str("upickle.Singletons.BB"),
           upack.Obj(upack.Str("$type") -> upack.Str("upickle.Singletons.BB"))
         )
         rw(
           CC: AA,
+          """ "CC" """,
           """ "upickle.Singletons.CC" """,
           """{"$type":"upickle.Singletons.CC"}""",
+          upack.Str("CC"),
           upack.Str("upickle.Singletons.CC"),
           upack.Obj(upack.Str("$type") -> upack.Str("upickle.Singletons.CC"))
         )
@@ -616,10 +724,26 @@ object MacroTests extends TestSuite {
     }
 
     test("specialchars"){
-      rw(SpecialChars.`+1`(), """{"$type": "upickle.SpecialChars.+1"}""")
-      rw(SpecialChars.`+1`(1), """{"$type": "upickle.SpecialChars.+1", "+1": 1}""")
-      rw(SpecialChars.`-1`(), """{"$type": "upickle.SpecialChars.-1"}""")
-      rw(SpecialChars.`-1`(1), """{"$type": "upickle.SpecialChars.-1", "-1": 1}""")
+      rw(
+        SpecialChars.`+1`(),
+         """{"$type": "+1"}""",
+         """{"$type": "upickle.SpecialChars.+1"}""",
+      )
+      rw(
+        SpecialChars.`+1`(1),
+        """{"$type": "+1", "+1": 1}""",
+        """{"$type": "upickle.SpecialChars.+1", "+1": 1}"""
+      )
+      rw(
+        SpecialChars.`-1`(),
+        """{"$type": "-1"}""",
+        """{"$type": "upickle.SpecialChars.-1"}""",
+      )
+      rw(
+        SpecialChars.`-1`(1),
+         """{"$type": "-1", "-1": 1}""",
+         """{"$type": "upickle.SpecialChars.-1", "-1": 1}""",
+      )
     }
 
     test("genericIssue545"){
@@ -663,11 +787,11 @@ object MacroTests extends TestSuite {
     }
 
     test("keyedADT") {
-      val fooJson = "\"upickle.KeyedADT.Foo\""
+      val fooJson = "\"Foo\""
       upickle.default.read[KeyedADT](fooJson) ==> KeyedADT.Foo
       upickle.default.write[KeyedADT](KeyedADT.Foo) ==> fooJson
 
-      val barJson = """{"customKey":"upickle.KeyedADT.Bar","i":1}"""
+      val barJson = """{"customKey":"Bar","i":1}"""
       upickle.default.read[KeyedADT](barJson) ==> KeyedADT.Bar(1)
       upickle.default.write[KeyedADT](KeyedADT.Bar(1)) ==> barJson
     }
@@ -678,6 +802,52 @@ object MacroTests extends TestSuite {
 
       compileError("upickle.default.macroRW[upickle.SomeMultiKeyedObj.type]")
         .check("", "inherits from multiple parent types with different discriminator keys")
+    }
+
+    test("multiKeyedADT") {
+      compileError("upickle.default.macroRW[upickle.MultiKeyedObj.type]")
+        .check("", "inherits from multiple parent types with different discriminator keys")
+
+      compileError("upickle.default.macroRW[upickle.SomeMultiKeyedObj.type]")
+        .check("", "inherits from multiple parent types with different discriminator keys")
+    }
+
+    test("objectTypeKeyWriteFullyQualified") {
+      object customPickler extends upickle.AttributeTagged {
+        override def objectTypeKeyWriteFullyQualified = true
+      }
+
+      val customPicklerTest = new TestUtil(customPickler)
+
+      implicit def rwA: customPickler.ReadWriter[upickle.Hierarchy.A] = customPickler.macroRW
+      implicit def rwB: customPickler.ReadWriter[upickle.Hierarchy.B] = customPickler.macroRW
+      implicit def rwC: customPickler.ReadWriter[upickle.Hierarchy.C] = customPickler.macroRW
+
+      // Make sure both custom pickler and default pickler can read both long and short `$type` tags,
+      // but that the custom pickler generates the long `$type` tag while the default pickler
+      // generates the short one
+      customPicklerTest.rw(
+        new Hierarchy.B(1),
+        """{"$type": "upickle.Hierarchy.B", "i": 1}""",
+        """{"$type": "B", "i": 1}"""
+      )
+      rw(
+        new Hierarchy.B(1),
+        """{"$type": "B", "i": 1}""",
+        """{"$type": "upickle.Hierarchy.B", "i": 1}"""
+      )
+
+      customPicklerTest.rw(
+        new Hierarchy.C("x", "y"),
+        """{"$type": "upickle.Hierarchy.C", "s1": "x", "s2": "y"}""",
+         """{"$type": "C", "s1": "x", "s2": "y"}"""
+      )
+      rw(
+        new Hierarchy.C("x", "y"),
+        """{"$type": "C", "s1": "x", "s2": "y"}""",
+        """{"$type": "upickle.Hierarchy.C", "s1": "x", "s2": "y"}"""
+      )
+
     }
   }
 }
