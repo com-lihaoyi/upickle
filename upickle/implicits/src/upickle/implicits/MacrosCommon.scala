@@ -2,7 +2,10 @@ package upickle.implicits
 
 // Common things for derivation
 trait MacrosCommon {
-
+  /**
+   * Whether or not `case class` fields with values equal to the default are serialized.
+   * Defaults to `false`, so such fields are elided.
+   */
   def serializeDefaults: Boolean = false
 
   def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
@@ -11,6 +14,14 @@ trait MacrosCommon {
   def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
   def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
 
+  /**
+   * Whether top-level `Some(t)`s and `None`s are serialized unboxed as `t` or
+   * `null`, rather than `[t]` or `[]`. This is generally what people expect,
+   * although it does cause issues where `Some(null)` when serialized and de-serialized
+   * can become `None`. Can be disabled to use the boxed serialization format
+   * as 0-or-1-element-arrays, presering round trip-ability at the expense of
+   * un-intuitiveness and verbosity
+   */
   def optionsAsNulls: Boolean = true
 }
 

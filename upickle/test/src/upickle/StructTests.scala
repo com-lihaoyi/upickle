@@ -494,21 +494,20 @@ object StructTests extends TestSuite {
         )
       )
 
-//      test("NullySeqListMapOptionString") - rw[Seq[List[Map[Option[String], String]]]](
-//        Seq(Nil, List(Map(Some(null) -> "omg"), Map(Some("lol") -> null, None -> "")), List(null)),
-//        """[[],[[[[null],"omg"]],[[["lol"],null],[[],""]]],[null]]""",
-//        upack.Arr(
-//          upack.Arr(),
-//          upack.Arr(
-//            upack.Obj(upack.Arr(upack.Null) -> upack.Str("omg")),
-//            upack.Obj(
-//              upack.Arr(upack.Str("lol")) -> upack.Null,
-//              upack.Arr() -> upack.Str("")
-//            )
-//          ),
-//          upack.Arr(upack.Null)
-//        )
-//      )
+      test("NullySeqListMapOptionString") - {
+        // Due to the default handling of `None` as `null`, and `Some(null)` as also `null`,
+        // `Some(null)` does not round trip during serialization and ends up being read back
+        // as `None`. This can be disabled via the config `optionsAsNulls = false`
+        type MyType = Seq[List[Map[Option[String], String]]]
+        val value: MyType =
+          Seq(Nil, List(Map(Some(null) -> "omg"), Map(Some("lol") -> null, None -> "")), List(null))
+
+        val serialized = """[[],[[[null,"omg"]],[["lol",null],[null,""]]],[null]]"""
+
+        upickle.default.write(value) ==> serialized
+        upickle.default.read[MyType](serialized) ==>
+          Seq(Nil, List(Map(None -> "omg"), Map(Some("lol") -> null, None -> "")), List(null))
+      }
 
       test("tuples") - rw(
         (1, (2.0, true), (3.0, 4.0, 5.0)),
