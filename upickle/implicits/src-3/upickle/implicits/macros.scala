@@ -181,21 +181,23 @@ inline def isMemberOfSealedHierarchy[T]: Boolean = ${ isMemberOfSealedHierarchyI
 def isMemberOfSealedHierarchyImpl[T](using Quotes, Type[T]): Expr[Boolean] =
   Expr(sealedHierarchyParents[T].nonEmpty)
 
-inline def tagKey[T]: String = ${ tagKeyImpl[T] }
-def tagKeyImpl[T](using Quotes, Type[T]): Expr[String] =
+inline def tagKey[T](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon): String = ${ tagKeyImpl[T]('thisOuter) }
+def tagKeyImpl[T](using Quotes, Type[T])(thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon]): Expr[String] =
   import quotes.reflect._
 
   // `case object`s extend from `Mirror`, which is `sealed` and will never have a `@key` annotation
   // so we need to filter it out to ensure it doesn't trigger an error in `tagKeyFromParents`
   val mirrorType = Symbol.requiredClass("scala.deriving.Mirror")
-
-  Expr(MacrosCommon.tagKeyFromParents(
+  MacrosCommon.tagKeyFromParents(
     Type.show[T],
     sealedHierarchyParents[T].filterNot(_ == mirrorType),
     extractKey,
     (_: Symbol).name,
     report.errorAndAbort,
-  ))
+  ) match{
+    case Some(v) => Expr(v)
+    case None => '{${thisOuter}.tagName}
+  }
 
 inline def tagName[T]: String = ${ tagNameImpl[T] }
 def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =

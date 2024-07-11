@@ -241,7 +241,11 @@ object Macros {
             ).decodedName.toString
           )
 
-        q"${c.prefix}.annotate($derived, $tagKey, $tagValue, $shortTagValue)"
+        val tagKeyExpr = tagKey match {
+          case Some(v) => q"$v"
+          case None => q"${c.prefix}.tagName"
+        }
+        q"${c.prefix}.annotate($derived, $tagKeyExpr, $tagValue, $shortTagValue)"
       }
     }
 
