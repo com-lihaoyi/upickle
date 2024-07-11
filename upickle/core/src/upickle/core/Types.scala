@@ -32,6 +32,10 @@ trait Types{ types =>
       extends Visitor.Delegate[Any, T](other) with ReadWriter[T]
 
     def merge[T](tagKey: String, rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = {
+      assert(
+        rws.forall(_.isInstanceOf[TaggedReadWriter[_]]),
+        "Can only merge ReadWriters of case classes, not " + rws.filterNot(_.isInstanceOf[TaggedReadWriter[_]])
+      )
       new TaggedReadWriter.Node(tagKey, rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
 
@@ -108,6 +112,10 @@ trait Types{ types =>
       override def visitArray(length: Int, index: Int) = super.visitArray(length, index).asInstanceOf[ArrVisitor[Any, Z]]
     }
     def merge[T](tagKey: String, readers0: Reader[_ <: T]*): TaggedReader.Node[T] = {
+      assert(
+        readers0.forall(_.isInstanceOf[TaggedReader[_]]),
+        "Can only merge Readers of case classes, not " + readers0.filterNot(_.isInstanceOf[TaggedReader[_]])
+      )
       new TaggedReader.Node(tagKey, readers0.asInstanceOf[Seq[TaggedReader[T]]]:_*)
     }
 
@@ -147,6 +155,10 @@ trait Types{ types =>
       def write0[R](out: Visitor[_, R], v: U): R = src.write(out, f(v))
     }
     def merge[T](writers: Writer[_ <: T]*) = {
+      assert(
+        writers.forall(_.isInstanceOf[TaggedWriter[_]]),
+        "Can only merge Writers of case classes, not " + writers.filterNot(_.isInstanceOf[TaggedWriter[_]])
+      )
       new TaggedWriter.Node(writers.asInstanceOf[Seq[TaggedWriter[T]]]:_*)
     }
   }
