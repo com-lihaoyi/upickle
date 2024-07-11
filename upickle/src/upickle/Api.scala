@@ -54,13 +54,6 @@ trait Api
     maybeSortKeysTransform(t, sortKeys, ujson.StringRenderer(indent, escapeUnicode)).toString
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def write[T: Writer](t: T,
-                       indent: Int,
-                       escapeUnicode: Boolean): String = {
-    write(t, indent, escapeUnicode, sortKeys = false)
-  }
-
   /**
     * Write the given Scala value as a MessagePack binary
     */
@@ -68,9 +61,6 @@ trait Api
                              sortKeys: Boolean = false): Array[Byte] = {
     maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
   }
-
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeBinary[T: Writer](t: T): Array[Byte] = writeBinary(t, sortKeys = false)
 
   /**
     * Write the given Scala value as a JSON struct
@@ -93,27 +83,12 @@ trait Api
     maybeSortKeysTransform(t, sortKeys, new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
 
-
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeTo[T: Writer](t: T,
-                         out: java.io.Writer,
-                         indent: Int,
-                         escapeUnicode: Boolean): Unit = writeTo(t, out, indent, escapeUnicode, sortKeys = false)
-
   def writeToOutputStream[T: Writer](t: T,
                                      out: java.io.OutputStream,
                                      indent: Int = -1,
                                      escapeUnicode: Boolean = false,
                                      sortKeys: Boolean = false): Unit = {
     maybeSortKeysTransform(t, sortKeys, new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
-  }
-
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeToOutputStream[T: Writer](t: T,
-                                     out: java.io.OutputStream,
-                                     indent: Int,
-                                     escapeUnicode: Boolean): Unit = {
-    writeToOutputStream(t, out, indent, escapeUnicode, sortKeys = false)
   }
 
   def writeToByteArray[T: Writer](t: T,
@@ -125,12 +100,6 @@ trait Api
     out.toByteArray
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeToByteArray[T: Writer](t: T,
-                                  indent: Int,
-                                  escapeUnicode: Boolean): Array[Byte] = {
-    writeToByteArray[T](t, indent, escapeUnicode, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a JSON string via a `geny.Writable`
     */
@@ -144,12 +113,6 @@ trait Api
     }
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def stream[T: Writer](t: T,
-                        indent: Int,
-                        escapeUnicode: Boolean): geny.Writable = {
-    stream(t, indent, escapeUnicode, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a MessagePack binary to the given OutputStream
     */
@@ -159,12 +122,6 @@ trait Api
     streamBinary[T](t, sortKeys = sortKeys).writeBytesTo(out)
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeBinaryTo[T: Writer](t: T,
-                               out: java.io.OutputStream): Unit = {
-    writeBinaryTo(t, out, sortKeys = false)
-  }
-
   def writeBinaryToByteArray[T: Writer](t: T,
                                         sortKeys: Boolean = false): Array[Byte] = {
     val out = new java.io.ByteArrayOutputStream()
@@ -172,10 +129,6 @@ trait Api
     out.toByteArray
   }
 
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def writeBinaryToByteArray[T: Writer](t: T): Array[Byte] = {
-    writeBinaryToByteArray(t, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a MessagePack binary via a `geny.Writable`
     */
@@ -183,12 +136,7 @@ trait Api
     override def httpContentType = Some("application/octet-stream")
     def writeBytesTo(out: java.io.OutputStream) = maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(out))
   }
-
-  // @deprecated("Binary Compatibility Stub", "upickle after 3.1.4")
-  def streamBinary[T: Writer](t: T): geny.Writable = {
-    streamBinary(t, sortKeys = false)
-  }
-
+  
   def writer[T: Writer] = implicitly[Writer[T]]
 
   def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
@@ -245,27 +193,12 @@ object default extends AttributeTagged{
  */
 object legacy extends LegacyApi
 trait LegacyApi extends Api with Annotator{
-  @deprecated("Not used, left for binary compatibility")
-  override def annotate[V](rw: Reader[V], key: String, value: String) =  annotate(rw, key, value, value)
-
   override def annotate[V](rw: Reader[V], key: String, value: String, shortValue: String) = {
     new TaggedReader.Leaf[V](key, value, shortValue, rw)
   }
 
-  @deprecated("Not used, left for binary compatibility")
-  override final def annotate[V](rw: Reader[V], n: String) =
-    annotate(rw, Annotator.defaultTagKey, n, n)
-
-  @deprecated("Not used, left for binary compatibility")
-  override def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] =
-    annotate(rw, key, value, value, checker)
-
   override def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] =
     new TaggedWriter.Leaf[V](checker, key, if (objectTypeKeyWriteFullyQualified) value else shortValue, rw)
-
-  @deprecated("Not used, left for binary compatibility")
-  override final def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] =
-    annotate(rw, Annotator.defaultTagKey, n, n, checker)
 
   def taggedExpectedMsg = "expected sequence"
   sealed trait TaggedReaderState
@@ -311,9 +244,6 @@ trait LegacyApi extends Api with Annotator{
 
     ctx.visitEnd(-1)
   }
-  @deprecated("Not used, left for binary compatibility")
-  final def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_,  R], v: T): R =
-    taggedWrite(w, Annotator.defaultTagKey, tag, out, v)
 }
 
 /**
@@ -322,31 +252,14 @@ trait LegacyApi extends Api with Annotator{
  * of the attribute is.
  */
 trait AttributeTagged extends Api with Annotator{
-  @deprecated("Not used, left for binary compatibility")
-  def tagName = Annotator.defaultTagKey
-
-  @deprecated("Not used, left for binary compatibility")
-  override def annotate[V](rw: Reader[V], key: String, value: String) = annotate(rw, key, value, value)
 
   override def annotate[V](rw: Reader[V], key: String, value: String, shortValue: String) = {
     new TaggedReader.Leaf[V](key, value, shortValue, rw)
-  }
-  @deprecated("Not used, left for binary compatibility")
-  override final def annotate[V](rw: Reader[V], n: String) =
-    annotate(rw, Annotator.defaultTagKey, n, n)
-
-  @deprecated("Not used, left for binary compatibility")
-  override def annotate[V](rw: ObjectWriter[V], key: String, value: String, checker: Annotator.Checker): TaggedWriter[V] = {
-    annotate(rw, key, value, value, checker)
   }
 
   override def annotate[V](rw: ObjectWriter[V], key: String, value: String, shortValue: String, checker: Annotator.Checker): TaggedWriter[V] = {
     new TaggedWriter.Leaf[V](checker, key, if (objectTypeKeyWriteFullyQualified) value else shortValue, rw)
   }
-
-  @deprecated("Not used, left for binary compatibility")
-  override final def annotate[V](rw: ObjectWriter[V], n: String, checker: Annotator.Checker): TaggedWriter[V] =
-    annotate(rw, Annotator.defaultTagKey, n, n, checker)
 
   def taggedExpectedMsg = "expected dictionary"
   private def isTagName(tagKey: String, i: Any) = i match{
@@ -439,7 +352,4 @@ trait AttributeTagged extends Api with Annotator{
       res
     }
   }
-  @deprecated("Not used, left for binary compatibility")
-  final def taggedWrite[T, R](w: ObjectWriter[T], tag: String, out: Visitor[_,  R], v: T): R =
-    taggedWrite(w, Annotator.defaultTagKey, tag, out, v)
 }

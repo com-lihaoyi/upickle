@@ -9,7 +9,7 @@
 @val jvmExampleTests = wd/'upickle/'test/"src-jvm-2"/'upickle/'example/"JvmExampleTests.scala"
 @val macroTests = wd/'upickle/'test/'src/'upickle/"MacroTests.scala"
 
-@val optionsAsNullTests =  wd/'upickle/'test/"src"/'upickle/'example/"OptionsAsNullTests.scala"
+@val boxedOptionsTests =  wd/'upickle/'test/"src"/'upickle/'example/"BoxedOptionsTests.scala"
 
 
 @a(
@@ -464,25 +464,25 @@
         Often, there will be times that you want to customize something on a
         project-wide level. uPickle provides hooks in letting you subclass the
         @hl.scala{upickle.Api} trait to create your own bundles apart from the
-        in-built @hl.scala{upickle.default} and @hl.scala{upickle.legacy}. The
+        in-built @hl.scala{upickle.default} and @hl.scala{upickle.legacy}. These are listed
+        below in the @code{upickle.core.Config} trait:
+
+      @hl.ref(wd / "upickle" / "core" / "src" / "upickle" / "core" / "Config.scala", Seq("trait Config"))
+
+      @p The
         following example demonstrates how to customize a bundle to
         automatically @code{snake_case} all dictionary keys.
 
         @hl.ref(exampleTests, Seq("\"snakeCase\"", ""))
 
       @p
-        If you are using uPickle to convert JSON from another source into Scala
-        data structures, you can also configure it to map @hl.scala{Option[T]}s
-        to @code{null}s when the option is @code{None}:
+        uPickle by default serializes Scala @code{None}s to JSON @hl.scala{null}s, and @code{Some(t)}s
+        to unboxed JSON @code{t}s. This is generally what people want, but can cause issues at
+        some edge cases (e.g. @hl.scala{Some(null)} can round trip and become @hl.scala{None}).
+        You can use a more verbose serialization which converts Scala @code{None}s to boxed
+        JSON @hl.scala{[]]}s, and @code{Some(t)}s to boxed JSON @code{[t]}s
 
-      @hl.ref(optionsAsNullTests, "object OptionPickler", "// end_ex")
-
-      @p
-        This custom configuration allows you to treat @hl.scala{null}s as
-        @hl.scala{None}s and anything else as @hl.scala{Some(...)}s. Simply
-        @hl.scala{import OptionPickler._} instead of the normal uPickle import
-        throughout your project and you'll have the customized reading/writing
-        available to you.
+      @hl.ref(boxedOptionsTests, "object BoxedOptionsPickler", "// end_ex")
 
       @p
         You can also use a custom configuration to change how 64-bit @code{Long}s are

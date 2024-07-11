@@ -320,17 +320,4 @@ class MsgPackWriter[T <: java.io.OutputStream](out: T = new ByteArrayOutputStrea
     flushElemBuilder()
     out
   }
-
-
-  @deprecated("Not used, kept for binary compatibility")
-  def writeUInt8(i: Int): Unit = writeUInt8(byteBuilder.arr, byteBuilder.length, i)
-
-  @deprecated("Not used, kept for binary compatibility")
-  def writeUInt16(i: Int): Unit = writeUInt16(byteBuilder.arr, byteBuilder.length, i)
-
-  @deprecated("Not used, kept for binary compatibility")
-  def writeUInt32(i: Int): Unit = writeUInt32(byteBuilder.arr, byteBuilder.length, i)
-
-  @deprecated("Not used, kept for binary compatibility")
-  def writeUInt64(i: Long): Unit = writeUInt64(byteBuilder.arr, byteBuilder.length, i)
 }

@@ -70,18 +70,6 @@ object RenderUtils{
     if (wrapQuotes) sb.append('"')
   }
 
-  @deprecated("Not used, kept for binary compatibility")
-  def escapeSingleByteUnicodeRaw(unicodeCharBuilder: CharBuilder,
-                                 sb: ByteBuilder,
-                                 s: CharSequence,
-                                 escapeUnicode: Boolean,
-                                 i0: Int,
-                                 len0: Int,
-                                 naiveOutLen: Int,
-                                 wrapQuotes: Boolean): Unit = escapeSingleByteUnicodeRaw(
-    unicodeCharBuilder, sb, s, escapeUnicode, i0, len0, wrapQuotes
-  )
-
   def escapeSingleByteUnicodeRaw(unicodeCharBuilder: CharBuilder,
                                  sb: ByteBuilder,
                                  s: CharSequence,
@@ -224,37 +212,4 @@ object RenderUtils{
     }
     19 + d
   }
-
-  @deprecated("Not used, kept for binary compatibility")
-  def escapeSingleChar(sb: upickle.core.CharBuilder,
-                       naiveOutLen: Int,
-                       i: Int,
-                       c: Char) = CharUtils.escapeSingleChar(sb, i, c)
-
-  @deprecated("Not used, kept for binary compatibility")
-  def escapeSingleByte(sb: upickle.core.ByteBuilder,
-                       naiveOutLen: Int,
-                       i: Int,
-                       c: Char) = ByteUtils.escapeSingleByte(sb, i, c)
-
-  @deprecated("Not used, kept for binary compatibility")
-  def escapeSingleCharUnicodeEscape(naiveOutLen: Int, sb: CharBuilder, i: Int, c: Char) =
-    CharUtils.escapeSingleCharUnicodeEscape(sb, i, c)
-
-  @deprecated("Not used, kept for binary compatibility")
-  def escapeSingleByteUnicodeEscape(sb: ByteBuilder, i: Int, naiveOutLen: Int, c: Char) = {
-    ByteUtils.escapeSingleByteUnicodeEscape(sb, i, c)
-  }
-
-  @deprecated("Not used, kept for binary compatibility")
-  final def escapeChar0(i0: Int,
-                        naiveOutLen: Int,
-                        len: Int,
-                        sb: upickle.core.CharBuilder,
-                        s: CharSequence,
-                        escapeUnicode: Boolean,
-                        wrapQuotes: Boolean): upickle.core.CharBuilder = {
-    escapeChar0(i0, len, sb, s, escapeUnicode, wrapQuotes)
-  }
-
 }
