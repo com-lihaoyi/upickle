@@ -195,10 +195,12 @@ object ExampleTests extends TestSuite {
         write(Some(1))                    ==> "[1]"
         write(None)                       ==> "[]"
       }
+
       test("either") {
         write(Left(42): Either[Int, String])     ==> "[0,42]"
         write(Right("foo"): Either[Int, String]) ==> """[1,"foo"]"""
       }
+
       test("tuples"){
         write((1, "omg"))                 ==> """[1,"omg"]"""
         write((1, "omg", true))           ==> """[1,"omg",true]"""
