@@ -125,6 +125,20 @@ object UnknownKeys{
     override def allowUnknownKeys = false
   }
 }
+
+object TagName{
+  object TagNamePickler extends upickle.AttributeTagged {
+    override def tagName = "_tag"
+  }
+
+  sealed trait Foo
+  case class Bar(x: Int) extends Foo
+  case class Qux(s: String) extends Foo
+
+  implicit val barRw: TagNamePickler.ReadWriter[Bar] = TagNamePickler.macroRW
+  implicit val quxRw: TagNamePickler.ReadWriter[Qux] = TagNamePickler.macroRW
+  implicit val fooRw: TagNamePickler.ReadWriter[Foo] = TagNamePickler.macroRW
+}
 object MacroTests extends TestSuite {
 
   // Doesn't work :(
@@ -846,6 +860,15 @@ object MacroTests extends TestSuite {
         new Hierarchy.C("x", "y"),
         """{"$type": "C", "s1": "x", "s2": "y"}""",
         """{"$type": "upickle.Hierarchy.C", "s1": "x", "s2": "y"}"""
+      )
+
+    }
+
+    test("tagName"){
+      val customPicklerTest = new TestUtil(TagName.TagNamePickler)
+      customPicklerTest.rw(
+        TagName.Bar(123),
+        """{"_tag": "Bar", "x": 123}"""
       )
 
     }

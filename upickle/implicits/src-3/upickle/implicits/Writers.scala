@@ -13,7 +13,6 @@ trait WritersVersionSpecific
     with Annotator
     with CaseClassReadWriters:
 
-  val outerThis = this
   inline def macroW[T: ClassTag](using m: Mirror.Of[T]): Writer[T] = inline m match {
     case m: Mirror.ProductOf[T] =>
 
@@ -46,7 +45,7 @@ trait WritersVersionSpecific
       inline if macros.isSingleton[T] then
         annotate[T](
           SingletonWriter[T](null.asInstanceOf[T]),
-          macros.tagKey[T],
+          macros.tagKey[T](outerThis),
           macros.tagName[T],
           macros.shortTagName[T],
           Annotator.Checker.Val(macros.getSingleton[T]),
@@ -54,7 +53,7 @@ trait WritersVersionSpecific
       else if macros.isMemberOfSealedHierarchy[T] then
         annotate[T](
           writer,
-          macros.tagKey[T],
+          macros.tagKey[T](outerThis),
           macros.tagName[T],
           macros.shortTagName[T],
           Annotator.Checker.Cls(implicitly[ClassTag[T]].runtimeClass),

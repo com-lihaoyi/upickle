@@ -1,6 +1,8 @@
 package upickle.implicits
 
-trait MacrosCommon extends upickle.core.Config
+trait MacrosCommon extends upickle.core.Config with upickle.core.Types{
+  val outerThis = this
+}
 
 object MacrosCommon {
   def tagKeyFromParents[P](
@@ -9,7 +11,7 @@ object MacrosCommon {
     getKey: P => Option[String],
     getName: P => String,
     fail: String => Nothing,
-  ): String =
+  ): Option[String] =
     /**
       * Valid cases are:
       *
@@ -17,8 +19,8 @@ object MacrosCommon {
       * 2. All of the parents have the same `@key` annotation
       */
     sealedParents.flatMap(getKey(_)) match {
-      case Nil => upickle.core.Annotator.defaultTagKey
-      case keys @ (key :: _) if keys.length == sealedParents.length && keys.distinct.length == 1 => key
+      case Nil => None
+      case keys @ (key :: _) if keys.length == sealedParents.length && keys.distinct.length == 1 => Some(key)
       case keys =>
         fail(
           s"Type $typeName inherits from multiple parent types with different discriminator keys:\n\n" +
