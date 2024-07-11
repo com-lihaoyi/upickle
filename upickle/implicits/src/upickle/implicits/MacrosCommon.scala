@@ -8,10 +8,28 @@ trait MacrosCommon {
    */
   def serializeDefaults: Boolean = false
 
+  /**
+   * Map the name of Scala `case class` fields to JSON object fields during de-serialization.
+   * Must be kept in sync with [[objectAttributeKeyWriteMap]]
+   */
   def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
+
+  /**
+   * Map the name of JSON object fields to Scala `case class` fields during serialization.
+   * Must be kept in sync with [[objectAttributeKeyReadMap]]
+   */
   def objectAttributeKeyWriteMap(s: CharSequence): CharSequence = s
 
+  /**
+   * Map the name of JSON `$type` field values to Scala `case class` type names during
+   * de-serialization. Must be kept in sync with [[objectTypeKeyWriteMap]]
+   */
   def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
+
+  /**
+   * Map the name of Scala `case class` type names to JSON `$type` field value during
+   * serialization. Must be kept in sync with [[objectTypeKeyWriteMap]]
+   */
   def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
 
   /**
