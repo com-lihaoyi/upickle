@@ -2,8 +2,15 @@ package upickle.core
 
 // Common things for derivation
 trait Config {
-  @deprecated("Not used, left for binary compatibility")
   def tagName = Annotator.defaultTagKey
+
+  /**
+   * Whether to use the fully-qualified name of `case class`es and `case object`s which
+   * are part of `sealed trait` hierarchies when serializing them and writing their `$type`
+   * key. Defaults to `false`, so `$type` key uses the shortest partially-qualified name.
+   * Can be set to `true` to use their fully-qualified name.
+   * */
+  def objectTypeKeyWriteFullyQualified: Boolean = false
 
   /**
    * Whether or not `case class` fields with values equal to the default are serialized.

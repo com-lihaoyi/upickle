@@ -21,9 +21,6 @@ trait CaseClassReadWriters extends upickle.core.Types{
   trait CaseClassWriter[V] extends ObjectWriter[V] {
     def length(v: V): Int
 
-    @deprecated("Not used, left for binary compatibility")
-    def writeToObject[R](ctx: ObjVisitor[_, R], v: V): Unit
-
     @scala.annotation.nowarn
     def write0[R](out: Visitor[_, R], v: V): R = {
       if (v == null) out.visitNull(-1)
@@ -43,15 +40,6 @@ trait CaseClassReadWriters extends upickle.core.Types{
         keyVisitor.visitString(mappedArgsI, -1)
       )
       ctx.narrow.visitValue(w.asInstanceOf[Writer[Any]].write(ctx.subVisitor, value), -1)
-    }
-
-    @deprecated("Not used, left for binary compatibility")
-    def writeSnippet[R, V](objectAttributeKeyWriteMap: CharSequence => CharSequence,
-                           ctx: _root_.upickle.core.ObjVisitor[_, R],
-                           mappedArgsI: String,
-                           w: Any,
-                           value: Any) = {
-      writeSnippetMappedName(ctx, objectAttributeKeyWriteMap(mappedArgsI), w, value)
     }
   }
 

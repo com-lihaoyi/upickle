@@ -104,13 +104,7 @@ object Macros {
 
     }
 
-    @deprecated("Not used, left for binary compatibility")
-    def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
-
-    // Calling deprecated method to maintain binary compatibility
-    @annotation.nowarn("msg=deprecated")
-    def mergeTrait(tagKey: String, subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree =
-      mergeTrait(subtrees, subtypes, targetType)
+    def mergeTrait(tagKey: String, subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree
 
     def derive(tpe: c.Type) = {
       if (tpe.typeSymbol.asClass.isTrait || (tpe.typeSymbol.asClass.isAbstractClass && !tpe.typeSymbol.isJava)) {
@@ -369,10 +363,6 @@ object Macros {
       """
     }
 
-    @deprecated("Not used, left for binary compatibility")
-    def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree =
-      mergeTrait(Annotator.defaultTagKey, subtrees, subtypes, targetType)
-
     override def mergeTrait(tagKey: String, subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       q"${c.prefix}.Reader.merge[$targetType]($tagKey, ..$subtrees)"
     }
@@ -445,10 +435,6 @@ object Macros {
         }
        """
     }
-
-    @deprecated("Not used, left for binary compatibility")
-    def mergeTrait(subtrees: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree =
-      mergeTrait(Annotator.defaultTagKey, subtrees, subtypes, targetType)
 
     override def mergeTrait(tagKey: String, subtree: Seq[Tree], subtypes: Seq[Type], targetType: c.Type): Tree = {
       q"${c.prefix}.Writer.merge[$targetType](..$subtree)"
