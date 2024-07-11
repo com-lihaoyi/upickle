@@ -311,19 +311,28 @@ trait Readers extends upickle.core.Types
     }
   }
 
-  implicit def OptionReader[T: Reader]: Reader[Option[T]] = new SimpleReader[Option[T]] {
-    override def expectedMsg = "expected sequence"
-    override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, Option[T]] {
-      var b: Option[T] = None
+  trait OptionReader[T] extends Reader[Option[T]]
+  @scala.annotation.nowarn("cat=unchecked")
+  implicit def OptionReader[T: Reader]: Reader[Option[T]] = implicitly[Reader[T]] match{
+    case inner if inner.isInstanceOf[OptionReader[T]] || !optionsAsNulls =>
+      new  SimpleReader[Option[T]] with OptionReader[T]{
+        override def expectedMsg = "expected sequence"
+        override def visitArray(length: Int, index: Int) = new ArrVisitor[Any, Option[T]] {
+          var b: Option[T] = None
 
-      def visitValue(v: Any, index: Int): Unit = {
-        b = Some(v.asInstanceOf[T])
+          def visitValue(v: Any, index: Int): Unit = {
+            b = Some(v.asInstanceOf[T])
+          }
+
+          def visitEnd(index: Int) = b
+
+          def subVisitor = inner
+        }
       }
-
-      def visitEnd(index: Int) = b
-
-      def subVisitor = implicitly[Reader[T]]
-    }
+    case inner =>
+      new Reader.Delegate[Any, Option[T]](implicitly[Reader[T]].map(Some(_))) with OptionReader[T]{
+        override def visitNull(index: Int) = None
+      }
   }
   implicit def SomeReader[T: Reader]: Reader[Some[T]] = OptionReader[T].narrow[Some[T]]
   implicit def NoneReader: Reader[None.type] = OptionReader[Unit].narrow[None.type]

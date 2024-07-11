@@ -333,15 +333,17 @@ object AdvancedTests extends TestSuite {
       //      }
 
       test("issue-371") {
-        val input = """{"head":"a","tail":[{"head":"b","tail":[]}]}"""
+        val input = """{"head":"a","tail":{"head":"b"}}"""
         val expected = Node371("a", Some(Node371("b", None)))
         val result = upickle.default.read[Node371](input)
         assert(result == expected)
+        val written = upickle.default.write(result)
+        assert(written == input)
       }
     }
   }
 
-  case class Node371(head: String, tail: Option[Node371])
+  case class Node371(head: String, tail: Option[Node371] = None)
 
   object Node371 {
     implicit val nodeRW: ReadWriter[Node371] = macroRW[Node371]

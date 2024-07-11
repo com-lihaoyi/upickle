@@ -2,7 +2,6 @@ package upickle.implicits
 
 // Common things for derivation
 trait MacrosCommon {
-
   /**
    * Whether to use the fully-qualified name of `case class`es and `case object`s which
    * are part of `sealed trait` hierarchies when serializing them and writing their `$type`
@@ -28,6 +27,11 @@ trait MacrosCommon {
    * [[upickle.implicits.key]] annotation on the `case class` field
    */
   def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
+
+  /**
+   * Map the name of JSON object fields to Scala `case class` fields during serialization.
+   * Must be kept in sync with [[objectAttributeKeyReadMap]]
+   */
   def objectAttributeKeyWriteMap(s: CharSequence): CharSequence = s
 
   /**
@@ -40,8 +44,22 @@ trait MacrosCommon {
    * * [[upickle.implicits.key]] annotation on the `case class`
    */
   def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
+
+  /**
+   * Map the name of Scala `case class` type names to JSON `$type` field value during
+   * serialization. Must be kept in sync with [[objectTypeKeyReadMap]]
+   */
   def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
 
+  /**
+   * Whether top-level `Some(t)`s and `None`s are serialized unboxed as `t` or
+   * `null`, rather than `[t]` or `[]`. This is generally what people expect,
+   * although it does cause issues where `Some(null)` when serialized and de-serialized
+   * can become `None`. Can be disabled to use the boxed serialization format
+   * as 0-or-1-element-arrays, presering round trip-ability at the expense of
+   * un-intuitiveness and verbosity
+   */
+  def optionsAsNulls: Boolean = true
 }
 
 object MacrosCommon {

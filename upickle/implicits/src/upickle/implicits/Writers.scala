@@ -80,18 +80,35 @@ trait Writers extends upickle.core.Types
     override def writeString(v: Symbol) = v.name
   }
 
-  implicit def OptionWriter[T: Writer]: Writer[Option[T]] = new Writer[Option[T]] {
-    def write0[V](out: Visitor[_, V], v: Option[T]) = {
-      val ctx = out.visitArray(v.size, -1).narrow
-      val x = v.iterator
-      v match{
-        case None =>
-        case Some(next) =>
-        val written = implicitly[Writer[T]].write(ctx.subVisitor, next)
-        ctx.visitValue(written, -1)
-      }
+  trait OptionWriter[T] extends Writer[Option[T]]
+  @scala.annotation.nowarn("cat=unchecked")
+  implicit def OptionWriter[T: Writer]: Writer[Option[T]] = {
+    implicitly[Writer[T]] match{
+      case inner if inner.isInstanceOf[OptionWriter[T]] || !optionsAsNulls =>
+        new OptionWriter[T]{
+          def write0[V](out: Visitor[_, V], v: Option[T]) = {
+            val ctx = out.visitArray(v.size, -1).narrow
+            v match{
+              case None =>
+              case Some(next) =>
+                val written = inner.write(ctx.subVisitor, next)
+                ctx.visitValue(written, -1)
+            }
 
-      ctx.visitEnd(-1)
+            ctx.visitEnd(-1)
+          }
+        }
+
+      case inner =>
+        new OptionWriter[T]{
+          def write0[V](out: Visitor[_, V], v: Option[T]) = {
+            v match{
+              case None => out.visitNull(-1)
+              case Some(next) => inner.write(out, next)
+            }
+          }
+        }
+
     }
   }
 
