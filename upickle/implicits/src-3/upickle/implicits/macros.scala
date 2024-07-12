@@ -199,6 +199,44 @@ def tagKeyImpl[T](using Quotes, Type[T])(thisOuter: Expr[upickle.core.Types with
     case None => '{${thisOuter}.tagName}
   }
 
+inline def applyConstructor[T](params: Array[Any]): T = ${ applyConstructorImpl[T]('params) }
+def applyConstructorImpl[T](using Quotes, Type[T])(params: Expr[Array[Any]]): Expr[T] =
+  import quotes._
+  import quotes.reflect._
+
+  def apply(t: TypeRepr, typeApply: Option[List[TypeRepr]]) = {
+    val companion: Symbol = t.classSymbol.get.companionModule
+    val lhs = Select(Ref(companion), companion.methodMember("apply").head)
+    val rhs = TypeRepr.of[T].typeSymbol
+      .primaryConstructor
+      .paramSymss
+      .flatten
+      .filterNot(_.isType).zipWithIndex.map {
+      case (sym0, i) =>
+
+        val sym = TypeRepr.of[T].select(sym0.asInstanceOf[quotes.reflect.Symbol])
+        println(sym.asType)
+        val tpe = sym.asType
+        val lhs = '{$params(${ Expr(i) })}
+        tpe match {
+          case '[t] => '{ $lhs.asInstanceOf[t] }.asTerm
+          case t => sys.error(t.toString)
+        }
+    }
+
+    typeApply match{
+      case None => Apply(lhs, rhs).asExprOf[T]
+      case Some(args) =>
+        Apply(TypeApply(lhs, args.map(a => TypeTree.ref(a.typeSymbol))), rhs).asExprOf[T]
+    }
+  }
+
+  TypeRepr.of[T] match{
+    case t: AppliedType => apply(t, Some(t.args))
+    case t: TypeRef => apply(t, None)
+    case t: TermRef => '{${Ref(t.classSymbol.get.companionModule).asExprOf[Any]}.asInstanceOf[T]}
+  }
+
 inline def tagName[T]: String = ${ tagNameImpl[T] }
 def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   tagNameImpl0(identity)

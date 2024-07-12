@@ -206,13 +206,13 @@ trait MixedIn{
   trait Trt1{
     case class ClsA(s: String)
     object ClsA{
-      implicit def rw: RW[ClsA] = default.macroRW
+      implicit def rw: RW[ClsA] = ???
     }
   }
   trait Trt2 extends Trt1{
     case class ClsB(i: Int)
     object ClsB{
-      implicit def rw: RW[ClsB] = default.macroRW
+      implicit def rw: RW[ClsB] = ???
     }
   }
   object Obj extends Trt2

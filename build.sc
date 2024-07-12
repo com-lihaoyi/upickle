@@ -17,7 +17,7 @@ import com.github.lolgab.mill.mima._
 val scala212  = "2.12.18"
 val scala213  = "2.13.11"
 
-val scala3   = "3.3.3"
+val scala3   = "3.4.2"
 val scalaNative = "0.5.0"
 val acyclic = "0.3.12"
 
@@ -98,8 +98,8 @@ trait CommonPublishModule
   }
 
   def scalacOptions = T {
-    Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-feature", "-Xfatal-warnings") ++
-    Agg.when(!isScala3(scalaVersion()))("-opt:l:method").toSeq
+    Seq("-unchecked", "-encoding", "utf8", "-feature", "-experimental") ++
+    Agg.when(!isScala3(scalaVersion()))("-opt:l:method", "-Xfatal-warnings", "-deprecation").toSeq
   }
 
   trait CommonTestModule0 extends ScalaModule with TestModule.Utest {
