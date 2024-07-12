@@ -214,7 +214,7 @@ def applyConstructorImpl[T](using Quotes, Type[T])(params: Expr[Array[Any]]): Ex
       .filterNot(_.isType).zipWithIndex.map {
       case (sym0, i) =>
 
-        val sym = TypeRepr.of[T].select(sym0.asInstanceOf[quotes.reflect.Symbol])
+        val sym = TypeRepr.of[T].select(sym0)
         val tpe = sym.asType
         val lhs = '{$params(${ Expr(i) })}
         tpe match {
