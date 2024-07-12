@@ -205,27 +205,18 @@ def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: Expr[Arra
   def apply(typeApply: Option[List[TypeRepr]]) = {
     val tpe = TypeRepr.of[T]
     val companion: Symbol = tpe.classSymbol.get.companionModule
-    val constructorParamSymss = tpe.typeSymbol.primaryConstructor.paramSymss
+    val constructorSym = tpe.typeSymbol.primaryConstructor
+    val constructorParamSymss = constructorSym.paramSymss
 
-    def isPrimaryApplyMethod(syms1: Seq[Seq[Symbol]], syms2: Seq[Seq[Symbol]]) = {
-      // try to guess the primary apply method based on the parameter counts
-      // not sure why comparing the types doesn't seem to work
-      // println(syms1.flatten.zip(syms2.flatten).map{case (s1, s2) => (s1.typeRef.simplified, s2.typeRef.simplified)})
-      syms1.map(_.length) == syms2.map(_.length)
-    }
-
-    val applyMethods = companion
-      .methodMember("apply")
-      .filter(s => isPrimaryApplyMethod(s.paramSymss, constructorParamSymss))
-
-    val lhs = Select(Ref(companion), applyMethods.head)
-
-    val params0 = constructorParamSymss.flatten.filterNot(_.isType)
+    val (tparams0, params0) = constructorParamSymss.flatten.partition(_.isType)
+    val constructorTpe = tpe.memberType(constructorSym).widen
 
     val rhs = params0.zipWithIndex.map {
       case (sym0, i) =>
         val lhs = '{$params(${ Expr(i) })}
-        tpe.memberType(tpe.typeSymbol.fieldMember(sym0.name)) match{
+        val tpe0 = constructorTpe.memberType(sym0)
+
+        typeApply.map(tps => tpe0.substituteTypes(tparams0, tps)).getOrElse(tpe0) match {
           case AnnotatedType(AppliedType(base, Seq(arg)), x)
             if x.tpe =:= defn.RepeatedAnnot.typeRef =>
             arg.asType match {
@@ -244,9 +235,9 @@ def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: Expr[Arra
     }
 
     typeApply match{
-      case None => Apply(lhs, rhs).asExprOf[T]
+      case None => Select.overloaded(Ref(companion), "apply", Nil, rhs).asExprOf[T]
       case Some(args) =>
-        Apply(TypeApply(lhs, args.map(a => TypeTree.ref(a.typeSymbol))), rhs).asExprOf[T]
+        Select.overloaded(Ref(companion), "apply", args, rhs).asExprOf[T]
     }
   }
 
