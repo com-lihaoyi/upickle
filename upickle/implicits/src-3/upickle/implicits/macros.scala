@@ -122,7 +122,7 @@ def serDfltVals(using quotes: Quotes)(thisOuter: Expr[upickle.core.Types with up
                                       argSym: quotes.reflect.Symbol,
                                       targetType: quotes.reflect.Symbol): Expr[Boolean] = {
   extractSerializeDefaults(argSym).orElse(extractSerializeDefaults(targetType)) match {
-    case Some(b) => '{ ${Expr(b)} }
+    case Some(b) => Expr(b)
     case None => '{ ${ thisOuter }.serializeDefaults }
   }
 }
