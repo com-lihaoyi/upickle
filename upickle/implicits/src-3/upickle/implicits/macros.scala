@@ -41,6 +41,13 @@ def extractKey[A](using Quotes)(sym: quotes.reflect.Symbol): Option[String] =
     .find(_.tpe =:= TypeRepr.of[upickle.implicits.key])
     .map{case Apply(_, Literal(StringConstant(s)) :: Nil) => s}
 
+def extractSerializeDefaults[A](using quotes: Quotes)(sym: quotes.reflect.Symbol): Option[Boolean] =
+  import quotes.reflect._
+  sym
+    .annotations
+    .find(_.tpe =:= TypeRepr.of[upickle.implicits.serializeDefaults])
+    .map{case Apply(_, Literal(BooleanConstant(s)) :: Nil) => s}
+
 inline def extractIgnoreUnknownKeys[T](): List[Boolean] = ${extractIgnoreUnknownKeysImpl[T]}
 def extractIgnoreUnknownKeysImpl[T](using Quotes, Type[T]): Expr[List[Boolean]] =
   import quotes.reflect._
@@ -111,16 +118,28 @@ inline def writeLength[T](inline thisOuter: upickle.core.Types with upickle.impl
                           inline v: T): Int =
   ${writeLengthImpl[T]('thisOuter, 'v)}
 
+def serDfltVals(using quotes: Quotes)(thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon],
+                                      argSym: quotes.reflect.Symbol,
+                                      targetType: quotes.reflect.Symbol): Expr[Boolean] = {
+  extractSerializeDefaults(argSym).orElse(extractSerializeDefaults(targetType)) match {
+    case Some(b) => '{ ${Expr(b)} }
+    case None => '{ ${ thisOuter }.serializeDefaults }
+  }
+}
 def writeLengthImpl[T](thisOuter: Expr[upickle.core.Types with upickle.implicits.MacrosCommon],
                                        v: Expr[T])
-                                      (using Quotes, Type[T]): Expr[Int] =
+                                      (using quotes: Quotes, t: Type[T]): Expr[Int] =
   import quotes.reflect.*
     fieldLabelsImpl0[T]
       .map{(rawLabel, label) =>
         val defaults = getDefaultParamsImpl0[T]
         val select = Select.unique(v.asTerm, rawLabel.name).asExprOf[Any]
+
         if (!defaults.contains(label)) '{1}
-        else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(label)}) 1 else 0}
+        else {
+          val serDflt = serDfltVals(thisOuter, rawLabel, TypeRepr.of[T].typeSymbol)
+          '{if (${serDflt} || ${select} != ${defaults(label)}) 1 else 0}
+        }
       }
       .foldLeft('{0}) { case (prev, next) => '{$prev + $next} }
 
@@ -166,7 +185,10 @@ def writeSnippetsImpl[R, T, WS <: Tuple](thisOuter: Expr[upickle.core.Types with
             )
           }
           if (!defaults.contains(label)) snippet
-          else '{if (${thisOuter}.serializeDefaults || ${select} != ${defaults(label)}) $snippet}
+          else {
+            val serDflt = serDfltVals(thisOuter, rawLabel, TypeRepr.of[T].typeSymbol)
+            '{if ($serDflt || ${select} != ${defaults(label)}) $snippet}
+          }
 
     },
     '{()}
@@ -197,6 +219,63 @@ def tagKeyImpl[T](using Quotes, Type[T])(thisOuter: Expr[upickle.core.Types with
   ) match{
     case Some(v) => Expr(v)
     case None => '{${thisOuter}.tagName}
+  }
+
+inline def applyConstructor[T](params: Array[Any]): T = ${ applyConstructorImpl[T]('params) }
+def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: Expr[Array[Any]]): Expr[T] =
+  import quotes.reflect._
+  def apply(typeApply: Option[List[TypeRepr]]) = {
+    val tpe = TypeRepr.of[T]
+    val companion: Symbol = tpe.classSymbol.get.companionModule
+    val constructorParamSymss = tpe.typeSymbol.primaryConstructor.paramSymss
+
+    def isPrimaryApplyMethod(syms1: Seq[Seq[Symbol]], syms2: Seq[Seq[Symbol]]) = {
+      // try to guess the primary apply method based on the parameter counts
+      // not sure why comparing the types doesn't seem to work
+      // println(syms1.flatten.zip(syms2.flatten).map{case (s1, s2) => (s1.typeRef.simplified, s2.typeRef.simplified)})
+      syms1.map(_.length) == syms2.map(_.length)
+    }
+
+    val applyMethods = companion
+      .methodMember("apply")
+      .filter(s => isPrimaryApplyMethod(s.paramSymss, constructorParamSymss))
+
+    val lhs = Select(Ref(companion), applyMethods.head)
+
+    val params0 = constructorParamSymss.flatten.filterNot(_.isType)
+
+    val rhs = params0.zipWithIndex.map {
+      case (sym0, i) =>
+        val lhs = '{$params(${ Expr(i) })}
+        tpe.memberType(tpe.typeSymbol.fieldMember(sym0.name)) match{
+          case AnnotatedType(AppliedType(base, Seq(arg)), x)
+            if x.tpe =:= defn.RepeatedAnnot.typeRef =>
+            arg.asType match {
+              case '[t] =>
+                Typed(
+                  lhs.asTerm,
+                  TypeTree.of(using AppliedType(defn.RepeatedParamClass.typeRef, List(arg)).asType)
+                )
+            }
+          case tpe =>
+            tpe.asType match {
+              case '[t] => '{ $lhs.asInstanceOf[t] }.asTerm
+            }
+        }
+
+    }
+
+    typeApply match{
+      case None => Apply(lhs, rhs).asExprOf[T]
+      case Some(args) =>
+        Apply(TypeApply(lhs, args.map(a => TypeTree.ref(a.typeSymbol))), rhs).asExprOf[T]
+    }
+  }
+
+  TypeRepr.of[T] match{
+    case t: AppliedType => apply(Some(t.args))
+    case t: TypeRef => apply(None)
+    case t: TermRef => '{${Ref(t.classSymbol.get.companionModule).asExprOf[Any]}.asInstanceOf[T]}
   }
 
 inline def tagName[T]: String = ${ tagNameImpl[T] }

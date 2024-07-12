@@ -192,6 +192,7 @@ object Macros {
               wrapCaseN(
                 companion,
                 rawArgs,
+                argSyms,
                 mappedArgs,
                 argSyms.map(_.typeSignature).map(func),
                 hasDefaults,
@@ -255,11 +256,18 @@ object Macros {
           .flatMap(_.scalaArgs.headOption)
           .map{case Literal(Constant(s)) => s.toString}
     }
+    def serializeDefaults(sym: c.Symbol): Option[Boolean] = {
+        sym.annotations
+          .find(_.tpe == typeOf[upickle.implicits.serializeDefaults])
+          .flatMap(_.scalaArgs.headOption)
+          .map{case Literal(Constant(s)) => s.asInstanceOf[Boolean]}
+    }
 
     def wrapObject(obj: Tree): Tree
 
     def wrapCaseN(companion: Tree,
                   rawArgs: Seq[String],
+                  argSyms: Seq[Symbol],
                   mappedArgs: Seq[String],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
@@ -274,6 +282,7 @@ object Macros {
 
     def wrapCaseN(companion: c.Tree,
                   rawArgs: Seq[String],
+                  argSyms: Seq[Symbol],
                   mappedArgs: Seq[String],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
@@ -395,13 +404,20 @@ object Macros {
     def internal = q"${c.prefix}.Internal"
     def wrapCaseN(companion: c.Tree,
                   rawArgs: Seq[String],
+                  argSyms: Seq[Symbol],
                   mappedArgs: Seq[String],
                   argTypes: Seq[Type],
                   hasDefaults: Seq[Boolean],
                   targetType: c.Type,
                   varargs: Boolean) = {
       val defaults = deriveDefaults(companion, hasDefaults)
-      val serDfltVals  = q"${c.prefix}.serializeDefaults"
+      def serDfltVals(i: Int) = {
+        val b: Option[Boolean] = serializeDefaults(argSyms(i)).orElse(serializeDefaults(targetType.typeSymbol))
+        b match {
+          case Some(b) => q"${b}"
+          case None => q"${c.prefix}.serializeDefaults"
+        }
+      }
 
       def write(i: Int) = {
         val snippet = q"""
@@ -412,9 +428,9 @@ object Macros {
              v.${TermName(rawArgs(i))}
            )
         """
-        
+
         if (!hasDefaults(i)) snippet
-        else q"""if ($serDfltVals || v.${TermName(rawArgs(i))} != ${defaults(i)}) $snippet"""
+        else q"""if (${serDfltVals(i)} || v.${TermName(rawArgs(i))} != ${defaults(i)}) $snippet"""
       }
       q"""
         new ${c.prefix}.CaseClassWriter[$targetType]{
@@ -423,7 +439,7 @@ object Macros {
               Range(0, rawArgs.length)
                 .map(i =>
                   if (!hasDefaults(i)) q"1"
-                  else q"""if ($serDfltVals || v.${TermName(rawArgs(i))} != ${defaults(i)}) 1 else 0"""
+                  else q"""if (${serDfltVals(i)} || v.${TermName(rawArgs(i))} != ${defaults(i)}) 1 else 0"""
                 )
                 .foldLeft[Tree](q"0"){case (prev, next) => q"$prev + $next"}
             }
