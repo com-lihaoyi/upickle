@@ -200,27 +200,43 @@ def tagKeyImpl[T](using Quotes, Type[T])(thisOuter: Expr[upickle.core.Types with
   }
 
 inline def applyConstructor[T](params: Array[Any]): T = ${ applyConstructorImpl[T]('params) }
-def applyConstructorImpl[T](using Quotes, Type[T])(params: Expr[Array[Any]]): Expr[T] =
+def applyConstructorImpl[T](using quotes: Quotes, t: Type[T])(params: Expr[Array[Any]]): Expr[T] =
+
   import quotes._
   import quotes.reflect._
-
   def apply(t: TypeRepr, typeApply: Option[List[TypeRepr]]) = {
     val companion: Symbol = t.classSymbol.get.companionModule
     val lhs = Select(Ref(companion), companion.methodMember("apply").head)
-    val rhs = TypeRepr.of[T].typeSymbol
+
+    val tpe = TypeRepr.of[T]
+    val params0 = tpe.typeSymbol
       .primaryConstructor
       .paramSymss
       .flatten
-      .filterNot(_.isType).zipWithIndex.map {
-      case (sym0, i) =>
+      .filterNot(_.isType)
 
-        val sym = TypeRepr.of[T].select(sym0)
-        val tpe = sym.asType
+    val rhs = params0.zipWithIndex.map {
+      case (sym0, i) =>
         val lhs = '{$params(${ Expr(i) })}
-        tpe match {
-          case '[t] => '{ $lhs.asInstanceOf[t] }.asTerm
-          case t => sys.error(t.toString)
+        tpe.memberType(tpe.typeSymbol.fieldMember(sym0.name)) match{
+          case AnnotatedType(AppliedType(base, Seq(arg)), x)
+            if x.show == "new scala.annotation.internal.Repeated()" =>
+
+            arg.asType match {
+              case '[t] =>
+                val x = '{ $lhs.asInstanceOf[Seq[t]] }.asTerm
+
+                Typed(
+                  lhs.asTerm,
+                  TypeTree.of(using AppliedType(defn.RepeatedParamClass.typeRef, List(arg)).asType)
+                )
+            }
+          case tpe =>
+            tpe.asType match {
+              case '[t] => '{ $lhs.asInstanceOf[t] }.asTerm
+            }
         }
+
     }
 
     typeApply match{
