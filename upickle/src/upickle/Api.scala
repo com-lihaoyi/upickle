@@ -170,13 +170,6 @@ trait Api
     def write0[R](out: Visitor[_, R], v: T): R = readwriter.write0(out, v)
   }
 
-  /**
-   * Configure whether you want upickle to skip unknown keys during de-serialization
-   * of `case class`es. Can be overriden for the entire serializer via `override def`, and
-   * further overriden for individual `case class`es via the annotation
-   * `@upickle.implicits.allowUnknownKeys(b: Boolean)`
-   */
-  override def allowUnknownKeys: Boolean = true
   // End Api
 }
 
