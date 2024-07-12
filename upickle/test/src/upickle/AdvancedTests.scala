@@ -340,6 +340,14 @@ object AdvancedTests extends TestSuite {
         val written = upickle.default.write(result)
         assert(written == input)
       }
+      test("customApply") {
+        val input = """{"x":"a","y":-102}"""
+        val expected = CustomApply("A", +102)
+        val result = upickle.default.read[CustomApply](input)
+        assert(result == expected)
+        val written = upickle.default.write(result)
+        assert(written == """{"x":"A","y":102}""")
+      }
     }
   }
 
@@ -351,6 +359,13 @@ object AdvancedTests extends TestSuite {
 
   class Thing[T: upickle.default.Writer, V: upickle.default.Writer](t: Option[(V, T)]) {
     implicitly[upickle.default.Writer[Option[(V, T)]]]
+  }
+  case class CustomApply(x: String, y: Int)
+
+  object CustomApply {
+    def apply(x: String, y: Int) = new CustomApply(x.toUpperCase, math.abs(y))
+
+    implicit val nodeRW: ReadWriter[CustomApply] = macroRW[CustomApply]
   }
 }
 
