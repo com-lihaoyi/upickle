@@ -68,7 +68,6 @@ trait Config {
    */
   def optionsAsNulls: Boolean = true
 
-
   /**
    * Configure whether you want upickle to skip unknown keys during de-serialization
    * of `case class`es. Can be overriden for the entire serializer via `override def`, and
