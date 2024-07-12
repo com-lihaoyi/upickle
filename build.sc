@@ -98,7 +98,7 @@ trait CommonPublishModule
   }
 
   def scalacOptions = T {
-    Seq("-unchecked", "-encoding", "utf8", "-feature", "-experimental") ++
+    Seq("-unchecked", "-encoding", "utf8", "-feature") ++
     Agg.when(!isScala3(scalaVersion()))("-opt:l:method", "-Xfatal-warnings", "-deprecation").toSeq
   }
 
