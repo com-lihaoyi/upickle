@@ -67,4 +67,11 @@ trait Config {
    * un-intuitiveness and verbosity
    */
   def optionsAsNulls: Boolean = true
+
+  /**
+   * Whether or not unknown keys when de-serializing case classes should be allowed.
+   * Defaults to `true`, but can be set to `false` to make the presence unknown keys
+   * raise an error
+   */
+  def allowUnknownKeys: Boolean = true
 }
