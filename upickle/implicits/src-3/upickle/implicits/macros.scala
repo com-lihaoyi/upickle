@@ -221,63 +221,6 @@ def tagKeyImpl[T](using Quotes, Type[T])(thisOuter: Expr[upickle.core.Types with
     case None => '{${thisOuter}.tagName}
   }
 
-inline def applyConstructor[T](params: Array[Any]): T = ${ applyConstructorImpl[T]('params) }
-def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: Expr[Array[Any]]): Expr[T] =
-  import quotes.reflect._
-  def apply(typeApply: Option[List[TypeRepr]]) = {
-    val tpe = TypeRepr.of[T]
-    val companion: Symbol = tpe.classSymbol.get.companionModule
-    val constructorParamSymss = tpe.typeSymbol.primaryConstructor.paramSymss
-
-    def isPrimaryApplyMethod(syms1: Seq[Seq[Symbol]], syms2: Seq[Seq[Symbol]]) = {
-      // try to guess the primary apply method based on the parameter counts
-      // not sure why comparing the types doesn't seem to work
-      // println(syms1.flatten.zip(syms2.flatten).map{case (s1, s2) => (s1.typeRef.simplified, s2.typeRef.simplified)})
-      syms1.map(_.length) == syms2.map(_.length)
-    }
-
-    val applyMethods = companion
-      .methodMember("apply")
-      .filter(s => isPrimaryApplyMethod(s.paramSymss, constructorParamSymss))
-
-    val lhs = Select(Ref(companion), applyMethods.head)
-
-    val params0 = constructorParamSymss.flatten.filterNot(_.isType)
-
-    val rhs = params0.zipWithIndex.map {
-      case (sym0, i) =>
-        val lhs = '{$params(${ Expr(i) })}
-        tpe.memberType(tpe.typeSymbol.fieldMember(sym0.name)) match{
-          case AnnotatedType(AppliedType(base, Seq(arg)), x)
-            if x.tpe =:= defn.RepeatedAnnot.typeRef =>
-            arg.asType match {
-              case '[t] =>
-                Typed(
-                  lhs.asTerm,
-                  TypeTree.of(using AppliedType(defn.RepeatedParamClass.typeRef, List(arg)).asType)
-                )
-            }
-          case tpe =>
-            tpe.asType match {
-              case '[t] => '{ $lhs.asInstanceOf[t] }.asTerm
-            }
-        }
-
-    }
-
-    typeApply match{
-      case None => Apply(lhs, rhs).asExprOf[T]
-      case Some(args) =>
-        Apply(TypeApply(lhs, args.map(a => TypeTree.ref(a.typeSymbol))), rhs).asExprOf[T]
-    }
-  }
-
-  TypeRepr.of[T] match{
-    case t: AppliedType => apply(Some(t.args))
-    case t: TypeRef => apply(None)
-    case t: TermRef => '{${Ref(t.classSymbol.get.companionModule).asExprOf[Any]}.asInstanceOf[T]}
-  }
-
 inline def tagName[T]: String = ${ tagNameImpl[T] }
 def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   tagNameImpl0(identity)
