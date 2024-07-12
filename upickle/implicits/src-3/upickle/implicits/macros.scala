@@ -200,20 +200,27 @@ def tagKeyImpl[T](using Quotes, Type[T])(thisOuter: Expr[upickle.core.Types with
   }
 
 inline def applyConstructor[T](params: Array[Any]): T = ${ applyConstructorImpl[T]('params) }
-def applyConstructorImpl[T](using quotes: Quotes, t: Type[T])(params: Expr[Array[Any]]): Expr[T] =
-
-  import quotes._
+def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: Expr[Array[Any]]): Expr[T] =
   import quotes.reflect._
-  def apply(t: TypeRepr, typeApply: Option[List[TypeRepr]]) = {
-    val companion: Symbol = t.classSymbol.get.companionModule
-    val lhs = Select(Ref(companion), companion.methodMember("apply").head)
-
+  def apply(typeApply: Option[List[TypeRepr]]) = {
     val tpe = TypeRepr.of[T]
-    val params0 = tpe.typeSymbol
-      .primaryConstructor
-      .paramSymss
-      .flatten
-      .filterNot(_.isType)
+    val companion: Symbol = tpe.classSymbol.get.companionModule
+    val constructorParamSymss = tpe.typeSymbol.primaryConstructor.paramSymss
+
+    def isPrimaryApplyMethod(syms1: Seq[Seq[Symbol]], syms2: Seq[Seq[Symbol]]) = {
+      // try to guess the primary apply method based on the parameter counts
+      // not sure why comparing the types doesn't seem to work
+      // println(syms1.flatten.zip(syms2.flatten).map{case (s1, s2) => (s1.typeRef.simplified, s2.typeRef.simplified)})
+      syms1.map(_.length) == syms2.map(_.length)
+    }
+
+    val applyMethods = companion
+      .methodMember("apply")
+      .filter(s => isPrimaryApplyMethod(s.paramSymss, constructorParamSymss))
+
+    val lhs = Select(Ref(companion), applyMethods.head)
+
+    val params0 = constructorParamSymss.flatten.filterNot(_.isType)
 
     val rhs = params0.zipWithIndex.map {
       case (sym0, i) =>
@@ -223,8 +230,6 @@ def applyConstructorImpl[T](using quotes: Quotes, t: Type[T])(params: Expr[Array
             if x.tpe =:= defn.RepeatedAnnot.typeRef =>
             arg.asType match {
               case '[t] =>
-                val x = '{ $lhs.asInstanceOf[Seq[t]] }.asTerm
-
                 Typed(
                   lhs.asTerm,
                   TypeTree.of(using AppliedType(defn.RepeatedParamClass.typeRef, List(arg)).asType)
@@ -246,8 +251,8 @@ def applyConstructorImpl[T](using quotes: Quotes, t: Type[T])(params: Expr[Array
   }
 
   TypeRepr.of[T] match{
-    case t: AppliedType => apply(t, Some(t.args))
-    case t: TypeRef => apply(t, None)
+    case t: AppliedType => apply(Some(t.args))
+    case t: TypeRef => apply(None)
     case t: TermRef => '{${Ref(t.classSymbol.get.companionModule).asExprOf[Any]}.asInstanceOf[T]}
   }
 
