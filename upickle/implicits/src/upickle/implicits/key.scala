@@ -2,5 +2,5 @@ package upickle.implicits
 
 import scala.annotation.StaticAnnotation
 
-case class key(s: String) extends StaticAnnotation
-case class allowUnknownKeys(b: Boolean) extends StaticAnnotation
+class key(s: String) extends StaticAnnotation
+class allowUnknownKeys(b: Boolean) extends StaticAnnotation
