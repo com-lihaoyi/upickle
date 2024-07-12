@@ -220,8 +220,7 @@ def applyConstructorImpl[T](using quotes: Quotes, t: Type[T])(params: Expr[Array
         val lhs = '{$params(${ Expr(i) })}
         tpe.memberType(tpe.typeSymbol.fieldMember(sym0.name)) match{
           case AnnotatedType(AppliedType(base, Seq(arg)), x)
-            if x.show == "new scala.annotation.internal.Repeated()" =>
-
+            if x.tpe =:= defn.RepeatedAnnot.typeRef =>
             arg.asType match {
               case '[t] =>
                 val x = '{ $lhs.asInstanceOf[Seq[t]] }.asTerm
