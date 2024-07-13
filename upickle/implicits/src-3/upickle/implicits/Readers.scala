@@ -14,7 +14,9 @@ trait ReadersVersionSpecific
 
   abstract class CaseClassReader3[T](paramCount: Int,
                                      missingKeyCount: Long,
-                                     allowUnknownKeys: Boolean) extends CaseClassReader[T] {
+                                     allowUnknownKeys: Boolean,
+                                     construct: Array[Any] => T) extends CaseClassReader[T] {
+
     def visitors0: Product
     lazy val visitors = visitors0
     def fromProduct(p: Product): T
@@ -45,11 +47,7 @@ trait ReadersVersionSpecific
         if (this.checkErrorMissingKeys(missingKeyCount))
           this.errorMissingKeys(paramCount, allKeysArray)
 
-        fromProduct(new Product {
-          def canEqual(that: Any): Boolean = true
-          def productArity: Int = params.length
-          def productElement(i: Int): Any = params(i)
-        })
+        construct(params)
     }
     override def visitObject(length: Int,
                              jsonableKeys: Boolean,
@@ -63,7 +61,8 @@ trait ReadersVersionSpecific
       val reader = new CaseClassReader3[T](
         macros.paramsCount[T],
         macros.checkErrorMissingKeysCount[T](),
-        macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.allowUnknownKeys)
+        macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.allowUnknownKeys),
+        params => macros.applyConstructor[T](params)
       ){
         override def visitors0 = compiletime.summonAll[Tuple.Map[m.MirroredElemTypes, Reader]]
         override def fromProduct(p: Product): T = m.fromProduct(p)

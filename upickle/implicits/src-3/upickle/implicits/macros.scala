@@ -221,6 +221,54 @@ def tagKeyImpl[T](using Quotes, Type[T])(thisOuter: Expr[upickle.core.Types with
     case None => '{${thisOuter}.tagName}
   }
 
+inline def applyConstructor[T](params: Array[Any]): T = ${ applyConstructorImpl[T]('params) }
+def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: Expr[Array[Any]]): Expr[T] =
+  import quotes.reflect._
+  def apply(typeApply: Option[List[TypeRepr]]) = {
+    val tpe = TypeRepr.of[T]
+    val companion: Symbol = tpe.classSymbol.get.companionModule
+    val constructorSym = tpe.typeSymbol.primaryConstructor
+    val constructorParamSymss = constructorSym.paramSymss
+
+    val (tparams0, params0) = constructorParamSymss.flatten.partition(_.isType)
+    val constructorTpe = tpe.memberType(constructorSym).widen
+
+    val rhs = params0.zipWithIndex.map {
+      case (sym0, i) =>
+        val lhs = '{$params(${ Expr(i) })}
+        val tpe0 = constructorTpe.memberType(sym0)
+
+        typeApply.map(tps => tpe0.substituteTypes(tparams0, tps)).getOrElse(tpe0) match {
+          case AnnotatedType(AppliedType(base, Seq(arg)), x)
+            if x.tpe =:= defn.RepeatedAnnot.typeRef =>
+            arg.asType match {
+              case '[t] =>
+                Typed(
+                  lhs.asTerm,
+                  TypeTree.of(using AppliedType(defn.RepeatedParamClass.typeRef, List(arg)).asType)
+                )
+            }
+          case tpe =>
+            tpe.asType match {
+              case '[t] => '{ $lhs.asInstanceOf[t] }.asTerm
+            }
+        }
+
+    }
+
+    typeApply match{
+      case None => Select.overloaded(Ref(companion), "apply", Nil, rhs).asExprOf[T]
+      case Some(args) =>
+        Select.overloaded(Ref(companion), "apply", args, rhs).asExprOf[T]
+    }
+  }
+
+  TypeRepr.of[T] match{
+    case t: AppliedType => apply(Some(t.args))
+    case t: TypeRef => apply(None)
+    case t: TermRef => '{${Ref(t.classSymbol.get.companionModule).asExprOf[Any]}.asInstanceOf[T]}
+  }
+
 inline def tagName[T]: String = ${ tagNameImpl[T] }
 def tagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   tagNameImpl0(identity)
