@@ -57,13 +57,13 @@
 span.hljs-tag, span.hljs-symbol{
     background: none;
 }
-    </style><title>uPickle 3.3.1</title><script src="scripts.js"></script></head><body><div>
+    </style><title>uPickle 4.0.0-RC1</title><script src="scripts.js"></script></head><body><div>
 
 
 
 <a href="https://github.com/lihaoyi/upickle-pprint"><img style="position: absolute;top: 0px;right: 0px;border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" /></a>
 
-<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="uPickle3.3.1" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">uPickle 3.3.1<a class=" scalatex-site-Styles-headerLink" href="#uPickle3.3.1" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="uPickle4.0.0-RC1" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">uPickle 4.0.0-RC1<a class=" scalatex-site-Styles-headerLink" href="#uPickle4.0.0-RC1" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div><div class=" scalatex-site-Styles-content">
   <div style="display: flex;align-items: center;flex-direction: column;">
     <div>
       <a href="https://gitter.im/lihaoyi/upickle"><img src="https://badges.gitter.im/Join%20Chat.svg" /></a>
@@ -107,8 +107,8 @@ span.hljs-tag, span.hljs-symbol{
       <a href="http://www.lihaoyi.com/post/HowtoworkwithJSONinScala.html">How to work with JSON in Scala</a>
 </li></ul>
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="GettingStarted" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Getting Started<a class=" scalatex-site-Styles-headerLink" href="#GettingStarted" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
-    <pre><code class="scala scalatex-site-Styles-highlightMe">&quot;com.lihaoyi&quot; %% &quot;upickle&quot; % &quot;3.3.1&quot; // SBT
-ivy&quot;com.lihaoyi::upickle:3.3.1&quot; // Mill
+    <pre><code class="scala scalatex-site-Styles-highlightMe">&quot;com.lihaoyi&quot; %% &quot;upickle&quot; % &quot;4.0.0-RC1&quot; // SBT
+ivy&quot;com.lihaoyi::upickle:4.0.0-RC1&quot; // Mill
 </code></pre>
     <p>
       And then you can immediately start writing and reading common Scala
@@ -124,7 +124,7 @@ read[Seq[Int]](&quot;[1,2,3]&quot;)         ==&gt; List(1, 2, 3)
 
 write((1, &quot;omg&quot;, true))           ==&gt; &quot;&quot;&quot;[1,&quot;omg&quot;,true]&quot;&quot;&quot;
 
-read[(Int, String, Boolean)](&quot;&quot;&quot;[1,&quot;omg&quot;,true]&quot;&quot;&quot;) ==&gt; (1, &quot;omg&quot;, true)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L109-L120" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[(Int, String, Boolean)](&quot;&quot;&quot;[1,&quot;omg&quot;,true]&quot;&quot;&quot;) ==&gt; (1, &quot;omg&quot;, true)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L113-L124" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <p>
       Or to compact byte arrays, using the <a href="https://msgpack.org/index.html">MessagePack</a>
@@ -142,13 +142,13 @@ val serializedTuple = Array[Byte](0x93.toByte, 1, 0xa3.toByte, 111, 109, 103, 0x
 
 writeBinary((1, &quot;omg&quot;, true))           ==&gt; serializedTuple
 
-readBinary[(Int, String, Boolean)](serializedTuple) ==&gt; (1, &quot;omg&quot;, true)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L122-L135" target="_blank"><i class="fa fa-link "></i></a></pre>
+readBinary[(Int, String, Boolean)](serializedTuple) ==&gt; (1, &quot;omg&quot;, true)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L126-L139" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <h1 id="ScalaJS" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ScalaJS" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>ScalaJS</h1>
       <p>
         For ScalaJS applications, use this dependencies instead:</p>
-      <pre><code class="scala scalatex-site-Styles-highlightMe">&quot;com.lihaoyi&quot; %%% &quot;upickle&quot; % &quot;3.3.1&quot; // SBT
-ivy&quot;com.lihaoyi::upickle::3.3.1&quot; // Mill
+      <pre><code class="scala scalatex-site-Styles-highlightMe">&quot;com.lihaoyi&quot; %%% &quot;upickle&quot; % &quot;4.0.0-RC1&quot; // SBT
+ivy&quot;com.lihaoyi::upickle::4.0.0-RC1&quot; // Mill
 </code></pre>
     <h1 id="ScalaVersions" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#ScalaVersions" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Scala Versions</h1>
       <p>
@@ -168,7 +168,7 @@ ivy&quot;com.lihaoyi::upickle::3.3.1&quot; // Mill
           Booleans are serialized as JSON booleans
 </p>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(true: Boolean)              ==&gt; &quot;true&quot;
-write(false: Boolean)             ==&gt; &quot;false&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L139-L141" target="_blank"><i class="fa fa-link "></i></a></pre>
+write(false: Boolean)             ==&gt; &quot;false&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L143-L145" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <p>
           Numbers are serialized as JSON numbers
@@ -179,7 +179,7 @@ write(12: Byte)                   ==&gt; &quot;12&quot;
 write(Int.MaxValue)               ==&gt; &quot;2147483647&quot;
 write(Int.MinValue)               ==&gt; &quot;-2147483648&quot;
 write(12.5f: Float)               ==&gt; &quot;12.5&quot;
-write(12.5: Double)               ==&gt; &quot;12.5&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L143-L150" target="_blank"><i class="fa fa-link "></i></a></pre>
+write(12.5: Double)               ==&gt; &quot;12.5&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L147-L154" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <p>
           Except for <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Long</code>s, which too large for Javascript. These are
@@ -190,7 +190,7 @@ write(12.5: Double)               ==&gt; &quot;12.5&quot;</code><a class=" scala
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(12: Long)                   ==&gt; &quot;12&quot;
 write(4000000000000L: Long)       ==&gt; &quot;4000000000000&quot;
 // large longs are written as strings, to avoid floating point rounding
-write(9223372036854775807L: Long) ==&gt; &quot;\&quot;9223372036854775807\&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L152-L156" target="_blank"><i class="fa fa-link "></i></a></pre>
+write(9223372036854775807L: Long) ==&gt; &quot;\&quot;9223372036854775807\&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L156-L160" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <p>
           Special values of <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Double</code>s and <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Float</code>s are also
@@ -198,7 +198,7 @@ write(9223372036854775807L: Long) ==&gt; &quot;\&quot;9223372036854775807\&quot;
 </p>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(1.0/0: Double)              ==&gt; &quot;\&quot;Infinity\&quot;&quot;
 write(Float.PositiveInfinity)     ==&gt; &quot;\&quot;Infinity\&quot;&quot;
-write(Float.NegativeInfinity)     ==&gt; &quot;\&quot;-Infinity\&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L158-L161" target="_blank"><i class="fa fa-link "></i></a></pre>
+write(Float.NegativeInfinity)     ==&gt; &quot;\&quot;-Infinity\&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L162-L165" target="_blank"><i class="fa fa-link "></i></a></pre>
 
 
 
@@ -206,7 +206,7 @@ write(Float.NegativeInfinity)     ==&gt; &quot;\&quot;-Infinity\&quot;&quot;</co
           Both <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Char</code>s and <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">String</code>s are serialized as Strings
 </p>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write('o')                        ==&gt; &quot;\&quot;o\&quot;&quot;
-write(&quot;omg&quot;)                      ==&gt; &quot;\&quot;omg\&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L163-L165" target="_blank"><i class="fa fa-link "></i></a></pre>
+write(&quot;omg&quot;)                      ==&gt; &quot;\&quot;omg\&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L167-L169" target="_blank"><i class="fa fa-link "></i></a></pre>
       <h2 id="Collections" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Collections" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Collections</h2>
         <p>
           <code>Array</code>s and most immutable collections are serialized as JSON lists
@@ -227,20 +227,27 @@ write(Seq(1, 2, 3))               ==&gt; &quot;[1,2,3]&quot;
 write(Vector(1, 2, 3))            ==&gt; &quot;[1,2,3]&quot;
 write(List(1, 2, 3))              ==&gt; &quot;[1,2,3]&quot;
 import collection.immutable.SortedSet
-write(SortedSet(1, 2, 3))         ==&gt; &quot;[1,2,3]&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L167-L184" target="_blank"><i class="fa fa-link "></i></a></pre>
+write(SortedSet(1, 2, 3))         ==&gt; &quot;[1,2,3]&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L171-L188" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <p>
-          <code>Option</code>s are serialized as JSON lists with 0 or 1 element
+          <code>Option</code>s are serialized as nullable values
 </p>
-        <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(Some(1))                    ==&gt; &quot;[1]&quot;
-write(None)                       ==&gt; &quot;[]&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L203-L205" target="_blank"><i class="fa fa-link "></i></a></pre>
+        <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(Some(1))                    ==&gt; &quot;1&quot;
+write(None)                       ==&gt; &quot;null&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L207-L209" target="_blank"><i class="fa fa-link "></i></a></pre>
 
+        <p>
+          <code>Either</code>s are serialized as JSON lists with 2 elements, with the first
+          element a number indicating <code>Left</code> (0) or <code>Right</code> (1), and the second
+          containing the value.
+</p>
+        <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(Left(42): Either[Int, String])     ==&gt; &quot;[0,42]&quot;
+write(Right(&quot;foo&quot;): Either[Int, String]) ==&gt; &quot;&quot;&quot;[1,&quot;foo&quot;]&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L212-L214" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <p>
           Tuples of all sizes (1-22) are serialized as heterogenous JSON lists
 </p>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write((1, &quot;omg&quot;))                 ==&gt; &quot;&quot;&quot;[1,&quot;omg&quot;]&quot;&quot;&quot;
-write((1, &quot;omg&quot;, true))           ==&gt; &quot;&quot;&quot;[1,&quot;omg&quot;,true]&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L207-L209" target="_blank"><i class="fa fa-link "></i></a></pre>
+write((1, &quot;omg&quot;, true))           ==&gt; &quot;&quot;&quot;[1,&quot;omg&quot;,true]&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L217-L219" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <p>
           <code>Map</code>s with primitive keys are serialized into JSON dictionaries,
@@ -261,7 +268,7 @@ write(Map(Seq.empty[Int] -&gt; Seq.empty[Int]), indent = 4) ==&gt;
   |    ]
   |]&quot;&quot;&quot;.stripMargin
 
-write(Map.empty[Int, Int], indent = 4) ==&gt; &quot;&quot;&quot;{}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L186-L201" target="_blank"><i class="fa fa-link "></i></a></pre>
+write(Map.empty[Int, Int], indent = 4) ==&gt; &quot;&quot;&quot;{}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L190-L205" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <h2 id="CaseClasses" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CaseClasses" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Case Classes</h2>
         <p>
@@ -279,10 +286,14 @@ write(Map.empty[Int, Int], indent = 4) ==&gt; &quot;&quot;&quot;{}&quot;&quot;&q
 object Thing{
   implicit val rw: RW[Thing] = macroRW
 }
+case class OptionThing(myFieldA: Option[Int] = None, myFieldB: Option[String] = None)
+object OptionThing{
+  implicit val rw: RW[OptionThing] = macroRW
+}
 case class Big(i: Int, b: Boolean, str: String, c: Char, t: Thing)
 object Big{
   implicit val rw: RW[Big] = macroRW
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L12-L20" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L12-L24" target="_blank"><i class="fa fa-link "></i></a></pre>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">import upickle._
 write(Thing(1, &quot;gg&quot;))             ==&gt; &quot;&quot;&quot;{&quot;myFieldA&quot;:1,&quot;myFieldB&quot;:&quot;gg&quot;}&quot;&quot;&quot;
 read[Thing](&quot;&quot;&quot;{&quot;myFieldA&quot;:1,&quot;myFieldB&quot;:&quot;gg&quot;}&quot;&quot;&quot;) ==&gt; Thing(1, &quot;gg&quot;)
@@ -311,7 +322,7 @@ write(Big(1, true, &quot;lol&quot;, 'Z', Thing(7, &quot;&quot;)), indent = 4, so
     |        &quot;myFieldA&quot;: 7,
     |        &quot;myFieldB&quot;: &quot;&quot;
     |    }
-    |}&quot;&quot;&quot;.stripMargin</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L212-L241" target="_blank"><i class="fa fa-link "></i></a></pre>
+    |}&quot;&quot;&quot;.stripMargin</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L222-L251" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <p>
           Sealed hierarchies are serialized as tagged values, the serialized
@@ -328,15 +339,15 @@ object IntThing{
 case class TupleThing(name: String, t: (Int, Int)) extends IntOrTuple
 object TupleThing{
   implicit val rw: RW[TupleThing] = macroRW
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L22-L34" target="_blank"><i class="fa fa-link "></i></a></pre>
-        <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(IntThing(1)) ==&gt; &quot;&quot;&quot;{&quot;$type&quot;:&quot;upickle.example.Sealed.IntThing&quot;,&quot;i&quot;:1}&quot;&quot;&quot;
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L26-L38" target="_blank"><i class="fa fa-link "></i></a></pre>
+        <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(IntThing(1)) ==&gt; &quot;&quot;&quot;{&quot;$type&quot;:&quot;IntThing&quot;,&quot;i&quot;:1}&quot;&quot;&quot;
 
 write(TupleThing(&quot;naeem&quot;, (1, 2))) ==&gt;
-  &quot;&quot;&quot;{&quot;$type&quot;:&quot;upickle.example.Sealed.TupleThing&quot;,&quot;name&quot;:&quot;naeem&quot;,&quot;t&quot;:[1,2]}&quot;&quot;&quot;
+  &quot;&quot;&quot;{&quot;$type&quot;:&quot;TupleThing&quot;,&quot;name&quot;:&quot;naeem&quot;,&quot;t&quot;:[1,2]}&quot;&quot;&quot;
 
 // You can read tagged value without knowing its
 // type in advance, just use type of the sealed trait
-read[IntOrTuple](&quot;&quot;&quot;{&quot;$type&quot;:&quot;upickle.example.Sealed.IntThing&quot;,&quot;i&quot;:1}&quot;&quot;&quot;) ==&gt; IntThing(1)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L245-L254" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[IntOrTuple](&quot;&quot;&quot;{&quot;$type&quot;:&quot;IntThing&quot;,&quot;i&quot;:1}&quot;&quot;&quot;) ==&gt; IntThing(1)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L263-L272" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <p>
           Serializability is recursive; you can serialize a type only if all
@@ -350,7 +361,7 @@ object Foo{
 case class Bar(name: String, foos: Seq[Foo])
 object Bar{
   implicit val rw: RW[Bar] = macroRW
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L36-L44" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L40-L48" target="_blank"><i class="fa fa-link "></i></a></pre>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write((((1, 2), (3, 4)), ((5, 6), (7, 8)))) ==&gt;
   &quot;&quot;&quot;[[[1,2],[3,4]],[[5,6],[7,8]]]&quot;&quot;&quot;
 
@@ -358,7 +369,7 @@ write(Seq(Thing(1, &quot;g&quot;), Thing(2, &quot;k&quot;))) ==&gt;
   &quot;&quot;&quot;[{&quot;myFieldA&quot;:1,&quot;myFieldB&quot;:&quot;g&quot;},{&quot;myFieldA&quot;:2,&quot;myFieldB&quot;:&quot;k&quot;}]&quot;&quot;&quot;
 
 write(Bar(&quot;bearrr&quot;, Seq(Foo(1), Foo(2), Foo(3)))) ==&gt;
-  &quot;&quot;&quot;{&quot;name&quot;:&quot;bearrr&quot;,&quot;foos&quot;:[{&quot;i&quot;:1},{&quot;i&quot;:2},{&quot;i&quot;:3}]}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L256-L264" target="_blank"><i class="fa fa-link "></i></a></pre>
+  &quot;&quot;&quot;{&quot;name&quot;:&quot;bearrr&quot;,&quot;foos&quot;:[{&quot;i&quot;:1},{&quot;i&quot;:2},{&quot;i&quot;:3}]}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L274-L282" target="_blank"><i class="fa fa-link "></i></a></pre>
       <h2 id="Scala3Deriving" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Scala3Deriving" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Scala 3 Deriving</h2>
         <p>
           In Scala 3, you can use the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">derives</code> keyword on standalone
@@ -374,18 +385,18 @@ case class Person(name: String, address: String, age: Int = 20) extends Animal
 case class Cat(name: String, owner: Person) extends Animal
 case object Cthulu extends Animal</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/DerivationTests.scala#L10-L14" target="_blank"><i class="fa fa-link "></i></a></pre>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">upickle.default.write(Person(&quot;Peter&quot;, &quot;Ave 10&quot;)) ==&gt;
-  &quot;&quot;&quot;{&quot;$type&quot;:&quot;upickle.Person&quot;,&quot;name&quot;:&quot;Peter&quot;,&quot;address&quot;:&quot;Ave 10&quot;}&quot;&quot;&quot;
+  &quot;&quot;&quot;{&quot;$type&quot;:&quot;Person&quot;,&quot;name&quot;:&quot;Peter&quot;,&quot;address&quot;:&quot;Ave 10&quot;}&quot;&quot;&quot;
 
-upickle.default.read[Animal](&quot;&quot;&quot;{&quot;$type&quot;:&quot;upickle.Person&quot;,&quot;name&quot;:&quot;Peter&quot;,&quot;address&quot;:&quot;Ave 10&quot;}&quot;&quot;&quot;) ==&gt;
+upickle.default.read[Animal](&quot;&quot;&quot;{&quot;$type&quot;:&quot;Person&quot;,&quot;name&quot;:&quot;Peter&quot;,&quot;address&quot;:&quot;Ave 10&quot;}&quot;&quot;&quot;) ==&gt;
   Person(&quot;Peter&quot;, &quot;Ave 10&quot;)
 
-upickle.default.write(Cthulu) ==&gt; &quot;\&quot;upickle.Cthulu\&quot;&quot;
-upickle.default.read[Animal](&quot;\&quot;upickle.Cthulu\&quot;&quot;) ==&gt; Cthulu</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/DerivationTests.scala#L60-L68" target="_blank"><i class="fa fa-link "></i></a></pre>
+upickle.default.write(Cthulu) ==&gt; &quot;\&quot;Cthulu\&quot;&quot;
+upickle.default.read[Animal](&quot;\&quot;Cthulu\&quot;&quot;) ==&gt; Cthulu</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/DerivationTests.scala#L60-L68" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">enum SimpleEnum derives ReadWriter:
   case A, B</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/EnumTests.scala#L10-L12" target="_blank"><i class="fa fa-link "></i></a></pre>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">upickle.default.write(SimpleEnum.A) ==&gt; &quot;\&quot;A\&quot;&quot;
-upickle.default.read[SimpleEnum](&quot;\&quot;A\&quot;&quot;) ==&gt; SimpleEnum.A</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/EnumTests.scala#L42-L44" target="_blank"><i class="fa fa-link "></i></a></pre>
+upickle.default.read[SimpleEnum](&quot;\&quot;A\&quot;&quot;) ==&gt; SimpleEnum.A</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/EnumTests.scala#L44-L46" target="_blank"><i class="fa fa-link "></i></a></pre>
 
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">enum ColorEnum(val rgb: Int) derives ReadWriter:
   case Red extends ColorEnum(0xFF0000)
@@ -394,7 +405,7 @@ upickle.default.read[SimpleEnum](&quot;\&quot;A\&quot;&quot;) ==&gt; SimpleEnum.
   case Mix(mix: Int) extends ColorEnum(mix)
   case Unknown(mix: Int) extends ColorEnum(0x000000)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/EnumTests.scala#L15-L21" target="_blank"><i class="fa fa-link "></i></a></pre>
         <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">Enclosing(&quot;test&quot;, SimpleEnum.A, Some(SimpleEnum.B)),
-&quot;&quot;&quot;{&quot;str&quot;:&quot;test&quot;,&quot;simple1&quot;:&quot;A&quot;,&quot;simple2&quot;:[&quot;B&quot;]}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/EnumTests.scala#L66-L68" target="_blank"><i class="fa fa-link "></i></a></pre>
+&quot;&quot;&quot;{&quot;str&quot;:&quot;test&quot;,&quot;simple1&quot;:&quot;A&quot;,&quot;simple2&quot;:&quot;B&quot;}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src-3/upickle/EnumTests.scala#L68-L70" target="_blank"><i class="fa fa-link "></i></a></pre>
       <p>
         Note that you only need to put the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">derives</code> keyword on the
         <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">enum</code>s or <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">sealed trait</code>s, and not on all the
@@ -420,7 +431,7 @@ upickle.default.read[SimpleEnum](&quot;\&quot;A\&quot;&quot;) ==&gt; SimpleEnum.
 val original = &quot;&quot;&quot;{&quot;myFieldA&quot;:1,&quot;myFieldB&quot;:&quot;gg&quot;}&quot;&quot;&quot;
 read[Thing](original) ==&gt; Thing(1, &quot;gg&quot;)
 read[Thing](original: CharSequence) ==&gt; Thing(1, &quot;gg&quot;)
-read[Thing](original.getBytes) ==&gt; Thing(1, &quot;gg&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L284-L289" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[Thing](original.getBytes) ==&gt; Thing(1, &quot;gg&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L302-L307" target="_blank"><i class="fa fa-link "></i></a></pre>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">import upickle.default._
 val original = &quot;&quot;&quot;{&quot;myFieldA&quot;:1,&quot;myFieldB&quot;:&quot;gg&quot;}&quot;&quot;&quot;
 
@@ -443,7 +454,7 @@ read[Thing](f.toFile) ==&gt; Thing(1, &quot;gg&quot;)</code><a class=" scalatex-
         Nulls serialize into JSON nulls, as you would expect
       
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(Bar(null, Seq(Foo(1), null, Foo(3)))) ==&gt;
-  &quot;&quot;&quot;{&quot;name&quot;:null,&quot;foos&quot;:[{&quot;i&quot;:1},null,{&quot;i&quot;:3}]}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L266-L268" target="_blank"><i class="fa fa-link "></i></a></pre>
+  &quot;&quot;&quot;{&quot;name&quot;:null,&quot;foos&quot;:[{&quot;i&quot;:1},null,{&quot;i&quot;:3}]}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L284-L286" target="_blank"><i class="fa fa-link "></i></a></pre>
       
       <p>
         uPickle only throws exceptions on unpickling; if a pickler is
@@ -464,7 +475,7 @@ read[Thing](f.toFile) ==&gt; Thing(1, &quot;gg&quot;)</code><a class=" scalatex-
         value if one exists
 </p>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">read[FooDefault](&quot;{}&quot;)                ==&gt; FooDefault(10, &quot;lol&quot;)
-read[FooDefault](&quot;&quot;&quot;{&quot;i&quot;: 123}&quot;&quot;&quot;)    ==&gt; FooDefault(123,&quot;lol&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L273-L275" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[FooDefault](&quot;&quot;&quot;{&quot;i&quot;: 123}&quot;&quot;&quot;)    ==&gt; FooDefault(123,&quot;lol&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L291-L293" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
 
@@ -473,7 +484,7 @@ read[FooDefault](&quot;&quot;&quot;{&quot;i&quot;: 123}&quot;&quot;&quot;)    ==
 </p>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(FooDefault(i = 11, s = &quot;lol&quot;))  ==&gt; &quot;&quot;&quot;{&quot;i&quot;:11}&quot;&quot;&quot;
 write(FooDefault(i = 10, s = &quot;lol&quot;))  ==&gt; &quot;&quot;&quot;{}&quot;&quot;&quot;
-write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L277-L280" target="_blank"><i class="fa fa-link "></i></a></pre>
+write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L295-L298" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
 
@@ -483,6 +494,12 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
         <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">&quot;&quot;</code> for Strings, or wrap it in an <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Option[T]</code> and
         make the default <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">None</code>) and uPickle will happily read the
         old data, filling in the missing field using the default value.
+</p>
+      <p>
+        You can enable serialization of default values a per-field or per-case-class basis
+        using the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">@upickle.implicits.serializeDefaults(true)</code>
+        annotation on that field or <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">case class</code>, or globally on a
+        <a href="#CustomConfiguration">Custom Configuration</a> via <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">override def serializeDefaults = true</code>
 </p>
     <h1 id="SupportedTypes" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#SupportedTypes" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Supported Types</h1>
       <p>
@@ -521,13 +538,12 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
            serializable up to 64 fields.
 </p>
       <p>
-        Case classes are serialized using the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">apply</code> and
-        <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">unapply</code> methods on their companion objects. This means that
-        you can make your own classes serializable by giving them companions
-         <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">apply</code> and <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">unapply</code>. <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">sealed</code> hierarchies
-         are serialized as tagged unions: whatever the serialization of the
-         actual object, together with the fully-qualified name of its class, so
-          the correct class in the sealed hierarchy can be reconstituted later.
+        Case classes are de-serialized using the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">apply</code> method on their
+        companion objects. <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">sealed</code> hierarchies
+        are serialized as tagged unions: whatever the serialization of the
+        actual object, together with the partially-qualified name of its class
+        in a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">&quot;$type&quot;: &quot;...&quot;</code> field, so
+        the correct class in the sealed hierarchy can be reconstituted later.
 </p>
       <p>
         That concludes the list of supported types. Anything else is not supported
@@ -579,13 +595,6 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
     maybeSortKeysTransform(t, sortKeys, ujson.StringRenderer(indent, escapeUnicode)).toString
   }
 
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def write[T: Writer](t: T,
-                       indent: Int,
-                       escapeUnicode: Boolean): String = {
-    write(t, indent, escapeUnicode, sortKeys = false)
-  }
-
   /**
     * Write the given Scala value as a MessagePack binary
     */
@@ -593,9 +602,6 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
                              sortKeys: Boolean = false): Array[Byte] = {
     maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(new ByteArrayOutputStream())).toByteArray
   }
-
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def writeBinary[T: Writer](t: T): Array[Byte] = writeBinary(t, sortKeys = false)
 
   /**
     * Write the given Scala value as a JSON struct
@@ -618,27 +624,12 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
     maybeSortKeysTransform(t, sortKeys, new ujson.Renderer(out, indent = indent, escapeUnicode))
   }
 
-
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def writeTo[T: Writer](t: T,
-                         out: java.io.Writer,
-                         indent: Int,
-                         escapeUnicode: Boolean): Unit = writeTo(t, out, indent, escapeUnicode, sortKeys = false)
-
   def writeToOutputStream[T: Writer](t: T,
                                      out: java.io.OutputStream,
                                      indent: Int = -1,
                                      escapeUnicode: Boolean = false,
                                      sortKeys: Boolean = false): Unit = {
     maybeSortKeysTransform(t, sortKeys, new ujson.BaseByteRenderer(out, indent = indent, escapeUnicode))
-  }
-
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def writeToOutputStream[T: Writer](t: T,
-                                     out: java.io.OutputStream,
-                                     indent: Int,
-                                     escapeUnicode: Boolean): Unit = {
-    writeToOutputStream(t, out, indent, escapeUnicode, sortKeys = false)
   }
 
   def writeToByteArray[T: Writer](t: T,
@@ -650,12 +641,6 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
     out.toByteArray
   }
 
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def writeToByteArray[T: Writer](t: T,
-                                  indent: Int,
-                                  escapeUnicode: Boolean): Array[Byte] = {
-    writeToByteArray[T](t, indent, escapeUnicode, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a JSON string via a `geny.Writable`
     */
@@ -669,12 +654,6 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
     }
   }
 
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def stream[T: Writer](t: T,
-                        indent: Int,
-                        escapeUnicode: Boolean): geny.Writable = {
-    stream(t, indent, escapeUnicode, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a MessagePack binary to the given OutputStream
     */
@@ -684,12 +663,6 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
     streamBinary[T](t, sortKeys = sortKeys).writeBytesTo(out)
   }
 
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def writeBinaryTo[T: Writer](t: T,
-                               out: java.io.OutputStream): Unit = {
-    writeBinaryTo(t, out, sortKeys = false)
-  }
-
   def writeBinaryToByteArray[T: Writer](t: T,
                                         sortKeys: Boolean = false): Array[Byte] = {
     val out = new java.io.ByteArrayOutputStream()
@@ -697,10 +670,6 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
     out.toByteArray
   }
 
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def writeBinaryToByteArray[T: Writer](t: T): Array[Byte] = {
-    writeBinaryToByteArray(t, sortKeys = false)
-  }
   /**
     * Write the given Scala value as a MessagePack binary via a `geny.Writable`
     */
@@ -708,12 +677,7 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
     override def httpContentType = Some(&quot;application/octet-stream&quot;)
     def writeBytesTo(out: java.io.OutputStream) = maybeSortKeysTransform(t, sortKeys, new upack.MsgPackWriter(out))
   }
-
-  // @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-  def streamBinary[T: Writer](t: T): geny.Writable = {
-    streamBinary(t, sortKeys = false)
-  }
-
+  
   def writer[T: Writer] = implicitly[Writer[T]]
 
   def readwriter[T: ReadWriter] = implicitly[ReadWriter[T]]
@@ -745,15 +709,7 @@ write(FooDefault())                   ==&gt; &quot;&quot;&quot;{}&quot;&quot;&qu
   def stringKeyW[T](readwriter: Writer[T]): Writer[T] = new Writer[T]{
     override def isJsonDictKey = true
     def write0[R](out: Visitor[_, R], v: T): R = readwriter.write0(out, v)
-  }
-
-  /**
-   * Configure whether you want upickle to skip unknown keys during de-serialization
-   * of `case class`es. Can be overriden for the entire serializer via `override def`, and
-   * further overriden for individual `case class`es via the annotation
-   * `@upickle.implicits.allowUnknownKeys(b: Boolean)`
-   */
-  override def allowUnknownKeys: Boolean = true</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/src/upickle/Api.scala#L15-L231" target="_blank"><i class="fa fa-link "></i></a></pre>
+  }</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/src/upickle/Api.scala#L15-L172" target="_blank"><i class="fa fa-link "></i></a></pre>
 
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Customization" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Customization<a class=" scalatex-site-Styles-headerLink" href="#Customization" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
     <h1 id="CustomPicklers" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CustomPicklers" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Custom Picklers</h1>
@@ -763,7 +719,7 @@ implicit val fooReadWrite: ReadWriter[Wrap] =
   readwriter[Int].bimap[Wrap](_.i, Wrap(_))
 
 write(Seq(Wrap(1), Wrap(10), Wrap(100))) ==&gt; &quot;[1,10,100]&quot;
-read[Seq[Wrap]](&quot;[1,10,100]&quot;) ==&gt; Seq(Wrap(1), Wrap(10), Wrap(100))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L292-L299" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[Seq[Wrap]](&quot;[1,10,100]&quot;) ==&gt; Seq(Wrap(1), Wrap(10), Wrap(100))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L310-L317" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         You can use the <code>readwriter[T].bimap[V]</code> function to create a pickler
@@ -785,7 +741,7 @@ object CustomThing2 {
       new CustomThing2(i.toInt, s)
     }
   )
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L77-L87" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L81-L91" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         Note that when writing custom picklers, it is entirely up to you to get
@@ -806,21 +762,19 @@ implicit val fooReadWrite: ReadWriter[Bar] =
   )
 
 write(Bar(123, &quot;abc&quot;)) ==&gt; &quot;&quot;&quot;[&quot;abc&quot;,123]&quot;&quot;&quot;
-read[Bar](&quot;&quot;&quot;[&quot;abc&quot;,123]&quot;&quot;&quot;) ==&gt; Bar(123, &quot;abc&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L301-L311" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[Bar](&quot;&quot;&quot;[&quot;abc&quot;,123]&quot;&quot;&quot;) ==&gt; Bar(123, &quot;abc&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L319-L329" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <h1 id="CustomKeys" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CustomKeys" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Custom Keys</h1>
       <p>
-
         uPickle allows you to specify the key that a field is serialized with
         via a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">@key</code> annotation
-
 </p>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">case class KeyBar(@upickle.implicits.key(&quot;hehehe&quot;) kekeke: Int)
 object KeyBar{
   implicit val rw: RW[KeyBar] = macroRW
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L52-L56" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L56-L60" target="_blank"><i class="fa fa-link "></i></a></pre>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(KeyBar(10))                     ==&gt; &quot;&quot;&quot;{&quot;hehehe&quot;:10}&quot;&quot;&quot;
-read[KeyBar](&quot;&quot;&quot;{&quot;hehehe&quot;: 10}&quot;&quot;&quot;)    ==&gt; KeyBar(10)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L316-L318" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[KeyBar](&quot;&quot;&quot;{&quot;hehehe&quot;: 10}&quot;&quot;&quot;)    ==&gt; KeyBar(10)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L334-L336" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
 
@@ -844,9 +798,9 @@ object A{
 object B{
   implicit val rw: RW[B] = macroRW
 }
-case object C extends A</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L58-L67" target="_blank"><i class="fa fa-link "></i></a></pre>
+case object C extends A</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L62-L71" target="_blank"><i class="fa fa-link "></i></a></pre>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(B(10))                          ==&gt; &quot;&quot;&quot;{&quot;$type&quot;:&quot;Bee&quot;,&quot;i&quot;:10}&quot;&quot;&quot;
-read[B](&quot;&quot;&quot;{&quot;$type&quot;:&quot;Bee&quot;,&quot;i&quot;:10}&quot;&quot;&quot;) ==&gt; B(10)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L320-L322" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[B](&quot;&quot;&quot;{&quot;$type&quot;:&quot;Bee&quot;,&quot;i&quot;:10}&quot;&quot;&quot;) ==&gt; B(10)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L338-L340" target="_blank"><i class="fa fa-link "></i></a></pre>
 
 
 
@@ -871,16 +825,18 @@ sealed trait Tag
 case class ATag(i: Int) extends Tag
 object ATag {
   implicit val rw: RW[ATag] = macroRW
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L69-L75" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L73-L79" target="_blank"><i class="fa fa-link "></i></a></pre>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">write(ATag(11)) ==&gt;
-  &quot;&quot;&quot;{&quot;_tag&quot;:&quot;upickle.example.KeyedTagKey.ATag&quot;,&quot;i&quot;:11}&quot;&quot;&quot;
+  &quot;&quot;&quot;{&quot;_tag&quot;:&quot;ATag&quot;,&quot;i&quot;:11}&quot;&quot;&quot;
 
-read[ATag](&quot;&quot;&quot;{&quot;_tag&quot;:&quot;upickle.example.KeyedTagKey.ATag&quot;,&quot;i&quot;:11}&quot;&quot;&quot;) ==&gt;
-  ATag(11)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L324-L329" target="_blank"><i class="fa fa-link "></i></a></pre>
+read[ATag](&quot;&quot;&quot;{&quot;_tag&quot;:&quot;ATag&quot;,&quot;i&quot;:11}&quot;&quot;&quot;) ==&gt;
+  ATag(11)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L342-L347" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         This is useful in cases where you need to override uPickle's default
         behavior, for example to preserve compatibility with another JSON library.
+
+
 </p>
     <h1 id="JSONDictionaryFormats" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#JSONDictionaryFormats" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>JSON Dictionary Formats</h1>
       <p>
@@ -901,7 +857,7 @@ write(Map(FooId(123) -&gt; &quot;hello&quot;, FooId(456) -&gt; &quot;world&quot;
   &quot;&quot;&quot;[[123,&quot;hello&quot;],[456,&quot;world&quot;]]&quot;&quot;&quot;
 
 read[Map[FooId, String]](&quot;&quot;&quot;[[123,&quot;hello&quot;],[456,&quot;world&quot;]]&quot;&quot;&quot;) ==&gt;
-  Map(FooId(123) -&gt; &quot;hello&quot;, FooId(456) -&gt; &quot;world&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L625-L639" target="_blank"><i class="fa fa-link "></i></a></pre>
+  Map(FooId(123) -&gt; &quot;hello&quot;, FooId(456) -&gt; &quot;world&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L643-L657" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         For types of <code>K</code> that you want to serialize to JSON strings in
@@ -920,7 +876,7 @@ write(Map(FooId(123) -&gt; &quot;hello&quot;, FooId(456) -&gt; &quot;world&quot;
   &quot;&quot;&quot;{&quot;123&quot;:&quot;hello&quot;,&quot;456&quot;:&quot;world&quot;}&quot;&quot;&quot;
 
 read[Map[FooId, String]](&quot;&quot;&quot;{&quot;123&quot;:&quot;hello&quot;,&quot;456&quot;:&quot;world&quot;}&quot;&quot;&quot;) ==&gt;
-  Map(FooId(123) -&gt; &quot;hello&quot;, FooId(456) -&gt; &quot;world&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L641-L654" target="_blank"><i class="fa fa-link "></i></a></pre>
+  Map(FooId(123) -&gt; &quot;hello&quot;, FooId(456) -&gt; &quot;world&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L659-L672" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         Note that this only works for types <code>K</code> which serialize to JSON
@@ -962,14 +918,129 @@ readBinary[Map[Seq[Int], Int]](
     upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3)) -&gt; upack.Int32(6)
   )
 ) ==&gt;
-  Map(Seq(1) -&gt; 1, Seq(1, 2) -&gt; 3, Seq(1, 2, 3) -&gt; 6)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L656-L678" target="_blank"><i class="fa fa-link "></i></a></pre>
+  Map(Seq(1) -&gt; 1, Seq(1, 2) -&gt; 3, Seq(1, 2, 3) -&gt; 6)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L674-L696" target="_blank"><i class="fa fa-link "></i></a></pre>
+    <h1 id="OtherPer-Case-ClassAnnotations" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#OtherPer-Case-ClassAnnotations" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Other Per-Case-Class Annotations</h1>
+      <p>
+        The full list of annotations that can be applied to <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">case class</code>es
+        and <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">sealed trait</code>s is below:
+</p>
+      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">package upickle.implicits
+
+import scala.annotation.StaticAnnotation
+
+/**
+ * Annotation for control over the strings used to serialize your data structure. Can
+ * be applied in three ways:
+ *
+ * 1. To individual fields, in which case it overrides the JSON object fieldname
+ *
+ * 2. To `case class`es which are part of `sealed trait`s, where it overrides
+ *    the value of the `&quot;$type&quot;: &quot;foo&quot;` discriminator field
+ *
+ * 2. To `sealed trait`s themselves, where it overrides
+ *    the key of the `&quot;$type&quot;: &quot;foo&quot;` discriminator field
+ */
+class key(s: String) extends StaticAnnotation
+
+/**
+ * Annotation for fine-grained control of the `def serializeDefaults` configuration
+ * on the upickle bundle; can be applied to individual fields or to entire `case class`es,
+ * with finer-grained application taking precedence
+ */
+class serializeDefaults(s: Boolean) extends StaticAnnotation
+
+/**
+ * Annotation for fine-grained control of the `def allowUnknownKeys` configuration
+ * on the upickle bundle; can be applied to individual `case class`es, taking precedence
+ * over upickle pickler-level configuration
+ */
+class allowUnknownKeys(b: Boolean) extends StaticAnnotation</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/implicits/src/upickle/implicits/key.scala#L0-L31" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <h1 id="CustomConfiguration" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CustomConfiguration" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Custom Configuration</h1>
       <p>
         Often, there will be times that you want to customize something on a
         project-wide level. uPickle provides hooks in letting you subclass the
         <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">upickle.Api</code> trait to create your own bundles apart from the
-        in-built <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">upickle.default</code> and <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">upickle.legacy</code>. The
+        in-built <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">upickle.default</code> and <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">upickle.legacy</code>. These are listed
+        below in the <code>upickle.core.Config</code> trait:
+</p>
+      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">trait Config {
+  /**
+   * Specifies the name of the field used to distinguish different `case class`es under
+   * a `sealed trait`. Defaults to `$type`, but can be configured globally by overriding
+   * [[tagName]], or on a per-`sealed trait` basis via the `@key` annotation
+   */
+  def tagName: String = Annotator.defaultTagKey
+
+  /**
+   * Whether to use the fully-qualified name of `case class`es and `case object`s which
+   * are part of `sealed trait` hierarchies when serializing them and writing their `$type`
+   * key. Defaults to `false`, so `$type` key uses the shortest partially-qualified name.
+   * Can be set to `true` to use their fully-qualified name.
+   */
+  def objectTypeKeyWriteFullyQualified: Boolean = false
+
+  /**
+   * Whether or not to write `case class` keys which match their default values.
+   * Defaults to `false`, allowing those keys to be omitted. Can be set to `true`
+   * to always write field values even if they are equal to the default
+   */
+  def serializeDefaults: Boolean = false
+
+  /**
+   * Transform dictionary keys when writing `case class`es when reading. Can
+   * be overriden to provide custom mappings between Scala field names and JSON
+   * field names. Needs to be kept in sync with [[objectAttributeKeyWriteMap]]
+   *
+   * This customizes the mapping across all `case class`es fields handled by this
+   * upickle instance. This can be customized on a field-by-field basis using the
+   * [[upickle.implicits.key]] annotation on the `case class` field
+   */
+  def objectAttributeKeyReadMap(s: CharSequence): CharSequence = s
+
+  /**
+   * Map the name of JSON object fields to Scala `case class` fields during serialization.
+   * Must be kept in sync with [[objectAttributeKeyReadMap]]
+   */
+  def objectAttributeKeyWriteMap(s: CharSequence): CharSequence = s
+
+  /**
+   * Transforms the value of the `$type` field when writing `sealed trait`s,
+   * to allow custom mapping between the `case class` name and the `$type` field
+   * in the generated JSON. Must be kept in sync with [[objectTypeKeyWriteMap]].
+   *
+   * * This customizes the mapping across all `case class`es fields handled by this
+   * * upickle instance. This can be customized on a per-`sealed trait` basis using the
+   * * [[upickle.implicits.key]] annotation on the `case class`
+   */
+  def objectTypeKeyReadMap(s: CharSequence): CharSequence = s
+
+  /**
+   * Map the name of Scala `case class` type names to JSON `$type` field value during
+   * serialization. Must be kept in sync with [[objectTypeKeyReadMap]]
+   */
+  def objectTypeKeyWriteMap(s: CharSequence): CharSequence = s
+
+  /**
+   * Whether top-level `Some(t)`s and `None`s are serialized unboxed as `t` or
+   * `null`, rather than `[t]` or `[]`. This is generally what people expect,
+   * although it does cause issues where `Some(null)` when serialized and de-serialized
+   * can become `None`. Can be disabled to use the boxed serialization format
+   * as 0-or-1-element-arrays, presering round trip-ability at the expense of
+   * un-intuitiveness and verbosity
+   */
+  def optionsAsNulls: Boolean = true
+
+  /**
+   * Configure whether you want upickle to skip unknown keys during de-serialization
+   * of `case class`es. Can be overriden for the entire serializer via `override def`, and
+   * further overriden for individual `case class`es via the annotation
+   * `@upickle.implicits.allowUnknownKeys(b: Boolean)`
+   */
+  def allowUnknownKeys: Boolean = true
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/core/src/upickle/core/Config.scala#L3-L78" target="_blank"><i class="fa fa-link "></i></a></pre>
+
+      <p></p> The
         following example demonstrates how to customize a bundle to
         automatically <code>snake_case</code> all dictionary keys.
 
@@ -1007,34 +1078,19 @@ SnakePickle.write(Thing(1, &quot;gg&quot;)) ==&gt;
   &quot;&quot;&quot;{&quot;my_field_a&quot;:1,&quot;my_field_b&quot;:&quot;gg&quot;}&quot;&quot;&quot;
 
 SnakePickle.read[Thing](&quot;&quot;&quot;{&quot;my_field_a&quot;:1,&quot;my_field_b&quot;:&quot;gg&quot;}&quot;&quot;&quot;) ==&gt;
-  Thing(1, &quot;gg&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L331-L366" target="_blank"><i class="fa fa-link "></i></a></pre>
-</p>
-      <p>
-        If you are using uPickle to convert JSON from another source into Scala
-        data structures, you can also configure it to map <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Option[T]</code>s
-        to <code>null</code>s when the option is <code>None</code>:
-</p>
-      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">object OptionPickler extends upickle.AttributeTagged {
-  override implicit def OptionWriter[T: Writer]: Writer[Option[T]] =
-    implicitly[Writer[T]].comap[Option[T]] {
-      case None =&gt; null.asInstanceOf[T]
-      case Some(x) =&gt; x
-    }
-
-  override implicit def OptionReader[T: Reader]: Reader[Option[T]] = {
-    new Reader.Delegate[Any, Option[T]](implicitly[Reader[T]].map(Some(_))){
-      override def visitNull(index: Int) = None
-    }
-  }
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/OptionsAsNullTests.scala#L10-L23" target="_blank"><i class="fa fa-link "></i></a></pre>
+  Thing(1, &quot;gg&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L349-L384" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
-        This custom configuration allows you to treat <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">null</code>s as
-        <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">None</code>s and anything else as <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Some(...)</code>s. Simply
-        <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">import OptionPickler._</code> instead of the normal uPickle import
-        throughout your project and you'll have the customized reading/writing
-        available to you.
+        uPickle by default serializes Scala <code>None</code>s to JSON <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">null</code>s, and <code>Some(t)</code>s
+        to unboxed JSON <code>t</code>s. This is generally what people want, but can cause issues at
+        some edge cases (e.g. <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Some(null)</code> can round trip and become <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">None</code>).
+        You can use a more verbose serialization which converts Scala <code>None</code>s to boxed
+        JSON <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">[]]</code>s, and <code>Some(t)</code>s to boxed JSON <code>[t]</code>s
 </p>
+      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">object BoxedOptionsPickler extends upickle.AttributeTagged {
+  override def optionsAsNulls = false
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/BoxedOptionsTests.scala#L10-L13" target="_blank"><i class="fa fa-link "></i></a></pre>
+
       <p>
         You can also use a custom configuration to change how 64-bit <code>Long</code>s are
         handled. By default, small longs that can be represented exactly in 64-bit
@@ -1064,7 +1120,7 @@ object NumLongs extends upickle.AttributeTagged{
 }
 
 NumLongs.write(123: Long) ==&gt; &quot;123&quot;
-NumLongs.write(Long.MaxValue) ==&gt; &quot;9223372036854775807&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L369-L390" target="_blank"><i class="fa fa-link "></i></a></pre>
+NumLongs.write(Long.MaxValue) ==&gt; &quot;9223372036854775807&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L387-L408" target="_blank"><i class="fa fa-link "></i></a></pre>
 
 
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Limitations" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Limitations<a class=" scalatex-site-Styles-headerLink" href="#Limitations" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
@@ -1139,7 +1195,7 @@ object TypedFoo{
           ujson.Obj(&quot;myFieldA&quot; -&gt; 2, &quot;myFieldB&quot; -&gt; &quot;k&quot;)
         )
 
-        json0 ==&gt; json</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L460-L472" target="_blank"><i class="fa fa-link "></i></a></pre>
+        json0 ==&gt; json</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L478-L490" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         Or parsing them from strings, byte arrays or files:
@@ -1151,7 +1207,7 @@ json(0)(&quot;myFieldB&quot;).str   ==&gt; &quot;g&quot;
 json(1)(&quot;myFieldA&quot;).num   ==&gt; 2
 json(1)(&quot;myFieldB&quot;).str   ==&gt; &quot;k&quot;
 
-ujson.write(json)         ==&gt; str</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L482-L490" target="_blank"><i class="fa fa-link "></i></a></pre>
+ujson.write(json)         ==&gt; str</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L500-L508" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         <code>ujson.Js</code> ASTs are mutable, and can be modified before being re-serialized
@@ -1162,7 +1218,7 @@ val json: ujson.Value = ujson.read(str)
 
 json.arr.remove(1)
 json(0)(&quot;myFieldA&quot;) = 1337
-json(0)(&quot;myFieldB&quot;) = json(0)(&quot;myFieldB&quot;).str + &quot;lols&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L492-L499" target="_blank"><i class="fa fa-link "></i></a></pre>
+json(0)(&quot;myFieldB&quot;) = json(0)(&quot;myFieldB&quot;).str + &quot;lols&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L510-L517" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         You can also use the `_` shorthand syntax to update a JSON value in
@@ -1172,7 +1228,7 @@ json(0)(&quot;myFieldB&quot;) = json(0)(&quot;myFieldB&quot;).str + &quot;lols&q
 val json: ujson.Value = ujson.read(str)
 
 json(0)(&quot;myFieldA&quot;) = _.num + 100
-json(1)(&quot;myFieldB&quot;) = _.str + &quot;lol&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L502-L508" target="_blank"><i class="fa fa-link "></i></a></pre>
+json(1)(&quot;myFieldB&quot;) = _.str + &quot;lol&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L520-L526" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         case classes or other Scala data structures can be converted to
@@ -1186,176 +1242,117 @@ val json = upickle.default.writeJs(data)
 json.arr.remove(1)
 json(0)(&quot;myFieldA&quot;) = 1337
 
-upickle.default.read[Seq[Thing]](json)   ==&gt; Seq(Thing(1337, &quot;g&quot;))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L512-L519" target="_blank"><i class="fa fa-link "></i></a></pre>
+upickle.default.read[Seq[Thing]](json)   ==&gt; Seq(Thing(1337, &quot;g&quot;))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L530-L537" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <h1 id="JSONUtilities" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#JSONUtilities" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>JSON Utilities</h1>
       <p>
         uJson comes with some convenient utilities on the `ujson` package:
 </p>
-      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">def transform[T](t: Readable,
-                 v: upickle.core.Visitor[_, T],
-                 sortKeys: Boolean = false): T = {
-  BufferedValue.maybeSortKeysTransform(Readable, t, sortKeys, v)
-}
+      <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">package object ujson{
+  def transform[T](t: Readable,
+                   v: upickle.core.Visitor[_, T],
+                   sortKeys: Boolean = false): T = {
+    BufferedValue.maybeSortKeysTransform(Readable, t, sortKeys, v)
+  }
 
-  @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def transform[T](t: Readable,
-                 v: upickle.core.Visitor[_, T]): T = transform(t, v, sortKeys = false)
-/**
-  * Read the given JSON input as a JSON struct
-  */
-def read(s: Readable, trace: Boolean = false): Value.Value =
-  upickle.core.TraceVisitor.withTrace(trace, Value)(transform(s, _))
+  /**
+    * Read the given JSON input as a JSON struct
+    */
+  def read(s: Readable, trace: Boolean = false): Value.Value =
+    upickle.core.TraceVisitor.withTrace(trace, Value)(transform(s, _))
 
-def copy(t: Value.Value): Value.Value = transform(t, Value)
+  def copy(t: Value.Value): Value.Value = transform(t, Value)
 
-/**
-  * Write the given JSON struct as a JSON String
-  */
-def write(t: Value.Value,
-          indent: Int = -1,
-          escapeUnicode: Boolean = false,
-          sortKeys: Boolean = false): String = {
-  val writer = new java.io.StringWriter
-  writeTo(t, writer, indent, escapeUnicode, sortKeys)
-  writer.toString
-}
-
-// @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def write(t: Value.Value,
-          indent: Int,
-          escapeUnicode: Boolean): String = {
-  write(t, indent, escapeUnicode, sortKeys = false)
-}
-
-/**
-  * Write the given JSON struct as a JSON String to the given Writer
-  */
-def writeTo(t: Value.Value,
-            out: java.io.Writer,
+  /**
+    * Write the given JSON struct as a JSON String
+    */
+  def write(t: Value.Value,
             indent: Int = -1,
             escapeUnicode: Boolean = false,
-            sortKeys: Boolean = false): Unit = {
-  transform(t, Renderer(out, indent, escapeUnicode), sortKeys)
-}
+            sortKeys: Boolean = false): String = {
+    val writer = new java.io.StringWriter
+    writeTo(t, writer, indent, escapeUnicode, sortKeys)
+    writer.toString
+  }
 
-// @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def writeTo(t: Value.Value,
-            out: java.io.Writer,
-            indent: Int,
-            escapeUnicode: Boolean): Unit = {
-  writeTo(t, out, indent, escapeUnicode, sortKeys = false)
-}
+  /**
+    * Write the given JSON struct as a JSON String to the given Writer
+    */
+  def writeTo(t: Value.Value,
+              out: java.io.Writer,
+              indent: Int = -1,
+              escapeUnicode: Boolean = false,
+              sortKeys: Boolean = false): Unit = {
+    transform(t, Renderer(out, indent, escapeUnicode), sortKeys)
+  }
 
-def writeToOutputStream(t: Value.Value,
-                        out: java.io.OutputStream,
-                        indent: Int = -1,
-                        escapeUnicode: Boolean = false,
-                        sortKeys: Boolean = false): Unit = {
-  transform(t, new BaseByteRenderer(out, indent, escapeUnicode), sortKeys)
-}
+  def writeToOutputStream(t: Value.Value,
+                          out: java.io.OutputStream,
+                          indent: Int = -1,
+                          escapeUnicode: Boolean = false,
+                          sortKeys: Boolean = false): Unit = {
+    transform(t, new BaseByteRenderer(out, indent, escapeUnicode), sortKeys)
+  }
 
-// @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def writeToOutputStream(t: Value.Value,
-                        out: java.io.OutputStream,
-                        indent: Int,
-                        escapeUnicode: Boolean): Unit = {
-  writeToOutputStream(t, out, indent, escapeUnicode, sortKeys = false)
-}
+  def writeToByteArray(t: Value.Value,
+                       indent: Int = -1,
+                       escapeUnicode: Boolean = false,
+                       sortKeys: Boolean = false): Array[Byte] = {
+    val baos = new java.io.ByteArrayOutputStream
+    writeToOutputStream(t, baos, indent, escapeUnicode, sortKeys)
+    baos.toByteArray
+  }
 
-def writeToByteArray(t: Value.Value,
-                     indent: Int = -1,
-                     escapeUnicode: Boolean = false,
-                     sortKeys: Boolean = false): Array[Byte] = {
-  val baos = new java.io.ByteArrayOutputStream
-  writeToOutputStream(t, baos, indent, escapeUnicode, sortKeys)
-  baos.toByteArray
-}
-
-// @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def writeToByteArray(t: Value.Value,
-                     indent: Int,
-                     escapeUnicode: Boolean): Array[Byte] = {
-  writeToByteArray(t, indent, escapeUnicode, sortKeys = false)
-}
-
-/**
-  * Parse the given JSON input, failing if it is invalid
-  */
-def validate(s: Readable): Unit = transform(s, NoOpVisitor)
-/**
-  * Parse the given JSON input and write it to a string with
-  * the configured formatting
-  */
-def reformat(s: Readable,
-             indent: Int = -1,
-             escapeUnicode: Boolean = false,
-             sortKeys: Boolean = false): String = {
-  val writer = new java.io.StringWriter()
-  reformatTo(s, writer, indent, escapeUnicode, sortKeys)
-  writer.toString
-}
-
-// @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def reformat(s: Readable,
-             indent: Int,
-             escapeUnicode: Boolean): String = {
-  reformat(s, indent, escapeUnicode, sortKeys = false)
-}
-/**
-  * Parse the given JSON input and write it to a string with
-  * the configured formatting to the given Writer
-  */
-def reformatTo(s: Readable,
-               out: java.io.Writer,
+  /**
+    * Parse the given JSON input, failing if it is invalid
+    */
+  def validate(s: Readable): Unit = transform(s, NoOpVisitor)
+  /**
+    * Parse the given JSON input and write it to a string with
+    * the configured formatting
+    */
+  def reformat(s: Readable,
                indent: Int = -1,
                escapeUnicode: Boolean = false,
-               sortKeys: Boolean = false): Unit = {
-  transform(s, Renderer(out, indent, escapeUnicode), sortKeys)
-}
-
-// @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def reformatTo(s: Readable,
-               out: java.io.Writer,
-               indent: Int,
-               escapeUnicode: Boolean): Unit = {
-  reformatTo(s, out, indent, escapeUnicode, sortKeys = false)
-}
-/**
-  * Parse the given JSON input and write it to a string with
-  * the configured formatting to the given Writer
-  */
-def reformatToOutputStream(s: Readable,
-                           out: java.io.OutputStream,
-                           indent: Int = -1,
-                           escapeUnicode: Boolean = false,
-                           sortKeys: Boolean = false): Unit = {
-  transform(s, new BaseByteRenderer(out, indent, escapeUnicode), sortKeys)
-}
-
-// @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def reformatToOutputStream(s: Readable,
-                           out: java.io.OutputStream,
-                           indent: Int,
-                           escapeUnicode: Boolean): Unit = {
-  reformatToOutputStream(s, out, indent, escapeUnicode, sortKeys = false)
-}
-
-def reformatToByteArray(s: Readable,
-                        indent: Int = -1,
-                        escapeUnicode: Boolean = false,
-                        sortKeys: Boolean = false): Array[Byte] = {
-  val baos = new java.io.ByteArrayOutputStream
-  reformatToOutputStream(s, baos, indent, escapeUnicode, sortKeys)
-  baos.toByteArray
-}
-
-// @deprecated(&quot;Binary Compatibility Stub&quot;, &quot;upickle after 3.1.4&quot;)
-def reformatToByteArray(s: Readable,
-                        indent: Int,
-                        escapeUnicode: Boolean): Array[Byte] = {
-  reformatToByteArray(s, indent, escapeUnicode, sortKeys = false)
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/ujson/src/ujson/package.scala#L4-L168" target="_blank"><i class="fa fa-link "></i></a></pre>
+               sortKeys: Boolean = false): String = {
+    val writer = new java.io.StringWriter()
+    reformatTo(s, writer, indent, escapeUnicode, sortKeys)
+    writer.toString
+  }
+  
+  /**
+    * Parse the given JSON input and write it to a string with
+    * the configured formatting to the given Writer
+    */
+  def reformatTo(s: Readable,
+                 out: java.io.Writer,
+                 indent: Int = -1,
+                 escapeUnicode: Boolean = false,
+                 sortKeys: Boolean = false): Unit = {
+    transform(s, Renderer(out, indent, escapeUnicode), sortKeys)
+  }
+  
+  /**
+    * Parse the given JSON input and write it to a string with
+    * the configured formatting to the given Writer
+    */
+  def reformatToOutputStream(s: Readable,
+                             out: java.io.OutputStream,
+                             indent: Int = -1,
+                             escapeUnicode: Boolean = false,
+                             sortKeys: Boolean = false): Unit = {
+    transform(s, new BaseByteRenderer(out, indent, escapeUnicode), sortKeys)
+  }
+  
+  def reformatToByteArray(s: Readable,
+                          indent: Int = -1,
+                          escapeUnicode: Boolean = false,
+                          sortKeys: Boolean = false): Array[Byte] = {
+    val baos = new java.io.ByteArrayOutputStream
+    reformatToOutputStream(s, baos, indent, escapeUnicode, sortKeys)
+    baos.toByteArray
+  }
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/ujson/src/ujson/package.scala#L3-L108" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <h1 id="Transformations" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Transformations" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Transformations</h1>
       <p>
@@ -1401,7 +1398,7 @@ ujson.transform(&quot;[1, 2, 3]&quot;, StringRenderer(indent = 4)).toString ==&g
     |]&quot;&quot;&quot;.stripMargin
 
 // `transform` takes any `Transformable`, including byte arrays and files
-ujson.transform(&quot;[1, 2, 3]&quot;.getBytes, StringRenderer()).toString ==&gt; &quot;[1,2,3]&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L567-L592" target="_blank"><i class="fa fa-link "></i></a></pre>
+ujson.transform(&quot;[1, 2, 3]&quot;.getBytes, StringRenderer()).toString ==&gt; &quot;[1,2,3]&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L585-L610" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         All transformations from A to B using <code>ujson.transform</code> happen
@@ -1413,7 +1410,7 @@ ujson.transform(&quot;[1, 2, 3]&quot;.getBytes, StringRenderer()).toString ==&gt
         fashion:
 </p>
       <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">test {
-  ujson.transform(&quot;[1, 2, 3]&quot;, NoOpVisitor)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L594-L596" target="_blank"><i class="fa fa-link "></i></a></pre>
+  ujson.transform(&quot;[1, 2, 3]&quot;, NoOpVisitor)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L612-L614" target="_blank"><i class="fa fa-link "></i></a></pre>
 
       <p>
         The normal <code>upickle.default.read/write</code> methods to serialize Scala
@@ -1425,7 +1422,7 @@ ujson.transform(&quot;[1, 2, 3]&quot;.getBytes, StringRenderer()).toString ==&gt
   Seq(1, 2, 3)
 
 ujson.transform(upickle.default.transform(Seq(1, 2, 3)), StringRenderer()).toString ==&gt;
-  &quot;[1,2,3]&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L609-L614" target="_blank"><i class="fa fa-link "></i></a></pre>
+  &quot;[1,2,3]&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L627-L632" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <h1 id="OtherASTs" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#OtherASTs" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Other ASTs</h1>
       <p>
@@ -1647,14 +1644,14 @@ def validate(s: Readable): Unit = transform(s, NoOpVisitor)</code><a class=" sca
 val binary: Array[Byte] = upack.write(msg)
 
 val read = upack.read(binary)
-assert(msg == read)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L409-L418" target="_blank"><i class="fa fa-link "></i></a></pre>
+assert(msg == read)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L427-L436" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <p>
       You can read/write Scala values to <code>upack.Msg</code>s using <code>readBinary</code>/<code>writeMsg</code>:
 </p>
     <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val big = Big(1, true, &quot;lol&quot;, 'Z', Thing(7, &quot;&quot;))
 val msg: upack.Msg = upickle.default.writeMsg(big)
-upickle.default.readBinary[Big](msg) ==&gt; big</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L421-L424" target="_blank"><i class="fa fa-link "></i></a></pre>
+upickle.default.readBinary[Big](msg) ==&gt; big</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L439-L442" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <p>
       Or include <code>upack.Msg</code>s inside <code>Seq</code>s, case-classes and other
@@ -1667,7 +1664,7 @@ upickle.default.readBinary[Big](msg) ==&gt; big</code><a class=" scalatex-site-S
 
 val binary: Array[Byte] = upickle.default.writeBinary(msgSeq)
 
-upickle.default.readBinary[Seq[upack.Msg]](binary) ==&gt; msgSeq</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L427-L435" target="_blank"><i class="fa fa-link "></i></a></pre>
+upickle.default.readBinary[Seq[upack.Msg]](binary) ==&gt; msgSeq</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L445-L453" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <p>
       You can also convert the uPack messages or binaries to <code>ujson.Value</code>s via
@@ -1692,7 +1689,7 @@ upack.transform(binary, new ujson.StringRenderer()).toString ==&gt;
 // Some messagepack structs cannot be converted to valid JSON, e.g.
 // they may have maps with non-string keys. These can still be pretty-printed:
 val msg2 = upack.Obj(upack.Arr(upack.Int32(1), upack.Int32(2)) -&gt; upack.Int32(1))
-upack.transform(msg2, new ujson.StringRenderer()).toString ==&gt; &quot;&quot;&quot;{&quot;[1,2]&quot;:1}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L438-L457" target="_blank"><i class="fa fa-link "></i></a></pre>
+upack.transform(msg2, new ujson.StringRenderer()).toString ==&gt; &quot;&quot;&quot;{&quot;[1,2]&quot;:1}&quot;&quot;&quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/upickle/tree/main/upickle/test/src/upickle/example/ExampleTests.scala#L456-L475" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <p>
       Note that such a conversion between MessagePack structs and JSON data is
@@ -1857,6 +1854,50 @@ upack.transform(msg2, new ujson.StringRenderer()).toString ==&gt; &quot;&quot;&q
       JSON library, and inherits a lot of it's performance from Erik's work.
 </p>
   <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="VersionHistory" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Version History<a class=" scalatex-site-Styles-headerLink" href="#VersionHistory" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
+    <h1 id="4.0.0-RC1" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#4.0.0-RC1" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>4.0.0-RC1</h1>
+      <ul>
+        <li>
+          <b>4.0.0 is a major breaking change in uPickle, including in the serialization
+          format for many common data types (<code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Option</code>s, <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">sealed trait</code>s,
+          etc.), as well as breaking binary compatibility. Please be
+          careful upgrading and follow the instructions below.</b></li>
+        <li>
+          uPickle 4.0.0-RC1 is a release candidate. It breaks backwards compatibility with
+          uPickle 3.x (binary and serialization), but makes no promises for compatibility
+          with uPickle 4.0.0 final. Hopefully nothing will need to change between 4.0.0-RC1
+          and 4.0.0 final, but it cannot be guaranteed.</li>
+        <li>
+          Shorten <code>$type</code> tag used for discriminating <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">sealed trait</code> cases
+          <a href="https://github.com/com-lihaoyi/upickle/pull/596">#594</a></li>
+        <li>
+          Unbox first level of <code>Options</code> when serializing JSON
+          <a href="https://github.com/com-lihaoyi/upickle/pull/598">#598</a></li>
+        <li>
+          Make uPickle derivation in Scala 3 call <code>apply</code> method instead of <code>new</code>
+          <a href="https://github.com/com-lihaoyi/upickle/pull/607">#607</a></li>
+        <li>
+          Allow field-level and class-level application of <code>serializeDefaults</code> as an annotation
+          <a href="https://github.com/com-lihaoyi/upickle/pull/608">#608</a>.</li>
+        <li>
+          To upgrade to uPickle 4.0.0 from uPickle 3.x while preserving the existing serialization
+          format, please add <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">override def objectTypeKeyWriteFullyQualified = true</code> and
+          <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">override def optionsAsNulls = false</code> to your upickle
+          <a href="#CustomConfiguration">Custom Configuration</a>. If you are currently using <code>upickle.default</code>, please define
+          a <a href="#CustomConfiguration">Custom Configuration</a> and replace all usage of <code>upickle.default</code>
+          with it. This will preserve the prior serialization format, allowing a smooth upgrade</li>
+        <li>
+          <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">override def objectTypeKeyWriteFullyQualified = true</code> is both forwards and
+          backwards compatible. Once your entire system is on uPickle 4.0.0, you can incrementally
+          disable <code>objectTypeKeyWriteFullyQualified</code>, and uPickle 4.0.0 will be able to read
+          the generate JSON whether <code>objectTypeKeyWriteFullyQualified</code> is <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">true</code>
+          or <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">false</code>.</li>
+        <li>
+          <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">override def optionsAsNulls = false</code> is <b>not</b> forwards or backwards
+          compatible, and cannot be due to the nature of the change in the serialization
+          format. If you are unable to do a &quot;big bang&quot; upgrade of your entire system (both
+          code and serialized data) to uPickle 4.0.0, it may be best to continue using
+          <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">override def optionsAsNulls = false</code> for the foreseeable future.
+</li></ul>
     <h1 id="3.3.1" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#3.3.1" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>3.3.1</h1>
       <ul>
         <li>
@@ -2424,7 +2465,7 @@ upack.transform(msg2, new ujson.StringRenderer()).toString ==&gt; &quot;&quot;&q
           Specification of the exception-throwing behavior: instead of failing with random <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">MatchError</code>s or similar, parse failures now are restricted to subclasses <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">upickle.Invalid</code> which define different failure modes.</li></ul></div>
 </div><script>
     scalatex.scrollspy.Controller().main(
-      [{"value":"uPickle 3.3.1","children":[{"value":"Getting Started","children":[{"value":"ScalaJS","children":[]},{"value":"Scala Versions","children":[]}]},{"value":"Basics","children":[{"value":"Builtins","children":[{"value":"Primitives","children":[]},{"value":"Collections","children":[]},{"value":"Case Classes","children":[]},{"value":"Scala 3 Deriving","children":[]}]},{"value":"Read/Writing Other Things","children":[]},{"value":"Nulls","children":[]},{"value":"Defaults","children":[]},{"value":"Supported Types","children":[]},{"value":"Common Operations","children":[]}]},{"value":"Customization","children":[{"value":"Custom Picklers","children":[]},{"value":"Custom Keys","children":[]},{"value":"JSON Dictionary Formats","children":[]},{"value":"Custom Configuration","children":[]}]},{"value":"Limitations","children":[{"value":"Manual Sealed Trait Picklers","children":[]}]},{"value":"uJson","children":[{"value":"Construction","children":[]},{"value":"JSON Utilities","children":[]},{"value":"Transformations","children":[]},{"value":"Other ASTs","children":[{"value":"Argonaut","children":[]},{"value":"Circe","children":[]},{"value":"Play-Json","children":[]},{"value":"Json4s","children":[]},{"value":"Cross-Library Conversions","children":[]}]}]},{"value":"uPack","children":[]},{"value":"Performance","children":[{"value":"JVM Case Class Serialization Performance","children":[]},{"value":"JS Case Class Serialization Performance","children":[]}]},{"value":"Version History","children":[{"value":"3.3.1","children":[]},{"value":"3.3.0","children":[]},{"value":"3.2.0","children":[]},{"value":"3.1.4","children":[]},{"value":"3.1.3","children":[]},{"value":"3.1.2","children":[]},{"value":"3.1.1","children":[]},{"value":"3.1.0","children":[]},{"value":"3.0.0","children":[]},{"value":"2.0.0","children":[]},{"value":"1.6.0","children":[]},{"value":"1.5.0","children":[]},{"value":"1.4.3","children":[]},{"value":"1.4.2","children":[]},{"value":"1.4.1","children":[]},{"value":"1.4.0","children":[]},{"value":"1.3.11","children":[]},{"value":"1.3.8","children":[]},{"value":"1.3.7","children":[]},{"value":"1.3.0","children":[]},{"value":"1.2.0","children":[]},{"value":"0.9.6","children":[]},{"value":"0.9.0","children":[]},{"value":"0.8.0","children":[]},{"value":"0.7.5","children":[]},{"value":"0.7.1","children":[]},{"value":"0.6.7","children":[]},{"value":"0.6.6","children":[]},{"value":"0.6.5","children":[]},{"value":"0.6.4","children":[]},{"value":"0.6.3","children":[]},{"value":"0.6.2","children":[]},{"value":"0.6.0","children":[]},{"value":"0.5.1","children":[]},{"value":"0.4.3","children":[]},{"value":"0.4.1","children":[]},{"value":"0.4.1","children":[]},{"value":"0.4.0","children":[]},{"value":"0.3.9","children":[]},{"value":"0.3.8","children":[]},{"value":"0.3.7","children":[]},{"value":"0.3.6","children":[]},{"value":"0.3.5","children":[]},{"value":"0.3.4","children":[]},{"value":"0.3.3","children":[]},{"value":"0.3.2","children":[]},{"value":"0.3.1","children":[]},{"value":"0.3.0","children":[]},{"value":"0.2.8","children":[]},{"value":"0.2.7","children":[]},{"value":"0.2.6","children":[]},{"value":"0.2.5","children":[]},{"value":"0.2.4","children":[]},{"value":"0.2.3","children":[]},{"value":"0.2.2","children":[]},{"value":"0.2.1","children":[]},{"value":"0.2.0","children":[]},{"value":"0.1.7","children":[]},{"value":"0.1.6","children":[]},{"value":"0.1.5","children":[]},{"value":"0.1.4","children":[]},{"value":"0.1.3","children":[]}]}]}]
+      [{"value":"uPickle 4.0.0-RC1","children":[{"value":"Getting Started","children":[{"value":"ScalaJS","children":[]},{"value":"Scala Versions","children":[]}]},{"value":"Basics","children":[{"value":"Builtins","children":[{"value":"Primitives","children":[]},{"value":"Collections","children":[]},{"value":"Case Classes","children":[]},{"value":"Scala 3 Deriving","children":[]}]},{"value":"Read/Writing Other Things","children":[]},{"value":"Nulls","children":[]},{"value":"Defaults","children":[]},{"value":"Supported Types","children":[]},{"value":"Common Operations","children":[]}]},{"value":"Customization","children":[{"value":"Custom Picklers","children":[]},{"value":"Custom Keys","children":[]},{"value":"JSON Dictionary Formats","children":[]},{"value":"Other Per-Case-Class Annotations","children":[]},{"value":"Custom Configuration","children":[]}]},{"value":"Limitations","children":[{"value":"Manual Sealed Trait Picklers","children":[]}]},{"value":"uJson","children":[{"value":"Construction","children":[]},{"value":"JSON Utilities","children":[]},{"value":"Transformations","children":[]},{"value":"Other ASTs","children":[{"value":"Argonaut","children":[]},{"value":"Circe","children":[]},{"value":"Play-Json","children":[]},{"value":"Json4s","children":[]},{"value":"Cross-Library Conversions","children":[]}]}]},{"value":"uPack","children":[]},{"value":"Performance","children":[{"value":"JVM Case Class Serialization Performance","children":[]},{"value":"JS Case Class Serialization Performance","children":[]}]},{"value":"Version History","children":[{"value":"4.0.0-RC1","children":[]},{"value":"3.3.1","children":[]},{"value":"3.3.0","children":[]},{"value":"3.2.0","children":[]},{"value":"3.1.4","children":[]},{"value":"3.1.3","children":[]},{"value":"3.1.2","children":[]},{"value":"3.1.1","children":[]},{"value":"3.1.0","children":[]},{"value":"3.0.0","children":[]},{"value":"2.0.0","children":[]},{"value":"1.6.0","children":[]},{"value":"1.5.0","children":[]},{"value":"1.4.3","children":[]},{"value":"1.4.2","children":[]},{"value":"1.4.1","children":[]},{"value":"1.4.0","children":[]},{"value":"1.3.11","children":[]},{"value":"1.3.8","children":[]},{"value":"1.3.7","children":[]},{"value":"1.3.0","children":[]},{"value":"1.2.0","children":[]},{"value":"0.9.6","children":[]},{"value":"0.9.0","children":[]},{"value":"0.8.0","children":[]},{"value":"0.7.5","children":[]},{"value":"0.7.1","children":[]},{"value":"0.6.7","children":[]},{"value":"0.6.6","children":[]},{"value":"0.6.5","children":[]},{"value":"0.6.4","children":[]},{"value":"0.6.3","children":[]},{"value":"0.6.2","children":[]},{"value":"0.6.0","children":[]},{"value":"0.5.1","children":[]},{"value":"0.4.3","children":[]},{"value":"0.4.1","children":[]},{"value":"0.4.1","children":[]},{"value":"0.4.0","children":[]},{"value":"0.3.9","children":[]},{"value":"0.3.8","children":[]},{"value":"0.3.7","children":[]},{"value":"0.3.6","children":[]},{"value":"0.3.5","children":[]},{"value":"0.3.4","children":[]},{"value":"0.3.3","children":[]},{"value":"0.3.2","children":[]},{"value":"0.3.1","children":[]},{"value":"0.3.0","children":[]},{"value":"0.2.8","children":[]},{"value":"0.2.7","children":[]},{"value":"0.2.6","children":[]},{"value":"0.2.5","children":[]},{"value":"0.2.4","children":[]},{"value":"0.2.3","children":[]},{"value":"0.2.2","children":[]},{"value":"0.2.1","children":[]},{"value":"0.2.0","children":[]},{"value":"0.1.7","children":[]},{"value":"0.1.6","children":[]},{"value":"0.1.5","children":[]},{"value":"0.1.4","children":[]},{"value":"0.1.3","children":[]}]}]}]
   )</script><script>
     ['DOMContentLoaded', 'load'].forEach(function(ev){
       addEventListener(ev, function(){
@@ -2434,4 +2475,4 @@ upack.transform(msg2, new ujson.StringRenderer()).toString ==&gt; &quot;&quot;&q
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
