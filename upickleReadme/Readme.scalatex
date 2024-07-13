@@ -25,7 +25,7 @@
   )
 )
 
-@sect("uPickle 3.3.1")
+@sect("uPickle 4.0.0-RC1")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -74,8 +74,8 @@
 
   @sect{Getting Started}
     @hl.scala
-      "com.lihaoyi" %% "upickle" % "3.3.1" // SBT
-      ivy"com.lihaoyi::upickle:3.3.1" // Mill
+      "com.lihaoyi" %% "upickle" % "4.0.0-RC1" // SBT
+      ivy"com.lihaoyi::upickle:4.0.0-RC1" // Mill
 
     @p
       And then you can immediately start writing and reading common Scala
@@ -93,8 +93,8 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        "com.lihaoyi" %%% "upickle" % "3.3.1" // SBT
-        ivy"com.lihaoyi::upickle::3.3.1" // Mill
+        "com.lihaoyi" %%% "upickle" % "4.0.0-RC1" // SBT
+        ivy"com.lihaoyi::upickle::4.0.0-RC1" // Mill
 
     @sect{Scala Versions}
       @p
@@ -148,7 +148,7 @@
         @hl.ref(exampleTests, Seq("\"more\"", "\"seqs\"", ""))
 
         @p
-          @code{Option}s are serialized as JSON lists with 0 or 1 element
+          @code{Option}s are serialized as nullable values
 
         @hl.ref(exampleTests, Seq("\"more\"", "\"options\"", ""))
 
@@ -185,7 +185,7 @@
           After that, you can begin serializing that case class.
 
         @hl.ref(exampleTests, Seq("object Simple", ""))
-        @hl.ref(exampleTests, Seq("\"more\"", "\"caseClass\"", ""), "        }")
+        @hl.ref(exampleTests, Seq("\"more\"", "\"caseClass\"", ""))
 
         @p
           Sealed hierarchies are serialized as tagged values, the serialized
@@ -253,7 +253,7 @@
       
         Nulls serialize into JSON nulls, as you would expect
       
-      @hl.ref(exampleTests, Seq("\"more\"", "\"null\"", ""), "  }")
+      @hl.ref(exampleTests, Seq("test(\"null\")", ""))
       
       @p
         uPickle only throws exceptions on unpickling; if a pickler is
@@ -290,6 +290,12 @@
         @hl.scala{""} for Strings, or wrap it in an @hl.scala{Option[T]} and
         make the default @hl.scala{None}) and uPickle will happily read the
         old data, filling in the missing field using the default value.
+
+      @p
+        You can enable serialization of default values a per-field or per-case-class basis
+        using the @hl.scala{@@upickle.implicits.serializeDefaults(true)}
+        annotation on that field or @hl.scala{case class}, or globally on a
+        @sect.ref{Custom Configuration} via @hl.scala{override def serializeDefaults = true}
 
     @sect{Supported Types}
       @p
@@ -328,13 +334,12 @@
            serializable up to 64 fields.
 
       @p
-        Case classes are serialized using the @hl.scala{apply} and
-        @hl.scala{unapply} methods on their companion objects. This means that
-        you can make your own classes serializable by giving them companions
-         @hl.scala{apply} and @hl.scala{unapply}. @hl.scala{sealed} hierarchies
-         are serialized as tagged unions: whatever the serialization of the
-         actual object, together with the fully-qualified name of its class, so
-          the correct class in the sealed hierarchy can be reconstituted later.
+        Case classes are de-serialized using the @hl.scala{apply} method on their
+        companion objects. @hl.scala{sealed} hierarchies
+        are serialized as tagged unions: whatever the serialization of the
+        actual object, together with the partially-qualified name of its class
+        in a @hl.scala{"$type": "..."} field, so
+        the correct class in the sealed hierarchy can be reconstituted later.
 
       @p
         That concludes the list of supported types. Anything else is not supported
@@ -378,10 +383,8 @@
 
     @sect{Custom Keys}
       @p
-
         uPickle allows you to specify the key that a field is serialized with
         via a @hl.scala{@@key} annotation
-
 
       @hl.ref(exampleTests, Seq("object Keyed", ""))
       @hl.ref(exampleTests, Seq("\"keyed\"", "\"attrs\"", ""))
@@ -428,6 +431,8 @@
         This is useful in cases where you need to override uPickle's default
         behavior, for example to preserve compatibility with another JSON library.
 
+
+
     @sect{JSON Dictionary Formats}
       @p
         By default, serializing a @hl.scala{Map[K, V]} generates a nested
@@ -464,6 +469,12 @@
         the restriction that dictionary keys can only be strings:
 
       @hl.ref(exampleTests, Seq("msgPackMapKeys", ""))
+    @sect{Other Per-Case-Class Annotations}
+      @p
+        The full list of annotations that can be applied to @hl.scala{case class}es
+        and @hl.scala{sealed trait}s is below:
+
+      @hl.ref(wd / "upickle" / "implicits" / "src" / "upickle" / "implicits" / "key.scala", Nil)
 
     @sect{Custom Configuration}
       @p
@@ -586,7 +597,7 @@
       @p
         uJson comes with some convenient utilities on the `ujson` package:
 
-      @hl.ref(wd/'ujson/'src/'ujson/"package.scala", Seq("package object ujson", ""), "// End ujson")
+      @hl.ref(wd/'ujson/'src/'ujson/"package.scala", Seq("package object ujson"))
 
     @sect{Transformations}
       @p
@@ -904,6 +915,50 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{4.0.0-RC1}
+      @ul
+        @li
+          @b{4.0.0 is a major breaking change in uPickle, including in the serialization
+          format for many common data types (@hl.scala{Option}s, @hl.scala{sealed trait}s,
+          etc.), as well as breaking binary compatibility. Please be
+          careful upgrading and follow the instructions below.}
+        @li
+          uPickle 4.0.0-RC1 is a release candidate. It breaks backwards compatibility with
+          uPickle 3.x (binary and serialization), but makes no promises for compatibility
+          with uPickle 4.0.0 final. Hopefully nothing will need to change between 4.0.0-RC1
+          and 4.0.0 final, but it cannot be guaranteed.
+        @li
+          Shorten @code{$type} tag used for discriminating @hl.scala{sealed trait} cases
+          @lnk("#594", "https://github.com/com-lihaoyi/upickle/pull/596")
+        @li
+          Unbox first level of @code{Options} when serializing JSON
+          @lnk("#598", "https://github.com/com-lihaoyi/upickle/pull/598")
+        @li
+          Make uPickle derivation in Scala 3 call @code{apply} method instead of @code{new}
+          @lnk("#607", "https://github.com/com-lihaoyi/upickle/pull/607")
+        @li
+          Allow field-level and class-level application of @code{serializeDefaults} as an annotation
+          @lnk("#608", "https://github.com/com-lihaoyi/upickle/pull/608").
+        @li
+          To upgrade to uPickle 4.0.0 from uPickle 3.x while preserving the existing serialization
+          format, please add @hl.scala{override def objectTypeKeyWriteFullyQualified = true} and
+          @hl.scala{override def optionsAsNulls = false} to your upickle
+          @sect.ref{Custom Configuration}. If you are currently using @code{upickle.default}, please define
+          a @sect.ref{Custom Configuration} and replace all usage of @code{upickle.default}
+          with it. This will preserve the prior serialization format, allowing a smooth upgrade
+        @li
+          @hl.scala{override def objectTypeKeyWriteFullyQualified = true} is both forwards and
+          backwards compatible. Once your entire system is on uPickle 4.0.0, you can incrementally
+          disable @code{objectTypeKeyWriteFullyQualified}, and uPickle 4.0.0 will be able to read
+          the generate JSON whether @code{objectTypeKeyWriteFullyQualified} is @hl.scala{true}
+          or @hl.scala{false}.
+        @li
+          @hl.scala{override def optionsAsNulls = false} is @b{not} forwards or backwards
+          compatible, and cannot be due to the nature of the change in the serialization
+          format. If you are unable to do a "big bang" upgrade of your entire system (both
+          code and serialized data) to uPickle 4.0.0, it may be best to continue using
+          @hl.scala{override def optionsAsNulls = false} for the foreseeable future.
+
     @sect{3.3.1}
       @ul
         @li
