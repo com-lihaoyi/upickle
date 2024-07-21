@@ -74,6 +74,24 @@ sealed trait Msg extends Readable with geny.Writable{
     case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
   }
   /**
+    * Returns the `Float` value of this [[Msg]], fails if it is not
+    * a [[upack.Float32]] or [[upack.Float64]]
+    */
+  def float32 = this match{
+    case Float32(value) => value
+    case Float64(value) => value.toFloat
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
+  }
+  /**
+    * Returns the `Double` value of this [[Msg]], fails if it is not
+    * a [[upack.Float32]] or [[upack.Float64]]
+    */
+  def float64 = this match{
+    case Float32(value) => value.toDouble
+    case Float64(value) => value
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
+  }
+  /**
     * Returns the `Boolean` value of this [[Msg]], fails if it is not
     * a [[upack.Bool]]
     */
