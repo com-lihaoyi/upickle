@@ -282,7 +282,7 @@ object upickle extends Module{
          * Auto-generated picklers and unpicklers, used for creating the 22
          * versions of tuple-picklers and case-class picklers
          */
-        trait Generated extends TupleReadWriters{
+        trait Generated extends TupleReadWriters { self: upickle.core.Config =>
           ${tuples.mkString("\n")}
         }
       """)
