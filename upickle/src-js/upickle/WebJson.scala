@@ -2,7 +2,7 @@ package upickle
 
 import scala.scalajs.js
 
-trait WebJson extends upickle.core.Types {
+trait WebJson extends upickle.core.Types { self: upickle.core.Config =>
   object web {
     def read[T: Reader](s: String) = {
       ujson.WebJson.transform(js.JSON.parse(s), implicitly[Reader[T]])

@@ -3,14 +3,14 @@ package upickle.implicits
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.ClassTag
-import upickle.core.{Abort, AbortException, ArrVisitor, NoOpVisitor, ObjVisitor, Visitor}
+import upickle.core.{Abort, AbortException, ArrVisitor, Config, NoOpVisitor, ObjVisitor, Visitor}
 
 /**
 * Basic functionality to be able to read and write objects. Kept as a trait so
 * other internal files can use it, while also mixing it into the `upickle`
 * package to form the public API1
 */
-trait CaseClassReadWriters extends upickle.core.Types{
+trait CaseClassReadWriters extends upickle.core.Types { self: Config =>
   abstract class CaseClassReader[V] extends SimpleReader[V] {
     override def expectedMsg = "expected dictionary"
 

@@ -46,19 +46,11 @@ trait CommonPublishModule
 
   def publishVersion = VcsVersion.vcsState().format()
   def mimaReportBinaryIssues() =
-    if (true || this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) T.command()
+    if (this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) T.command()
     else super.mimaReportBinaryIssues()
 
   def mimaPreviousVersions = Seq(
-    "3.0.0",
-    "3.1.0",
-    "3.1.1",
-    "3.1.2",
-    "3.1.3",
-    "3.1.4",
-    "3.2.0",
-    "3.3.0",
-    "3.3.1",
+    "4.0.0",
   )
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
@@ -290,7 +282,7 @@ object upickle extends Module{
          * Auto-generated picklers and unpicklers, used for creating the 22
          * versions of tuple-picklers and case-class picklers
          */
-        trait Generated extends TupleReadWriters{
+        trait Generated extends TupleReadWriters { self: upickle.core.Config =>
           ${tuples.mkString("\n")}
         }
       """)
