@@ -7,7 +7,7 @@ import utest._
 object ExampleJsonTests extends TestSuite {
   def check(name: String) = {
     val msgPack = ujson
-      .read(Files.readAllBytes(Paths.get("exampleJson", name)))
+      .read(Files.readAllBytes(Paths.get(sys.env("EXAMPLE_JSON"), name)))
       .transform(new MsgPackWriter(new java.io.ByteArrayOutputStream))
       .toByteArray
     TestUtil.checkParse(msgPack, true)

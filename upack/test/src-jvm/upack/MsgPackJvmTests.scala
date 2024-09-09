@@ -22,9 +22,10 @@ object MsgPackJvmTests extends TestSuite{
 
       // Taken from:
       // https://github.com/msgpack/msgpack-ruby/tree/a22d8268f82e0f2ae95f038285af43ce5971810e/spec
-      val casesJson = "upack/test/resources/cases.json"
-      val casesMsg = "upack/test/resources/cases.msg"
-      val casesCompactMsg = "upack/test/resources/cases_compact.msg"
+      val resources = sys.env("MILL_TEST_RESOURCE_FOLDER")
+      val casesJson = resources + "/cases.json"
+      val casesMsg = resources + "/cases.msg"
+      val casesCompactMsg = resources + "/cases_compact.msg"
       val expectedJson = ujson.read(readBytes(casesJson))
 //      println("---msgs---")
       val msg = readMsgs(casesMsg)

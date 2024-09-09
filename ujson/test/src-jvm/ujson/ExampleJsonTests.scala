@@ -5,9 +5,10 @@ import java.nio.file.{Files, Paths}
 import utest._
 
 object ExampleJsonTests extends TestSuite {
-  def check(name: String) = {
-    TestUtil.checkParse(new String(Files.readAllBytes(Paths.get("exampleJson", name))), true)
-  }
+  def check(name: String) = TestUtil.checkParse(
+    new String(Files.readAllBytes(Paths.get(sys.env("EXAMPLE_JSON"), name))),
+    true
+  )
   val tests = Tests {
     test - check("australia-abc.json")
     test - check("bitcoin.json")
