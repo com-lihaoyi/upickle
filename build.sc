@@ -19,7 +19,7 @@ val scala213  = "2.13.11"
 
 val scala3   = "3.4.2"
 val scalaNative = "0.5.0"
-val acyclic = "0.3.12"
+val acyclic = "0.3.13"
 
 val sourcecode = "0.4.2"
 
