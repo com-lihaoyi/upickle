@@ -309,12 +309,15 @@ def tagNameImpl0[T](transform: String => String)(using Quotes, Type[T]): Expr[St
 inline def shortTagName[T]: String = ${ shortTagNameImpl[T] }
 def shortTagNameImpl[T](using Quotes, Type[T]): Expr[String] =
   import quotes.reflect._
-  val sym = TypeTree.of[T].symbol
+  val myself = if (TypeRepr.of[T].baseClasses.contains(TypeRepr.of[T].typeSymbol))
+    Some(TypeRepr.of[T].typeSymbol.fullName.split('.'))
+  else None
   val segments = TypeRepr.of[T].baseClasses
     .filter(_.flags.is(Flags.Sealed))
     .flatMap(_.children)
     .filter(_.flags.is(Flags.Case))
-    .map(_.fullName.split('.'))
+    .map(_.fullName.split('.')) ++
+    myself.toList
 
   val identicalSegmentCount = Range(0, segments.map(_.length).max - 1)
     .takeWhile(i => segments.map(_.lift(i)).distinct.size == 1)
