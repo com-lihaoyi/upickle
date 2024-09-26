@@ -219,9 +219,9 @@ object Macros {
           fail(tpe, _),
         )
 
-        val myself: Option[Symbol] = sealedParents.find(_ == tpe.typeSymbol)
+        val sealedClassSymbol: Option[Symbol] = sealedParents.find(_ == tpe.typeSymbol)
         val segments =
-          myself.toList.map(_.fullName.split('.')) ++
+          sealedClassSymbol.toList.map(_.fullName.split('.')) ++
             sealedParents
             .flatMap(_.asClass.knownDirectSubclasses)
             .map(_.fullName.split('.'))
