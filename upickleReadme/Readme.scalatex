@@ -923,7 +923,8 @@
     @sect{4.0.1}
       @ul
         @li
-          Respect @{Config#tagName} in @code{Reader.merge} and @code{ReadWriter.merge} @lnk("#619", "https://github.com/com-lihaoyi/upickle/pull/619")
+          Respect @code{Config#tagName} in @code{Reader.merge} and @code{ReadWriter.merge}
+          @lnk("#619", "https://github.com/com-lihaoyi/upickle/pull/619")
     @sect{4.0.0}
       @ul
         @li
