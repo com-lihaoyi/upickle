@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
 * other internal files can use it, while also mixing it into the `upickle`
 * package to form the public API1
 */
-trait Types{ types =>
+trait Types { types: Config =>
 
   /**
     * A combined [[Reader]] and [[Writer]], along with some utility methods.
@@ -39,7 +39,7 @@ trait Types{ types =>
       new TaggedReadWriter.Node(tagKey, rws.asInstanceOf[Seq[TaggedReadWriter[T]]]:_*)
     }
 
-    def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = merge(Annotator.defaultTagKey, rws:_*)
+    def merge[T](rws: ReadWriter[_ <: T]*): TaggedReadWriter[T] = merge(tagName, rws:_*)
 
     implicit def join[T](implicit r0: Reader[T], w0: Writer[T]): ReadWriter[T] = (r0, w0) match{
       // Make sure we preserve the tagged-ness of the Readers/Writers being
@@ -119,7 +119,7 @@ trait Types{ types =>
       new TaggedReader.Node(tagKey, readers0.asInstanceOf[Seq[TaggedReader[T]]]:_*)
     }
 
-    def merge[T](readers0: Reader[_ <: T]*): TaggedReader.Node[T] = merge(Annotator.defaultTagKey, readers0:_*)
+    def merge[T](readers0: Reader[_ <: T]*): TaggedReader.Node[T] = merge(tagName, readers0:_*)
   }
 
   /**
@@ -164,7 +164,7 @@ trait Types{ types =>
   }
 
   trait TaggedReader[T] extends SimpleReader[T]{
-    private[upickle] def tagKey: String = Annotator.defaultTagKey
+    private[upickle] def tagKey: String = tagName
 
     def findReader(s: String): Reader[T]
 

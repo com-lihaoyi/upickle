@@ -219,11 +219,13 @@ object Macros {
           fail(tpe, _),
         )
 
-
+        val sealedClassSymbol: Option[Symbol] = sealedParents.find(_ == tpe.typeSymbol)
         val segments =
-          sealedParents
+          sealedClassSymbol.toList.map(_.fullName.split('.')) ++
+            sealedParents
             .flatMap(_.asClass.knownDirectSubclasses)
             .map(_.fullName.split('.'))
+
 
         // -1 because even if there is only one subclass, and so no name segments
         // are needed to differentiate between them, we want to keep at least

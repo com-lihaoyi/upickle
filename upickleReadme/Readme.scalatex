@@ -25,7 +25,7 @@
   )
 )
 
-@sect("uPickle 4.0.0-RC1")
+@sect("uPickle 4.0.2")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://gitter.im/lihaoyi/upickle")(
@@ -74,8 +74,8 @@
 
   @sect{Getting Started}
     @hl.scala
-      "com.lihaoyi" %% "upickle" % "4.0.0-RC1" // SBT
-      ivy"com.lihaoyi::upickle:4.0.0-RC1" // Mill
+      "com.lihaoyi" %% "upickle" % "4.0.2" // SBT
+      ivy"com.lihaoyi::upickle:4.0.2" // Mill
 
     @p
       And then you can immediately start writing and reading common Scala
@@ -93,8 +93,8 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        "com.lihaoyi" %%% "upickle" % "4.0.0-RC1" // SBT
-        ivy"com.lihaoyi::upickle::4.0.0-RC1" // Mill
+        "com.lihaoyi" %%% "upickle" % "4.0.2" // SBT
+        ivy"com.lihaoyi::upickle::4.0.2" // Mill
 
     @sect{Scala Versions}
       @p
@@ -915,18 +915,23 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
-    @sect{4.0.0-RC1}
+    @sect{4.0.2}
+      @ul
+        @li
+          Add support for Scala 3.3.4 and above to re-enable support for the Scala 3.3.x series
+          @lnk("#635", "https://github.com/com-lihaoyi/upickle/pull/635")
+    @sect{4.0.1}
+      @ul
+        @li
+          Respect @code{Config#tagName} in @code{Reader.merge} and @code{ReadWriter.merge}
+          @lnk("#619", "https://github.com/com-lihaoyi/upickle/pull/619")
+    @sect{4.0.0}
       @ul
         @li
           @b{4.0.0 is a major breaking change in uPickle, including in the serialization
           format for many common data types (@hl.scala{Option}s, @hl.scala{sealed trait}s,
           etc.), as well as breaking binary compatibility. Please be
           careful upgrading and follow the instructions below.}
-        @li
-          uPickle 4.0.0-RC1 is a release candidate. It breaks backwards compatibility with
-          uPickle 3.x (binary and serialization), but makes no promises for compatibility
-          with uPickle 4.0.0 final. Hopefully nothing will need to change between 4.0.0-RC1
-          and 4.0.0 final, but it cannot be guaranteed.
         @li
           Shorten @code{$type} tag used for discriminating @hl.scala{sealed trait} cases
           @lnk("#594", "https://github.com/com-lihaoyi/upickle/pull/596")
@@ -939,6 +944,8 @@
         @li
           Allow field-level and class-level application of @code{serializeDefaults} as an annotation
           @lnk("#608", "https://github.com/com-lihaoyi/upickle/pull/608").
+        @li
+          Drop support for Scala 3.3, uPickle 4.0.0 only supports Scala 2.13.x and 3.4.x and above
         @li
           To upgrade to uPickle 4.0.0 from uPickle 3.x while preserving the existing serialization
           format, please add @hl.scala{override def objectTypeKeyWriteFullyQualified = true} and

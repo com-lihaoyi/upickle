@@ -20,7 +20,12 @@ If you use uPickle and like it, please support it by donating to our Patreon:
 
 - [https://www.patreon.com/lihaoyi](https://www.patreon.com/lihaoyi)
 
-[![Build Status](https://travis-ci.org/lihaoyi/upickle.svg)](https://travis-ci.org/lihaoyi/upickle)
+# Developer Docs
 
-
-[![Join the chat at https://gitter.im/lihaoyi/upickle](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lihaoyi/upickle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+* Publishing is automatic on pushing tag to Github
+* Updating docs is manual; 
+    * `sbt upickleReadme/run`
+    * `git checkout gh-pages`
+    * `cp -R upickleReadme/target/scalatex/* .`
+    * `git commit -am .`
+    * `git push origin head`
