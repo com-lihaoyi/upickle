@@ -6,6 +6,11 @@ import upickle.default.{read, write, ReadWriter => RW}
 
 case class Trivial(a: Int = 1)
 
+sealed case class SealedClass(i: Int, s: String)
+object SealedClass {
+  implicit val rw: RW[SealedClass] = upickle.default.macroRW
+}
+
 case class KeyedPerson(
                    @upickle.implicits.key("first_name") firstName: String = "N/A",
                    @upickle.implicits.key("last_name") lastName: String)
@@ -871,6 +876,10 @@ object MacroTests extends TestSuite {
         """{"_tag": "Bar", "x": 123}"""
       )
 
+    }
+
+    test("sealedClass"){
+      assert(write(SealedClass(3, "Hello")) == """{"$type":"SealedClass","i":3,"s":"Hello"}""")
     }
   }
 }

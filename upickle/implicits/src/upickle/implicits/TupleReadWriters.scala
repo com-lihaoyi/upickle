@@ -3,14 +3,14 @@ package upickle.implicits
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.ClassTag
-import upickle.core.{Visitor, Abort, ArrVisitor, ObjVisitor, NoOpVisitor}
+import upickle.core.{Visitor, Abort, ArrVisitor, Config, ObjVisitor, NoOpVisitor}
 
 /**
 * Basic functionality to be able to read and write objects. Kept as a trait so
 * other internal files can use it, while also mixing it into the `upickle`
 * package to form the public API1
 */
-trait TupleReadWriters extends upickle.core.Types{
+trait TupleReadWriters extends upickle.core.Types { self: Config =>
 
 
   class TupleNWriter[V](val writers: Array[Writer[_]], val f: V => Array[Any]) extends Writer[V]{

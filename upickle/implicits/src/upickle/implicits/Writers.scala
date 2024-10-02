@@ -2,7 +2,7 @@ package upickle.implicits
 
 import java.util.UUID
 
-import upickle.core.{ Visitor, Annotator }
+import upickle.core.{ Config, Visitor, Annotator }
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.language.higherKinds
@@ -240,7 +240,7 @@ trait Writers extends upickle.core.Types
 /**
   * This needs to be split into a separate trait due to https://github.com/scala/bug/issues/11768
   */
-trait LowPriWriters extends upickle.core.Types{
+trait LowPriWriters extends upickle.core.Types { self: Config =>
   implicit def SeqLikeWriter[C[_] <: Iterable[_], T](implicit r: Writer[T]): Writer[C[T]] = new Writer[C[T]] {
     def write0[R](out: Visitor[_, R], v: C[T]): R = {
       val ctx = out.visitArray(v.size, -1).narrow
