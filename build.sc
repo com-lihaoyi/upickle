@@ -153,6 +153,7 @@ object upack extends Module {
     def moduleDeps = Seq(upickle.core.jvm())
     object test extends CommonTestModule{
       def moduleDeps = super.moduleDeps ++ Seq(ujson.jvm().test, upickle.core.jvm().test)
+      def forkEnv = super.forkEnv() ++ Map("EXAMPLE_JSON" -> exampleJson().path.toString)
     }
   }
 
@@ -182,6 +183,7 @@ object ujson extends Module{
 
     object test extends CommonTestModule{
       def moduleDeps = super.moduleDeps ++ Seq(upickle.core.jvm().test)
+      def forkEnv = super.forkEnv() ++ Map("EXAMPLE_JSON" -> exampleJson().path.toString)
     }
   }
 
