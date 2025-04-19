@@ -2,8 +2,10 @@ package upickle.core
 
 import upickle.core.compat._
 
-import scala.collection.mutable
+import java.util.function.BiConsumer
 import java.{util => ju}
+import scala.collection.{GenTraversableOnce, mutable}
+import scala.collection.generic.CanBuildFrom
 
 /** mutable.Map[K, V] implementation wrapping a java.util.LinkedHashMap[K, V]
   * which doesn't allow null as key. Useful since the java.util implementation
@@ -21,16 +23,23 @@ class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     _put(elem._1, elem._2)
     this
   }
+
   def iterator: Iterator[(K, V)] = {
-    val it = underlying.keySet().iterator()
+    val it = underlying.entrySet().iterator()
     new Iterator[(K, V)] {
       def hasNext: Boolean = it.hasNext()
+
       def next(): (K, V) = {
-        val key = it.next()
-        key -> underlying.get(key)
+        val entry = it.next()
+        (entry.getKey(), entry.getValue())
       }
     }
   }
+
+  override def foreach[U](f: ((K, V)) => U): Unit = underlying.forEach(new BiConsumer[K, V] {
+    def accept(k: K, v: V): Unit = f((k, v))
+  })
+
   def get(key: K): Option[V] = Option(underlying.get(key))
   def subtractOne(elem: K): this.type = {
     underlying.remove(elem)
