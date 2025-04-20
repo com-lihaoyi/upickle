@@ -19,6 +19,9 @@ val scala212  = "2.12.18"
 val scala213  = "2.13.11"
 
 val scala3   = "3.3.4"
+val scala3NamedTuples = "3.7.0-RC3"
+val scalaJSNamedTuples = "1.18.1" // the version of scala.js that the scala3-library is built for.
+val scalaNativeNamedTuples = "0.5.7" // the version of scala.native that the scala3-library is built for.
 val scalaNative = "0.5.5"
 val acyclic = "0.3.12"
 
@@ -227,7 +230,7 @@ object ujson extends Module{
   }
 }
 
-object upickle extends Module{  
+object upickle extends Module{
   object core extends Module {
     trait CommonCoreModule extends CommonPublishModule {
       def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.1.1")
@@ -317,6 +320,31 @@ object upickle extends Module{
 
       object test extends CommonTestModule{
         def moduleDeps = super.moduleDeps ++ Seq(ujson.native().test, core.native().test)
+      }
+    }
+
+    object `named-tuples` extends Module {
+      object js extends Cross[JsModule](scala3NamedTuples)
+      trait JsModule extends CommonJsModule {
+        def scalaJSVersion = scalaJSNamedTuples
+        def moduleDeps = Seq(upickle.js())
+
+        object test extends CommonTestModule
+      }
+
+      object jvm extends Cross[JvmModule](scala3NamedTuples)
+      trait JvmModule extends CommonJvmModule {
+        def moduleDeps = Seq(upickle.jvm())
+
+        object test extends CommonTestModule
+      }
+
+      object native extends Cross[NativeModule](scala3NamedTuples)
+      trait NativeModule extends CommonNativeModule {
+        def scalaNativeVersion = scalaNativeNamedTuples
+        def moduleDeps = Seq(upickle.native())
+
+        object test extends CommonTestModule
       }
     }
   }
