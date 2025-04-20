@@ -328,6 +328,8 @@ object upickle extends Module{
       trait JsModule extends CommonJsModule {
         def scalaJSVersion = scalaJSNamedTuples
         def moduleDeps = Seq(upickle.js())
+        override def mimaPreviousVersions = Seq.empty[String] // no previous versions
+        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
@@ -335,6 +337,8 @@ object upickle extends Module{
       object jvm extends Cross[JvmModule](scala3NamedTuples)
       trait JvmModule extends CommonJvmModule {
         def moduleDeps = Seq(upickle.jvm())
+        override def mimaPreviousVersions = Seq.empty[String] // no previous versions
+        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
@@ -343,6 +347,8 @@ object upickle extends Module{
       trait NativeModule extends CommonNativeModule {
         def scalaNativeVersion = scalaNativeNamedTuples
         def moduleDeps = Seq(upickle.native())
+        override def mimaPreviousVersions = Seq.empty[String] // no previous versions
+        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
