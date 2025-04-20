@@ -66,6 +66,24 @@ object BasicTests extends TestSuite {
         val result = upickle.default.read[Schema](json)(using rw)
         assert(result == data)
       }
+
+      test("unhappy path reading when expected keys are missing") {
+        import upickle.implicits.namedTuples.default.given
+        val json = """{"bar": 23}"""
+        val err = intercept[upickle.core.AbortException] {
+          upickle.default.read[(foo: Boolean)](json)
+        }
+        assert(err.getMessage.contains("missing keys in dictionary: foo"))
+      }
+
+      test("unhappy path reading when json is not an object") {
+        import upickle.implicits.namedTuples.default.given
+        val json = """[]"""
+        val err = intercept[upickle.core.AbortException] {
+          upickle.default.read[(foo: Boolean)](json)
+        }
+        assert(err.getMessage.contains("expected dictionary got sequence"))
+      }
     }
 
     test("legacy cake") {
