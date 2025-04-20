@@ -8,6 +8,7 @@
 @val enumTests = wd/'upickle/'test/"src-3"/'upickle/"EnumTests.scala"
 @val jvmExampleTests = wd/'upickle/'test/"src-jvm-2"/'upickle/'example/"JvmExampleTests.scala"
 @val macroTests = wd/'upickle/'test/'src/'upickle/"MacroTests.scala"
+@val namedTupleTests = wd/'upickle/'implicits/"named-tuples"/'test/"src-3.7"/'upickle/'implicits/'namedTuples/"BasicTests.scala"
 
 @val boxedOptionsTests =  wd/'upickle/'test/"src"/'upickle/'example/"BoxedOptionsTests.scala"
 
@@ -214,19 +215,33 @@
 
         @hl.ref(enumTests, "enum ColorEnum", "end ColorEnum")
         @hl.ref(enumTests, Seq("example", "color", "Enclosing"))
-      @p
-        Note that you only need to put the @hl.scala{derives} keyword on the
-        @hl.scala{enum}s or @hl.scala{sealed trait}s, and not on all the
-        individual @hl.scala{case class}es or @hl.scala{case object}s.
+        @p
+          Note that you only need to put the @hl.scala{derives} keyword on the
+          @hl.scala{enum}s or @hl.scala{sealed trait}s, and not on all the
+          individual @hl.scala{case class}es or @hl.scala{case object}s.
 
-      @p
-        Also, note that for @hl.scala{enum}s, the short un-qualified name is used
-        for the type key, rather than the fully qualified name with package path.
-        This is because unlike @hl.scala{sealed trait}s, @hl.scala{enum}s enforce
-        that every case is in the same flat namespace, and thus the short name is
-        enough to dis-ambiguate them. This behavior can be overriden with the
-        @hl.scala("""@key("...")""") annotation in both cases, if a different type key
-        is desired.
+        @p
+          Also, note that for @hl.scala{enum}s, the short un-qualified name is used
+          for the type key, rather than the fully qualified name with package path.
+          This is because unlike @hl.scala{sealed trait}s, @hl.scala{enum}s enforce
+          that every case is in the same flat namespace, and thus the short name is
+          enough to dis-ambiguate them. This behavior can be overriden with the
+          @hl.scala("""@key("...")""") annotation in both cases, if a different type key
+          is desired.
+      @sect{Scala 3 Named Tuples}
+        @p
+          In Scala 3.7+, you can generate @code{ReadWriter}s for named tuple types.
+          (first depend on the optional @code{upickle-implicits-named-tuples} module).
+        @p
+          @b{Maven Coordinates}
+
+          @hl.scala
+            ivy"com.lihaoyi::upickle-implicits-named-tuples:4.1.0" // Mill
+
+        @p
+          You can read/write any named tuple value, as long as the fields can also be read/written:
+
+          @hl.ref(namedTupleTests, "val json = upickle.default.write(", ") // named tuple write")
 
     @sect{Read/Writing Other Things}
 
@@ -246,16 +261,16 @@
         to accumulate the serialized JSON in memory.
     @sect{Nulls}
       @p
-      
+
         Nulls serialize into JSON nulls, as you would expect
-      
+
       @hl.ref(exampleTests, Seq("test(\"null\")", ""))
-      
+
       @p
         uPickle only throws exceptions on unpickling; if a pickler is
         properly defined, serializing a data structure to a @hl.scala{String}
         should never throw an exception.
-      
+
       @p
         All these examples can be similarly serialized to MessagePack-formatted
         binaries, in the same way: JSON booleans become MessagePack booleans,
@@ -302,6 +317,9 @@
           @code{Int}, @code{Long}, @code{Float}, @code{Double}
         @li
           @code{Tuple}s from 1 to 22
+        @li
+          @code{NamedTuple}s of any size, when depending on the optional
+          @code{upickle-implicits-named-tuples} module in your build.
         @li
           Immutable @code{Seq}, @code{List}, @code{Vector}, @code{Set},
           @code{SortedSet}, @code{Option}, @code{Array}, @code{Map}s, and all
@@ -526,27 +544,27 @@
 
         @li
           @hl.scala{Iterable}: Flatten key-value pairs of a @hl.scala{Iterable[(String, _)]} into the parent structure.
-        
-        
+
+
           @hl.scala
             case class A(i: Int, @@flatten map: Map[String, String])
             implicit val rw: ReadWriter[A] = macroRW
             val map = Map("a" -> "1", "b" -> "2")
             write(A(1, map)) // {"i":1, "a":"1", "b": "2"}
-        
+
         @li
           @p
-        
+
             Nested flattening allows you to apply the @hl.scala{@@flatten} annotation recursively to fields within nested case classes.
           @hl.scala
             case class Outer(msg: String, @@flatten inner: Inner)
             case class Inner(@@flatten inner2: Inner2)
             case class Inner2(i: Int)
-        
+
             implicit val rw: ReadWriter[Inner2] = macroRW
             implicit val rw: ReadWriter[Inner] = macroRW
             implicit val rw: ReadWriter[Outer] = macroRW
-        
+
             write(Outer("abc", Inner(Inner2(7)))) // {"msg": "abc", "i": 7}
 
 
@@ -559,33 +577,33 @@
         implicit val rw: ReadWriter[B] = macroRW
         read("""{"i": 1, "msg": "Hello"}""")
         // The top-level field "msg": "Hello" is correctly mapped to the field in B.
-     
+
       @p
         For collection, during deserialization, all key-value pairs in the JSON that do not directly map to a
         specific field in the case class are attempted to be stored in the @hl.scala{Map}.
-     
+
       @p
         If a key in the JSON does not correspond to any field in the case class, it is stored in the collection.
-     
+
       @hl.scala
         case class A(i: Int, @@flatten Map[String, String])
         implicit val rw: ReadWriter[A] = macroRW
         read("""{"i":1, "a" -> "1", "b" -> "2"}""") // Output: A(1, Map("a" -> "1", "b" -> "2"))
-     
+
       @p
         If there are no keys in the JSON that can be stored in the collection, it is treated as an empty collection.
-     
+
       @hl.scala
         read("""{"i":1}""")
         // Output: A(1, Map.empty)
-     
+
       @p
         If a key’s value in the JSON cannot be converted to the Map’s value type (e.g., @hl.scala{String}), the deserialization fails.
       @hl.scala
         read("""{"i":1, "a":{"name":"foo"}}""")
         // Error: Failed to deserialize because the value for "a" is not a String, as required by Map[String, String].
-     
-     
+
+
       @sect{Flatten Limitations}
         @ol
           @li
@@ -594,7 +612,7 @@
              a @hl.scala{Reader}, it becomes unclear which collection the data should be stored in.
           @li
             Type parameters do not seem to be properly resolved in the following scenario:
-     
+
             @hl.scala
               case class Param[T](@@flatten t: T)
               object Param {
@@ -606,7 +624,7 @@
           @li
             When using the @hl.scala{@@flatten} annotation on a @hl.scala{Iterable}, the type
             of key must be @hl.scala{String}.
-     
+
 
   @sect{Limitations}
 
@@ -1241,7 +1259,7 @@
           Support Scala-Native on Scala 3
 
     @sect{1.4.3}
-      @ul 
+      @ul
          @li
            @code{MsgPackReader}: properly increment index in ext @lnk("#370", "https://github.com/com-lihaoyi/upickle/pull/370")
 

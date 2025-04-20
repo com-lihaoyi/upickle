@@ -19,7 +19,7 @@ object BasicTests extends TestSuite {
             (name = "Alice", isHuman = true, isAlien = false),
             (arr = (1, 2, 3), optionalAny = None, optionalInt = Some(42))
           )
-        )
+        ) // named tuple write
         assert(json == basic_formatted.replaceAll("\\s+", ""))
       }
 
