@@ -621,9 +621,21 @@ object Macros2 {
               }
               else fail(s"Invalid type for flattening: $tpeOfField.")
             case None =>
-              val snippet = if (defaultValue.isEmpty) q"1"
-              else q"""if (${serDfltVals(symbol)} || $select != ${defaultValue.get}) 1 else 0"""
-              snippet :: Nil
+              val isOption = tpeOfField.typeSymbol.fullName == "scala.Option"
+              val hasDefault = defaultValue.nonEmpty
+
+              def nonesCond = q"${c.prefix}.serializeNones || $select.nonEmpty"
+              def defaultsCond = q"${serDfltVals(symbol)} || $select != ${defaultValue.get}"
+
+              val res = if (isOption && hasDefault) {
+                q"""if (($nonesCond) && ($defaultsCond)) 1 else 0"""
+              } else if(hasDefault) {
+                q"""if ($defaultsCond) 1 else 0"""
+              } else if(isOption) {
+                q"""if ($nonesCond) 1 else 0"""
+              } else q"1"
+
+              res :: Nil
           }
         }
       }
