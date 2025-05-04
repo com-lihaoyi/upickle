@@ -485,6 +485,8 @@ object Macros2 {
               ..${
                 for(i <- defaultValues.indices if defaultValues(i).isDefined)
                   yield q"this.storeValueIfNotFound($i, ${defaultValues(i).get})"
+                for(i <- types.indices if types(i).typeSymbol.fullName == "scala.Option")
+                  yield q"this.storeValueIfNotFound($i, None)"
               }
 
               // Special-case 64 because java bit shifting ignores any RHS values above 63
@@ -584,9 +586,22 @@ object Macros2 {
                      $select
                    )
                 """
-              val default = if (defaultValue.isEmpty) snippet
-              else q"""if (${serDfltVals(symbol)} || $select != ${defaultValue.get}) $snippet"""
-              default :: Nil
+
+              val isOption = tpeOfField.typeSymbol.fullName == "scala.Option"
+              val hasDefault = defaultValue.nonEmpty
+
+              def nonesCond = q"${c.prefix}.serializeNones || $select.nonEmpty"
+              def defaultsCond = q"${serDfltVals(symbol)} || $select != ${defaultValue.get}"
+
+              val res = if (isOption && hasDefault) {
+                q"""if (($nonesCond) && ($defaultsCond)) $snippet"""
+              } else if(hasDefault) {
+                q"""if ($defaultsCond) $snippet"""
+              } else if(isOption) {
+                q"""if ($nonesCond) $snippet"""
+              } else snippet
+
+              res :: Nil
           }
         }
       }

@@ -53,6 +53,12 @@ object Defaults{
     implicit val rw: RW[FooDefault] = macroRW
   }
 }
+object Nones{
+  case class OptionWrapper(opt: Option[String])
+  object OptionWrapper{
+    implicit val rw: RW[OptionWrapper] = macroRW
+  }
+}
 object Keyed{
   case class KeyBar(@upickle.implicits.key("hehehe") kekeke: Int)
   object KeyBar{
@@ -100,6 +106,7 @@ import Sealed._
 import Simple._
 import Recursive._
 import Defaults._
+import Nones._
 
 object ExampleTests extends TestSuite {
   object Generic {
@@ -431,6 +438,28 @@ object ExampleTests extends TestSuite {
         SerializeDefaults.write(FooDefault(i = 11, s = "lol"))  ==> """{"i":11,"s":"lol"}"""
         SerializeDefaults.write(FooDefault(i = 10, s = "lol"))  ==> """{"i":10,"s":"lol"}"""
         SerializeDefaults.write(FooDefault())                   ==> """{"i":10,"s":"lol"}"""
+      }
+      test("serializeNones = false"){
+        object SerializeNones extends upickle.AttributeTagged{
+          override def serializeNones = false
+        }
+        implicit val optionWrapperRW: SerializeNones.ReadWriter[OptionWrapper] = SerializeNones.macroRW
+        SerializeNones.write(OptionWrapper(None)) ==> "{}"
+        SerializeNones.write(OptionWrapper(opt = Some("lol"))) ==> """{"opt":"lol"}"""
+
+        SerializeNones.read[OptionWrapper]("{}") ==> OptionWrapper(None)
+        SerializeNones.read[OptionWrapper]("""{"opt":"lol"}""") ==> OptionWrapper(opt = Some("lol"))
+      }
+      test("serializeNones = true"){
+        object SerializeNones extends upickle.AttributeTagged{
+          override def serializeNones = true
+        }
+        implicit val optionWrapperRW: SerializeNones.ReadWriter[OptionWrapper] = SerializeNones.macroRW
+        SerializeNones.write(OptionWrapper(None)) ==> """{"opt":null}"""
+        SerializeNones.write(OptionWrapper(opt = Some("lol"))) ==> """{"opt":"lol"}"""
+
+        SerializeNones.read[OptionWrapper]("""{"opt":null}""") ==> OptionWrapper(None)
+        SerializeNones.read[OptionWrapper]("""{"opt":"lol"}""") ==> OptionWrapper(opt = Some("lol"))
       }
     }
 
