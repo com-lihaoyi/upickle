@@ -19,8 +19,8 @@ val scala212  = "2.12.18"
 val scala213  = "2.13.11"
 
 val scala3   = "3.3.4"
-val scala3NamedTuples = "3.7.0-RC3"
-val scalaJSNamedTuples = "1.18.1" // the version of scala.js that the scala3-library is built for.
+val scala3NamedTuples = "3.7.0"
+val scalaJSNamedTuples = "1.19.0" // the version of scala.js that the scala3-library is built for.
 val scalaNativeNamedTuples = "0.5.7" // the version of scala.native that the scala3-library is built for.
 val scalaNative = "0.5.5"
 val acyclic = "0.3.12"
