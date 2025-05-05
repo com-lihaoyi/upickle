@@ -485,8 +485,13 @@ object Macros2 {
               ..${
                 for(i <- defaultValues.indices if defaultValues(i).isDefined)
                   yield q"this.storeValueIfNotFound($i, ${defaultValues(i).get})"
-                for(i <- types.indices if types(i).typeSymbol.fullName == "scala.Option")
-                  yield q"this.storeValueIfNotFound($i, None)"
+              }
+
+              if (!${c.prefix}.serializeNones) {
+                ..${
+                  for(i <- types.indices if types(i).typeSymbol.fullName == "scala.Option")
+                    yield q"this.storeValueIfNotFound($i, None)"
+                }
               }
 
               // Special-case 64 because java bit shifting ignores any RHS values above 63
