@@ -330,7 +330,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   protected[this] final def parseTopLevel0(i: Int, facade: Visitor[_, J]): (J, Int) = {
     (getElemSafe(i): @switch) match {
       // ignore whitespace
-      case ' ' | '\t' | 'r' => parseTopLevel0(i + 1, facade)
+      case ' ' | '\t' | '\r' => parseTopLevel0(i + 1, facade)
       case '\n' => parseTopLevel0(i + 1, facade)
 
       // if we have a recursive top-level structure, we'll delegate the parsing
