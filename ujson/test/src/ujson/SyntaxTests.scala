@@ -113,7 +113,7 @@ object SyntaxTests extends TestSuite{
       test { TestUtil.checkParse("\r{\r}", true) }
       test { TestUtil.checkParse("\r\n{\r\n}", true) }
       test { TestUtil.checkParse("r{}", false) }
-      test { TestUtil.checkParse("n{n}", false) }
+      test { TestUtil.checkParse("n{}", false) }
     }
   }
 }
