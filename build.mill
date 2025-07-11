@@ -1,14 +1,14 @@
-//| mill-version: 1.0.0-RC1-24-d74b52
+//| mill-version: 1.0.0
 //| mill-jvm-opts: ["-XX:NonProfiledCodeHeapSize=250m", "-XX:ReservedCodeCacheSize=500m", "-Xss10m"]
 //| mill-opts: ["--jobs=0.5C"]
 //| mvnDeps:
-//| - com.github.lolgab::mill-mima_mill1.0.0-RC1:0.2.0-M1
+//| - com.github.lolgab::mill-mima_mill1:0.2.0
 package build
 
 // imports
 import mill._
 import mill.scalalib._
-import mill.main.VcsVersion
+import mill.util.VcsVersion
 import mill.scalalib.publish._
 import mill.scalajslib._
 import mill.scalanativelib._
@@ -68,7 +68,7 @@ trait CommonPublishModule
     )
   )
 
-  def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
+  def publishProperties: T[Map[String, String]] = super.publishProperties() ++ Map(
     "info.releaseNotesURL" -> "https://com-lihaoyi.github.io/upickle/#VersionHistory"
   )
 
@@ -99,7 +99,7 @@ trait CommonPublishModule
 
   trait CommonTestModule0 extends ScalaModule with TestModule.Utest {
     def mvnDeps = {
-      Agg(mvn"com.lihaoyi::utest::0.8.3") ++
+      Seq(mvn"com.lihaoyi::utest::0.8.3") ++
       Option.when(!scalaVersion().startsWith("3."))(mvn"com.lihaoyi:::acyclic:$acyclic")
     }
 
@@ -126,7 +126,7 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule with CommonP
       case tag if vcsState.commitsSinceLastTag == 0 =>
         val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
         val sourcesOptionName = if(crossScalaVersion.startsWith("3.")) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
-        s"$sourcesOptionName:${Task.workspace.toIO.toURI}->$baseUrl/$tag/"
+        s"$sourcesOptionName:${mill.api.BuildCtx.workspaceRoot.toIO.toURI}->$baseUrl/$tag/"
     }
   }
 
@@ -202,13 +202,13 @@ object ujson extends Module{
   object argonaut extends Cross[ArgonautModule](scala2JVMVersions)
   trait ArgonautModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
-    def mvnDeps = Agg(mvn"io.argonaut::argonaut:6.2.6")
+    def mvnDeps = Seq(mvn"io.argonaut::argonaut:6.2.6")
   }
 
   object json4s extends Cross[Json4sModule](scalaVersions)
   trait Json4sModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
-    def mvnDeps = Agg(
+    def mvnDeps = Seq(
       mvn"org.json4s::json4s-ast:4.0.7",
       mvn"org.json4s::json4s-native:4.0.7"
     )
@@ -218,21 +218,21 @@ object ujson extends Module{
   trait CirceModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
     val circeVersion = "0.14.9"
-    def mvnDeps = Agg(mvn"io.circe::circe-parser:$circeVersion")
+    def mvnDeps = Seq(mvn"io.circe::circe-parser:$circeVersion")
   }
 
   object play extends Cross[PlayModule](scala2JVMVersions)
   trait PlayModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
     val playJsonVersion = "2.9.4"
-    def mvnDeps = Agg(mvn"com.typesafe.play::play-json:$playJsonVersion")
+    def mvnDeps = Seq(mvn"com.typesafe.play::play-json:$playJsonVersion")
   }
 }
 
 object upickle extends Module{
   object core extends Module {
     trait CommonCoreModule extends CommonPublishModule {
-      def mvnDeps = Agg(mvn"com.lihaoyi::geny::1.1.1")
+      def mvnDeps = Seq(mvn"com.lihaoyi::geny::1.1.1")
     }
 
     object js extends Cross[CoreJsModule](scalaVersions)
@@ -328,7 +328,7 @@ object upickle extends Module{
         def scalaJSVersion = scalaJSNamedTuples
         def moduleDeps = Seq(upickle.js())
         override def mimaPreviousVersions = Seq.empty[String] // no previous versions
-        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
+        override def mimaPreviousArtifacts = Seq.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
@@ -337,7 +337,7 @@ object upickle extends Module{
       trait JvmModule extends CommonJvmModule {
         def moduleDeps = Seq(upickle.jvm())
         override def mimaPreviousVersions = Seq.empty[String] // no previous versions
-        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
+        override def mimaPreviousArtifacts = Seq.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
@@ -347,7 +347,7 @@ object upickle extends Module{
         def scalaNativeVersion = scalaNativeNamedTuples
         def moduleDeps = Seq(upickle.native())
         override def mimaPreviousVersions = Seq.empty[String] // no previous versions
-        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
+        override def mimaPreviousArtifacts = Seq.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
@@ -411,7 +411,7 @@ def exampleJson = Task.Source(moduleDir / "exampleJson")
 trait BenchModule extends CommonPlatformModule{
   def crossScalaVersion = scala213
   def scalaVersion = scala213
-  def mvnDeps = Agg(
+  def mvnDeps = Seq(
     mvn"io.circe::circe-core::0.14.9",
     mvn"io.circe::circe-generic::0.14.9",
     mvn"io.circe::circe-parser::0.14.9",
@@ -435,7 +435,7 @@ object bench extends Module {
   object native extends BenchModule with ScalaNativeModule {
     def scalaNativeVersion = scalaNative
     def moduleDeps = Seq(upickle.native(scala213).test)
-    def mvnDeps = Agg(mvn"com.lihaoyi::sourcecode::$sourcecode")
+    def mvnDeps = Seq(mvn"com.lihaoyi::sourcecode::$sourcecode")
     def allSourceFiles = Task{ super.allSourceFiles().filter(_.path.last != "NonNative.scala") }
     def releaseMode = ReleaseMode.ReleaseFast
     def nativeLTO = LTO.Thin
