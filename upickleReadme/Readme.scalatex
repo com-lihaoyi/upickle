@@ -620,7 +620,7 @@
                 // compile error when this function is called to derive instance
                 implicit def rw[T: RW]: RW[Param[T]] = upickle.default.macroRW
                 // works
-                implicit val rw[SomeClass]: RW[Param[SomeClass]] = upickle.default.macroRW
+                implicit val rw: RW[Param[SomeClass]] = upickle.default.macroRW
               }
           @li
             When using the @hl.scala{@@flatten} annotation on a @hl.scala{Iterable}, the type

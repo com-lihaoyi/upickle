@@ -1,24 +1,24 @@
+//| mill-version: 1.0.0
+//| mill-jvm-opts: ["-XX:NonProfiledCodeHeapSize=250m", "-XX:ReservedCodeCacheSize=500m", "-Xss10m"]
+//| mill-opts: ["--jobs=0.5C"]
+//| mvnDeps:
+//| - com.github.lolgab::mill-mima_mill1:0.2.0
 package build
-// plugins
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.4.0`
-import $ivy.`com.github.lolgab::mill-mima::0.1.1`
 
 // imports
 import mill._
-import mill.define.Target
 import mill.scalalib._
+import mill.util.VcsVersion
 import mill.scalalib.publish._
 import mill.scalajslib._
 import mill.scalanativelib._
-import mill.scalalib.api.ZincWorkerUtil.isScala3
 import mill.scalanativelib.api.{LTO, ReleaseMode}
-import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
 val scala212  = "2.12.18"
 val scala213  = "2.13.11"
 
-val scala3   = "3.3.4"
+val scala3   = "3.3.5"
 val scala3NamedTuples = "3.7.0"
 val scalaJSNamedTuples = "1.19.0" // the version of scala.js that the scala3-library is built for.
 val scalaNativeNamedTuples = "0.5.7" // the version of scala.native that the scala3-library is built for.
@@ -33,16 +33,16 @@ val scala2JVMVersions = Seq(scala212, scala213)
 val scalaVersions = scala2JVMVersions ++ Seq(scala3) ++ dottyCustomVersion
 
 trait CommonPlatformModule extends ScalaModule with PlatformScalaModule{
-
-  def sources = T.sources {
-    super.sources() ++
-    Option.when(scalaVersion() != scala212)(PathRef(millSourcePath / "src-2.13+")) ++
-    (platformScalaSuffix match {
-      case "jvm" => Seq(PathRef(millSourcePath / "src-jvm-native"))
-      case "native" => Seq(PathRef(millSourcePath / "src-js-native"), PathRef(millSourcePath / "src-jvm-native"))
-      case "js" => Seq(PathRef(millSourcePath / "src-js-native"))
-    })
-  }
+  def crossScalaVersion: String
+  def platformSources = Task.Sources(
+    Option.when(crossScalaVersion != scala212)(os.sub / "src-2.13+").toSeq ++
+      (platformCrossSuffix match {
+        case "jvm" => Seq(os.sub / "src-jvm-native")
+        case "native" => Seq(os.sub / "src-js-native", os.sub / "src-jvm-native")
+        case "js" => Seq(os.sub / "src-js-native")
+      })*
+  )
+  def sources = Task { super.sources() ++ platformSources() }
 }
 
 trait CommonPublishModule
@@ -50,7 +50,7 @@ trait CommonPublishModule
 
   def publishVersion = VcsVersion.vcsState().format()
   def mimaReportBinaryIssues() =
-    if (this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) Task.Command()
+    if (this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) Task.Command{}
     else super.mimaReportBinaryIssues()
 
   def mimaPreviousVersions = Seq(
@@ -68,49 +68,48 @@ trait CommonPublishModule
     )
   )
 
-  def publishProperties: Target[Map[String, String]] = super.publishProperties() ++ Map(
+  def publishProperties: T[Map[String, String]] = super.publishProperties() ++ Map(
     "info.releaseNotesURL" -> "https://com-lihaoyi.github.io/upickle/#VersionHistory"
   )
 
-  def versionScheme: T[Option[VersionScheme]] = T(Some(VersionScheme.SemVerSpec))
+  def versionScheme: T[Option[VersionScheme]] = Task{ Some(VersionScheme.SemVerSpec) }
 
-  def templates = T.sources {
-    for(src <- sources()) yield{
-      val s"src$rest" = src.path.last
-      PathRef(src.path / os.up / s"templates$rest")
-    }
+  def templatesFolders = sourcesFolders.map{src =>
+    val s"src$rest" = src.last
+    src / os.up / s"templates$rest"
   }
-  def generatedSources = T{
+  def templates = Task.Sources(templatesFolders*)
+  def generatedSources = Task {
     for{
       pathRef <- templates()
       p <- if (os.exists(pathRef.path)) os.list(pathRef.path) else Nil
       rename <- Seq("Char", "Byte")
     }{
       def replace(s: String) = s.replace("Elem", rename).replace("elem", rename.toLowerCase)
-      os.write(T.dest / replace(p.last), replace(os.read(p)))
+      os.write(Task.dest / replace(p.last), replace(os.read(p)))
     }
 
-    Seq(PathRef(T.dest))
+    Seq(PathRef(Task.dest))
   }
 
-  def scalacOptions = T {
+  def scalacOptions = Task {
     Seq("-unchecked", "-encoding", "utf8", "-feature") ++
-    Agg.when(!isScala3(scalaVersion()))("-opt:l:method", "-Xfatal-warnings", "-deprecation").toSeq
+    Seq("-opt:l:method", "-Xfatal-warnings", "-deprecation").filter(_ => !scalaVersion().startsWith("3."))
   }
 
   trait CommonTestModule0 extends ScalaModule with TestModule.Utest {
-    def ivyDeps = {
-      Agg(ivy"com.lihaoyi::utest::0.8.3") ++
-      Option.when(!isScala3(scalaVersion()))(ivy"com.lihaoyi:::acyclic:$acyclic")
+    def mvnDeps = {
+      Seq(mvn"com.lihaoyi::utest::0.8.3") ++
+      Option.when(!scalaVersion().startsWith("3."))(mvn"com.lihaoyi:::acyclic:$acyclic")
     }
 
     def scalacOptions = super.scalacOptions() ++
-      Agg.when(isScala3(scalaVersion())) (
+      Seq(
         "-Ximplicit-search-limit",
         "200000",
         "-Xmax-inlines",
         "155"
-      )
+      ).filter(_ => scalaVersion().startsWith("3."))
   }
 }
 
@@ -126,8 +125,8 @@ trait CommonJsModule extends CommonPublishModule with ScalaJSModule with CommonP
     vcsState.lastTag.collect {
       case tag if vcsState.commitsSinceLastTag == 0 =>
         val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
-        val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
-        s"$sourcesOptionName:${T.workspace.toIO.toURI}->$baseUrl/$tag/"
+        val sourcesOptionName = if(crossScalaVersion.startsWith("3.")) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
+        s"$sourcesOptionName:${mill.api.BuildCtx.workspaceRoot.toIO.toURI}->$baseUrl/$tag/"
     }
   }
 
@@ -203,15 +202,15 @@ object ujson extends Module{
   object argonaut extends Cross[ArgonautModule](scala2JVMVersions)
   trait ArgonautModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(ivy"io.argonaut::argonaut:6.2.6")
+    def mvnDeps = Seq(mvn"io.argonaut::argonaut:6.2.6")
   }
 
   object json4s extends Cross[Json4sModule](scalaVersions)
   trait Json4sModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
-    def ivyDeps = Agg(
-      ivy"org.json4s::json4s-ast:4.0.7",
-      ivy"org.json4s::json4s-native:4.0.7"
+    def mvnDeps = Seq(
+      mvn"org.json4s::json4s-ast:4.0.7",
+      mvn"org.json4s::json4s-native:4.0.7"
     )
   }
 
@@ -219,21 +218,21 @@ object ujson extends Module{
   trait CirceModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
     val circeVersion = "0.14.9"
-    def ivyDeps = Agg(ivy"io.circe::circe-parser:$circeVersion")
+    def mvnDeps = Seq(mvn"io.circe::circe-parser:$circeVersion")
   }
 
   object play extends Cross[PlayModule](scala2JVMVersions)
   trait PlayModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
     val playJsonVersion = "2.9.4"
-    def ivyDeps = Agg(ivy"com.typesafe.play::play-json:$playJsonVersion")
+    def mvnDeps = Seq(mvn"com.typesafe.play::play-json:$playJsonVersion")
   }
 }
 
 object upickle extends Module{
   object core extends Module {
     trait CommonCoreModule extends CommonPublishModule {
-      def ivyDeps = Agg(ivy"com.lihaoyi::geny::1.1.1")
+      def mvnDeps = Seq(mvn"com.lihaoyi::geny::1.1.1")
     }
 
     object js extends Cross[CoreJsModule](scalaVersions)
@@ -254,15 +253,15 @@ object upickle extends Module{
 
   object implicits extends Module {
     trait ImplicitsModule extends CommonPublishModule{
-      def compileIvyDeps = T{
-        Agg.when(!isDotty)(
-          ivy"com.lihaoyi:::acyclic:$acyclic",
-          ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
-        )
+      def compileMvnDeps = Task {
+        Seq(
+          mvn"com.lihaoyi:::acyclic:$acyclic",
+          mvn"org.scala-lang:scala-reflect:${scalaVersion()}"
+        ).filter(_ => !isDotty)
       }
 
-      def generatedSources = T{
-        val dir = T.ctx().dest
+      def generatedSources = Task {
+        val dir = Task.ctx().dest
         val file = dir / "upickle" / "Generated.scala"
         os.makeDir(dir / "upickle")
         val tuples = (1 to 22).map{ i =>
@@ -329,7 +328,7 @@ object upickle extends Module{
         def scalaJSVersion = scalaJSNamedTuples
         def moduleDeps = Seq(upickle.js())
         override def mimaPreviousVersions = Seq.empty[String] // no previous versions
-        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
+        override def mimaPreviousArtifacts = Seq.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
@@ -338,7 +337,7 @@ object upickle extends Module{
       trait JvmModule extends CommonJvmModule {
         def moduleDeps = Seq(upickle.jvm())
         override def mimaPreviousVersions = Seq.empty[String] // no previous versions
-        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
+        override def mimaPreviousArtifacts = Seq.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
@@ -348,7 +347,7 @@ object upickle extends Module{
         def scalaNativeVersion = scalaNativeNamedTuples
         def moduleDeps = Seq(upickle.native())
         override def mimaPreviousVersions = Seq.empty[String] // no previous versions
-        override def mimaPreviousArtifacts = Agg.empty[Dep] // no previous versions
+        override def mimaPreviousArtifacts = Seq.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
       }
@@ -356,12 +355,12 @@ object upickle extends Module{
   }
 
   trait UpickleModule extends CommonPublishModule {
-    def compileIvyDeps =
-      Agg.when(!isDotty)(
-        ivy"com.lihaoyi:::acyclic:$acyclic",
-        ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
-        ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
-      )
+    def compileMvnDeps =
+      Seq(
+        mvn"com.lihaoyi:::acyclic:$acyclic",
+        mvn"org.scala-lang:scala-reflect:${scalaVersion()}",
+        mvn"org.scala-lang:scala-compiler:${scalaVersion()}"
+      ).filter(_ => !isDotty)
   }
 
   object jvm extends Cross[JvmModule](scalaVersions)
@@ -402,23 +401,24 @@ object upickle extends Module{
 
     object test extends CommonTestModule{
       def moduleDeps = super.moduleDeps ++ Seq(core.native().test)
-      def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "DurationsTests.scala"))
+      def allSourceFiles = Task{ super.allSourceFiles().filter(_.path.last != "DurationsTests.scala") }
     }
   }
 }
 
-def exampleJson = T.source(millSourcePath / "exampleJson")
+def exampleJson = Task.Source(moduleDir / "exampleJson")
 
 trait BenchModule extends CommonPlatformModule{
+  def crossScalaVersion = scala213
   def scalaVersion = scala213
-  def ivyDeps = Agg(
-    ivy"io.circe::circe-core::0.14.9",
-    ivy"io.circe::circe-generic::0.14.9",
-    ivy"io.circe::circe-parser::0.14.9",
-    ivy"com.typesafe.play::play-json::2.9.4",
-    ivy"io.argonaut::argonaut:6.2.6",
-    ivy"org.json4s::json4s-ast:3.6.12",
-    ivy"com.lihaoyi::sourcecode::$sourcecode",
+  def mvnDeps = Seq(
+    mvn"io.circe::circe-core::0.14.9",
+    mvn"io.circe::circe-generic::0.14.9",
+    mvn"io.circe::circe-parser::0.14.9",
+    mvn"com.typesafe.play::play-json::2.9.4",
+    mvn"io.argonaut::argonaut:6.2.6",
+    mvn"org.json4s::json4s-ast:3.6.12",
+    mvn"com.lihaoyi::sourcecode::$sourcecode",
   )
 }
 
@@ -435,8 +435,8 @@ object bench extends Module {
   object native extends BenchModule with ScalaNativeModule {
     def scalaNativeVersion = scalaNative
     def moduleDeps = Seq(upickle.native(scala213).test)
-    def ivyDeps = Agg(ivy"com.lihaoyi::sourcecode::$sourcecode")
-    def allSourceFiles = T(super.allSourceFiles().filter(_.path.last != "NonNative.scala"))
+    def mvnDeps = Seq(mvn"com.lihaoyi::sourcecode::$sourcecode")
+    def allSourceFiles = Task{ super.allSourceFiles().filter(_.path.last != "NonNative.scala") }
     def releaseMode = ReleaseMode.ReleaseFast
     def nativeLTO = LTO.Thin
   }
