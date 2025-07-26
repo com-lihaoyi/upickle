@@ -99,7 +99,7 @@ private def allReadersImpl[T, R[_]](using Quotes, Type[T], Type[R]): Expr[(AnyRe
   }
   Expr.ofTuple(
     (
-      readerMap.headOption.getOrElse('{null}.asInstanceOf[Expr[AnyRef]]), 
+      readerMap.headOption.getOrElse('{null.asInstanceOf[AnyRef]}), 
       '{${Expr.ofList(readers)}.toArray},
     )
   )

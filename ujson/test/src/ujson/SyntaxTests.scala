@@ -107,5 +107,13 @@ object SyntaxTests extends TestSuite{
       test("1+ is invalid") { TestUtil.checkParse("1+", false) }
       test("1- is invalid") { TestUtil.checkParse("1-", false) }
     }
+
+    test("whitespace") {
+      test { TestUtil.checkParse("\n{\n}", true) }
+      test { TestUtil.checkParse("\r{\r}", true) }
+      test { TestUtil.checkParse("\r\n{\r\n}", true) }
+      test { TestUtil.checkParse("r{}", false) }
+      test { TestUtil.checkParse("n{}", false) }
+    }
   }
 }
