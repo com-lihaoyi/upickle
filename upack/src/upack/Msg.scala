@@ -27,7 +27,7 @@ sealed trait Msg extends Readable with geny.Writable{
     */
   def binary = this match{
     case Binary(value) => value
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Binary")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Binary")
   }
   /**
     * Returns the `String` value of this [[Msg]], fails if it is not
@@ -35,7 +35,7 @@ sealed trait Msg extends Readable with geny.Writable{
     */
   def str = this match{
     case Str(value) => value
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Str")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Str")
   }
   /**
     * Returns the key/value map of this [[Msg]], fails if it is not
@@ -43,7 +43,7 @@ sealed trait Msg extends Readable with geny.Writable{
     */
   def obj = this match{
     case Obj(value) => value
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Obj")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Obj")
   }
   /**
     * Returns the elements of this [[Msg]], fails if it is not
@@ -51,7 +51,7 @@ sealed trait Msg extends Readable with geny.Writable{
     */
   def arr = this match{
     case Arr(value) => value
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Arr")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Arr")
   }
   /**
     * Returns the `Double` value of this [[Msg]], fails if it is not
@@ -61,7 +61,7 @@ sealed trait Msg extends Readable with geny.Writable{
     case Int32(value) => value
     case Int64(value) => value.toInt
     case UInt64(value) => value.toInt
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Int32, upack.Int64 or upack.UInt64")
   }
   /**
     * Returns the `Double` value of this [[Msg]], fails if it is not
@@ -71,7 +71,7 @@ sealed trait Msg extends Readable with geny.Writable{
     case Int32(value) => value.toLong
     case Int64(value) => value
     case UInt64(value) => value
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Int32, upack.Int64 or upack.UInt64")
   }
   /**
     * Returns the `Float` value of this [[Msg]], fails if it is not
@@ -80,7 +80,7 @@ sealed trait Msg extends Readable with geny.Writable{
   def float32 = this match{
     case Float32(value) => value
     case Float64(value) => value.toFloat
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Float32 or upack.Float64")
   }
   /**
     * Returns the `Double` value of this [[Msg]], fails if it is not
@@ -89,7 +89,7 @@ sealed trait Msg extends Readable with geny.Writable{
   def float64 = this match{
     case Float32(value) => value.toDouble
     case Float64(value) => value
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Num")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Float32 or upack.Float64")
   }
   /**
     * Returns the `Boolean` value of this [[Msg]], fails if it is not
@@ -97,10 +97,10 @@ sealed trait Msg extends Readable with geny.Writable{
     */
   def bool = this match{
     case Bool(value) => value
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Bool")
+    case _ => throw Msg.InvalidData(this, "Expected upack.Bool")
   }
   /**
-    * Returns true if the value of this [[Msg]] is ujson.Null, false otherwise
+    * Returns true if the value of this [[Msg]] is [[upack.Null]], false otherwise
     */
   def isNull = this match {
     case Null => true
