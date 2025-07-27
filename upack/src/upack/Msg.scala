@@ -22,12 +22,12 @@ sealed trait Msg extends Readable with geny.Writable{
   def transform[T](f: Visitor[_, T]) = Msg.transform(this, f)
 
   /**
-    * Returns the `String` value of this [[Msg]], fails if it is not
-    * a [[upack.Str]]
+    * Returns the `Array[Byte]` value of this [[Msg]], fails if it is not
+    * a [[upack.Binary]]
     */
   def binary = this match{
     case Binary(value) => value
-    case _ => throw Msg.InvalidData(this, "Expected ujson.Str")
+    case _ => throw Msg.InvalidData(this, "Expected ujson.Binary")
   }
   /**
     * Returns the `String` value of this [[Msg]], fails if it is not
