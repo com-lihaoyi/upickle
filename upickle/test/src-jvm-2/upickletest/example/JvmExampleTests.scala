@@ -1,4 +1,4 @@
-package upickle.example
+package upickletest.example
 
 import java.io.StringWriter
 import scala.concurrent.duration.Duration

@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 
 object withTimeout {
   // In Scala Native and Scala.js it's impossible to

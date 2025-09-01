@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 import utest._
 import upickle.legacy.read
 import TestUtil._
