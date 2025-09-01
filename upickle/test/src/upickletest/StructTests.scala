@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 import java.io.ByteArrayOutputStream
 import utest._
 import upickle.legacy.{read, write}

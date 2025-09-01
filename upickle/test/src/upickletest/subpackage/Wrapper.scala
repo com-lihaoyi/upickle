@@ -1,4 +1,4 @@
-package upickle.subpackage
+package upickletest.subpackage
 
 sealed trait Base
 object Base {

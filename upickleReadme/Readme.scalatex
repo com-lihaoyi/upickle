@@ -3,14 +3,14 @@
 
 
 @def lnk(txt: String, url: String) = a(txt, href:=url)
-@val exampleTests = wd/'upickle/'test/"src"/'upickle/'example/"ExampleTests.scala"
-@val derivationTests = wd/'upickle/'test/"src-3"/'upickle/"DerivationTests.scala"
-@val enumTests = wd/'upickle/'test/"src-3"/'upickle/"EnumTests.scala"
-@val jvmExampleTests = wd/'upickle/'test/"src-jvm-2"/'upickle/'example/"JvmExampleTests.scala"
+@val exampleTests = wd/'upickle/'test/"src-3"/'upickletest/'example/"ExampleTests.scala"
+@val derivationTests = wd/'upickle/'test/"src-3"/'upickletest/"DerivationTests.scala"
+@val enumTests = wd/'upickle/'test/"src-3"/'upickletest/"EnumTests.scala"
+@val jvmExampleTests = wd/'upickle/'test/"src-jvm-2"/'upickletest/'example/"JvmExampleTests.scala"
 @val macroTests = wd/'upickle/'test/'src/'upickle/"MacroTests.scala"
 @val namedTupleTests = wd/'upickle/'implicits/"named-tuples"/'test/"src-3.7"/'upickle/'implicits/'namedTuples/"BasicTests.scala"
 
-@val boxedOptionsTests =  wd/'upickle/'test/"src"/'upickle/'example/"BoxedOptionsTests.scala"
+@val boxedOptionsTests =  wd/'upickle/'test/"src-3"/'upickletest/'example/"BoxedOptionsTests.scala"
 
 
 @a(
@@ -85,6 +85,10 @@
       format:
 
     @hl.ref(exampleTests, Seq("\"binary\"", ""))
+
+    @p
+      Note that in Scala 2.x, you need to use the more verbose `upickle.default.{read,write}`
+      rather than the more convenient `upickle.{read,write}` available in Scala 3.x
 
     @sect{ScalaJS}
       @p
@@ -845,25 +849,25 @@
       and manipulation, without needing to bind it to Scala case classes or data
       types:
 
-    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("\"msgConstruction\"", ""))
+    @hl.ref(wd/'upickle/'test/"src-3"/'upickle/"ExampleTests.scala", Seq("\"msgConstruction\"", ""))
 
     @p
       You can read/write Scala values to @code{upack.Msg}s using @code{readBinary}/@code{writeMsg}:
 
-    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("\"msgReadWrite\"", ""))
+    @hl.ref(wd/'upickle/'test/"src-3"/'upickle/"ExampleTests.scala", Seq("\"msgReadWrite\"", ""))
 
     @p
       Or include @code{upack.Msg}s inside @code{Seq}s, case-classes and other
       data structures when you read/write them:
 
-    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("\"msgInsideValue\"", ""))
+    @hl.ref(wd/'upickle/'test/"src-3"/'upickle/"ExampleTests.scala", Seq("\"msgInsideValue\"", ""))
 
     @p
       You can also convert the uPack messages or binaries to @code{ujson.Value}s via
       @code{upack.transform}. This can be handy to help debug what's going on in your
       binary message data:
 
-    @hl.ref(wd/'upickle/'test/'src/'upickle/'example/"ExampleTests.scala", Seq("\"msgToJson\"", ""))
+    @hl.ref(wd/'upickle/'test/"src-3"/'upickle/"ExampleTests.scala", Seq("\"msgToJson\"", ""))
 
     @p
       Note that such a conversion between MessagePack structs and JSON data is

@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 
 import upickle.default._
 import utest._

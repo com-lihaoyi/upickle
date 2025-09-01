@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 
 import scala.language.implicitConversions
 import TestUtil.rw

@@ -1,7 +1,7 @@
-package upickle.example
+package upickletest.example
 
 import utest._
-import upickle.example.Simple.Thing
+import Simple.Thing
 import scala.language.implicitConversions
 
 case class Opt(a: Option[String], b: Option[Int])

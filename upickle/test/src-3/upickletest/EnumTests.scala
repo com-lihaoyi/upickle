@@ -1,7 +1,7 @@
-package upickle
+package upickletest
 
 import ujson.ParseException
-import upickle.TestUtil.rw
+import upickletest.TestUtil.rw
 import upickle.core.AbortException
 
 import scala.language.implicitConversions

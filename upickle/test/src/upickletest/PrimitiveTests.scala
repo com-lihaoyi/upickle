@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 import utest._
 import upickle.default.{read, write, readBinary, writeBinary, writeMsg, transform}
 import TestUtil._

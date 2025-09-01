@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 
 import upickle.core.TraceVisitor.TraceException
 import upickle.core.{TraceVisitor, NoOpVisitor}

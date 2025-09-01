@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 // TODO: utest's assert throws a cyclic dependency error in the version currently
 // published for Dotty. Use utest's assert once the fix has been published in
 // a new version.

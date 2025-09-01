@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 
 import utest._
 import upickle.legacy.read
@@ -276,10 +276,10 @@ object FailureTests extends TestSuite {
         }
 
         test("taggedInvalidBody"){
-          test - assertErrorMsg[Fi.Fo]("""["upickle.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 24")
-          test - assertErrorMsg[Fi]("""["upickle.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 24")
-          test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "upickle.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 32")
-          test - assertErrorMsgDefault[Fi]("""{"$type": "upickle.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 32")
+          test - assertErrorMsg[Fi.Fo]("""["upickletest.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 28")
+          test - assertErrorMsg[Fi]("""["upickletest.Fi.Fo", {"i": true, "z": null}]""", "expected number got boolean at index 28")
+          test - assertErrorMsgDefault[Fi.Fo]("""{"$type": "upickletest.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 36")
+          test - assertErrorMsgDefault[Fi]("""{"$type": "upickletest.Fi.Fo", "i": true, "z": null}""", "expected number got boolean at index 36")
         }
       }
     }
@@ -291,12 +291,12 @@ object FailureTests extends TestSuite {
       compileError("implicitly[upickle.default.Reader[Nothing]]")
     }
     test("flattenAnnotation") {
-      compileError("upickle.default.macroRW[FlattenTest.FlattenTwoMaps]")
-      compileError("upickle.default.macroRW[FlattenTest.ConflictingKeys]")
-      compileError("upickle.default.macroRW[FlattenTest.MapWithNoneStringKey]")
-      compileError("upickle.default.macroRW[FlattenTest.UnsupportedType]")
-      compileError("upickle.default.macroRW[FlattenTest.UnsupportedCollectionType]")
-      compileError("upickle.default.macroRW[FlattenTest.FlattenTwoCaseClasses]")
+      compileError("upickletest.default.macroRW[FlattenTest.FlattenTwoMaps]")
+      compileError("upickletest.default.macroRW[FlattenTest.ConflictingKeys]")
+      compileError("upickletest.default.macroRW[FlattenTest.MapWithNoneStringKey]")
+      compileError("upickletest.default.macroRW[FlattenTest.UnsupportedType]")
+      compileError("upickletest.default.macroRW[FlattenTest.UnsupportedCollectionType]")
+      compileError("upickletest.default.macroRW[FlattenTest.FlattenTwoCaseClasses]")
     }
     test("runtimeCollision") {
       import upickle.default._

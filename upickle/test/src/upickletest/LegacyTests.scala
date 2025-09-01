@@ -1,6 +1,7 @@
-package upickle
+package upickletest
 import utest._
 import LegacyTestUtil.rw
+import upickle.legacy
 
 import upickle.legacy.{ReadWriter => RW, Reader => R, Writer => W}
 object LegacyTests extends TestSuite {

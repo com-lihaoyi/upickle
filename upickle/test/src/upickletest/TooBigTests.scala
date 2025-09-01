@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 
 import java.io.{BufferedOutputStream, BufferedWriter, OutputStreamWriter}
 

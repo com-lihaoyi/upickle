@@ -1,6 +1,6 @@
 package upickle
 import utest._
-import upickle.TestUtil.rw
+import upickletest.TestUtil.rw
 
 object AdvancedTestsScala2Only extends TestSuite {
   import All._

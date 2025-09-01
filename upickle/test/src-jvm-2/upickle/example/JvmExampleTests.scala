@@ -4,7 +4,7 @@ import java.io.StringWriter
 import scala.concurrent.duration.Duration
 
 // import ujson.json4s.Json4sJson
-import upickle.TestUtil
+import upickletest.TestUtil
 import utest._
 
 import Simple._
