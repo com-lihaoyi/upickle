@@ -7,7 +7,7 @@
 @val derivationTests = wd/'upickle/'test/"src-3"/'upickletest/"DerivationTests.scala"
 @val enumTests = wd/'upickle/'test/"src-3"/'upickletest/"EnumTests.scala"
 @val jvmExampleTests = wd/'upickle/'test/"src-jvm-2"/'upickletest/'example/"JvmExampleTests.scala"
-@val macroTests = wd/'upickle/'test/'src/'upickle/"MacroTests.scala"
+@val macroTests = wd/'upickle/'test/'src/'upickletest/"MacroTests.scala"
 @val namedTupleTests = wd/'upickle/'implicits/"named-tuples"/'test/"src-3.7"/'upickle/'implicits/'namedTuples/"BasicTests.scala"
 
 @val boxedOptionsTests =  wd/'upickle/'test/"src-3"/'upickletest/'example/"BoxedOptionsTests.scala"
@@ -87,8 +87,8 @@
     @hl.ref(exampleTests, Seq("\"binary\"", ""))
 
     @p
-      Note that in Scala 2.x, you need to use the more verbose `upickle.default.{read,write}`
-      rather than the more convenient `upickle.{read,write}` available in Scala 3.x
+      Note that in Scala 2.x, you need to use the more verbose @hl.scala("upickle.default.{read,write}")
+      rather than the more convenient @hl.scala("upickle.{read,write}") available in Scala 3.x
 
     @sect{ScalaJS}
       @p
@@ -106,10 +106,9 @@
     @sect{Builtins}
       @p
         This is a non-comprehensive list of what the most commonly-used types
-         pickle to using uPickle. To begin, let's import upickle
-
-      @hl.scala
-        import upickle.default._
+        pickle to using uPickle. Most of the uPickle APIs you are about are
+        on the @hl.scala{upickle.*} package, though in Scala 2.x you need to reference
+        them via @hl.scala{upickle.default.*}
 
       @sect{Primitives}
         @p
@@ -849,25 +848,25 @@
       and manipulation, without needing to bind it to Scala case classes or data
       types:
 
-    @hl.ref(wd/'upickle/'test/"src-3"/'upickle/"ExampleTests.scala", Seq("\"msgConstruction\"", ""))
+    @hl.ref(wd/'upickle/'test/"src-3"/'upickletest/'example/"ExampleTests.scala", Seq("\"msgConstruction\"", ""))
 
     @p
       You can read/write Scala values to @code{upack.Msg}s using @code{readBinary}/@code{writeMsg}:
 
-    @hl.ref(wd/'upickle/'test/"src-3"/'upickle/"ExampleTests.scala", Seq("\"msgReadWrite\"", ""))
+    @hl.ref(wd/'upickle/'test/"src-3"/'upickletest/'example/"ExampleTests.scala", Seq("\"msgReadWrite\"", ""))
 
     @p
       Or include @code{upack.Msg}s inside @code{Seq}s, case-classes and other
       data structures when you read/write them:
 
-    @hl.ref(wd/'upickle/'test/"src-3"/'upickle/"ExampleTests.scala", Seq("\"msgInsideValue\"", ""))
+    @hl.ref(wd/'upickle/'test/"src-3"/'upickletest/'example/"ExampleTests.scala", Seq("\"msgInsideValue\"", ""))
 
     @p
       You can also convert the uPack messages or binaries to @code{ujson.Value}s via
       @code{upack.transform}. This can be handy to help debug what's going on in your
       binary message data:
 
-    @hl.ref(wd/'upickle/'test/"src-3"/'upickle/"ExampleTests.scala", Seq("\"msgToJson\"", ""))
+    @hl.ref(wd/'upickle/'test/"src-3"/'upickletest/'example/"ExampleTests.scala", Seq("\"msgToJson\"", ""))
 
     @p
       Note that such a conversion between MessagePack structs and JSON data is
