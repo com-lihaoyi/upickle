@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 object NonNative{
   import Common._
   import ADTs.ADT0

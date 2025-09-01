@@ -1,10 +1,10 @@
-package upickle
+package upickletest
 
-import upickle.ADTs.ADT0
-import upickle.Common.{Data, bench}
-import upickle.Defaults.ADTc
-import upickle.Hierarchy.{A, B, C}
-import upickle.Recursive.{End, LL, Node}
+import upickletest.ADTs.ADT0
+import upickletest.Common.{Data, bench}
+import upickletest.Defaults.ADTc
+import upickletest.Hierarchy.{A, B, C}
+import upickletest.Recursive.{End, LL, Node}
 import scala.scalajs.js
 object Main{
   def main(args: Array[String]): Unit = {

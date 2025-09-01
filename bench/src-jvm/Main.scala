@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 
 import upack.MsgPackWriter
 

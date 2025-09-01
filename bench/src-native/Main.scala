@@ -1,4 +1,4 @@
-package upickle
+package upickletest
 
 
 object Main{

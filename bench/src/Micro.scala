@@ -1,4 +1,4 @@
-package upickle 
+package upickletest
 object Micro  {
   
   val longStrings: Array[String] = Array.fill(1000)(
