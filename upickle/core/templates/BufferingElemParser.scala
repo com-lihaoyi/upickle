@@ -56,7 +56,9 @@ trait BufferingElemParser{
   def getLastIdx = lastIdx
 
   def getElemSafe(i: Int): Elem = {
-    requestUntil(i)
+    if(requestUntil(i)) {
+      throw java.io.EOFException(s"buffer elem $i out of range")
+    }
     buffer(i - firstIdx)
   }
   def getElemUnsafe(i: Int): Elem = {
