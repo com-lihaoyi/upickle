@@ -57,7 +57,7 @@ trait BufferingElemParser{
 
   def getElemSafe(i: Int): Elem = {
     if(requestUntil(i)) {
-      throw java.io.EOFException(s"buffer elem $i out of range")
+      throw new java.io.EOFException(s"buffer elem $i out of range")
     }
     buffer(i - firstIdx)
   }
