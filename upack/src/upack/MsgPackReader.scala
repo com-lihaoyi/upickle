@@ -8,9 +8,11 @@ class MsgPackReader(input0: Array[Byte]) extends BaseMsgPackReader {
   val srcLength = input0.length
   protected[this] final def close() = {}
 
-  // Make sure we never call this method, since it will mutate the original array,
-  // and it should not be necessary to call it if our implementation is correct.
-  override def growBuffer(until: Int): Unit = ???
+  // If we call this method, assuming our implementation is correct,
+  // we are processing a truncated input. Throw EOFException to signal this
+  // to our caller.
+  override def growBuffer(until: Int): Unit =
+    throw new java.io.EOFException(s"index $until is outside the range of input byte array (length $srcLength)")
 
   def readDataIntoBuffer(buffer: Array[Byte], bufferOffset: Int) = {
     if(buffer == null) (input0, false, srcLength)

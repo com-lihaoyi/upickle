@@ -96,8 +96,23 @@ object UnitTests extends TestSuite{
       readOne() ==> upack.Int32(2)
       readOne() ==> upack.Int32(3)
       readOne() ==> upack.Int32(4)
-      intercept[java.io.EOFException] {
+      intercept[java.io.EOFException]{
         readOne()
+      }
+    }
+    test("truncated input EOF"){
+      val msg = upack.Arr(upack.Int32(1), upack.Int32(2), upack.Int32(3), upack.Int32(4))
+      val bytes = upack.write(msg)
+      val truncatedBytes = bytes.take(2)
+
+      // Uses upack.MsgPackReader (which has its own growBuffer override that throws)
+      intercept[java.io.EOFException]{
+        upack.read(truncatedBytes)
+      }
+      // Uses upack.InputStreamMsgPackReader (BufferingElemParser semantics)
+      intercept[java.io.EOFException]{
+        val in = new ByteArrayInputStream(truncatedBytes)
+        upack.read(in)
       }
     }
   }
