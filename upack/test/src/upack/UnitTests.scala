@@ -105,14 +105,18 @@ object UnitTests extends TestSuite{
       val bytes = upack.write(msg)
       val truncatedBytes = bytes.take(2)
 
-      // Uses upack.MsgPackReader (which has its own growBuffer override that throws)
-      intercept[java.io.EOFException]{
-        upack.read(truncatedBytes)
+      // upack.MsgPackReader has its own growBuffer override that throws
+      test("upack.MsgPackReader"){
+        intercept[java.io.EOFException]{
+          upack.read(truncatedBytes) ==> msg
+        }
       }
-      // Uses upack.InputStreamMsgPackReader (BufferingElemParser semantics)
-      intercept[java.io.EOFException]{
-        val in = new ByteArrayInputStream(truncatedBytes)
-        upack.read(in)
+      // upack.InputStreamMsgPackReader uses BufferingElemParser semantics
+      test("upack.InputStreamMsgPackReader"){
+        intercept[java.io.EOFException]{
+          val in = new ByteArrayInputStream(truncatedBytes)
+          upack.read(in) ==> msg
+        }
       }
     }
   }
