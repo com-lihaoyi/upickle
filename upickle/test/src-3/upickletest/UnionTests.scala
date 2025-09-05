@@ -19,6 +19,8 @@ object UnionTests extends TestSuite {
       test("strings"){
         rw[AorB]("A", "\"A\"")
         rw[AorBorC]("C", "\"C\"")
+        compileError("""rw[AorBorC]("D", "\"D\"")""")
+        compileError("""rw[AorBorC]("A": String, "\"A\"")""")
       }
     }
   }
