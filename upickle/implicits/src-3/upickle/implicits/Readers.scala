@@ -206,5 +206,17 @@ trait ReadersVersionSpecific
       else new HugeCaseObjectContext[T](paramCount) with ObjectContext
   }
 
+  inline given derivedStringBasedUnionEnumerationReader[T <: String](using IsUnionOf[String, T]): Reader[T] =
+    lazy val values = UnionDerivation.constValueUnionTuple[String, T]
+    
+    lazy val valuesList = values.toList.asInstanceOf[List[T]]
+    // Codec.string.validate(validator.asInstanceOf[Validator[String]]).map(_.asInstanceOf[T])(_.asInstanceOf[String])
+    new SimpleReader[T] {
+      override def expectedMsg = s"expected oneOf ${valuesList.asInstanceOf[List[T]].mkString(", ")}"
+      override def visitString(s: CharSequence, index: Int) =
+        val v = s.toString
+        if (valuesList.contains(v)) v.asInstanceOf[T]
+        else throw new Abort(expectedMsg)
+    }
 
 end ReadersVersionSpecific
