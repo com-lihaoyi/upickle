@@ -12,6 +12,9 @@ import java.{util => ju}
 class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     extends mutable.Map[K, V]
     with LinkedHashMapCompat[K, V] {
+  override def size: Int = underlying.size()
+  override def clear(): Unit = underlying.clear()
+  override def isEmpty: Boolean = underlying.isEmpty()
   private def _put(key: K, value: V): V = {
     if (key == null)
       throw new NullPointerException("null keys are not allowed")
@@ -22,15 +25,18 @@ class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     this
   }
   def iterator: Iterator[(K, V)] = {
-    val it = underlying.keySet().iterator()
+    val it = underlying.entrySet().iterator()
     new Iterator[(K, V)] {
       def hasNext: Boolean = it.hasNext()
       def next(): (K, V) = {
-        val key = it.next()
-        key -> underlying.get(key)
+        val e = it.next()
+        (e.getKey, e.getValue)
       }
     }
   }
+  def foreach[U](f: (K, V) => U): Unit = underlying.forEach(new ju.function.BiConsumer[K, V] {
+    override def accept(t: K, u: V): Unit = f(t, u)
+  })
   def get(key: K): Option[V] = Option(underlying.get(key))
   def subtractOne(elem: K): this.type = {
     underlying.remove(elem)
