@@ -22,12 +22,12 @@ class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     this
   }
   def iterator: Iterator[(K, V)] = {
-    val it = underlying.keySet().iterator()
     new Iterator[(K, V)] {
+      val it = underlying.entrySet().iterator()
       def hasNext: Boolean = it.hasNext()
       def next(): (K, V) = {
-        val key = it.next()
-        key -> underlying.get(key)
+        val entry = it.next()
+        (entry.getKey, entry.getValue)
       }
     }
   }
