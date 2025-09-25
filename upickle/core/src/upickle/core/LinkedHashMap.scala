@@ -21,7 +21,7 @@ class LinkedHashMap[K, V] private (underlying: ju.LinkedHashMap[K, V])
     _put(elem._1, elem._2)
     this
   }
-  def size: Int = underlying.size
+  override def size: Int = underlying.size
   def iterator: Iterator[(K, V)] = {
     new Iterator[(K, V)] {
       val it = underlying.entrySet().iterator()
