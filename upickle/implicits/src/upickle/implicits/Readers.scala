@@ -252,7 +252,7 @@ trait Readers extends upickle.core.Types
       }
 
       override def visitArray(length: Int, index: Int) = {
-        SeqLikeReader[Array, (K, V)](Tuple2Reader(k, v), implicitly)
+        SeqLikeReader[Array, (K, V)](Tuple2Reader(using k, v), implicitly)
           .map(x => make(x))
           .visitArray(length, index)
       }
