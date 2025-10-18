@@ -160,8 +160,7 @@ object DerivationTests extends TestSuite {
 
       test("multilevelTaggedWrong") - {
         val e = intercept[upickle.core.AbortException] {
-          upickle.default.read[Level2]("""{"$type": "Level1Cls", "i": 1}"""),
-          trace = false
+          upickle.default.read[Level2]("""{"$type": "Level1Cls", "i": 1}""", trace = false)
         }
         assert(e.getMessage == "invalid tag for tagged object: Level1Cls at index 10")
       }
