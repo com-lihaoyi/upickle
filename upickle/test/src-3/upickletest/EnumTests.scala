@@ -59,7 +59,7 @@ object EnumTests extends TestSuite {
       }
 
       test("readFailure") - {
-        val ex = intercept[AbortException] { read[SimpleEnum]("\"C\"") }
+        val ex = intercept[AbortException] { read[SimpleEnum]("\"C\"", trace = false) }
         val expectedMessage = "invalid tag for tagged object: C at index 0"
         assert(ex.getMessage == expectedMessage)
       }

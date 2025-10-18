@@ -151,7 +151,8 @@ object DerivationTests extends TestSuite {
       test("caseClassTaggedWrong") - {
         val e = intercept[upickle.core.AbortException] {
           upickle.default.read[Person](
-            """{"$type":"Cat","name":"Peter","owner":{"$type":"Person","name": "bob", "address": "Avenue 10 Zurich"}}"""
+            """{"$type":"Cat","name":"Peter","owner":{"$type":"Person","name": "bob", "address": "Avenue 10 Zurich"}}""",
+            trace = false
           )
         }
         assert(e.getMessage == "invalid tag for tagged object: Cat at index 9")
@@ -159,7 +160,8 @@ object DerivationTests extends TestSuite {
 
       test("multilevelTaggedWrong") - {
         val e = intercept[upickle.core.AbortException] {
-          upickle.default.read[Level2]("""{"$type": "Level1Cls", "i": 1}""")
+          upickle.default.read[Level2]("""{"$type": "Level1Cls", "i": 1}"""),
+          trace = false
         }
         assert(e.getMessage == "invalid tag for tagged object: Level1Cls at index 10")
       }

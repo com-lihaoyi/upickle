@@ -85,7 +85,7 @@ object BasicTests extends TestSuite {
         import upickle.implicits.namedTuples.default.given
         val json = """{"bar": 23}"""
         val err = intercept[upickle.core.AbortException] {
-          upickle.default.read[(foo: Boolean)](json)
+          upickle.default.read[(foo: Boolean)](json, trace = false)
         }
         assert(err.getMessage.contains("missing keys in dictionary: foo"))
       }
@@ -94,7 +94,7 @@ object BasicTests extends TestSuite {
         import upickle.implicits.namedTuples.default.given
         val json = """[]"""
         val err = intercept[upickle.core.AbortException] {
-          upickle.default.read[(foo: Boolean)](json)
+          upickle.default.read[(foo: Boolean)](json, trace = false)
         }
         assert(err.getMessage.contains("expected dictionary got sequence"))
       }

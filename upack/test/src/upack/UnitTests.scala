@@ -108,14 +108,14 @@ object UnitTests extends TestSuite{
       // upack.MsgPackReader has its own growBuffer override that throws
       test("upack.MsgPackReader"){
         intercept[java.io.EOFException]{
-          upack.read(truncatedBytes) ==> msg
+          upack.read(truncatedBytes, trace = false) ==> msg
         }
       }
       // upack.InputStreamMsgPackReader uses BufferingElemParser semantics
       test("upack.InputStreamMsgPackReader"){
         intercept[java.io.EOFException]{
           val in = new ByteArrayInputStream(truncatedBytes)
-          upack.read(in) ==> msg
+          upack.read(in, trace = false) ==> msg
         }
       }
     }

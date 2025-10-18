@@ -35,7 +35,7 @@ object LensesTest extends TestSuite {
       val e = intercept[upickle.core.AbortException] {
         // should throw, because it does not expect to see extra fields
         val result: Schema =
-          upickle.default.read[Schema](big_blob_json)
+          upickle.default.read[Schema](big_blob_json, trace = false)
       }
       assert(e.getMessage().contains("Unknown Key: a0"))
     }

@@ -84,7 +84,8 @@ object TooBigTests extends TestSuite {
               .replace("\"__2\":2,", "")
               .replace("\"__52\":52,", "")
               .replace("\"__102\":102,", "")
-              .replace("\"__142\":142,", "")
+              .replace("\"__142\":142,", ""),
+            trace = false
           )
         }
         assert(

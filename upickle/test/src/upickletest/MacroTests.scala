@@ -852,29 +852,29 @@ object MacroTests extends TestSuite {
       // For upickle default, we defualt to allowing unknown keys, and explicitly annotating
       // `@allowUnknownKeys(true)` does nothing, but `@allowUnknownKeys(false)` makes unknown
       // keys an error (just for the annotated class)
-      upickle.default.read[UnknownKeys.Default]("""{"id":1, "name":"x", "omg": "wtf"}""") ==>
+      upickle.default.read[UnknownKeys.Default]("""{"id":1, "name":"x", "omg": "wtf"}""", trace = false) ==>
         UnknownKeys.Default(1, "x")
 
-      upickle.default.read[UnknownKeys.Allow]("""{"id":1, "name":"x", "omg": "wtf"}""") ==>
+      upickle.default.read[UnknownKeys.Allow]("""{"id":1, "name":"x", "omg": "wtf"}""", trace = false) ==>
         UnknownKeys.Allow(1, "x")
 
       intercept[upickle.core.AbortException]{
-        upickle.default.read[UnknownKeys.DisAllow]("""{"id":1, "name":"x", "omg": "wtf"}""")
+        upickle.default.read[UnknownKeys.DisAllow]("""{"id":1, "name":"x", "omg": "wtf"}""", trace = false)
       }
 
       // If the upickle API sets `override def allowUnknownKeys = false`, we default to treating unknown keys
       // as an error, `@allowUnknownKeys(false)` does nothing, but `@allowUnknownKeys(true)` makes unknown
       // keys get ignored (just for the annotated class)
       intercept[upickle.core.AbortException] {
-        UnknownKeys.DisallowPickler.read[UnknownKeys.Default]("""{"id":1, "name":"x", "omg": "wtf"}""") ==>
+        UnknownKeys.DisallowPickler.read[UnknownKeys.Default]("""{"id":1, "name":"x", "omg": "wtf"}""", trace = false) ==>
           UnknownKeys.Default(1, "x")
       }
 
-      UnknownKeys.DisallowPickler.read[UnknownKeys.Allow]("""{"id":1, "name":"x", "omg": "wtf"}""") ==>
+      UnknownKeys.DisallowPickler.read[UnknownKeys.Allow]("""{"id":1, "name":"x", "omg": "wtf"}""", trace = false) ==>
         UnknownKeys.Allow(1, "x")
 
       intercept[upickle.core.AbortException]{
-        UnknownKeys.DisallowPickler.read[UnknownKeys.DisAllow]("""{"id":1, "name":"x", "omg": "wtf"}""")
+        UnknownKeys.DisallowPickler.read[UnknownKeys.DisAllow]("""{"id":1, "name":"x", "omg": "wtf"}""", trace = false)
       }
     }
 
