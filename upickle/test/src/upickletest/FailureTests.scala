@@ -88,6 +88,8 @@ object TaggedCustomSerializer{
 */
 object FailureTests extends TestSuite {
 
+  def unwrapTraceException[T](t: => T) =
+    try t catch {case e: upickle.core.TraceVisitor.TraceException => throw e.getCause}
   def tests = Tests {
 //    test("test"){
 //      read[ujson.Value](""" {unquoted_key: "keys must be quoted"} """)
@@ -98,7 +100,7 @@ object FailureTests extends TestSuite {
       // skipping the ones which we don't support yet (e.g. leading zeroes,
       // extra commas) or will never support (e.g. too deep)
       def check(failureCase: String, expectedMessage: String) = {
-        val ex = intercept[ParseException] { read[ujson.Value](failureCase) }
+        val ex = intercept[ParseException] { unwrapTraceException(read[ujson.Value](failureCase)) }
         assert(ex.getMessage == expectedMessage)
       }
 //        """ "A JSON payload should be an object or array, not a string." """,
@@ -219,20 +221,20 @@ object FailureTests extends TestSuite {
       """ {"Extra comma": true,} """,
         """expected json string key got "}" at index 22"""
       )
-      test{ intercept[IncompleteParseException]{read[ujson.Value](""" {"Comma instead if closing brace": true, """)} }
-      test{ intercept[IncompleteParseException]{read[ujson.Value](""" ["Unclosed array" """)} }
+      test{ intercept[IncompleteParseException]{unwrapTraceException(read[ujson.Value](""" {"Comma instead if closing brace": true, """))} }
+      test{ intercept[IncompleteParseException]{unwrapTraceException(read[ujson.Value](""" ["Unclosed array" """))} }
     }
 
     test("facadeFailures"){
       def assertErrorMsg[T: upickle.legacy.Reader](s: String, msgs: String*) = {
-        val err = intercept[Exception] { upickle.legacy.read[T](s) }
+        val err = intercept[Exception] { unwrapTraceException(upickle.legacy.read[T](s)) }
         for (msg <- msgs) assert(err.getMessage.contains(msg))
 
         err
       }
 
       def assertErrorMsgDefault[T: upickle.default.Reader](s: String, msgs: String*) = {
-        val err = intercept[AbortException] { upickle.default.read[T](s) }
+        val err = intercept[AbortException] { unwrapTraceException(upickle.default.read[T](s)) }
         for (msg <- msgs) assert(err.getMessage.contains(msg))
         err
       }
@@ -302,7 +304,9 @@ object FailureTests extends TestSuite {
       import upickle.default._
 
       val error = intercept[Exception] {
-        upickle.default.write(FlattenTest.RuntimeCollision(1, Seq("x" -> 3)))
+        unwrapTraceException(
+          upickle.default.write(FlattenTest.RuntimeCollision(1, Seq("x" -> 3)))
+        )
       }
 
       assert(error.getMessage.startsWith("Key collision"))

@@ -8,37 +8,39 @@ import upickle.core.NoOpVisitor
 import scala.util.Try
 
 object TestUtil {
+  def unwrapTraceException[T](t: => T) =
+    try t catch {case e: upickle.core.TraceVisitor.TraceException => throw e.getCause}
   def checkParse(s: String, success: Boolean): Unit = {
     val cs = java.nio.CharBuffer.wrap(s.toCharArray)
     val bb = ByteBuffer.wrap(s.getBytes("UTF-8"))
 
-    val r0a = Try(ujson.read(cs))
-    val r1a = Try(ujson.read(s))
-    val r2a = Try(ujson.read(bb))
-    val r3a = Try(ujson.read(new ByteArrayInputStream(s.getBytes)))
-    val r4a = Try(ujson.read(s.getBytes))
-    val r5a = Try(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 2, 2).parse(ujson.Value))
+    val r0a = Try(unwrapTraceException(ujson.read(cs)))
+    val r1a = Try(unwrapTraceException(ujson.read(s)))
+    val r2a = Try(unwrapTraceException(ujson.read(bb)))
+    val r3a = Try(unwrapTraceException(ujson.read(new ByteArrayInputStream(s.getBytes))))
+    val r4a = Try(unwrapTraceException(ujson.read(s.getBytes)))
+    val r5a = Try(unwrapTraceException(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 2, 2).parse(ujson.Value)))
 
-    val r0b = Try(ujson.reformat(cs))
-    val r1b = Try(ujson.reformat(s))
-    val r2b = Try(ujson.reformat(bb))
-    val r3b = Try(ujson.reformat(new ByteArrayInputStream(s.getBytes)))
-    val r4b = Try(ujson.reformat(s.getBytes))
-    val r5b = Try(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 2, 2).parse(ujson.StringRenderer()).toString)
+    val r0b = Try(unwrapTraceException(ujson.reformat(cs)))
+    val r1b = Try(unwrapTraceException(ujson.reformat(s)))
+    val r2b = Try(unwrapTraceException(ujson.reformat(bb)))
+    val r3b = Try(unwrapTraceException(ujson.reformat(new ByteArrayInputStream(s.getBytes))))
+    val r4b = Try(unwrapTraceException(ujson.reformat(s.getBytes)))
+    val r5b = Try(unwrapTraceException(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 2, 2).parse(ujson.StringRenderer()).toString))
 
-    val r0c = Try(ujson.validate(cs))
-    val r1c = Try(ujson.validate(s))
-    val r2c = Try(ujson.validate(bb))
-    val r3c = Try(ujson.validate(new ByteArrayInputStream(s.getBytes)))
-    val r4c = Try(ujson.validate(s.getBytes))
-    val r5c = Try(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 2, 2).parse(NoOpVisitor))
+    val r0c = Try(unwrapTraceException(ujson.validate(cs)))
+    val r1c = Try(unwrapTraceException(ujson.validate(s)))
+    val r2c = Try(unwrapTraceException(ujson.validate(bb)))
+    val r3c = Try(unwrapTraceException(ujson.validate(new ByteArrayInputStream(s.getBytes))))
+    val r4c = Try(unwrapTraceException(ujson.validate(s.getBytes)))
+    val r5c = Try(unwrapTraceException(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 2, 2).parse(NoOpVisitor)))
 
-    val r0d = Try(ujson.reformatToByteArray(cs).toList)
-    val r1d = Try(ujson.reformatToByteArray(s).toList)
-    val r2d = Try(ujson.reformatToByteArray(bb).toList)
-    val r3d = Try(ujson.reformatToByteArray(new ByteArrayInputStream(s.getBytes)).toList)
-    val r4d = Try(ujson.reformatToByteArray(s.getBytes).toList)
-    val r5d = Try(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 2, 2).parse(BytesRenderer()).toByteArray.toList)
+    val r0d = Try(unwrapTraceException(ujson.reformatToByteArray(cs).toList))
+    val r1d = Try(unwrapTraceException(ujson.reformatToByteArray(s).toList))
+    val r2d = Try(unwrapTraceException(ujson.reformatToByteArray(bb).toList))
+    val r3d = Try(unwrapTraceException(ujson.reformatToByteArray(new ByteArrayInputStream(s.getBytes)).toList))
+    val r4d = Try(unwrapTraceException(ujson.reformatToByteArray(s.getBytes).toList))
+    val r5d = Try(unwrapTraceException(new InputStreamParser(new ByteArrayInputStream(s.getBytes), 2, 2).parse(BytesRenderer()).toByteArray.toList))
 
     if (success){
       if (r0a != r1a) sys.error(s"CharSequence/String parsing disagree($r0a, $r1a): $s")
