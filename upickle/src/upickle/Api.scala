@@ -30,15 +30,23 @@ trait Api
   }
   /**
     * Reads the given MessagePack input into a Scala value
+ *
+    * @param trace whether or not to enable tracing, which improves error reporting
+    *              at some cost in performance. Defaults to `true`, but can be
+    *              set to `false` to maximize performance
     */
-  def readBinary[T: Reader](s: upack.Readable, trace: Boolean = false): T = {
+  def readBinary[T: Reader](s: upack.Readable, trace: Boolean = true): T = {
     TraceVisitor.withTrace(trace, reader[T])(s.transform(_))
   }
 
   /**
     * Reads the given JSON input into a Scala value
+    *
+    * @param trace whether or not to enable tracing, which improves error reporting
+    *              at some cost in performance. Defaults to `true`, but can be
+    *              set to `false` to maximize performance
     */
-  def read[T: Reader](s: ujson.Readable, trace: Boolean = false): T = {
+  def read[T: Reader](s: ujson.Readable, trace: Boolean = true): T = {
     TraceVisitor.withTrace(trace, reader[T])(s.transform(_))
   }
 

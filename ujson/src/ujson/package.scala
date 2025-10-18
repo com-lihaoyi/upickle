@@ -10,8 +10,12 @@ package object ujson{
 
   /**
     * Read the given JSON input as a JSON struct
+    *
+    * @param trace whether or not to enable tracing, which improves error reporting
+    *              at some cost in performance. Defaults to `true`, but can be
+    *              set to `false` to maximize performance
     */
-  def read(s: Readable, trace: Boolean = false): Value.Value =
+  def read(s: Readable, trace: Boolean = true): Value.Value =
     upickle.core.TraceVisitor.withTrace(trace, Value)(transform(s, _))
 
   def copy(t: Value.Value): Value.Value = transform(t, Value)

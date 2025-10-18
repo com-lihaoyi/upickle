@@ -7,8 +7,12 @@ package object upack{
 
   /**
     * Read the given MessagePack input into a MessagePack struct
+    *
+    * @param trace whether or not to enable tracing, which improves error reporting
+    *              at some cost in performance. Defaults to `true`, but can be
+    *              set to `false` to maximize performance
     */
-  def read(s: Readable, trace: Boolean = false): Msg = upickle.core.TraceVisitor.withTrace(trace, Msg)(transform(s, _))
+  def read(s: Readable, trace: Boolean = true): Msg = upickle.core.TraceVisitor.withTrace(trace, Msg)(transform(s, _))
 
   def copy(t: Msg): Msg = transform(t, Msg)
   /**
