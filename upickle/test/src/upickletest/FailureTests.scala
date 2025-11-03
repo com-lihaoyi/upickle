@@ -360,7 +360,12 @@ object FailureTests extends TestSuite {
         upickle.default.read[AllDefaults]("\"hello\"")
       }
 
-      assert(error.getMessage.startsWith("assertion failed: Can only merge Readers of case classes"))
+
+      error match{
+        case e: upickle.core.TraceException =>
+          assert(e.getMessage == "$")
+          assert(e.getCuase.getMessage == "expected dictionary got string at index 0")
+      }
     }
   }
 }
