@@ -13,8 +13,6 @@ import upickle.core.{Abort, AbortException, ArrVisitor, Config, NoOpVisitor, Obj
 trait CaseClassReadWriters extends upickle.core.Types { self: Config =>
   abstract class CaseClassReader[V] extends SimpleReader[V] {
     override def expectedMsg = "expected dictionary"
-
-    override def visitString(s: CharSequence, index: Int) = visitObject(0, true, index).visitEnd(index)
   }
 
   trait CaseClassWriter[V] extends ObjectWriter[V] {
