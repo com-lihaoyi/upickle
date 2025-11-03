@@ -360,11 +360,10 @@ object FailureTests extends TestSuite {
         upickle.default.read[AllDefaults]("\"hello\"")
       }
 
-
       error match{
-        case e: upickle.core.TraceException =>
+        case e: upickle.core.TraceVisitor.TraceException =>
           assert(e.getMessage == "$")
-          assert(e.getCuase.getMessage == "expected dictionary got string at index 0")
+          assert(e.getCause.getMessage == "expected dictionary got string at index 0")
       }
     }
   }
