@@ -25,6 +25,7 @@ jobs:
       - name: Run JS tests
         run: |
           sed -i 's#//| mill-jvm-version: 11#//| mill-jvm-version: ${{ matrix.java }}#' build.mill
+          head build.mill
           ./mill -i -j 0 -k __.js.__.compile + __.js.__.publishArtifacts + __.js.__.test
 
   test-native:
@@ -42,6 +43,7 @@ jobs:
       - name: Run Native tests
         run: |
           sed -i 's#//| mill-jvm-version: 11#//| mill-jvm-version: ${{ matrix.java }}#' build.mill
+          head build.mill
           ./mill -i -j 0 -k __.native.__.compile + __.native.__.publishArtifacts + __.native.__.test
 
   test-jvm:
@@ -58,6 +60,7 @@ jobs:
       - name: Run JVM tests
         run: |
           sed -i 's#//| mill-jvm-version: 11#//| mill-jvm-version: ${{ matrix.java }}#' build.mill
+          head build.mill
           ./mill -i -j 0 -k __.jvm.__.compile + __.jvm.__.publishArtifacts + __.jvm.__.test
 
   check-binary-compatibility:
