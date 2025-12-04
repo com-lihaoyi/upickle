@@ -1,4 +1,5 @@
 //| mill-version: 1.0.6
+//| mill-jvm-version: 11
 //| mill-jvm-opts: ["-XX:NonProfiledCodeHeapSize=250m", "-XX:ReservedCodeCacheSize=500m", "-Xss10m"]
 //| mill-opts: ["--jobs=0.5C"]
 //| mvnDeps:
@@ -15,10 +16,10 @@ import mill.scalanativelib._
 import mill.scalanativelib.api.{LTO, ReleaseMode}
 import com.github.lolgab.mill.mima._
 
-val scala212  = "2.12.18"
-val scala213  = "2.13.11"
+val scala212  = "2.12.20"
+val scala213  = "2.13.16"
 
-val scala3   = "3.3.6"
+val scala3   = "3.3.7"
 val scala3NamedTuples = "3.7.0"
 val scalaJSNamedTuples = "1.19.0" // the version of scala.js that the scala3-library is built for.
 val scalaNativeNamedTuples = "0.5.7" // the version of scala.native that the scala3-library is built for.

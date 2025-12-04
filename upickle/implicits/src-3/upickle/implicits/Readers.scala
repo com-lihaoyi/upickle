@@ -13,7 +13,7 @@ trait ReadersVersionSpecific
     with Annotator
     with CaseClassReadWriters:
 
-  abstract class CaseClassReader3V2[T](paramCount: Int,
+  abstract class CaseClassReader3V3[T](paramCount: Int,
                                      missingKeyCount: Long,
                                      allowUnknownKeys: Boolean,
                                      construct: (Array[Any], scala.collection.mutable.ListBuffer[(Any, Any)]) => T) extends CaseClassReader[T] {
@@ -23,8 +23,8 @@ trait ReadersVersionSpecific
     lazy val hasFlattenOnMap = visitorMapValue ne null
     def keyToIndex(x: String): Int
     def allKeysArray: Array[String]
-    def storeDefaults(x: upickle.implicits.BaseCaseObjectContext): Unit
-    trait ObjectContext extends ObjVisitor[Any, T] with BaseCaseObjectContext {
+    def storeDefaults(x: upickle.implicits.BaseCaseObjectContext2): Unit
+    trait ObjectContext extends ObjVisitor[Any, T] with BaseCaseObjectContext2 {
       private val params = new Array[Any](paramCount)
       private val collection = scala.collection.mutable.ListBuffer.empty[(Any, Any)]
       private var currentKey: Any = null
@@ -82,6 +82,92 @@ trait ReadersVersionSpecific
     override def visitObject(length: Int,
                              jsonableKeys: Boolean,
                              index: Int) =
+      if (paramCount <= 64) new CaseObjectContext2[T](paramCount) with ObjectContext {
+        override def visitValue(v: Any, index: Int): Unit = {
+          if ((currentIndex != -1) && ((found & (1L << currentIndex)) == 0)) {
+            storeAggregatedValue(currentIndex, v)
+            found |= (1L << currentIndex)
+          }
+          else if (storeToMap) {
+            storeAggregatedValue(currentIndex, v)
+          }
+        }
+      }
+      else new HugeCaseObjectContext2[T](paramCount) with ObjectContext {
+        override def visitValue(v: Any, index: Int): Unit = {
+          if ((currentIndex != -1) && ((found(currentIndex / 64) & (1L << currentIndex)) == 0)) {
+            storeAggregatedValue(currentIndex, v)
+            found(currentIndex / 64) |= (1L << currentIndex)
+          }
+          else if (storeToMap) {
+            storeAggregatedValue(currentIndex, v)
+          }
+        }
+      }
+  }
+
+  @deprecated
+  abstract class CaseClassReader3V2[T](paramCount: Int,
+                                     missingKeyCount: Long,
+                                     allowUnknownKeys: Boolean,
+                                     construct: (Array[Any], scala.collection.mutable.ListBuffer[(String, Any)]) => T) extends CaseClassReader[T] {
+
+    def visitors0: (AnyRef, Array[AnyRef])
+    lazy val (visitorMap, visitors) = visitors0
+    lazy val hasFlattenOnMap = visitorMap ne null
+    def keyToIndex(x: String): Int
+    def allKeysArray: Array[String]
+    def storeDefaults(x: upickle.implicits.BaseCaseObjectContext): Unit
+    trait ObjectContext extends ObjVisitor[Any, T] with BaseCaseObjectContext {
+      private val params = new Array[Any](paramCount)
+      private val collection = scala.collection.mutable.ListBuffer.empty[(String, Any)]
+      private var currentKey = ""
+      protected var storeToMap = false
+
+      def storeAggregatedValue(currentIndex: Int, v: Any): Unit = 
+        if (currentIndex == -1) {
+          if (storeToMap) {
+            collection += (currentKey -> v)
+          }
+        } else {
+          params(currentIndex) = v
+        }
+
+      def subVisitor: Visitor[_, _] =
+        if (currentIndex == -1) {
+          if (hasFlattenOnMap) visitorMap.asInstanceOf[Visitor[_, _]]
+          else upickle.core.NoOpVisitor
+        } 
+        else {
+          visitors(currentIndex).asInstanceOf[Visitor[_, _]]
+        }
+
+      def visitKeyValue(v: Any): Unit =
+        storeToMap = false
+        currentKey = objectAttributeKeyReadMap(v.toString).toString
+        currentIndex = keyToIndex(currentKey)
+        if (currentIndex == -1) {
+          if (hasFlattenOnMap) {
+            storeToMap = true
+          } else if (!allowUnknownKeys) {
+            throw new upickle.core.Abort("Unknown Key: " + currentKey)
+          }
+        }
+
+      def visitEnd(index: Int): T =
+        storeDefaults(this)
+
+        // Special-case 64 because java bit shifting ignores any RHS values above 63
+        // https://docs.oracle.com/javase/specs/jls/se7/html/jls-15.html#jls-15.19
+        if (this.checkErrorMissingKeys(missingKeyCount))
+          this.errorMissingKeys(paramCount, allKeysArray)
+
+        construct(params, collection)
+    }
+
+    override def visitObject(length: Int,
+                             jsonableKeys: Boolean,
+                             index: Int) =
       if (paramCount <= 64) new CaseObjectContext[T](paramCount) with ObjectContext {
         override def visitValue(v: Any, index: Int): Unit = {
           if ((currentIndex != -1) && ((found & (1L << currentIndex)) == 0)) {
@@ -110,17 +196,17 @@ trait ReadersVersionSpecific
     case m: Mirror.ProductOf[T] =>
       macros.validateFlattenAnnotation[T]()
       val paramCount = macros.paramsCount[T]
-      val reader = new CaseClassReader3V2[T](
+      val reader = new CaseClassReader3V3[T](
         paramCount,
         if (paramCount <= 64) if (paramCount == 64) -1 else (1L << paramCount) - 1
         else paramCount,
         macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.allowUnknownKeys),
-        (params: Array[Any], collection :scala.collection.mutable.ListBuffer[(Any, Any)]) => macros.applyConstructor[T](params, collection)
+        (params: Array[Any], collection: scala.collection.mutable.ListBuffer[(Any, Any)]) => macros.applyConstructor[T](params, collection)
       ){
         override def visitors0 = macros.allReaders[T, Reader]
         override def keyToIndex(x: String): Int = macros.keyToIndex[T](x)
         override def allKeysArray = macros.allFieldsMappedName[T].toArray
-        override def storeDefaults(x: upickle.implicits.BaseCaseObjectContext): Unit = macros.storeDefaults[T](x)
+        override def storeDefaults(x: upickle.implicits.BaseCaseObjectContext2): Unit = macros.storeDefaults[T](x)
       }
 
       inline if macros.isSingleton[T] then

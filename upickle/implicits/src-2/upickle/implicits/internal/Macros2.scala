@@ -406,7 +406,7 @@ object Macros2 {
           else Nil
         }
         new ${c.prefix}.CaseClassReader[$targetType] {
-          override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ${if (numberOfFields <= 64) tq"_root_.upickle.implicits.CaseObjectContext[$targetType]" else tq"_root_.upickle.implicits.HugeCaseObjectContext[$targetType]"}(${numberOfFields}) {
+          override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ${if (numberOfFields <= 64) tq"_root_.upickle.implicits.CaseObjectContext2[$targetType]" else tq"_root_.upickle.implicits.HugeCaseObjectContext2[$targetType]"}(${numberOfFields}) {
             ..${
               if (hasFlattenOnCollection)
                 List(q"var currentKey: $keyTypeOfCollection = _")

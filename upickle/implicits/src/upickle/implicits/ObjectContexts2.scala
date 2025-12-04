@@ -2,11 +2,11 @@ package upickle.implicits
 
 import upickle.core.ObjVisitor
 
-@deprecated("Use BaseCaseObjectContext2", "4.0.0")
-trait BaseCaseObjectContext {
+
+trait BaseCaseObjectContext2 {
   def storeAggregatedValue(currentIndex: Int, v: Any): Unit
 
-  def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+  def visitKey(index: Int): _root_.upickle.core.Visitor[_, _] = _root_.upickle.core.StringVisitor
 
   var currentIndex = -1
 
@@ -17,8 +17,7 @@ trait BaseCaseObjectContext {
   protected def checkErrorMissingKeys(rawArgsBitset: Long): Boolean
 }
 
-@deprecated("Use CaseObjectContext2", "4.0.0")
-abstract class CaseObjectContext[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext {
+abstract class CaseObjectContext2[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext2 {
   var found = 0L
 
   def visitValue(v: Any, index: Int): Unit = {
@@ -50,8 +49,7 @@ abstract class CaseObjectContext[V](fieldCount: Int) extends ObjVisitor[Any, V] 
   }
 }
 
-@deprecated("Use HugeCaseObjectContext2", "4.0.0")
-abstract class HugeCaseObjectContext[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext {
+abstract class HugeCaseObjectContext2[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext2 {
   var found = new Array[Long](fieldCount / 64 + 1)
 
   def visitValue(v: Any, index: Int): Unit = {

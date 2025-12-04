@@ -107,7 +107,7 @@ trait NamedTupleReadWriters[
       fieldNames: N,
       fieldReaders: () => Tuple.Map[V, outer.Reader],
       strict: Boolean
-  ) extends outer.CaseClassReader3V2[NamedTuple[N, V]](
+  ) extends outer.CaseClassReader3V3[NamedTuple[N, V]](
         paramCount,
         if paramCount <= 64 then
           if paramCount == 64 then -1 else (1L << paramCount) - 1
@@ -128,7 +128,7 @@ trait NamedTupleReadWriters[
     override def allKeysArray: Array[String] = fN
 
     override def storeDefaults(
-        x: upickle.implicits.BaseCaseObjectContext
+        x: upickle.implicits.BaseCaseObjectContext2
     ): Unit = ()
   }
 }
