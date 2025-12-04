@@ -121,7 +121,7 @@ trait NamedTupleReadWriters[
     private val fN_Map: scala.collection.mutable.Map[String, Int] =
       fN.zipWithIndex.to(scala.collection.mutable.HashMap).withDefaultValue(-1)
 
-    override def visitors0: (AnyRef, Array[AnyRef]) = (null, fR)
+    override def visitors0: ((AnyRef, AnyRef), Array[AnyRef]) = ((null, null), fR)
 
     override def keyToIndex(x: String): Int = fN_Map(x)
 
