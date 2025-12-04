@@ -1,14 +1,19 @@
 package upickle.implicits
 
 import upickle.core.ObjVisitor
+trait BaseCaseObjectContext2 extends BaseCaseObjectContext0 {
+  var currentIndex = -1
+}
 
 @deprecated("Use BaseCaseObjectContext2", "4.0.0")
-trait BaseCaseObjectContext {
+trait BaseCaseObjectContext extends BaseCaseObjectContext0 {
+  override def visitKey(index: Int): _root_.upickle.core.StringVisitor.type = _root_.upickle.core.StringVisitor
+  var currentIndex = -1
+}
+trait BaseCaseObjectContext0 {
   def storeAggregatedValue(currentIndex: Int, v: Any): Unit
 
-  def visitKey(index: Int) = _root_.upickle.core.StringVisitor
-
-  var currentIndex = -1
+  def visitKey(index: Int): _root_.upickle.core.Visitor[_, _] = _root_.upickle.core.StringVisitor
 
   def storeValueIfNotFound(i: Int, v: Any): Unit
 
@@ -17,9 +22,20 @@ trait BaseCaseObjectContext {
   protected def checkErrorMissingKeys(rawArgsBitset: Long): Boolean
 }
 
-@deprecated("Use CaseObjectContext2", "4.0.0")
-abstract class CaseObjectContext[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext {
+
+abstract class CaseObjectContext2[V](fieldCount: Int) extends CaseObjectContext0[V](fieldCount) with BaseCaseObjectContext0 {
   var found = 0L
+}
+
+@deprecated("Use CaseObjectContext2", "4.0.0")
+abstract class CaseObjectContext[V](fieldCount: Int) extends CaseObjectContext0[V](fieldCount) with BaseCaseObjectContext {
+  var found = 0L
+
+}
+abstract class CaseObjectContext0[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext0{
+  def found: Long
+  def found_=(n: Long): Unit
+  def currentIndex: Int
 
   def visitValue(v: Any, index: Int): Unit = {
     if ((currentIndex != -1) && ((found & (1L << currentIndex)) == 0)) {
@@ -50,9 +66,22 @@ abstract class CaseObjectContext[V](fieldCount: Int) extends ObjVisitor[Any, V] 
   }
 }
 
+
+
+
+abstract class HugeCaseObjectContext2[V](fieldCount: Int) extends HugeCaseObjectContext0[V](fieldCount) with BaseCaseObjectContext2 {
+  val found = new Array[Long](fieldCount / 64 + 1)
+}
+
+
 @deprecated("Use HugeCaseObjectContext2", "4.0.0")
-abstract class HugeCaseObjectContext[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext {
+abstract class HugeCaseObjectContext[V](fieldCount: Int) extends HugeCaseObjectContext0[V](fieldCount) with BaseCaseObjectContext{
   var found = new Array[Long](fieldCount / 64 + 1)
+}
+
+abstract class HugeCaseObjectContext0[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext0 {
+  def found: Array[Long]
+  def currentIndex: Int
 
   def visitValue(v: Any, index: Int): Unit = {
     if ((currentIndex != -1) && ((found(currentIndex / 64) & (1L << currentIndex)) == 0)) {
