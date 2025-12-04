@@ -13,7 +13,7 @@ trait ReadersVersionSpecific
     with Annotator
     with CaseClassReadWriters:
 
-  abstract class CaseClassReader3V3[T](paramCount: Int,
+  private[upickle] abstract class CaseClassReader3V3[T](paramCount: Int,
                                      missingKeyCount: Long,
                                      allowUnknownKeys: Boolean,
                                      construct: (Array[Any], scala.collection.mutable.ListBuffer[(Any, Any)]) => T) extends CaseClassReader[T] {
