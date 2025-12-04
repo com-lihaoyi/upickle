@@ -127,8 +127,6 @@ trait NamedTupleReadWriters[
 
     override def allKeysArray: Array[String] = fN
 
-    override def storeDefaults(
-        x: upickle.implicits.BaseCaseObjectContext2
-    ): Unit = ()
+    override def storeDefaults(x: upickle.implicits.BaseCaseObjectContext0): Unit = ()
   }
 }
