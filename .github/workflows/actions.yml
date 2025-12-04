@@ -1,5 +1,8 @@
 name: ci
 
+env:
+  FORCE_COLOR: '1'
+
 on:
   push:
     branches:
