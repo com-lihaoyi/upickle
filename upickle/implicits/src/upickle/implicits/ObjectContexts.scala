@@ -23,7 +23,7 @@ trait BaseCaseObjectContext0 {
 }
 
 
-abstract class CaseObjectContext2[V](fieldCount: Int) extends CaseObjectContext0[V](fieldCount) with BaseCaseObjectContext0 {
+abstract class CaseObjectContext2[V](fieldCount: Int) extends CaseObjectContext0[V](fieldCount) with BaseCaseObjectContext2 {
   var found = 0L
 }
 
@@ -36,6 +36,7 @@ abstract class CaseObjectContext0[V](fieldCount: Int) extends ObjVisitor[Any, V]
   def found: Long
   def found_=(n: Long): Unit
   def currentIndex: Int
+  def currentIndex_=(v: Int): Unit
 
   def visitValue(v: Any, index: Int): Unit = {
     if ((currentIndex != -1) && ((found & (1L << currentIndex)) == 0)) {
@@ -82,6 +83,7 @@ abstract class HugeCaseObjectContext[V](fieldCount: Int) extends HugeCaseObjectC
 abstract class HugeCaseObjectContext0[V](fieldCount: Int) extends ObjVisitor[Any, V] with BaseCaseObjectContext0 {
   def found: Array[Long]
   def currentIndex: Int
+  def currentIndex_=(v: Int): Unit
 
   def visitValue(v: Any, index: Int): Unit = {
     if ((currentIndex != -1) && ((found(currentIndex / 64) & (1L << currentIndex)) == 0)) {
