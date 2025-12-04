@@ -2,7 +2,7 @@ package upickle.implicits
 
 import upickle.core.ObjVisitor
 
-trait BaseCaseObjectContext2 extends BaseCaseObjectContext2{
+trait BaseCaseObjectContext2 {
   def storeAggregatedValue(currentIndex: Int, v: Any): Unit
 
   def visitKey(index: Int): _root_.upickle.core.Visitor[_, _] = _root_.upickle.core.StringVisitor
