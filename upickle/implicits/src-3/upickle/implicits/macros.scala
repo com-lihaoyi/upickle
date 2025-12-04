@@ -119,8 +119,8 @@ private def allFieldsMappedNameImpl[T](using Quotes, Type[T]): Expr[List[String]
   Expr(allFields[T].map { case (_, label, _, _, _) => label })
 }
 
-private[upickle] inline def storeDefaults[T](inline x: upickle.implicits.BaseCaseObjectContext2): Unit = ${storeDefaultsImpl[T]('x)}
-private def storeDefaultsImpl[T](x: Expr[upickle.implicits.BaseCaseObjectContext2])(using Quotes, Type[T]) = {
+private[upickle] inline def storeDefaults[T](inline x: upickle.implicits.BaseCaseObjectContext0): Unit = ${storeDefaultsImpl[T]('x)}
+private def storeDefaultsImpl[T](x: Expr[upickle.implicits.BaseCaseObjectContext0])(using Quotes, Type[T]) = {
   import quotes.reflect.*
   val statements = allFields[T]
     .filter(!_._5)
