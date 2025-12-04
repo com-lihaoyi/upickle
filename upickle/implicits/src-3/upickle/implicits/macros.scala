@@ -76,18 +76,22 @@ def paramsCountImpl[T](using Quotes, Type[T]) = {
   Expr(count)
 }
 
-private[upickle] inline def allReaders[T, R[_]]: (AnyRef, Array[AnyRef]) = ${allReadersImpl[T, R]}
-private def allReadersImpl[T, R[_]](using Quotes, Type[T], Type[R]): Expr[(AnyRef, Array[AnyRef])] = {
+private[upickle] inline def allReaders[T, R[_]]: ((AnyRef, AnyRef), Array[AnyRef]) = ${allReadersImpl[T, R]}
+private def allReadersImpl[T, R[_]](using Quotes, Type[T], Type[R]): Expr[((AnyRef, AnyRef), Array[AnyRef])] = {
   import quotes.reflect._
   val fields = allFields[T]
-  val (readerMap, readers) = fields.partitionMap { case (_, _, tpe, _, isFlattenMap) =>
+  val (readerMapPairs, readers) = fields.partitionMap { case (_, _, tpe, _, isFlattenMap) =>
     if (isFlattenMap) {
-      val (_, valueTpe) = extractKeyValueTypes(tpe)
-      val readerTpe = TypeRepr.of[R].appliedTo(valueTpe)
-      val reader = readerTpe.asType match {
+      val (keyTpe, valueTpe) = extractKeyValueTypes(tpe)
+      val keyReaderTpe = TypeRepr.of[R].appliedTo(keyTpe)
+      val valueReaderTpe = TypeRepr.of[R].appliedTo(valueTpe)
+      val keyReader = keyReaderTpe.asType match {
         case '[t] => '{summonInline[t].asInstanceOf[AnyRef]}
       }
-      Left(reader)
+      val valueReader = valueReaderTpe.asType match {
+        case '[t] => '{summonInline[t].asInstanceOf[AnyRef]}
+      }
+      Left((keyReader, valueReader))
     }
     else {
       val readerTpe = TypeRepr.of[R].appliedTo(tpe)
@@ -97,9 +101,13 @@ private def allReadersImpl[T, R[_]](using Quotes, Type[T], Type[R]): Expr[(AnyRe
       Right(reader)
     }
   }
+  val (keyReaderOpt, valueReaderOpt) = readerMapPairs.headOption match {
+    case Some((k, v)) => (k, v)
+    case None => ('{null.asInstanceOf[AnyRef]}, '{null.asInstanceOf[AnyRef]})
+  }
   Expr.ofTuple(
     (
-      readerMap.headOption.getOrElse('{null.asInstanceOf[AnyRef]}), 
+      Expr.ofTuple((keyReaderOpt, valueReaderOpt)),
       '{${Expr.ofList(readers)}.toArray},
     )
   )
@@ -149,7 +157,7 @@ private def allFields[T](using Quotes, Type[T]): List[(quotes.reflect.Symbol, St
               }
         }
       } else {
-        report.error(s"${typeSymbol} is not a case class or a Iterable[(String, _)]")
+        report.error(s"${typeSymbol} is not a case class or a Iterable[(_, _)]")
         Nil
       }
     }
@@ -236,7 +244,7 @@ private def writeLengthImpl[T](thisOuter: Expr[upickle.core.Types with upickle.i
                 }
           }
         } else {
-          report.error(s"${typeSymbol} is not a case class or a Iterable[(String, _)]")
+          report.error(s"${typeSymbol} is not a case class or a Iterable[(_, _)]")
           Nil
         }
       }
@@ -277,25 +285,25 @@ private def writeSnippetsImpl[R, T, W[_]](thisOuter: Expr[upickle.core.Types wit
       val typeSymbol = fieldTypeRepr.typeSymbol
       if (flatten) {
         if (isCollectionFlattenable(fieldTypeRepr)) {
-          val (_, valueTpe0) = extractKeyValueTypes(fieldTypeRepr)
+          val (keyTpe0, valueTpe0) = extractKeyValueTypes(fieldTypeRepr)
           val allKeysExpr: Expr[Set[String]] = classTypeRepr.asType match {
             case '[t] => Expr(allFields[t].map(_._2).toSet)
           }
-          val writerTpe0 = TypeRepr.of[W].appliedTo(valueTpe0)
-          (valueTpe0.asType, writerTpe0.asType) match {
-            case ('[valueTpe], '[writerTpe])=>
+          val keyWriterTpe0 = TypeRepr.of[W].appliedTo(keyTpe0)
+          val valueWriterTpe0 = TypeRepr.of[W].appliedTo(valueTpe0)
+          (keyTpe0.asType, valueTpe0.asType, keyWriterTpe0.asType, valueWriterTpe0.asType) match {
+            case ('[keyTpe], '[valueTpe], '[keyWriterTpe], '[valueWriterTpe])=>
               val snippet = '{
-                val collisions = ${select.asExprOf[Iterable[(String, valueTpe)]]}.map(_._1).toSet.intersect(${allKeysExpr})
+                val collisions = ${select.asExprOf[Iterable[(keyTpe, valueTpe)]]}.map(_._1.toString).toSet.intersect(${allKeysExpr})
                 if (collisions.nonEmpty) {
                   throw new Exception("Key collision detected for the following keys: " + collisions.mkString(", "))
                 }
-                ${select.asExprOf[Iterable[(String, valueTpe)]]}.foreach { (k, v) =>
-                  ${self}.writeSnippetMappedName[R, valueTpe](
-                    ${ctx},
-                    k.toString,
-                    summonInline[writerTpe],
-                    v,
-                  )
+                val keyWriter = summonInline[keyWriterTpe].asInstanceOf[upickle.core.Types#Writer[keyTpe]]
+                val valueWriter = summonInline[valueWriterTpe].asInstanceOf[upickle.core.Types#Writer[valueTpe]]
+                ${select.asExprOf[Iterable[(keyTpe, valueTpe)]]}.foreach { (k, v) =>
+                  val keyVisitor = ${ctx}.visitKey(-1)
+                  ${ctx}.visitKeyValue(keyWriter.write(keyVisitor, k))
+                  ${ctx}.narrow.visitValue(valueWriter.write(${ctx}.subVisitor, v), -1)
                 }
               }
               List(snippet)
@@ -313,7 +321,7 @@ private def writeSnippetsImpl[R, T, W[_]](thisOuter: Expr[upickle.core.Types wit
                 }
           }
         } else {
-           report.error(s"${typeSymbol} is not a case class or a Iterable[(String, _)]", v.asTerm.pos)
+           report.error(s"${typeSymbol} is not a case class or a Iterable[(_, _)]", v.asTerm.pos)
            Nil
         }
       }
@@ -386,8 +394,8 @@ private def substituteTypeArgs(using Quotes)(tpe: quotes.reflect.TypeRepr, subsi
   subsitituted.substituteTypes(tparams0 ,tpe.typeArgs)
 }
 
-private[upickle] inline def applyConstructor[T](params: Array[Any], collection: scala.collection.mutable.ListBuffer[(String, Any)]): T = ${ applyConstructorImpl[T]('params, 'collection) }
-private def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: Expr[Array[Any]], collection: Expr[scala.collection.mutable.ListBuffer[(String, Any)]]): Expr[T] =
+private[upickle] inline def applyConstructor[T](params: Array[Any], collection: scala.collection.mutable.ListBuffer[(Any, Any)]): T = ${ applyConstructorImpl[T]('params, 'collection) }
+private def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: Expr[Array[Any]], collection: Expr[scala.collection.mutable.ListBuffer[(Any, Any)]]): Expr[T] =
   import quotes.reflect._
   def apply(tpe: TypeRepr, typeArgs: List[TypeRepr], offset: Int): (Term, Int) = {
     val companion: Symbol = tpe.classSymbol.get.companionModule
@@ -425,7 +433,7 @@ private def applyConstructorImpl[T](using quotes: Quotes, t0: Type[T])(params: E
                 (term :: terms, nextOffset)
             }
           } else {
-            report.error(s"${typeSymbol} is not a case class or a Iterable[(String, _)]")
+            report.error(s"${typeSymbol} is not a case class or a Iterable[(_, _)]")
             (terms, i + 1)
           }
         }
@@ -599,7 +607,7 @@ private def validateFlattenAnnotationImpl[T](using Quotes, Type[T]): Expr[Unit] 
 
 private def isCollectionFlattenable(using Quotes)(tpe: quotes.reflect.TypeRepr): Boolean = {
   import quotes.reflect._
-  tpe <:< TypeRepr.of[Iterable[(String, _)]]
+  tpe <:< TypeRepr.of[Iterable[(_, _)]]
 }
 
 private def isCaseClass(using Quotes)(typeSymbol: quotes.reflect.Symbol): Boolean = {

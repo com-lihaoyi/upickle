@@ -268,7 +268,7 @@ object Macros2 {
     }
 
     private[upickle] def isCollectionFlattenable(tpe: c.Type): Boolean =
-        tpe <:< typeOf[Iterable[(String, _)]]
+        tpe <:< typeOf[Iterable[(_, _)]]
 
     private[upickle] def extractKeyValueTypes(tpe: c.Type): (Symbol, c.Type, c.Type) =
       tpe match {
@@ -400,13 +400,19 @@ object Macros2 {
         ..${
           if (hasFlattenOnCollection)
             List(
-              q"private[this] lazy val localReaderCollection = implicitly[${c.prefix}.Reader[$valueTypeOfCollection]]",
+              q"private[this] lazy val localReaderCollectionKey = implicitly[${c.prefix}.Reader[$keyTypeOfCollection]]",
+              q"private[this] lazy val localReaderCollectionValue = implicitly[${c.prefix}.Reader[$valueTypeOfCollection]]",
             )
           else Nil
         }
         new ${c.prefix}.CaseClassReader[$targetType] {
           override def visitObject(length: Int, jsonableKeys: Boolean, index: Int) = new ${if (numberOfFields <= 64) tq"_root_.upickle.implicits.CaseObjectContext[$targetType]" else tq"_root_.upickle.implicits.HugeCaseObjectContext[$targetType]"}(${numberOfFields}) {
-            var currentKey = ""
+            ..${
+              if (hasFlattenOnCollection)
+                List(q"var currentKey: $keyTypeOfCollection = _")
+              else
+                List(q"var currentKey: String = _")
+            }
             var storeToMap = false
 
             $visitValueDef
@@ -420,6 +426,12 @@ object Macros2 {
                 List(
                   q"private[this] lazy val aggregatedCollection: scala.collection.mutable.ListBuffer[($keyTypeOfCollection, $valueTypeOfCollection)] = scala.collection.mutable.ListBuffer.empty",
                 )
+              else Nil
+            }
+
+            ..${
+              if (hasFlattenOnCollection)
+                List(q"override def visitKey(index: Int): _root_.upickle.core.Visitor[_, _] = _root_.upickle.core.BufferedValue.Builder")
               else Nil
             }
 
@@ -438,8 +450,13 @@ object Macros2 {
 
             def visitKeyValue(s: Any) = {
               storeToMap = false
-              currentKey = ${c.prefix}.objectAttributeKeyReadMap(s.toString).toString
-              currentIndex = currentKey match {
+              val currentKeyString = ${
+                if (hasFlattenOnCollection)
+                  q"${c.prefix}.objectAttributeKeyReadMap(_root_.upickle.core.BufferedValue.valueToSortKey(s.asInstanceOf[_root_.upickle.core.BufferedValue])).toString"
+                else
+                  q"${c.prefix}.objectAttributeKeyReadMap(s.toString).toString"
+              }
+              currentIndex = currentKeyString match {
                 case ..${
                   for (i <- mappedNames.indices)
                     yield cq"${mappedNames(i)} => $i"
@@ -447,7 +464,11 @@ object Macros2 {
                 case _ =>
                   ${
                     (allowUnknownKeysAnnotation, hasFlattenOnCollection) match {
-                      case (_, true) => q"storeToMap = true; -1"
+                      case (_, true) => q"""
+                        currentKey = _root_.upickle.core.BufferedValue.transform(s.asInstanceOf[_root_.upickle.core.BufferedValue], localReaderCollectionKey).asInstanceOf[$keyTypeOfCollection]
+                        storeToMap = true
+                        -1
+                      """
                       case (None, false) =>
                         q"""
                           if (${ c.prefix }.allowUnknownKeys) -1
@@ -482,7 +503,7 @@ object Macros2 {
               case -1 =>
                 ${
                   if (hasFlattenOnCollection)
-                    q"localReaderCollection"
+                    q"localReaderCollectionValue"
                   else
                     q"_root_.upickle.core.NoOpVisitor"
                 }
@@ -535,19 +556,18 @@ object Macros2 {
           symbol.annotations.find(_.tree.tpe =:= typeOf[flatten]) match {
             case Some(_) =>
               if (isCollectionFlattenable(tpeOfField)) {
-                val (_, _, valueType) = extractKeyValueTypes(tpeOfField)
+                val (_, keyType, valueType) = extractKeyValueTypes(tpeOfField)
                 q"""
-                  val collisions = allKeys.intersect($select.map(_._1).toSet)
+                  val collisions = allKeys.intersect($select.map(_._1.toString).toSet)
                   if (collisions.nonEmpty) {
                     throw new Exception("Key collision detected for the following keys: " + collisions.mkString(", "))
                   }
+                  val keyWriter = implicitly[${c.prefix}.Writer[$keyType]]
+                  val valueWriter = implicitly[${c.prefix}.Writer[$valueType]]
                   $select.foreach { case (key, value) =>
-                    this.writeSnippetMappedName[R, $valueType](
-                      ctx,
-                      key,
-                      implicitly[${c.prefix}.Writer[$valueType]],
-                      value
-                      )
+                    val keyVisitor = ctx.visitKey(-1)
+                    ctx.visitKeyValue(keyWriter.write(keyVisitor, key))
+                    ctx.narrow.visitValue(valueWriter.write(ctx.subVisitor, value), -1)
                   }
                 """ :: Nil
               } else if (tpeOfField.typeSymbol.isClass && tpeOfField.typeSymbol.asClass.isCaseClass) {

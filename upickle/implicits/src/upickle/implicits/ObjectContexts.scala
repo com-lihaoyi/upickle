@@ -6,7 +6,7 @@ import upickle.core.ObjVisitor
 trait BaseCaseObjectContext {
   def storeAggregatedValue(currentIndex: Int, v: Any): Unit
 
-  def visitKey(index: Int) = _root_.upickle.core.StringVisitor
+  def visitKey(index: Int): _root_.upickle.core.Visitor[_, _] = _root_.upickle.core.StringVisitor
 
   var currentIndex = -1
 

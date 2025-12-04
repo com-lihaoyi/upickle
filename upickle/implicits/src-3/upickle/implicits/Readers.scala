@@ -16,21 +16,25 @@ trait ReadersVersionSpecific
   abstract class CaseClassReader3V2[T](paramCount: Int,
                                      missingKeyCount: Long,
                                      allowUnknownKeys: Boolean,
-                                     construct: (Array[Any], scala.collection.mutable.ListBuffer[(String, Any)]) => T) extends CaseClassReader[T] {
+                                     construct: (Array[Any], scala.collection.mutable.ListBuffer[(Any, Any)]) => T) extends CaseClassReader[T] {
 
-    def visitors0: (AnyRef, Array[AnyRef])
-    lazy val (visitorMap, visitors) = visitors0
-    lazy val hasFlattenOnMap = visitorMap ne null
+    def visitors0: ((AnyRef, AnyRef), Array[AnyRef])
+    lazy val ((visitorMapKey, visitorMapValue), visitors) = visitors0
+    lazy val hasFlattenOnMap = visitorMapValue ne null
     def keyToIndex(x: String): Int
     def allKeysArray: Array[String]
     def storeDefaults(x: upickle.implicits.BaseCaseObjectContext): Unit
     trait ObjectContext extends ObjVisitor[Any, T] with BaseCaseObjectContext {
       private val params = new Array[Any](paramCount)
-      private val collection = scala.collection.mutable.ListBuffer.empty[(String, Any)]
-      private var currentKey = ""
+      private val collection = scala.collection.mutable.ListBuffer.empty[(Any, Any)]
+      private var currentKey: Any = null
       protected var storeToMap = false
 
-      def storeAggregatedValue(currentIndex: Int, v: Any): Unit = 
+      override def visitKey(index: Int): Visitor[_, _] =
+        if (hasFlattenOnMap) upickle.core.BufferedValue.Builder
+        else upickle.core.StringVisitor
+
+      def storeAggregatedValue(currentIndex: Int, v: Any): Unit =
         if (currentIndex == -1) {
           if (storeToMap) {
             collection += (currentKey -> v)
@@ -41,22 +45,26 @@ trait ReadersVersionSpecific
 
       def subVisitor: Visitor[_, _] =
         if (currentIndex == -1) {
-          if (hasFlattenOnMap) visitorMap.asInstanceOf[Visitor[_, _]]
+          if (hasFlattenOnMap) visitorMapValue.asInstanceOf[Visitor[_, _]]
           else upickle.core.NoOpVisitor
-        } 
+        }
         else {
           visitors(currentIndex).asInstanceOf[Visitor[_, _]]
         }
 
       def visitKeyValue(v: Any): Unit =
         storeToMap = false
-        currentKey = objectAttributeKeyReadMap(v.toString).toString
-        currentIndex = keyToIndex(currentKey)
+        val currentKeyString =
+          if (hasFlattenOnMap) objectAttributeKeyReadMap(upickle.core.BufferedValue.valueToSortKey(v.asInstanceOf[upickle.core.BufferedValue])).toString
+          else objectAttributeKeyReadMap(v.toString).toString
+        currentIndex = keyToIndex(currentKeyString)
         if (currentIndex == -1) {
           if (hasFlattenOnMap) {
+            // Convert the BufferedValue key to the key type using the key reader
+            currentKey = upickle.core.BufferedValue.transform(v.asInstanceOf[upickle.core.BufferedValue], visitorMapKey.asInstanceOf[Visitor[_, _]])
             storeToMap = true
           } else if (!allowUnknownKeys) {
-            throw new upickle.core.Abort("Unknown Key: " + currentKey)
+            throw new upickle.core.Abort("Unknown Key: " + currentKeyString)
           }
         }
 
@@ -107,7 +115,7 @@ trait ReadersVersionSpecific
         if (paramCount <= 64) if (paramCount == 64) -1 else (1L << paramCount) - 1
         else paramCount,
         macros.extractIgnoreUnknownKeys[T]().headOption.getOrElse(this.allowUnknownKeys),
-        (params: Array[Any], collection :scala.collection.mutable.ListBuffer[(String ,Any)]) => macros.applyConstructor[T](params, collection)
+        (params: Array[Any], collection :scala.collection.mutable.ListBuffer[(Any, Any)]) => macros.applyConstructor[T](params, collection)
       ){
         override def visitors0 = macros.allReaders[T, Reader]
         override def keyToIndex(x: String): Int = macros.keyToIndex[T](x)
