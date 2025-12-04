@@ -23,7 +23,7 @@ trait ReadersVersionSpecific
     lazy val hasFlattenOnMap = visitorMapValue ne null
     def keyToIndex(x: String): Int
     def allKeysArray: Array[String]
-    def storeDefaults(x: upickle.implicits.BaseCaseObjectContext0): Unit
+    def storeDefaults(x: upickle.implicits.BaseCaseObjectContext2): Unit
     trait ObjectContext extends ObjVisitor[Any, T] with BaseCaseObjectContext2 {
       private val params = new Array[Any](paramCount)
       private val collection = scala.collection.mutable.ListBuffer.empty[(Any, Any)]
@@ -206,7 +206,7 @@ trait ReadersVersionSpecific
         override def visitors0 = macros.allReaders[T, Reader]
         override def keyToIndex(x: String): Int = macros.keyToIndex[T](x)
         override def allKeysArray = macros.allFieldsMappedName[T].toArray
-        override def storeDefaults(x: upickle.implicits.BaseCaseObjectContext0): Unit = macros.storeDefaults[T](x)
+        override def storeDefaults(x: upickle.implicits.BaseCaseObjectContext2): Unit = macros.storeDefaults[T](x)
       }
 
       inline if macros.isSingleton[T] then
