@@ -55,59 +55,59 @@ object TooBigTests extends TestSuite {
         val written65 = upickle.default.write(b65)
         assert(upickle.default.read[Big65](written65) == b65)
       }
-//      test("big150") {
-//        val b150 = Big150(
-//          0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-//          10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-//          20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-//          30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
-//          40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-//          50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
-//          60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
-//          70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
-//          80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
-//          90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
-//          100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
-//          110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
-//          120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
-//          130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
-//          140, 141, 142, 143, 144, 145, 146, 147, 148, 149
-//        )
-//
-//
-//        val written150 = upickle.default.write(b150)
-//        assert(upickle.default.read[Big150](written150) == b150)
-//
-//        val err = intercept[upickle.core.AbortException] {
-//          upickle.default.read[Big150](
-//            written150
-//              .replace("\"__2\":2,", "")
-//              .replace("\"__52\":52,", "")
-//              .replace("\"__102\":102,", "")
-//              .replace("\"__142\":142,", ""),
-//            trace = false
-//          )
-//        }
-//        assert(
-//          err.getMessage
-//            .startsWith("missing keys in dictionary: __2, __52, __102, __142 at index")
-//        )
-//
-//        val readWithDefault1 = upickle.default.read[Big150](
-//          written150.replace(",\"__149\":149", "")
-//        )
-//        assert(readWithDefault1 == b150.copy(__149 = -1337))
-//
-//        val readWithDefault2 = upickle.default.read[Big150](
-//          written150.replace("\"__0\":0,", "")
-//        )
-//        assert(readWithDefault2 == b150.copy(__0 = 31337))
-//
-//        val readWithDefault3 = upickle.default.read[Big150](
-//          written150.replace("\"__0\":0,", "").replace(",\"__149\":149", "")
-//        )
-//        assert(readWithDefault3 == b150.copy(__0 = 31337, __149 = -1337))
-//      }
+      test("big150") {
+        val b150 = Big150(
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+          10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+          20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+          30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+          40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+          50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+          60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+          70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+          80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+          90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+          100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+          110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
+          120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
+          130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
+          140, 141, 142, 143, 144, 145, 146, 147, 148, 149
+        )
+
+
+        val written150 = upickle.default.write(b150)
+        assert(upickle.default.read[Big150](written150) == b150)
+
+        val err = intercept[upickle.core.AbortException] {
+          upickle.default.read[Big150](
+            written150
+              .replace("\"__2\":2,", "")
+              .replace("\"__52\":52,", "")
+              .replace("\"__102\":102,", "")
+              .replace("\"__142\":142,", ""),
+            trace = false
+          )
+        }
+        assert(
+          err.getMessage
+            .startsWith("missing keys in dictionary: __2, __52, __102, __142 at index")
+        )
+
+        val readWithDefault1 = upickle.default.read[Big150](
+          written150.replace(",\"__149\":149", "")
+        )
+        assert(readWithDefault1 == b150.copy(__149 = -1337))
+
+        val readWithDefault2 = upickle.default.read[Big150](
+          written150.replace("\"__0\":0,", "")
+        )
+        assert(readWithDefault2 == b150.copy(__0 = 31337))
+
+        val readWithDefault3 = upickle.default.read[Big150](
+          written150.replace("\"__0\":0,", "").replace(",\"__149\":149", "")
+        )
+        assert(readWithDefault3 == b150.copy(__0 = 31337, __149 = -1337))
+      }
     }
 //    test("hugeFile"){
 //      import java.nio.file.{Files, Path}

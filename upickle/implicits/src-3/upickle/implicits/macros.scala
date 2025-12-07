@@ -205,6 +205,18 @@ private def keyToIndexImpl[T](x: Expr[String])(using Quotes, Type[T]): Expr[Int]
   z.asExpr.asInstanceOf[Expr[Int]]
 }
 
+// Helper to create a balanced tree of additions to avoid deep nesting
+// that causes StackOverflowError in Scala 3 compiler's staging phase
+private def balancedSum(using Quotes)(exprs: List[Expr[Int]]): Expr[Int] = exprs match {
+  case Nil => '{0}
+  case single :: Nil => single
+  case _ =>
+    val (left, right) = exprs.splitAt(exprs.length / 2)
+    val leftSum = balancedSum(left)
+    val rightSum = balancedSum(right)
+    '{$leftSum + $rightSum}
+}
+
 private[upickle] inline def writeLength[T](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
                           inline v: T): Int =
   ${writeLengthImpl[T]('thisOuter, 'v)}
@@ -256,14 +268,15 @@ private def writeLengthImpl[T](thisOuter: Expr[upickle.core.Types with upickle.i
         )
       }
 
-    fieldLabelsImpl0[T]
-      .flatMap { (rawLabel, label) =>
-        val defaults = getDefaultParamsImpl0[T]
-        val select = Select.unique(v.asTerm, rawLabel.name)
-        val classTypeRepr = TypeRepr.of[T]
-        loop(rawLabel, label, classTypeRepr, select, defaults)
-      }
-      .foldLeft('{0}) { case (prev, next) => '{$prev + $next} }
+    balancedSum(
+      fieldLabelsImpl0[T]
+        .flatMap { (rawLabel, label) =>
+          val defaults = getDefaultParamsImpl0[T]
+          val select = Select.unique(v.asTerm, rawLabel.name)
+          val classTypeRepr = TypeRepr.of[T]
+          loop(rawLabel, label, classTypeRepr, select, defaults)
+        }
+    )
 
 private[upickle] inline def writeSnippets[R, T, W[_]](inline thisOuter: upickle.core.Types with upickle.implicits.MacrosCommon,
                                    inline self: upickle.implicits.CaseClassReadWriters#CaseClassWriter[T],
