@@ -169,7 +169,7 @@ case class Big65(__0: Byte, __1: Byte, __2: Byte, __3: Byte, __4: Byte, __5: Byt
                  __36: Byte, __37: Byte, __38: Byte, __39: Byte, __40: Byte, __41: Byte, __42: Byte,
                  __43: Byte, __44: Byte, __45: Byte, __46: Byte, __47: Byte, __48: Byte, __49: Byte,
                  __50: Byte, __51: Byte, __52: Byte, __53: Byte, __54: Byte, __55: Byte, __56: Byte,
-                 __57: Byte, _  _58: Byte, __59: Byte, __60: Byte, __61: Byte, __62: Byte, __63: Byte,
+                 __57: Byte, __58: Byte, __59: Byte, __60: Byte, __61: Byte, __62: Byte, __63: Byte,
                  __64: Byte)
 object Big65{
   implicit val b65rw: upickle.default.ReadWriter[Big65] = upickle.default.macroRW

@@ -33,6 +33,14 @@ trait BufferingElemParser{
   def getBufferLength() = if (buffer == null) -1 else buffer.length
 
   /**
+    * Tracks the cumulative number of bytes/chars that have been dropped and
+    * had their indices reset. This allows us to handle files >2GB by keeping
+    * working indices (firstIdx, lastIdx, dropped) within Int range while
+    * tracking the true absolute position in this Long.
+    */
+  private[this] var droppedOffset: Long = 0L
+
+  /**
     * The logical offset of the buffer(0) Elem in the input being parsed
     */
   private[this] var firstIdx = 0
@@ -98,6 +106,15 @@ trait BufferingElemParser{
     }
 
     System.arraycopy(buffer, dropped - firstIdx, arr, 0, lastIdx - dropped)
+
+    // Track the cumulative offset for computing absolute positions.
+    // When firstIdx advances, we're effectively "forgetting" about
+    // data before firstIdx, so we need to remember how much we've forgotten.
+    val shift = dropped - firstIdx
+    if (shift > 0) {
+      droppedOffset += shift
+    }
+
     firstIdx = dropped
     buffer = arr
   }
@@ -156,9 +173,56 @@ trait BufferingElemParser{
 
   def readDataIntoBuffer(buffer: Array[Elem], bufferOffset: Int): (Array[Elem], Boolean, Int)
 
+  /**
+    * Threshold at which we should reset indices to prevent overflow.
+    * Set to 1GB to leave plenty of headroom before Int.MaxValue (~2.1GB).
+    */
+  private[this] final val IndexResetThreshold = 1024 * 1024 * 1024
+
   def dropBufferUntil(i: Int): Unit = {
     dropped = i
   }
+
+  /**
+    * Normalizes an index by triggering index reset if needed.
+    * Call this periodically (e.g., after processing each element) to prevent
+    * index overflow when parsing files >2GB.
+    *
+    * @return The equivalent index after any reset, to be used for subsequent parsing
+    */
+  def normalizeIndex(i: Int): Int = {
+    if (firstIdx > IndexResetThreshold) {
+      // Trigger a reset: shift all indices down by firstIdx
+      val shift = firstIdx
+      droppedOffset += shift
+      lastIdx -= shift
+      dropped -= shift
+      if (knownEof != Int.MaxValue) {
+        knownEof -= shift
+      }
+      firstIdx = 0
+      i - shift
+    } else {
+      i
+    }
+  }
+
+  /**
+    * Computes the absolute position in the input stream for a given working index.
+    * Used to determine if the position can be represented as an Int for visitor callbacks.
+    */
+  def absolutePosition(i: Int): Long = droppedOffset + i
+
+  /**
+    * Returns an index safe for passing to Visitor methods.
+    * If the absolute position exceeds Int.MaxValue, returns -1 (the convention
+    * for "index not available" per the Visitor documentation).
+    */
+  def safeVisitorIndex(i: Int): Int = {
+    val absPos = absolutePosition(i)
+    if (absPos > Int.MaxValue) -1 else absPos.toInt
+  }
+
   def unsafeCharSeqForRange(start: Int, length: Int) = {
     new WrapElemArrayCharSeq(buffer, start - firstIdx, length)
   }

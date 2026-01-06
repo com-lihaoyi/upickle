@@ -34,9 +34,9 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
 
     val n = getByteSafe(index)
     (n & 0xFF: @switch) match{
-      case MPK.Nil => index += 1; visitor.visitNull(index)
-      case MPK.False => index += 1; visitor.visitFalse(index)
-      case MPK.True => index += 1; visitor.visitTrue(index)
+      case MPK.Nil => index += 1; visitor.visitNull(safeVisitorIndex(index))
+      case MPK.False => index += 1; visitor.visitFalse(safeVisitorIndex(index))
+      case MPK.True => index += 1; visitor.visitTrue(safeVisitorIndex(index))
 
       case MPK.Bin8 => parseBin(parseUInt8(index + 1), visitor)
       case MPK.Bin16 => parseBin(parseUInt16(index + 1), visitor)
@@ -46,18 +46,18 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
       case MPK.Ext16 => parseExt(parseUInt16(index + 1), visitor)
       case MPK.Ext32 => parseExt(parseUInt32(index + 1), visitor)
 
-      case MPK.Float32 => visitor.visitFloat64(java.lang.Float.intBitsToFloat(parseUInt32(index + 1)), index)
-      case MPK.Float64 => visitor.visitFloat64(java.lang.Double.longBitsToDouble(parseUInt64(index + 1)), index)
+      case MPK.Float32 => visitor.visitFloat64(java.lang.Float.intBitsToFloat(parseUInt32(index + 1)), safeVisitorIndex(index))
+      case MPK.Float64 => visitor.visitFloat64(java.lang.Double.longBitsToDouble(parseUInt64(index + 1)), safeVisitorIndex(index))
 
-      case MPK.UInt8 => visitor.visitInt32(parseUInt8(index + 1), index)
-      case MPK.UInt16 => visitor.visitInt32(parseUInt16(index + 1), index)
-      case MPK.UInt32 => visitor.visitInt64(parseUInt32(index + 1) & 0xffffffffL, index)
-      case MPK.UInt64 => visitor.visitUInt64(parseUInt64(index + 1), index)
+      case MPK.UInt8 => visitor.visitInt32(parseUInt8(index + 1), safeVisitorIndex(index))
+      case MPK.UInt16 => visitor.visitInt32(parseUInt16(index + 1), safeVisitorIndex(index))
+      case MPK.UInt32 => visitor.visitInt64(parseUInt32(index + 1) & 0xffffffffL, safeVisitorIndex(index))
+      case MPK.UInt64 => visitor.visitUInt64(parseUInt64(index + 1), safeVisitorIndex(index))
 
-      case MPK.Int8 => visitor.visitInt32(parseUInt8(index + 1).toByte, index)
-      case MPK.Int16 => visitor.visitInt32(parseUInt16(index + 1).toShort, index)
-      case MPK.Int32 => visitor.visitInt32(parseUInt32(index + 1), index)
-      case MPK.Int64 => visitor.visitInt64(parseUInt64(index + 1), index)
+      case MPK.Int8 => visitor.visitInt32(parseUInt8(index + 1).toByte, safeVisitorIndex(index))
+      case MPK.Int16 => visitor.visitInt32(parseUInt16(index + 1).toShort, safeVisitorIndex(index))
+      case MPK.Int32 => visitor.visitInt32(parseUInt32(index + 1), safeVisitorIndex(index))
+      case MPK.Int64 => visitor.visitInt64(parseUInt64(index + 1), safeVisitorIndex(index))
 
       case MPK.FixExt1 => index += 1; parseExt(1, visitor)
       case MPK.FixExt2 => index += 1; parseExt(2, visitor)
@@ -78,7 +78,7 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
         if (x <= MPK.PositiveFixInt) {
           // positive fixint
           index += 1
-          visitor.visitInt32(x & 0x7f, index)
+          visitor.visitInt32(x & 0x7f, safeVisitorIndex(index))
         } else if (x <= MPK.FixMap) {
           val n = x & 0x0f
           index += 1
@@ -94,53 +94,57 @@ abstract class BaseMsgPackReader extends upickle.core.BufferingByteParser{
           parseStr(n, visitor)
         } else if (x >= 0xe0) { // negative fixint
           index += 1
-          visitor.visitInt32(x | 0xffffffe0, index)
+          visitor.visitInt32(x | 0xffffffe0, safeVisitorIndex(index))
         } else ???
     }
   }
   def parseExt[T](n: Int, visitor: Visitor[_, T]) = {
     val (arr, i, j) = sliceArr(index + 1, n)
-    val res = visitor.visitExt(getByteSafe(index), arr, i, j, index)
+    val res = visitor.visitExt(getByteSafe(index), arr, i, j, safeVisitorIndex(index))
     index += n + 1
     res
   }
 
   def parseStr[T](n: Int, visitor: Visitor[_, T]) = {
-    val res = visitor.visitString(sliceString(index, index + n), index)
+    val res = visitor.visitString(sliceString(index, index + n), safeVisitorIndex(index))
     index += n
     res
   }
   def parseBin[T](n: Int, visitor: Visitor[_, T]) = {
     val (arr, i, j) = sliceArr(index, n)
-    val res = visitor.visitBinary(arr, i, j, index)
+    val res = visitor.visitBinary(arr, i, j, safeVisitorIndex(index))
     index += n
     res
   }
   def parseMap[T](n: Int, visitor: Visitor[_, T]) = {
-    val obj = visitor.visitObject(n, true, index)
+    val obj = visitor.visitObject(n, true, safeVisitorIndex(index))
 
     var i = 0
     while(i < n){
-      val keyVisitor = obj.visitKey(index)
+      val keyVisitor = obj.visitKey(safeVisitorIndex(index))
       obj.visitKeyValue(parse(keyVisitor.asInstanceOf[Visitor[_, T]]))
-      obj.narrow.visitValue(parse(obj.subVisitor.asInstanceOf[Visitor[_, T]]), index)
+      obj.narrow.visitValue(parse(obj.subVisitor.asInstanceOf[Visitor[_, T]]), safeVisitorIndex(index))
       dropBufferUntil(index)
+      // Normalize index to prevent overflow when parsing files >2GB
+      index = normalizeIndex(index)
       i += 1
     }
-    obj.visitEnd(index)
+    obj.visitEnd(safeVisitorIndex(index))
   }
   def parseArray[T](n: Int, visitor: Visitor[_, T]) = {
-    val arr = visitor.visitArray(n, index)
+    val arr = visitor.visitArray(n, safeVisitorIndex(index))
 
     var i = 0
 
     while(i < n){
       val v = parse(arr.subVisitor.asInstanceOf[Visitor[_, T]])
-      arr.narrow.visitValue(v, index)
+      arr.narrow.visitValue(v, safeVisitorIndex(index))
       dropBufferUntil(index)
+      // Normalize index to prevent overflow when parsing files >2GB
+      index = normalizeIndex(index)
       i += 1
     }
-    arr.visitEnd(index)
+    arr.visitEnd(safeVisitorIndex(index))
   }
   def parseUInt8(i: Int) = {
     index = i + 1

@@ -158,7 +158,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       if (j0 == j)  die(i, "expected digit")
     }
 
-    ctxt.visitValue(visitFloat64StringPartsWithWrapper(facade, decIndex, expIndex, i, j), i)
+    ctxt.visitValue(visitFloat64StringPartsWithWrapper(facade, decIndex, expIndex, i, j), safeVisitorIndex(i))
     j
   }
 
@@ -173,7 +173,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       j - i,
       decIndex,
       expIndex,
-      i
+      safeVisitorIndex(i)
     )
   }
 
@@ -284,7 +284,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   protected[this] final def parseTrue(i: Int, facade: Visitor[_, J]): J = {
     requestUntilOrThrow(i + 3)
     if (getElemUnsafe(i + 1) == 'r' && getElemUnsafe(i + 2) == 'u' && getElemUnsafe(i + 3) == 'e') {
-      facade.visitTrue(i)
+      facade.visitTrue(safeVisitorIndex(i))
     } else {
       die(i, "expected true")
     }
@@ -299,7 +299,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
     requestUntilOrThrow(i + 4)
 
     if (getElemUnsafe(i + 1) == 'a' && getElemUnsafe(i + 2) == 'l' && getElemUnsafe(i + 3) == 's' && getElemUnsafe(i + 4) == 'e') {
-      facade.visitFalse(i)
+      facade.visitFalse(safeVisitorIndex(i))
     } else {
       die(i, "expected false")
     }
@@ -313,7 +313,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   protected[this] final def parseNull(i: Int, facade: Visitor[_, J]): J = {
     requestUntilOrThrow(i + 3)
     if (getElemUnsafe(i + 1) == 'u' && getElemUnsafe(i + 2) == 'l' && getElemUnsafe(i + 3) == 'l') {
-      facade.visitNull(i)
+      facade.visitNull(safeVisitorIndex(i))
     } else {
       die(i, "expected null")
     }
@@ -335,8 +335,8 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
 
       // if we have a recursive top-level structure, we'll delegate the parsing
       // duties to our good friend rparse().
-      case '[' => parseNested(ARRBEG, i + 1, facade.visitArray(-1, i), Nil)
-      case '{' => parseNested(OBJBEG, i + 1, facade.visitObject(-1, true, i), Nil)
+      case '[' => parseNested(ARRBEG, i + 1, facade.visitArray(-1, safeVisitorIndex(i)), Nil)
+      case '{' => parseNested(OBJBEG, i + 1, facade.visitObject(-1, true, safeVisitorIndex(i)), Nil)
 
       // we have a single top-level number
       case '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => parseNumTopLevel(i, facade)
@@ -407,14 +407,14 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
       case '[' =>
         failIfNotData(state, i)
         val ctx =
-          try stackHead.subVisitor.asInstanceOf[Visitor[_, J]].visitArray(-1, i)
+          try stackHead.subVisitor.asInstanceOf[Visitor[_, J]].visitArray(-1, safeVisitorIndex(i))
           catch reject(i)
         parseNested(ARRBEG, i + 1, ctx, stackHead :: stackTail)
 
       case '{' =>
         failIfNotData(state, i)
         val ctx =
-          try stackHead.subVisitor.asInstanceOf[Visitor[_, J]].visitObject(-1, true, i)
+          try stackHead.subVisitor.asInstanceOf[Visitor[_, J]].visitObject(-1, true, safeVisitorIndex(i))
           catch reject(i)
         parseNested(OBJBEG, i + 1, ctx, stackHead :: stackTail)
 
@@ -429,7 +429,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
         failIfNotData(state, i)
         try stackHead.narrow.visitValue(
           parseTrue(i, stackHead.subVisitor.asInstanceOf[Visitor[_, J]]),
-          i
+          safeVisitorIndex(i)
         )
         catch reject(i)
         parseNested(collectionEndFor(stackHead), i + 4, stackHead, stackTail)
@@ -438,7 +438,7 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
         failIfNotData(state, i)
         try stackHead.narrow.visitValue(
           parseFalse(i, stackHead.subVisitor.asInstanceOf[Visitor[_, J]]),
-          i
+          safeVisitorIndex(i)
         )
         catch reject(i)
         parseNested(collectionEndFor(stackHead), i + 5, stackHead, stackTail)
@@ -447,16 +447,18 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
         failIfNotData(state, i)
         try stackHead.narrow.visitValue(
           parseNull(i, stackHead.subVisitor.asInstanceOf[Visitor[_, J]]),
-          i
+          safeVisitorIndex(i)
         )
         catch reject(i)
         parseNested(collectionEndFor(stackHead), i + 4, stackHead, stackTail)
 
       case ',' =>
         dropBufferUntil(i)
+        // Normalize indices to prevent overflow when parsing files >2GB
+        val nextI = normalizeIndex(i + 1)
         (state: @switch) match{
-          case ARREND => parseNested(DATA, i + 1, stackHead, stackTail)
-          case OBJEND => parseNested(KEY, i + 1, stackHead, stackTail)
+          case ARREND => parseNested(DATA, nextI, stackHead, stackTail)
+          case OBJEND => parseNested(KEY, nextI, stackHead, stackTail)
           case _ => dieWithFailureMessage(i, state)
         }
 
@@ -508,11 +510,12 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   }
 
   def tryCloseCollection(stackHead: ObjArrVisitor[_, J], stackTail: List[ObjArrVisitor[_, J]], i: Int) = {
+    val safeIdx = safeVisitorIndex(i)
     if (stackTail.isEmpty) {
-      Some(try stackHead.visitEnd(i) catch reject(i), i + 1)
+      Some(try stackHead.visitEnd(safeIdx) catch reject(i), i + 1)
     } else {
       val ctxt2 = stackTail.head.narrow
-      try ctxt2.visitValue(stackHead.visitEnd(i), i) catch reject(i)
+      try ctxt2.visitValue(stackHead.visitEnd(safeIdx), safeIdx) catch reject(i)
       None
 
     }
@@ -641,25 +644,27 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   }
 
   def visitString(i: Int, s: CharSequence, stackHead: ObjArrVisitor[_, J]) = {
-    val v = stackHead.subVisitor.visitString(s, i)
-    stackHead.narrow.visitValue(v, i)
+    val safeIdx = safeVisitorIndex(i)
+    val v = stackHead.subVisitor.visitString(s, safeIdx)
+    stackHead.narrow.visitValue(v, safeIdx)
   }
   def visitStringKey(i: Int, s: CharSequence, stackHead: ObjArrVisitor[_, J]) = {
+    val safeIdx = safeVisitorIndex(i)
     val obj = stackHead.asInstanceOf[ObjVisitor[Any, _]]
-    val keyVisitor = obj.visitKey(i)
-    obj.visitKeyValue(keyVisitor.visitString(s, i))
+    val keyVisitor = obj.visitKey(safeIdx)
+    obj.visitKeyValue(keyVisitor.visitString(s, safeIdx))
   }
 
 
   protected[this] final def parseStringTopLevel(i: Int, facade: Visitor[_, J]): (J, Int) = {
-
+    val safeIdx = safeVisitorIndex(i)
     val k = parseStringSimple(i + 1)
     if (k >= 0) {
-      val res = facade.visitString(unsafeCharSeqForRange(i + 1, k - i - 2), i)
+      val res = facade.visitString(unsafeCharSeqForRange(i + 1, k - i - 2), safeIdx)
       (res, k)
     } else {
       val k2 = parseStringToOutputBuilder(i, k)
-      val res = facade.visitString(outputBuilder.makeString(), i)
+      val res = facade.visitString(outputBuilder.makeString(), safeIdx)
       (res, k2)
     }
   }
