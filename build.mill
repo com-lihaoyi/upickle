@@ -64,6 +64,15 @@ trait CommonPublishModule
     //    "4.2.0", publishing failed on this one for some reason
     "4.2.1",
   )
+
+  // Exclusions for >2GB file parsing support (#656)
+  // Adding droppedOffset field to BufferingElemParser trait generates synthetic accessors
+  def mimaBinaryIssueFilters = Seq(
+    ProblemFilter.exclude[ReversedMissingMethodProblem]("upickle.core.BufferingByteParser.upickle$core$BufferingByteParser$$droppedOffset"),
+    ProblemFilter.exclude[ReversedMissingMethodProblem]("upickle.core.BufferingByteParser.upickle$core$BufferingByteParser$$droppedOffset_="),
+    ProblemFilter.exclude[ReversedMissingMethodProblem]("upickle.core.BufferingCharParser.upickle$core$BufferingCharParser$$droppedOffset"),
+    ProblemFilter.exclude[ReversedMissingMethodProblem]("upickle.core.BufferingCharParser.upickle$core$BufferingCharParser$$droppedOffset_="),
+  )
   def isDotty = crossScalaVersion.startsWith("0") || crossScalaVersion.startsWith("3")
   def pomSettings = PomSettings(
     description = artifactName(),
