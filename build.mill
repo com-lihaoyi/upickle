@@ -48,6 +48,7 @@ trait CommonPlatformModule extends ScalaModule with PlatformScalaModule{
   def sources = Task { super.sources() ++ platformSources() }
 }
 
+
 trait CommonPublishModule
   extends ScalaModule with PublishModule with Mima with CrossScalaModule { outer =>
   def jvmId = "11"
