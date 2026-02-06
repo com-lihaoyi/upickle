@@ -303,8 +303,15 @@ private def writeSnippetsImpl[R, T, W[_]](thisOuter: Expr[upickle.core.Types wit
                             v: Expr[T],
                             ctx: Expr[_root_.upickle.core.ObjVisitor[_, R]])
                            (using Quotes, Type[T], Type[R], Type[W]): Expr[Unit] =
-
   import quotes.reflect.*
+  val configCheck = '{
+    if (!${thisOuter}.optionsAsNulls && !${thisOuter}.serializeNones) {
+      throw new IllegalArgumentException(
+        "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false. " +
+        "When optionsAsNulls is false, Options are serialized as arrays ([t] or []), so the serializeNones setting does not apply."
+      )
+    }
+  }
 
     def loop(field: Symbol, label: String, classTypeRepr: TypeRepr, select: Select, defaults: Map[String, Expr[Object]]): List[Expr[Any]] =  
       val flatten = extractFlatten(field)
@@ -384,6 +391,7 @@ private def writeSnippetsImpl[R, T, W[_]](thisOuter: Expr[upickle.core.Types wit
       }
 
   Expr.block(
+    configCheck ::
     fieldLabelsImpl0[T]
       .flatMap { (rawLabel, label) =>
         val defaults = getDefaultParamsImpl0[T]

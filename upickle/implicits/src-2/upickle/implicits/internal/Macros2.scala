@@ -645,6 +645,18 @@ object Macros2 {
         }
       }
 
+      val hasOptionFields = types.exists(_.typeSymbol.fullName == "scala.Option")
+      val configCheck = if (hasOptionFields) {
+        q"""
+          if (!${c.prefix}.optionsAsNulls && !${c.prefix}.serializeNones) {
+            throw new IllegalArgumentException(
+              "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false. " +
+              "When optionsAsNulls is false, Options are serialized as arrays ([t] or []), so the serializeNones setting does not apply."
+            )
+          }
+        """
+      } else q"()"
+
       q"""
         new ${c.prefix}.CaseClassWriter[$targetType]{
           private lazy val allKeys = Set[String](..${mappedNames.toList.map(name => Literal(Constant(name)))})
@@ -658,6 +670,7 @@ object Macros2 {
           override def write0[R](out: _root_.upickle.core.Visitor[_, R], v: $targetType): R = {
             if (v == null) out.visitNull(-1)
             else {
+              $configCheck
               val ctx = out.visitObject(length(v), true, -1)
               ..${write(targetType, q"v")}
               ctx.visitEnd(-1)

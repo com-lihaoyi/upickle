@@ -461,6 +461,18 @@ object ExampleTests extends TestSuite {
         SerializeNones.read[OptionWrapper]("""{"opt":null}""") ==> OptionWrapper(None)
         SerializeNones.read[OptionWrapper]("""{"opt":"lol"}""") ==> OptionWrapper(opt = Some("lol"))
       }
+      test("serializeNones = false with optionsAsNulls = false fails"){
+        object IncompatibleConfig extends upickle.AttributeTagged{
+          override def serializeNones = false
+          override def optionsAsNulls = false
+        }
+        implicit val optionWrapperRW: IncompatibleConfig.ReadWriter[OptionWrapper] = IncompatibleConfig.macroRW
+        val expectedMsg = "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false"
+        val writeEx = intercept[Throwable](IncompatibleConfig.write(OptionWrapper(None))).getMessage
+        assert(writeEx.startsWith(expectedMsg))
+        val readEx = intercept[Throwable](IncompatibleConfig.read[OptionWrapper]("{}")).getCause.getMessage
+        assert(readEx.startsWith(expectedMsg))
+      }
     }
 
     test("transform"){

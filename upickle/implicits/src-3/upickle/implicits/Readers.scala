@@ -206,7 +206,15 @@ trait ReadersVersionSpecific
         override def visitors0 = macros.allReaders[T, Reader]
         override def keyToIndex(x: String): Int = macros.keyToIndex[T](x)
         override def allKeysArray = macros.allFieldsMappedName[T].toArray
-        override def storeDefaults(x: upickle.implicits.BaseCaseObjectContext2): Unit = macros.storeDefaults[T](x)
+        override def storeDefaults(x: upickle.implicits.BaseCaseObjectContext2): Unit = {
+          if (!outerThis.optionsAsNulls && !outerThis.serializeNones) {
+            throw new IllegalArgumentException(
+              "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false. " +
+              "When optionsAsNulls is false, Options are serialized as arrays ([t] or []), so the serializeNones setting does not apply."
+            )
+          }
+          macros.storeDefaults[T](x)
+        }
       }
 
       inline if macros.isSingleton[T] then
