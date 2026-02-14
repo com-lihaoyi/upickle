@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Flatten.Nested": {
+      "type": "object",
+      "properties": {
+        "d": {
+          "type": "number"
+        },
+        "m": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "d",
+        "m"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/upickletest.Flatten.Nested"
+}

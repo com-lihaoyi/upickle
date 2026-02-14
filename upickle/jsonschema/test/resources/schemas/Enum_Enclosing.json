@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.SimpleEnum.A": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "upickletest.SimpleEnum.B": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "upickletest.SimpleEnum": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/upickletest.SimpleEnum.A"
+        },
+        {
+          "$ref": "#/$defs/upickletest.SimpleEnum.B"
+        }
+      ]
+    },
+    "upickletest.Enclosing": {
+      "type": "object",
+      "properties": {
+        "str": {
+          "type": "string"
+        },
+        "simple1": {
+          "$ref": "#/$defs/upickletest.SimpleEnum"
+        },
+        "simple2": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/upickletest.SimpleEnum"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "str",
+        "simple1",
+        "simple2"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/upickletest.Enclosing"
+}

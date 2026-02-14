@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Flatten.FlattenIntKey": {
+      "type": "object",
+      "properties": {
+        "i": {
+          "type": "integer"
+        },
+        "m": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "i",
+        "m"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/upickletest.Flatten.FlattenIntKey"
+}

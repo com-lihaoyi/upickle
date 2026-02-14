@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.ColorEnum.Red": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "upickletest.ColorEnum.Green": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "upickletest.ColorEnum.Blue": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "upickletest.ColorEnum.Mix": {
+      "type": "object",
+      "properties": {
+        "mix": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mix"
+      ],
+      "additionalProperties": false
+    },
+    "upickletest.ColorEnum.Unknown": {
+      "type": "object",
+      "properties": {
+        "mix": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mix"
+      ],
+      "additionalProperties": false
+    },
+    "upickletest.ColorEnum": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/upickletest.ColorEnum.Red"
+        },
+        {
+          "$ref": "#/$defs/upickletest.ColorEnum.Green"
+        },
+        {
+          "$ref": "#/$defs/upickletest.ColorEnum.Blue"
+        },
+        {
+          "$ref": "#/$defs/upickletest.ColorEnum.Mix"
+        },
+        {
+          "$ref": "#/$defs/upickletest.ColorEnum.Unknown"
+        }
+      ]
+    }
+  },
+  "$ref": "#/$defs/upickletest.ColorEnum"
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Flatten.NestedWithDefault": {
+      "type": "object",
+      "properties": {
+        "k": {
+          "type": "integer"
+        },
+        "l": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "k",
+        "l"
+      ],
+      "additionalProperties": false
+    },
+    "upickletest.Flatten.FlattenWithDefault": {
+      "type": "object",
+      "properties": {
+        "i": {
+          "type": "integer"
+        },
+        "n": {
+          "$ref": "#/$defs/upickletest.Flatten.NestedWithDefault"
+        }
+      },
+      "required": [
+        "i",
+        "n"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/upickletest.Flatten.FlattenWithDefault"
+}

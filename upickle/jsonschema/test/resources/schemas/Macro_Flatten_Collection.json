@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Flatten.ValueClass": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "upickletest.Flatten.Collection": {
+      "type": "object",
+      "properties": {
+        "n": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/upickletest.Flatten.ValueClass"
+          }
+        }
+      },
+      "required": [
+        "n"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/upickletest.Flatten.Collection"
+}

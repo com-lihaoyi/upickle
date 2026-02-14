@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "scala.NamedTuple.NamedTuple[scala.Tuple3[\"x\", \"y\", \"z\"], scala.Tuple3[scala.Int, scala.Double, scala.Long]]": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "additionalProperties": false
+    },
+    "scala.NamedTuple.NamedTuple[scala.Tuple3[\"name\", \"isHuman\", \"isAlien\"], scala.Tuple3[scala.Predef.String, scala.Boolean, scala.Boolean]]": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "isHuman": {
+          "type": "boolean"
+        },
+        "isAlien": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "isHuman",
+        "isAlien"
+      ],
+      "additionalProperties": false
+    },
+    "scala.NamedTuple.NamedTuple[scala.Tuple3[\"arr\", \"optionalAny\", \"optionalInt\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Option[scala.Int], scala.Option[scala.Int]]]": {
+      "type": "object",
+      "properties": {
+        "arr": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "optionalAny": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "optionalInt": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "arr",
+        "optionalAny",
+        "optionalInt"
+      ],
+      "additionalProperties": false
+    },
+    "scala.Tuple3[scala.NamedTuple.NamedTuple[scala.Tuple3[\"x\", \"y\", \"z\"], scala.Tuple3[scala.Int, scala.Double, scala.Long]], scala.NamedTuple.NamedTuple[scala.Tuple3[\"name\", \"isHuman\", \"isAlien\"], scala.Tuple3[scala.Predef.String, scala.Boolean, scala.Boolean]], scala.NamedTuple.NamedTuple[scala.Tuple3[\"arr\", \"optionalAny\", \"optionalInt\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Option[scala.Int], scala.Option[scala.Int]]]]": {
+      "type": "object",
+      "properties": {
+        "_1": {
+          "$ref": "#/$defs/scala.NamedTuple.NamedTuple[scala.Tuple3[\"x\", \"y\", \"z\"], scala.Tuple3[scala.Int, scala.Double, scala.Long]]"
+        },
+        "_2": {
+          "$ref": "#/$defs/scala.NamedTuple.NamedTuple[scala.Tuple3[\"name\", \"isHuman\", \"isAlien\"], scala.Tuple3[scala.Predef.String, scala.Boolean, scala.Boolean]]"
+        },
+        "_3": {
+          "$ref": "#/$defs/scala.NamedTuple.NamedTuple[scala.Tuple3[\"arr\", \"optionalAny\", \"optionalInt\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Option[scala.Int], scala.Option[scala.Int]]]"
+        }
+      },
+      "required": [
+        "_1",
+        "_2",
+        "_3"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/scala.Tuple3[scala.NamedTuple.NamedTuple[scala.Tuple3[\"x\", \"y\", \"z\"], scala.Tuple3[scala.Int, scala.Double, scala.Long]], scala.NamedTuple.NamedTuple[scala.Tuple3[\"name\", \"isHuman\", \"isAlien\"], scala.Tuple3[scala.Predef.String, scala.Boolean, scala.Boolean]], scala.NamedTuple.NamedTuple[scala.Tuple3[\"arr\", \"optionalAny\", \"optionalInt\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Option[scala.Int], scala.Option[scala.Int]]]]"
+}
