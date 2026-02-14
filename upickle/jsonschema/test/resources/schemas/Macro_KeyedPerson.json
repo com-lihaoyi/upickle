@@ -4,10 +4,10 @@
     "upickletest.KeyedPerson": {
       "type": "object",
       "properties": {
-        "firstName": {
+        "first_name": {
           "type": "string"
         },
-        "lastName": {
+        "last_name": {
           "type": "string"
         }
       },

@@ -54,6 +54,20 @@ object JsonSchema {
     case _: (h *: t) => constValue[h].toString :: labelsToList[t]
   }
 
+  private inline def mappedFieldLabels[T]: List[String] = ${mappedFieldLabelsImpl[T]}
+  private def mappedFieldLabelsImpl[T](using q: Quotes, t: Type[T]): Expr[List[String]] = {
+    import q.reflect.*
+    def keyAnnotation(sym: Symbol): Option[String] =
+      sym.annotations.collectFirst {
+        case Apply(Select(New(tpt), _), List(Literal(StringConstant(s))))
+            if tpt.tpe =:= TypeRepr.of[upickle.implicits.key] =>
+          s
+      }
+
+    val fields = TypeRepr.of[T].typeSymbol.primaryConstructor.paramSymss.flatten.filterNot(_.isType)
+    Expr.ofList(fields.map(f => Expr(keyAnnotation(f).getOrElse(f.name))))
+  }
+
   private inline def containsType[T, Ts <: Tuple]: Boolean =
     inline erasedValue[Ts] match {
       case _: EmptyTuple => false
@@ -83,16 +97,30 @@ object JsonSchema {
       delayed(resolveSchema[h, Seen]).asInstanceOf[JsonSchema[Any]] :: summonSchemas[t, Seen]
   }
 
-  private inline def summonSumSchemas[T <: Tuple, Seen <: Tuple]: List[(Boolean, String, JsonSchema[Any])] =
+  private inline def summonSumSchemas[T <: Tuple, Seen <: Tuple]: List[(Boolean, String, String, JsonSchema[Any])] =
     inline erasedValue[T] match {
       case _: EmptyTuple => Nil
       case _: (h *: t) =>
         (
           macros.isSingleton[h],
           macros.tagName[h],
+          macros.shortTagName[h],
           delayed(resolveSchema[h, Seen]).asInstanceOf[JsonSchema[Any]]
         ) :: summonSumSchemas[t, Seen]
     }
+
+  private inline def annotatedSumTagKey[T]: Option[String] = ${annotatedSumTagKeyImpl[T]}
+  private def annotatedSumTagKeyImpl[T](using q: Quotes, t: Type[T]): Expr[Option[String]] = {
+    import q.reflect.*
+    TypeRepr.of[T].typeSymbol.annotations.collectFirst {
+      case Apply(Select(New(tpt), _), List(Literal(StringConstant(s))))
+          if tpt.tpe =:= TypeRepr.of[upickle.implicits.key] =>
+        Expr(s)
+    } match {
+      case Some(v) => '{Some($v)}
+      case None => '{None}
+    }
+  }
 
 
   inline def derived[T](using m: Mirror.Of[T]): JsonSchema[T] =
@@ -112,6 +140,7 @@ object JsonSchema {
 
   private inline def productSchema[T, Labels <: Tuple, Elems <: Tuple, Seen <: Tuple]: JsonSchema[T] = {
     val fieldLabels = labelsToList[Labels]
+    val rawMappedFieldLabels = mappedFieldLabels[T]
     val fieldSchemas = summonSchemas[Elems, Seen]
     new JsonSchema[T] {
       override def schema(api: upickle.Api, registry: Registry): ujson.Value = {
@@ -125,7 +154,10 @@ object JsonSchema {
               "maxItems" -> fieldSchemas.size
             )
           } else {
-            val mappedLabels = fieldLabels.map(api.objectAttributeKeyWriteMap(_).toString)
+            val chosenLabels =
+              if (rawMappedFieldLabels.size == fieldSchemas.size) rawMappedFieldLabels
+              else fieldLabels
+            val mappedLabels = chosenLabels.map(api.objectAttributeKeyWriteMap(_).toString)
             val props = ujson.Obj.from(
               mappedLabels.zip(fieldSchemas).map { case (k, s) =>
                 k -> s.schema(api, registry)
@@ -145,17 +177,20 @@ object JsonSchema {
 
   private inline def sumSchema[T, Elems <: Tuple, Seen <: Tuple]: JsonSchema[T] = {
     val alts = summonSumSchemas[Elems, Seen]
+    val tagKeyOverride = annotatedSumTagKey[T]
     new JsonSchema[T] {
       override def schema(api: upickle.Api, registry: Registry): ujson.Value = {
         val defKey = typeId[T]
         registry.define(defKey) {
-          val tagKey = api.tagName
+          val tagKey = api.objectAttributeKeyWriteMap(tagKeyOverride.getOrElse(api.tagName)).toString
           ujson.Obj(
             "oneOf" -> ujson.Arr.from(
               alts.map {
-                case (true, tagName, _) =>
-                  ujson.Obj("const" -> api.objectTypeKeyWriteMap(tagName).toString)
-                case (false, tagName, altSchema) =>
+                case (true, fullTagName, shortTagName, _) =>
+                  val rawTag = if (api.objectTypeKeyWriteFullyQualified) fullTagName else shortTagName
+                  ujson.Obj("const" -> api.objectTypeKeyWriteMap(rawTag).toString)
+                case (false, fullTagName, shortTagName, altSchema) =>
+                  val rawTag = if (api.objectTypeKeyWriteFullyQualified) fullTagName else shortTagName
                   ujson.Obj(
                     "allOf" -> ujson.Arr(
                       altSchema.schema(api, registry),
@@ -163,7 +198,7 @@ object JsonSchema {
                         "type" -> "object",
                         "properties" -> ujson.Obj(
                           tagKey -> ujson.Obj(
-                            "const" -> api.objectTypeKeyWriteMap(tagName).toString
+                            "const" -> api.objectTypeKeyWriteMap(rawTag).toString
                           )
                         ),
                         "required" -> ujson.Arr(tagKey)

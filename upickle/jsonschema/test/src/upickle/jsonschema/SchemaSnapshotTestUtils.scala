@@ -21,15 +21,12 @@ object SchemaSnapshotTestUtils {
     path
   }
 
-  def assertSchemaSnapshot[T](resourcePath: String)(using JsonSchema[T], GoldenFix.Reporter): Unit = {
-    val rendered = JsonSchema.schemaFor[T](upickle.default).render(indent = 2)
-    assertGoldenFile(rendered, goldenPath(resourcePath))
-  }
-
   def assertSchemaSerializationCase[T](
       resourcePath: String,
       value: T,
-      expectedSerializedJson: String
+      expectedSerializedJson: String,
+      invalidJson: String,
+      expectedInvalidError: String
   )(using JsonSchema[T], upickle.default.Writer[T], GoldenFix.Reporter): Unit = {
     val renderedSchema = JsonSchema.schemaFor[T](upickle.default).render(indent = 2)
     assertGoldenFile(renderedSchema, goldenPath(resourcePath))
@@ -38,8 +35,13 @@ object SchemaSnapshotTestUtils {
     assert(serialized == expectedSerializedJson)
 
     val schema = schemaFactory.getSchema(mapper.readTree(renderedSchema))
-    val validationErrors = schema.validate(mapper.readTree(serialized))
-    assert(validationErrors.isEmpty)
+    val validErrors = schema.validate(mapper.readTree(serialized))
+    assert(validErrors.isEmpty)
+    val invalidErrors = schema.validate(mapper.readTree(invalidJson))
+    assert(!invalidErrors.isEmpty)
+    val invalidMessage = invalidErrors.toString
+    assert(invalidMessage.nonEmpty)
+    assert(invalidMessage.contains(expectedInvalidError))
   }
 
   def assertSerializationValidatesSchema[T](
@@ -53,5 +55,14 @@ object SchemaSnapshotTestUtils {
     val schema = schemaFactory.getSchema(mapper.readTree(renderedSchema))
     val validationErrors = schema.validate(mapper.readTree(serialized))
     assert(validationErrors.isEmpty)
+  }
+
+  def assertJsonDoesNotValidateSchema[T](
+      json: String
+  )(using JsonSchema[T]): Unit = {
+    val renderedSchema = JsonSchema.schemaFor[T](upickle.default).render(indent = 2)
+    val schema = schemaFactory.getSchema(mapper.readTree(renderedSchema))
+    val validationErrors = schema.validate(mapper.readTree(json))
+    assert(!validationErrors.isEmpty)
   }
 }

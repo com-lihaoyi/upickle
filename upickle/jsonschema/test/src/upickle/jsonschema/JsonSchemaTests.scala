@@ -12,10 +12,23 @@ enum LinkedList[+T] derives ReadWriter:
   case End
   case Cons(value: T, next: LinkedList[T])
 
+@upickle.implicits.key("kind")
+sealed trait KeyedTagBase derives ReadWriter
+object KeyedTagBase:
+  case class Foo(i: Int) extends KeyedTagBase
+  case object Bar extends KeyedTagBase
+
+sealed trait PlainTagBase derives ReadWriter
+object PlainTagBase:
+  case class Foo(i: Int) extends PlainTagBase
+  case object Bar extends PlainTagBase
+
 given JsonSchema[Address] = JsonSchema.derived
 given JsonSchema[Person] = JsonSchema.derived
 lazy given JsonSchema[Node] = JsonSchema.derived
 given JsonSchema[LinkedList[Int]] = JsonSchema.derived
+given JsonSchema[KeyedTagBase] = JsonSchema.derived
+given JsonSchema[PlainTagBase] = JsonSchema.derived
 
 object JsonSchemaTests extends TestSuite {
   val tests = Tests {
@@ -160,6 +173,37 @@ object JsonSchemaTests extends TestSuite {
           |  "$ref": "#/$defs/upickle.jsonschema.LinkedList[scala.Int]"
           |}""".stripMargin
       assert(rendered == expected)
+    }
+
+    test("tagKeyOverrideAndShortTags") {
+      SchemaSnapshotTestUtils.assertSerializationValidatesSchema[KeyedTagBase](
+        KeyedTagBase.Foo(1),
+        """{"kind":"Foo","i":1}"""
+      )
+      SchemaSnapshotTestUtils.assertSerializationValidatesSchema[KeyedTagBase](
+        KeyedTagBase.Bar,
+        """"Bar""""
+      )
+      SchemaSnapshotTestUtils.assertJsonDoesNotValidateSchema[KeyedTagBase](
+        """{"$type":"Foo","i":1}"""
+      )
+      SchemaSnapshotTestUtils.assertJsonDoesNotValidateSchema[KeyedTagBase](
+        """{"kind":"upickle.jsonschema.KeyedTagBase.Foo","i":1}"""
+      )
+    }
+
+    test("plainShortTagRegression") {
+      SchemaSnapshotTestUtils.assertSerializationValidatesSchema[PlainTagBase](
+        PlainTagBase.Foo(1),
+        """{"$type":"Foo","i":1}"""
+      )
+      SchemaSnapshotTestUtils.assertSerializationValidatesSchema[PlainTagBase](
+        PlainTagBase.Bar,
+        """"Bar""""
+      )
+      SchemaSnapshotTestUtils.assertJsonDoesNotValidateSchema[PlainTagBase](
+        """{"$type":"upickle.jsonschema.PlainTagBase.Foo","i":1}"""
+      )
     }
   }
 }
