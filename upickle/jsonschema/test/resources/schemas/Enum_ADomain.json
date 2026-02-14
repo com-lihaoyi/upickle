@@ -18,7 +18,9 @@
           "$ref": "#/$defs/upickletest.Domain"
         }
       },
-      "required": [],
+      "required": [
+        "d"
+      ],
       "additionalProperties": true
     }
   },

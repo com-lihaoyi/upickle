@@ -102,6 +102,52 @@
 
         uPickle supports Scala 2.12, 2.13 and 3.1+
 
+  @sect{JSON Schema (Scala 3)}
+    @p
+      uPickle can derive JSON Schema documents from the same types you serialize
+      with @hl.scala{Reader}/@hl.scala{Writer}/@hl.scala{ReadWriter}. This lives in
+      a separate module, currently targeting Scala 3.
+
+    @hl.scala
+      "com.lihaoyi" %% "upickle-jsonschema" % "4.4.2" // SBT
+      ivy"com.lihaoyi::upickle-jsonschema:4.4.2" // Mill
+
+    @p
+      Define @hl.scala{JsonSchema} instances (usually via @hl.scala{JsonSchema.derived}),
+      then call @hl.scala{upickle.default.schema[T]}:
+
+    @hl.scala
+      import upickle.default.*
+      import upickle.jsonschema.*
+
+      case class Address(street: String, zip: Int) derives ReadWriter
+      case class Person(name: String, address: Address) derives ReadWriter
+
+      given JsonSchema[Address] = JsonSchema.derived
+      given JsonSchema[Person] = JsonSchema.derived
+
+      val schemaJson: ujson.Value = upickle.default.schema[Person]
+      println(schemaJson.render(indent = 2))
+
+    @p
+      Recursive and mutually-recursive types are supported via @hl.scala{$ref}/@hl.scala{$defs}:
+
+    @hl.scala
+      import upickle.default.*
+      import upickle.jsonschema.*
+
+      case class Node(value: Int, next: Option[Node]) derives ReadWriter
+      lazy given JsonSchema[Node] = JsonSchema.derived
+
+      val recursiveSchema = upickle.default.schema[Node]
+
+    @p
+      To inspect just the collected definitions map, use @hl.scala{schemas[T]}:
+
+    @hl.scala
+      val defs: collection.immutable.ListMap[String, ujson.Value] =
+        upickle.default.schemas[Person]
+
   @sect{Basics}
     @sect{Builtins}
       @p

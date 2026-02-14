@@ -3,26 +3,11 @@
   "$defs": {
     "upickletest.Flatten.FlattenSeq": {
       "type": "object",
-      "properties": {
-        "n": {
-          "type": "array",
-          "items": {
-            "type": "array",
-            "prefixItems": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "integer"
-              }
-            ],
-            "minItems": 2,
-            "maxItems": 2
-          }
-        }
-      },
+      "properties": {},
       "required": [],
-      "additionalProperties": true
+      "additionalProperties": {
+        "type": "integer"
+      }
     }
   },
   "$ref": "#/$defs/upickletest.Flatten.FlattenSeq"

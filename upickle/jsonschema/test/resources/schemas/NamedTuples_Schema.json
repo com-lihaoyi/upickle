@@ -11,10 +11,22 @@
           "type": "number"
         },
         "z": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            }
+          ]
         }
       },
-      "required": [],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "additionalProperties": true
     },
     "scala.NamedTuple.NamedTuple[scala.Tuple3[\"name\", \"isHuman\", \"isAlien\"], scala.Tuple3[scala.Predef.String, scala.Boolean, scala.Boolean]]": {
@@ -30,7 +42,11 @@
           "type": "boolean"
         }
       },
-      "required": [],
+      "required": [
+        "name",
+        "isHuman",
+        "isAlien"
+      ],
       "additionalProperties": true
     },
     "scala.NamedTuple.NamedTuple[scala.Tuple3[\"arr\", \"optionalAny\", \"optionalInt\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Option[scala.Int], scala.Option[scala.Int]]]": {
@@ -79,7 +95,11 @@
           ]
         }
       },
-      "required": [],
+      "required": [
+        "arr",
+        "optionalAny",
+        "optionalInt"
+      ],
       "additionalProperties": true
     },
     "scala.Tuple3[scala.NamedTuple.NamedTuple[scala.Tuple3[\"x\", \"y\", \"z\"], scala.Tuple3[scala.Int, scala.Double, scala.Long]], scala.NamedTuple.NamedTuple[scala.Tuple3[\"name\", \"isHuman\", \"isAlien\"], scala.Tuple3[scala.Predef.String, scala.Boolean, scala.Boolean]], scala.NamedTuple.NamedTuple[scala.Tuple3[\"arr\", \"optionalAny\", \"optionalInt\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Option[scala.Int], scala.Option[scala.Int]]]]": {

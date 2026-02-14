@@ -11,20 +11,30 @@
           "type": "integer"
         }
       },
-      "required": [],
+      "required": [
+        "a",
+        "b"
+      ],
       "additionalProperties": true
     },
     "upickletest.Flatten.Inner": {
       "type": "object",
       "properties": {
-        "innerMost": {
-          "$ref": "#/$defs/upickletest.Flatten.InnerMost"
+        "a": {
+          "type": "string"
+        },
+        "b": {
+          "type": "integer"
         },
         "c": {
           "type": "boolean"
         }
       },
-      "required": [],
+      "required": [
+        "a",
+        "b",
+        "c"
+      ],
       "additionalProperties": true
     },
     "upickletest.Flatten.Outer": {
@@ -33,11 +43,22 @@
         "d": {
           "type": "number"
         },
-        "inner": {
-          "$ref": "#/$defs/upickletest.Flatten.Inner"
+        "a": {
+          "type": "string"
+        },
+        "b": {
+          "type": "integer"
+        },
+        "c": {
+          "type": "boolean"
         }
       },
-      "required": [],
+      "required": [
+        "d",
+        "a",
+        "b",
+        "c"
+      ],
       "additionalProperties": true
     }
   },

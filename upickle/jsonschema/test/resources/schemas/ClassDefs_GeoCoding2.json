@@ -17,7 +17,11 @@
           }
         }
       },
-      "required": [],
+      "required": [
+        "name",
+        "whatever",
+        "types"
+      ],
       "additionalProperties": true
     },
     "upickletest.GeoCoding2": {
@@ -33,7 +37,10 @@
           "type": "string"
         }
       },
-      "required": [],
+      "required": [
+        "results",
+        "status"
+      ],
       "additionalProperties": true
     }
   },

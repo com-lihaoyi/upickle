@@ -65,4 +65,17 @@ object SchemaSnapshotTestUtils {
     val validationErrors = schema.validate(mapper.readTree(json))
     assert(!validationErrors.isEmpty)
   }
+
+  def assertJsonDoesNotValidateSchemaWithMessage[T](
+      json: String,
+      expectedError: String
+  )(using JsonSchema[T]): Unit = {
+    val renderedSchema = JsonSchema.schemaFor[T](upickle.default).render(indent = 2)
+    val schema = schemaFactory.getSchema(mapper.readTree(renderedSchema))
+    val validationErrors = schema.validate(mapper.readTree(json))
+    assert(!validationErrors.isEmpty)
+    val renderedErrors = validationErrors.toString
+    assert(renderedErrors.nonEmpty)
+    assert(renderedErrors.contains(expectedError))
+  }
 }

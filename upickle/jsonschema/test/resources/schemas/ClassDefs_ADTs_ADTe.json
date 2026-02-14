@@ -8,7 +8,9 @@
           "type": "integer"
         }
       },
-      "required": [],
+      "required": [
+        "i"
+      ],
       "additionalProperties": true
     },
     "upickletest.ADTs.ADTe": {
@@ -43,7 +45,13 @@
           }
         }
       },
-      "required": [],
+      "required": [
+        "i",
+        "s",
+        "t",
+        "a",
+        "q"
+      ],
       "additionalProperties": true
     }
   },

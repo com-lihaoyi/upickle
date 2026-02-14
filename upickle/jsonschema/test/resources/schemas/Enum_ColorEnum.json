@@ -8,7 +8,9 @@
           "type": "integer"
         }
       },
-      "required": [],
+      "required": [
+        "mix"
+      ],
       "additionalProperties": true
     },
     "upickletest.ColorEnum.Unknown": {
@@ -18,7 +20,9 @@
           "type": "integer"
         }
       },
-      "required": [],
+      "required": [
+        "mix"
+      ],
       "additionalProperties": true
     },
     "upickletest.ColorEnum": {

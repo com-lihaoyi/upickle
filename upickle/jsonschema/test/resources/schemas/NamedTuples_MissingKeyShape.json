@@ -8,7 +8,9 @@
           "type": "boolean"
         }
       },
-      "required": [],
+      "required": [
+        "foo"
+      ],
       "additionalProperties": true
     }
   },

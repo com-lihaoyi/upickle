@@ -11,7 +11,10 @@
           "$ref": "#/$defs/upickletest.LinkedList[scala.Int]"
         }
       },
-      "required": [],
+      "required": [
+        "value",
+        "next"
+      ],
       "additionalProperties": true
     },
     "upickletest.LinkedList.Node2[scala.Int]": {
@@ -24,7 +27,10 @@
           "$ref": "#/$defs/upickletest.LinkedList.Node[scala.Int]"
         }
       },
-      "required": [],
+      "required": [
+        "value",
+        "next"
+      ],
       "additionalProperties": true
     },
     "upickletest.LinkedList[scala.Int]": {

@@ -6,16 +6,27 @@
       "properties": {
         "i": {
           "type": "integer"
-        },
-        "m": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
         }
       },
-      "required": [],
-      "additionalProperties": true
+      "required": [
+        "i"
+      ],
+      "additionalProperties": {
+        "type": "string"
+      },
+      "propertyNames": {
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^-?(0|[1-9][0-9]*)$"
+          },
+          {
+            "enum": [
+              "i"
+            ]
+          }
+        ]
+      }
     }
   },
   "$ref": "#/$defs/upickletest.Flatten.FlattenIntKey"

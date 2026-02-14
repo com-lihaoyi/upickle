@@ -32,7 +32,11 @@
           ]
         }
       },
-      "required": [],
+      "required": [
+        "foo",
+        "bar",
+        "qux"
+      ],
       "additionalProperties": true
     }
   },

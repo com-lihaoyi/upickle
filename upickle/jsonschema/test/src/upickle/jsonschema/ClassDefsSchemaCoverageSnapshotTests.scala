@@ -9,8 +9,8 @@ object ClassDefsSchemaCoverageSnapshotTests extends TestSuite {
         "schemas/ClassDefs_ADTs_ADT0.json",
         upickletest.ADTs.ADT0(),
         "{}",
-        """{"i":1}""",
-        "property 'i' is not defined"
+        """[]""",
+        "object expected"
       )
     }
     test("ClassDefs_ADTs_ADTa") {

@@ -24,7 +24,11 @@
           "maxItems": 2
         }
       },
-      "required": [],
+      "required": [
+        "i",
+        "s",
+        "t"
+      ],
       "additionalProperties": true
     }
   },

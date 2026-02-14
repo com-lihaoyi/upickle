@@ -8,7 +8,9 @@
           "type": "integer"
         }
       },
-      "required": [],
+      "required": [
+        "i"
+      ],
       "additionalProperties": true
     },
     "upickletest.ADTs.ADTd": {
@@ -37,7 +39,12 @@
           "$ref": "#/$defs/upickletest.ADTs.ADTa"
         }
       },
-      "required": [],
+      "required": [
+        "i",
+        "s",
+        "t",
+        "a"
+      ],
       "additionalProperties": true
     }
   },

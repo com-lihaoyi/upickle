@@ -12,6 +12,8 @@ trait JsonSchema[+T] {
 
 object JsonSchema {
   private val Draft202012 = "https://json-schema.org/draft/2020-12/schema"
+  private val IntegralPattern = "^-?(0|[1-9][0-9]*)$"
+  private val BooleanPattern = "^(true|false)$"
 
   final class Registry {
     private val inProgress = mutable.HashSet.empty[String]
@@ -23,8 +25,8 @@ object JsonSchema {
       if (defs0.contains(defKey) || inProgress.contains(defKey)) ref(defKey)
       else {
         inProgress += defKey
-        defs0(defKey) = build
-        inProgress -= defKey
+        try defs0(defKey) = build
+        finally inProgress -= defKey
         ref(defKey)
       }
     }
@@ -34,6 +36,50 @@ object JsonSchema {
   }
 
   private def primitive(tpe: String): ujson.Obj = ujson.Obj("type" -> tpe)
+  private def arraySchema(item: ujson.Value, uniqueItems: Boolean = false): ujson.Obj = {
+    val out = ujson.Obj("type" -> "array", "items" -> item)
+    if (uniqueItems) out("uniqueItems") = true
+    out
+  }
+
+  trait MapKeySchema[-K] {
+    def propertyNames: Option[ujson.Value]
+  }
+  given defaultMapKeySchema[K]: MapKeySchema[K] with {
+    def propertyNames: Option[ujson.Value] = None
+  }
+  given MapKeySchema[java.util.UUID] with {
+    def propertyNames: Option[ujson.Value] =
+      Some(ujson.Obj("type" -> "string", "format" -> "uuid"))
+  }
+  given MapKeySchema[Char] with {
+    def propertyNames: Option[ujson.Value] =
+      Some(ujson.Obj("type" -> "string", "minLength" -> 1, "maxLength" -> 1))
+  }
+  given MapKeySchema[Boolean] with {
+    def propertyNames: Option[ujson.Value] =
+      Some(ujson.Obj("type" -> "string", "pattern" -> BooleanPattern))
+  }
+  given MapKeySchema[Int] with {
+    def propertyNames: Option[ujson.Value] =
+      Some(ujson.Obj("type" -> "string", "pattern" -> IntegralPattern))
+  }
+  given MapKeySchema[Long] with {
+    def propertyNames: Option[ujson.Value] =
+      Some(ujson.Obj("type" -> "string", "pattern" -> IntegralPattern))
+  }
+  given MapKeySchema[Short] with {
+    def propertyNames: Option[ujson.Value] =
+      Some(ujson.Obj("type" -> "string", "pattern" -> IntegralPattern))
+  }
+  given MapKeySchema[Byte] with {
+    def propertyNames: Option[ujson.Value] =
+      Some(ujson.Obj("type" -> "string", "pattern" -> IntegralPattern))
+  }
+  given MapKeySchema[BigInt] with {
+    def propertyNames: Option[ujson.Value] =
+      Some(ujson.Obj("type" -> "string", "pattern" -> IntegralPattern))
+  }
 
   private def isTupleLabels(labels: List[String]): Boolean =
     labels.zipWithIndex.forall { case (label, index) => label == s"_${index + 1}" }
@@ -54,8 +100,8 @@ object JsonSchema {
     case _: (h *: t) => constValue[h].toString :: labelsToList[t]
   }
 
-  private inline def mappedFieldLabels[T]: List[String] = ${mappedFieldLabelsImpl[T]}
-  private def mappedFieldLabelsImpl[T](using q: Quotes, t: Type[T]): Expr[List[String]] = {
+  private inline def productFieldMetadata[T]: List[(String, Boolean, Boolean, Boolean, String)] = ${productFieldMetadataImpl[T]}
+  private def productFieldMetadataImpl[T](using q: Quotes, t: Type[T]): Expr[List[(String, Boolean, Boolean, Boolean, String)]] = {
     import q.reflect.*
     def keyAnnotation(sym: Symbol): Option[String] =
       sym.annotations.collectFirst {
@@ -63,9 +109,61 @@ object JsonSchema {
             if tpt.tpe =:= TypeRepr.of[upickle.implicits.key] =>
           s
       }
+    def flattenAnnotation(sym: Symbol): Boolean =
+      sym.annotations.exists(_.tpe =:= TypeRepr.of[upickle.implicits.flatten])
 
-    val fields = TypeRepr.of[T].typeSymbol.primaryConstructor.paramSymss.flatten.filterNot(_.isType)
-    Expr.ofList(fields.map(f => Expr(keyAnnotation(f).getOrElse(f.name))))
+    def substituteTypeArgs(owner: TypeRepr, fieldType: TypeRepr): TypeRepr = {
+      val constructorSym = owner.typeSymbol.primaryConstructor
+      val tparams0 = constructorSym.paramSymss.flatten.filter(_.isType)
+      fieldType.substituteTypes(tparams0, owner.typeArgs)
+    }
+
+    def isCollectionFlattenable(tpe: TypeRepr): Boolean = {
+      val iterableSym = Symbol.requiredClass("scala.collection.Iterable")
+      tpe.baseType(iterableSym) match {
+        case AppliedType(_, List(elemTpe)) =>
+          elemTpe.dealias match {
+            case AppliedType(tupleConstructor, List(_, _)) =>
+              tupleConstructor.typeSymbol == Symbol.requiredClass("scala.Tuple2")
+            case _ => false
+          }
+        case _ => false
+      }
+    }
+
+    def mapKeyKindForType(tpe: TypeRepr): String = {
+      val d = tpe.dealias
+      if (d =:= TypeRepr.of[Int] || d =:= TypeRepr.of[Long] || d =:= TypeRepr.of[Short] || d =:= TypeRepr.of[Byte] || d =:= TypeRepr.of[BigInt]) "integral"
+      else if (d =:= TypeRepr.of[Boolean]) "boolean"
+      else if (d =:= TypeRepr.of[Char]) "char"
+      else if (d =:= TypeRepr.of[java.util.UUID]) "uuid"
+      else "none"
+    }
+
+    def flattenCollectionKeyKind(tpe: TypeRepr): String = {
+      val iterableSym = Symbol.requiredClass("scala.collection.Iterable")
+      tpe.baseType(iterableSym) match {
+        case AppliedType(_, List(elemTpe)) =>
+          elemTpe.dealias match {
+            case AppliedType(tupleConstructor, List(keyTpe, _))
+                if tupleConstructor.typeSymbol == Symbol.requiredClass("scala.Tuple2") =>
+              mapKeyKindForType(keyTpe)
+            case _ => "none"
+          }
+        case _ => "none"
+      }
+    }
+
+    val owner = TypeRepr.of[T]
+    val fields = owner.typeSymbol.primaryConstructor.paramSymss.flatten.filterNot(_.isType)
+    Expr.ofList(fields.map { f =>
+      val mapped = keyAnnotation(f).getOrElse(f.name)
+      val isFlatten = flattenAnnotation(f)
+      val fieldTpe = substituteTypeArgs(owner, owner.memberType(f))
+      val isFlattenMap = isFlatten && isCollectionFlattenable(fieldTpe)
+      val keyKind = if (isFlattenMap) flattenCollectionKeyKind(fieldTpe) else "none"
+      Expr((mapped, f.flags.is(Flags.HasDefault), isFlatten, isFlattenMap, keyKind))
+    })
   }
 
   private inline def containsType[T, Ts <: Tuple]: Boolean =
@@ -122,6 +220,62 @@ object JsonSchema {
     }
   }
 
+  private inline def annotatedAllowUnknownKeys[T]: Option[Boolean] = ${annotatedAllowUnknownKeysImpl[T]}
+  private def annotatedAllowUnknownKeysImpl[T](using q: Quotes, t: Type[T]): Expr[Option[Boolean]] = {
+    import q.reflect.*
+    TypeRepr.of[T].typeSymbol.annotations.collectFirst {
+      case Apply(Select(New(tpt), _), List(Literal(BooleanConstant(b))))
+          if tpt.tpe =:= TypeRepr.of[upickle.implicits.allowUnknownKeys] =>
+        Expr(b)
+    } match {
+      case Some(v) => '{Some($v)}
+      case None => '{None}
+    }
+  }
+
+  private def derefSchema(schema: ujson.Value, registry: Registry): Option[ujson.Obj] = schema match {
+    case o: ujson.Obj =>
+      o.obj.get("$ref") match {
+        case Some(ujson.Str(ref)) if ref.startsWith("#/$defs/") =>
+          registry.defs.get(ref.stripPrefix("#/$defs/")).collect { case obj: ujson.Obj => obj }
+        case _ => Some(o)
+      }
+    case _ => None
+  }
+
+  private def mapSchema(valueSchema: ujson.Value, keySchema: MapKeySchema[?]): ujson.Obj = {
+    val out = ujson.Obj("type" -> "object", "additionalProperties" -> valueSchema)
+    keySchema.propertyNames.foreach(v => out("propertyNames") = v)
+    out
+  }
+
+  private def propertyNamesFromKeyKind(kind: String): Option[ujson.Value] = kind match {
+    case "integral" => Some(ujson.Obj("type" -> "string", "pattern" -> IntegralPattern))
+    case "boolean" => Some(ujson.Obj("type" -> "string", "pattern" -> BooleanPattern))
+    case "char" => Some(ujson.Obj("type" -> "string", "minLength" -> 1, "maxLength" -> 1))
+    case "uuid" => Some(ujson.Obj("type" -> "string", "format" -> "uuid"))
+    case _ => None
+  }
+
+  private def flattenMapValueSchema(schema: ujson.Value, registry: Registry): Option[ujson.Value] = {
+    derefSchema(schema, registry) match {
+      case Some(obj) if obj.obj.contains("additionalProperties") =>
+        obj.obj.get("additionalProperties")
+      case Some(obj) if obj.obj.get("type").contains(ujson.Str("array")) =>
+        obj.obj.get("items") match {
+          case Some(itemObj: ujson.Obj) =>
+            itemObj.obj.get("prefixItems") match {
+              case Some(prefixItems: ujson.Arr) if prefixItems.value.length >= 2 =>
+                val valueSchema = prefixItems.value(1)
+                Some(valueSchema)
+              case _ => None
+            }
+          case _ => None
+        }
+      case _ => None
+    }
+  }
+
 
   inline def derived[T](using m: Mirror.Of[T]): JsonSchema[T] =
     derivedWithSeen[T, EmptyTuple](using m)
@@ -140,8 +294,9 @@ object JsonSchema {
 
   private inline def productSchema[T, Labels <: Tuple, Elems <: Tuple, Seen <: Tuple]: JsonSchema[T] = {
     val fieldLabels = labelsToList[Labels]
-    val rawMappedFieldLabels = mappedFieldLabels[T]
+    val rawFieldMeta = productFieldMetadata[T]
     val fieldSchemas = summonSchemas[Elems, Seen]
+    val objectAllowUnknownOverride = annotatedAllowUnknownKeys[T]
     new JsonSchema[T] {
       override def schema(api: upickle.Api, registry: Registry): ujson.Value = {
         val defKey = typeId[T]
@@ -155,20 +310,68 @@ object JsonSchema {
             )
           } else {
             val chosenLabels =
-              if (rawMappedFieldLabels.size == fieldSchemas.size) rawMappedFieldLabels
+              if (rawFieldMeta.size == fieldSchemas.size) rawFieldMeta.map(_._1)
               else fieldLabels
-            val mappedLabels = chosenLabels.map(api.objectAttributeKeyWriteMap(_).toString)
-            val props = ujson.Obj.from(
-              mappedLabels.zip(fieldSchemas).map { case (k, s) =>
-                k -> s.schema(api, registry)
+            val fieldMetaByLabel = rawFieldMeta.map { case (label, hasDefault, isFlatten, isFlattenMap, keyKind) =>
+              label -> (hasDefault, isFlatten, isFlattenMap, keyKind)
+            }.toMap
+            val allowUnknown = objectAllowUnknownOverride.getOrElse(api.allowUnknownKeys)
+            val props = ujson.Obj()
+            val required = mutable.LinkedHashSet.empty[String]
+            var flattenMapAdditionalProperties: Option[ujson.Value] = None
+            var flattenMapPropertyNames: Option[ujson.Value] = None
+
+            chosenLabels.zip(fieldSchemas).foreach { case (label, schema) =>
+              val mappedLabel = api.objectAttributeKeyWriteMap(label).toString
+              fieldMetaByLabel.get(label) match {
+                case Some((_, _, true, keyKind)) =>
+                  flattenMapValueSchema(schema.schema(api, registry), registry)
+                    .foreach(v => flattenMapAdditionalProperties = Some(v))
+                  propertyNamesFromKeyKind(keyKind).foreach(v => flattenMapPropertyNames = Some(v))
+                case Some((_, true, _, _)) =>
+                  val nestedObj = derefSchema(schema.schema(api, registry), registry)
+                  nestedObj match {
+                    case Some(obj) =>
+                      obj.obj.get("properties").collect { case p: ujson.Obj => p }.foreach { p =>
+                        p.value.foreach { case (k, v) => props(k) = v }
+                      }
+                      obj.obj.get("required").collect { case arr: ujson.Arr => arr }.foreach { arr =>
+                        arr.value.foreach {
+                          case ujson.Str(k) => required += k
+                          case _ =>
+                        }
+                      }
+                    case None =>
+                      props(mappedLabel) = schema.schema(api, registry)
+                  }
+                case Some((hasDefault, _, _, _)) =>
+                  props(mappedLabel) = schema.schema(api, registry)
+                  if (!hasDefault) required += mappedLabel
+                case None =>
+                  props(mappedLabel) = schema.schema(api, registry)
+                  required += mappedLabel
               }
-            )
-            ujson.Obj(
+            }
+
+            val additionalProperties = flattenMapAdditionalProperties.getOrElse(ujson.Bool(allowUnknown))
+            val out = ujson.Obj(
               "type" -> "object",
               "properties" -> props,
-              "required" -> ujson.Arr(),
-              "additionalProperties" -> fieldSchemas.nonEmpty
+              "required" -> ujson.Arr.from(required),
+              "additionalProperties" -> additionalProperties
             )
+            flattenMapPropertyNames.foreach { v =>
+              if (props.value.isEmpty) out("propertyNames") = v
+              else {
+                out("propertyNames") = ujson.Obj(
+                  "anyOf" -> ujson.Arr(
+                    v,
+                    ujson.Obj("enum" -> ujson.Arr.from(props.value.keys))
+                  )
+                )
+              }
+            }
+            out
           }
         }
       }
@@ -220,14 +423,25 @@ object JsonSchema {
   given JsonSchema[Boolean] with { def schema(api: upickle.Api, registry: Registry) = primitive("boolean") }
 
   given JsonSchema[Int] with { def schema(api: upickle.Api, registry: Registry) = primitive("integer") }
-  given JsonSchema[Long] with { def schema(api: upickle.Api, registry: Registry) = primitive("integer") }
+  given JsonSchema[Long] with {
+    def schema(api: upickle.Api, registry: Registry) =
+      ujson.Obj(
+        "anyOf" -> ujson.Arr(
+          primitive("integer"),
+          ujson.Obj("type" -> "string", "pattern" -> IntegralPattern)
+        )
+      )
+  }
   given JsonSchema[Short] with { def schema(api: upickle.Api, registry: Registry) = primitive("integer") }
   given JsonSchema[Byte] with { def schema(api: upickle.Api, registry: Registry) = primitive("integer") }
-  given JsonSchema[BigInt] with { def schema(api: upickle.Api, registry: Registry) = primitive("integer") }
+  given JsonSchema[BigInt] with {
+    def schema(api: upickle.Api, registry: Registry) =
+      ujson.Obj("type" -> "string", "pattern" -> IntegralPattern)
+  }
 
   given JsonSchema[Double] with { def schema(api: upickle.Api, registry: Registry) = primitive("number") }
   given JsonSchema[Float] with { def schema(api: upickle.Api, registry: Registry) = primitive("number") }
-  given JsonSchema[BigDecimal] with { def schema(api: upickle.Api, registry: Registry) = primitive("number") }
+  given JsonSchema[BigDecimal] with { def schema(api: upickle.Api, registry: Registry) = primitive("string") }
 
   given JsonSchema[Unit] with { def schema(api: upickle.Api, registry: Registry) = ujson.Obj("type" -> "null") }
   given JsonSchema[ujson.Value] with { def schema(api: upickle.Api, registry: Registry) = ujson.Obj() }
@@ -259,23 +473,23 @@ object JsonSchema {
 
   given [T](using inner: JsonSchema[T]): JsonSchema[List[T]] = new JsonSchema[List[T]] {
     def schema(api: upickle.Api, registry: Registry): ujson.Value =
-      ujson.Obj("type" -> "array", "items" -> inner.schema(api, registry))
+      arraySchema(inner.schema(api, registry))
   }
   given [T](using inner: JsonSchema[T]): JsonSchema[Vector[T]] = new JsonSchema[Vector[T]] {
     def schema(api: upickle.Api, registry: Registry): ujson.Value =
-      ujson.Obj("type" -> "array", "items" -> inner.schema(api, registry))
+      arraySchema(inner.schema(api, registry))
   }
   given [T](using inner: JsonSchema[T]): JsonSchema[Seq[T]] = new JsonSchema[Seq[T]] {
     def schema(api: upickle.Api, registry: Registry): ujson.Value =
-      ujson.Obj("type" -> "array", "items" -> inner.schema(api, registry))
+      arraySchema(inner.schema(api, registry))
   }
   given [T](using inner: JsonSchema[T]): JsonSchema[Set[T]] = new JsonSchema[Set[T]] {
     def schema(api: upickle.Api, registry: Registry): ujson.Value =
-      ujson.Obj("type" -> "array", "items" -> inner.schema(api, registry), "uniqueItems" -> true)
+      arraySchema(inner.schema(api, registry), uniqueItems = true)
   }
   given [T](using inner: JsonSchema[T]): JsonSchema[Array[T]] = new JsonSchema[Array[T]] {
     def schema(api: upickle.Api, registry: Registry): ujson.Value =
-      ujson.Obj("type" -> "array", "items" -> inner.schema(api, registry))
+      arraySchema(inner.schema(api, registry))
   }
   given [A, B](using aSchema: JsonSchema[A], bSchema: JsonSchema[B]): JsonSchema[(A, B)] =
     new JsonSchema[(A, B)] {
@@ -292,14 +506,18 @@ object JsonSchema {
       }
     }
 
-  given [K, V](using valueSchema: JsonSchema[V]): JsonSchema[Map[K, V]] = new JsonSchema[Map[K, V]] {
-    def schema(api: upickle.Api, registry: Registry): ujson.Value =
-      ujson.Obj("type" -> "object", "additionalProperties" -> valueSchema.schema(api, registry))
-  }
-  given [K, V](using valueSchema: JsonSchema[V]): JsonSchema[scala.collection.mutable.LinkedHashMap[K, V]] =
+  given [K, V](using valueSchema: JsonSchema[V], keySchema: MapKeySchema[K]): JsonSchema[Map[K, V]] =
+    new JsonSchema[Map[K, V]] {
+      def schema(api: upickle.Api, registry: Registry): ujson.Value =
+        mapSchema(valueSchema.schema(api, registry), keySchema)
+    }
+  given [K, V](
+      using valueSchema: JsonSchema[V],
+      keySchema: MapKeySchema[K]
+  ): JsonSchema[scala.collection.mutable.LinkedHashMap[K, V]] =
     new JsonSchema[scala.collection.mutable.LinkedHashMap[K, V]] {
       def schema(api: upickle.Api, registry: Registry): ujson.Value =
-        ujson.Obj("type" -> "object", "additionalProperties" -> valueSchema.schema(api, registry))
+        mapSchema(valueSchema.schema(api, registry), keySchema)
     }
 
   def schemaFor[T](api: upickle.Api)(using JsonSchema[T]): ujson.Value = {

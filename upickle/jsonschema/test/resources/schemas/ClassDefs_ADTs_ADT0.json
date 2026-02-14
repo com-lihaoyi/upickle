@@ -5,7 +5,7 @@
       "type": "object",
       "properties": {},
       "required": [],
-      "additionalProperties": false
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.ADTs.ADT0"

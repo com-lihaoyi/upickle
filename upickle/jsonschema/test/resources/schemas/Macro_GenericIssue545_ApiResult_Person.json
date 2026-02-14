@@ -11,7 +11,9 @@
           "type": "string"
         }
       },
-      "required": [],
+      "required": [
+        "id"
+      ],
       "additionalProperties": true
     },
     "upickletest.GenericIssue545.ApiResult[upickletest.GenericIssue545.Person]": {
@@ -39,7 +41,9 @@
           "type": "integer"
         }
       },
-      "required": [],
+      "required": [
+        "total_count"
+      ],
       "additionalProperties": true
     }
   },

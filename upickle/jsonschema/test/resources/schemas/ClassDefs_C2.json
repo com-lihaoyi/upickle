@@ -14,7 +14,10 @@
           }
         }
       },
-      "required": [],
+      "required": [
+        "name",
+        "types"
+      ],
       "additionalProperties": true
     },
     "upickletest.C2": {
@@ -27,7 +30,9 @@
           }
         }
       },
-      "required": [],
+      "required": [
+        "results"
+      ],
       "additionalProperties": true
     }
   },

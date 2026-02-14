@@ -14,7 +14,10 @@
           }
         }
       },
-      "required": [],
+      "required": [
+        "name",
+        "types"
+      ],
       "additionalProperties": true
     }
   },

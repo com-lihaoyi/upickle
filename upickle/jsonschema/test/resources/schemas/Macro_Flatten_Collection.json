@@ -8,21 +8,18 @@
           "type": "number"
         }
       },
-      "required": [],
+      "required": [
+        "value"
+      ],
       "additionalProperties": true
     },
     "upickletest.Flatten.Collection": {
       "type": "object",
-      "properties": {
-        "n": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/upickletest.Flatten.ValueClass"
-          }
-        }
-      },
+      "properties": {},
       "required": [],
-      "additionalProperties": true
+      "additionalProperties": {
+        "$ref": "#/$defs/upickletest.Flatten.ValueClass"
+      }
     }
   },
   "$ref": "#/$defs/upickletest.Flatten.Collection"

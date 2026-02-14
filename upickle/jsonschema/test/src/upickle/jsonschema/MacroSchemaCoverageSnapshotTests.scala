@@ -112,7 +112,7 @@ object MacroSchemaCoverageSnapshotTests extends TestSuite {
         upickletest.Flatten.FlattenSeq(Seq("a" -> 1, "b" -> 2)),
         """{"a":1,"b":2}""",
         """{"n":"oops","a":1,"b":2}""",
-        "array expected"
+        "integer expected"
       )
     }
     test("Macro_Flatten_Collection") {
@@ -141,7 +141,7 @@ object MacroSchemaCoverageSnapshotTests extends TestSuite {
         upickletest.Flatten.FlattenSeqIntKey(Seq(1 -> "one", 2 -> "two")),
         """{"1":"one","2":"two"}""",
         """{"n":"oops","1":"one","2":"two"}""",
-        "array expected"
+        "does not match the regex pattern"
       )
     }
     test("Macro_Flatten_FlattenLongKey") {
@@ -150,7 +150,7 @@ object MacroSchemaCoverageSnapshotTests extends TestSuite {
         upickletest.Flatten.FlattenLongKey(ListMap(100L -> 1, 200L -> 2)),
         """{"100":1,"200":2}""",
         """{"m":"oops","100":1,"200":2}""",
-        "object expected"
+        "integer expected"
       )
     }
   }

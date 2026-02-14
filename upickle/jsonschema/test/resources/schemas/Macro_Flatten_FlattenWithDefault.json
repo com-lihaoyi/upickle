@@ -11,7 +11,9 @@
           "type": "string"
         }
       },
-      "required": [],
+      "required": [
+        "l"
+      ],
       "additionalProperties": true
     },
     "upickletest.Flatten.FlattenWithDefault": {
@@ -20,11 +22,17 @@
         "i": {
           "type": "integer"
         },
-        "n": {
-          "$ref": "#/$defs/upickletest.Flatten.NestedWithDefault"
+        "k": {
+          "type": "integer"
+        },
+        "l": {
+          "type": "string"
         }
       },
-      "required": [],
+      "required": [
+        "i",
+        "l"
+      ],
       "additionalProperties": true
     }
   },
