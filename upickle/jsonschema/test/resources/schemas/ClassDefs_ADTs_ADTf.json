@@ -8,10 +8,8 @@
           "type": "integer"
         }
       },
-      "required": [
-        "i"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.ADTs.ADTf": {
       "type": "object",
@@ -53,24 +51,48 @@
                 },
                 {
                   "type": "null"
+                },
+                {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 1,
+                  "items": {
+                    "type": "boolean"
+                  }
                 }
               ]
             },
             {
               "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1,
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 1,
+                    "items": {
+                      "type": "boolean"
+                    }
+                  }
+                ]
+              }
             }
           ]
         }
       },
-      "required": [
-        "i",
-        "s",
-        "t",
-        "a",
-        "q",
-        "o"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.ADTs.ADTf"

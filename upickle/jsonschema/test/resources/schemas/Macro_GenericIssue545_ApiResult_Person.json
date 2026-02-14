@@ -11,11 +11,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "id",
-        "name"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.GenericIssue545.ApiResult[upickletest.GenericIssue545.Person]": {
       "type": "object",
@@ -27,6 +24,14 @@
             },
             {
               "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1,
+              "items": {
+                "$ref": "#/$defs/upickletest.GenericIssue545.Person"
+              }
             }
           ]
         },
@@ -34,11 +39,8 @@
           "type": "integer"
         }
       },
-      "required": [
-        "data",
-        "totalCount"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.GenericIssue545.ApiResult[upickletest.GenericIssue545.Person]"

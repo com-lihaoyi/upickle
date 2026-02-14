@@ -11,11 +11,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "i",
-        "s"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.SealedClass"

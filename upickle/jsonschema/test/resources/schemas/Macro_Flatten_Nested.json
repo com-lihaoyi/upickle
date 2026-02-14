@@ -14,11 +14,8 @@
           }
         }
       },
-      "required": [
-        "d",
-        "m"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.Flatten.Nested"

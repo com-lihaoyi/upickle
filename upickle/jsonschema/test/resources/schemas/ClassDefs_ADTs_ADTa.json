@@ -8,10 +8,8 @@
           "type": "integer"
         }
       },
-      "required": [
-        "i"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.ADTs.ADTa"

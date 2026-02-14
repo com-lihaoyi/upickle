@@ -11,11 +11,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "k",
-        "l"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.Flatten.FlattenWithDefault": {
       "type": "object",
@@ -27,11 +24,8 @@
           "$ref": "#/$defs/upickletest.Flatten.NestedWithDefault"
         }
       },
-      "required": [
-        "i",
-        "n"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.Flatten.FlattenWithDefault"

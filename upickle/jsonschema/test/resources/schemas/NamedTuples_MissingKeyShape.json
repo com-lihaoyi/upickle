@@ -8,10 +8,8 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "foo"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/scala.NamedTuple.NamedTuple[scala.Tuple1[\"foo\"], scala.Tuple1[scala.Boolean]]"

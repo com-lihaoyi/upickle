@@ -11,11 +11,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "id",
-        "name"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.UnknownKeys.Default"

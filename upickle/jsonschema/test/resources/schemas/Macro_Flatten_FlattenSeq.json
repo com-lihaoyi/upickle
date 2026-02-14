@@ -21,10 +21,8 @@
           }
         }
       },
-      "required": [
-        "n"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.Flatten.FlattenSeq"

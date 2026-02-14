@@ -8,10 +8,8 @@
           "type": "integer"
         }
       },
-      "required": [
-        "i"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.ADTs.ADTe": {
       "type": "object",
@@ -45,14 +43,8 @@
           }
         }
       },
-      "required": [
-        "i",
-        "s",
-        "t",
-        "a",
-        "q"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.ADTs.ADTe"

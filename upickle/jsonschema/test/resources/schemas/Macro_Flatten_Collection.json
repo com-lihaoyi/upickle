@@ -8,10 +8,8 @@
           "type": "number"
         }
       },
-      "required": [
-        "value"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.Flatten.Collection": {
       "type": "object",
@@ -23,10 +21,8 @@
           }
         }
       },
-      "required": [
-        "n"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.Flatten.Collection"

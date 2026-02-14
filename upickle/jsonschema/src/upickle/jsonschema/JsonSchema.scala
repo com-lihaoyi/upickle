@@ -4,6 +4,7 @@ import scala.collection.mutable
 import scala.compiletime.{constValue, erasedValue, summonFrom}
 import scala.deriving.Mirror
 import scala.quoted.{Expr, Quotes, Type}
+import upickle.implicits.macros
 
 trait JsonSchema[+T] {
   def schema(api: upickle.Api, registry: JsonSchema.Registry): ujson.Value
@@ -33,6 +34,9 @@ object JsonSchema {
   }
 
   private def primitive(tpe: String): ujson.Obj = ujson.Obj("type" -> tpe)
+
+  private def isTupleLabels(labels: List[String]): Boolean =
+    labels.zipWithIndex.forall { case (label, index) => label == s"_${index + 1}" }
 
   private def isRef(v: ujson.Value): Boolean = v match {
     case o: ujson.Obj => o.value.size == 1 && o.obj.contains("$ref")
@@ -79,6 +83,17 @@ object JsonSchema {
       delayed(resolveSchema[h, Seen]).asInstanceOf[JsonSchema[Any]] :: summonSchemas[t, Seen]
   }
 
+  private inline def summonSumSchemas[T <: Tuple, Seen <: Tuple]: List[(Boolean, String, JsonSchema[Any])] =
+    inline erasedValue[T] match {
+      case _: EmptyTuple => Nil
+      case _: (h *: t) =>
+        (
+          macros.isSingleton[h],
+          macros.tagName[h],
+          delayed(resolveSchema[h, Seen]).asInstanceOf[JsonSchema[Any]]
+        ) :: summonSumSchemas[t, Seen]
+    }
+
 
   inline def derived[T](using m: Mirror.Of[T]): JsonSchema[T] =
     derivedWithSeen[T, EmptyTuple](using m)
@@ -102,31 +117,62 @@ object JsonSchema {
       override def schema(api: upickle.Api, registry: Registry): ujson.Value = {
         val defKey = typeId[T]
         registry.define(defKey) {
-          val mappedLabels = fieldLabels.map(api.objectAttributeKeyWriteMap(_).toString)
-          val props = ujson.Obj.from(
-            mappedLabels.zip(fieldSchemas).map { case (k, s) =>
-              k -> s.schema(api, registry)
-            }
-          )
-          val req = ujson.Arr.from(mappedLabels.map(ujson.Str(_)))
-          ujson.Obj(
-            "type" -> "object",
-            "properties" -> props,
-            "required" -> req,
-            "additionalProperties" -> false
-          )
+          if (fieldLabels.nonEmpty && isTupleLabels(fieldLabels)) {
+            ujson.Obj(
+              "type" -> "array",
+              "prefixItems" -> ujson.Arr.from(fieldSchemas.map(_.schema(api, registry))),
+              "minItems" -> fieldSchemas.size,
+              "maxItems" -> fieldSchemas.size
+            )
+          } else {
+            val mappedLabels = fieldLabels.map(api.objectAttributeKeyWriteMap(_).toString)
+            val props = ujson.Obj.from(
+              mappedLabels.zip(fieldSchemas).map { case (k, s) =>
+                k -> s.schema(api, registry)
+              }
+            )
+            ujson.Obj(
+              "type" -> "object",
+              "properties" -> props,
+              "required" -> ujson.Arr(),
+              "additionalProperties" -> fieldSchemas.nonEmpty
+            )
+          }
         }
       }
     }
   }
 
   private inline def sumSchema[T, Elems <: Tuple, Seen <: Tuple]: JsonSchema[T] = {
-    val alts = summonSchemas[Elems, Seen]
+    val alts = summonSumSchemas[Elems, Seen]
     new JsonSchema[T] {
       override def schema(api: upickle.Api, registry: Registry): ujson.Value = {
         val defKey = typeId[T]
         registry.define(defKey) {
-          ujson.Obj("oneOf" -> ujson.Arr.from(alts.map(_.schema(api, registry))))
+          val tagKey = api.tagName
+          ujson.Obj(
+            "oneOf" -> ujson.Arr.from(
+              alts.map {
+                case (true, tagName, _) =>
+                  ujson.Obj("const" -> api.objectTypeKeyWriteMap(tagName).toString)
+                case (false, tagName, altSchema) =>
+                  ujson.Obj(
+                    "allOf" -> ujson.Arr(
+                      altSchema.schema(api, registry),
+                      ujson.Obj(
+                        "type" -> "object",
+                        "properties" -> ujson.Obj(
+                          tagKey -> ujson.Obj(
+                            "const" -> api.objectTypeKeyWriteMap(tagName).toString
+                          )
+                        ),
+                        "required" -> ujson.Arr(tagKey)
+                      )
+                    )
+                  )
+              }
+            )
+          )
         }
       }
     }
@@ -157,7 +203,13 @@ object JsonSchema {
         ujson.Obj(
           "anyOf" -> ujson.Arr(
             inner.schema(api, registry),
-            ujson.Obj("type" -> "null")
+            ujson.Obj("type" -> "null"),
+            ujson.Obj(
+              "type" -> "array",
+              "minItems" -> 0,
+              "maxItems" -> 1,
+              "items" -> inner.schema(api, registry)
+            )
           )
         )
       } else {

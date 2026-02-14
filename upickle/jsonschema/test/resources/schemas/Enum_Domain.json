@@ -1,25 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
-    "upickletest.Domain.Something": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    },
-    "upickletest.Domain.reddit.com": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    },
     "upickletest.Domain": {
       "oneOf": [
         {
-          "$ref": "#/$defs/upickletest.Domain.Something"
+          "const": "Something"
         },
         {
-          "$ref": "#/$defs/upickletest.Domain.reddit.com"
+          "const": "reddit.com"
         }
       ]
     }

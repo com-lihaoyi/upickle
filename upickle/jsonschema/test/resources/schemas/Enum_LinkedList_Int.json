@@ -1,12 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
-    "upickletest.LinkedList.End": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    },
     "upickletest.LinkedList.Node[scala.Int]": {
       "type": "object",
       "properties": {
@@ -17,11 +11,8 @@
           "$ref": "#/$defs/upickletest.LinkedList[scala.Int]"
         }
       },
-      "required": [
-        "value",
-        "next"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.LinkedList.Node2[scala.Int]": {
       "type": "object",
@@ -33,22 +24,49 @@
           "$ref": "#/$defs/upickletest.LinkedList.Node[scala.Int]"
         }
       },
-      "required": [
-        "value",
-        "next"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.LinkedList[scala.Int]": {
       "oneOf": [
         {
-          "$ref": "#/$defs/upickletest.LinkedList.End"
+          "const": "End"
         },
         {
-          "$ref": "#/$defs/upickletest.LinkedList.Node[scala.Int]"
+          "allOf": [
+            {
+              "$ref": "#/$defs/upickletest.LinkedList.Node[scala.Int]"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$type": {
+                  "const": "Node"
+                }
+              },
+              "required": [
+                "$type"
+              ]
+            }
+          ]
         },
         {
-          "$ref": "#/$defs/upickletest.LinkedList.Node2[scala.Int]"
+          "allOf": [
+            {
+              "$ref": "#/$defs/upickletest.LinkedList.Node2[scala.Int]"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$type": {
+                  "const": "Node2"
+                }
+              },
+              "required": [
+                "$type"
+              ]
+            }
+          ]
         }
       ]
     }

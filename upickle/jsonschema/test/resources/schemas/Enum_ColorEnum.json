@@ -1,24 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
-    "upickletest.ColorEnum.Red": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    },
-    "upickletest.ColorEnum.Green": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    },
-    "upickletest.ColorEnum.Blue": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "additionalProperties": false
-    },
     "upickletest.ColorEnum.Mix": {
       "type": "object",
       "properties": {
@@ -26,10 +8,8 @@
           "type": "integer"
         }
       },
-      "required": [
-        "mix"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.ColorEnum.Unknown": {
       "type": "object",
@@ -38,27 +18,55 @@
           "type": "integer"
         }
       },
-      "required": [
-        "mix"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.ColorEnum": {
       "oneOf": [
         {
-          "$ref": "#/$defs/upickletest.ColorEnum.Red"
+          "const": "Red"
         },
         {
-          "$ref": "#/$defs/upickletest.ColorEnum.Green"
+          "const": "Green"
         },
         {
-          "$ref": "#/$defs/upickletest.ColorEnum.Blue"
+          "const": "Blue"
         },
         {
-          "$ref": "#/$defs/upickletest.ColorEnum.Mix"
+          "allOf": [
+            {
+              "$ref": "#/$defs/upickletest.ColorEnum.Mix"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$type": {
+                  "const": "Mix"
+                }
+              },
+              "required": [
+                "$type"
+              ]
+            }
+          ]
         },
         {
-          "$ref": "#/$defs/upickletest.ColorEnum.Unknown"
+          "allOf": [
+            {
+              "$ref": "#/$defs/upickletest.ColorEnum.Unknown"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$type": {
+                  "const": "Unknown"
+                }
+              },
+              "required": [
+                "$type"
+              ]
+            }
+          ]
         }
       ]
     }

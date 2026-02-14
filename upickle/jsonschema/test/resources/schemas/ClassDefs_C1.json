@@ -14,11 +14,8 @@
           }
         }
       },
-      "required": [
-        "name",
-        "types"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.C1"

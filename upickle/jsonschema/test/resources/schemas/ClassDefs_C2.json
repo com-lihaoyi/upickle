@@ -14,11 +14,8 @@
           }
         }
       },
-      "required": [
-        "name",
-        "types"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.C2": {
       "type": "object",
@@ -30,10 +27,8 @@
           }
         }
       },
-      "required": [
-        "results"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.C2"

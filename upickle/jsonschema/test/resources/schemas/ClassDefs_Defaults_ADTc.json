@@ -24,12 +24,8 @@
           "maxItems": 2
         }
       },
-      "required": [
-        "i",
-        "s",
-        "t"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.Defaults.ADTc"

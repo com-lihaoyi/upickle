@@ -17,12 +17,8 @@
           }
         }
       },
-      "required": [
-        "name",
-        "whatever",
-        "types"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     },
     "upickletest.GeoCoding2": {
       "type": "object",
@@ -37,11 +33,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "results",
-        "status"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.GeoCoding2"

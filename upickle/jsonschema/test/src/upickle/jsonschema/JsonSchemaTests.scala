@@ -20,6 +20,11 @@ given JsonSchema[LinkedList[Int]] = JsonSchema.derived
 object JsonSchemaTests extends TestSuite {
   val tests = Tests {
     test("nestedDefinitions") {
+      SchemaSnapshotTestUtils.assertSerializationValidatesSchema[Person](
+        Person("Bob", Address("Main", 12345)),
+        """{"name":"Bob","address":{"street":"Main","zip":12345}}"""
+      )
+
       val rendered = upickle.default.schema[Person].render(indent = 2)
       val expected =
         """{
@@ -35,11 +40,8 @@ object JsonSchemaTests extends TestSuite {
           |          "type": "integer"
           |        }
           |      },
-          |      "required": [
-          |        "street",
-          |        "zip"
-          |      ],
-          |      "additionalProperties": false
+          |      "required": [],
+          |      "additionalProperties": true
           |    },
           |    "upickle.jsonschema.Person": {
           |      "type": "object",
@@ -51,11 +53,8 @@ object JsonSchemaTests extends TestSuite {
           |          "$ref": "#/$defs/upickle.jsonschema.Address"
           |        }
           |      },
-          |      "required": [
-          |        "name",
-          |        "address"
-          |      ],
-          |      "additionalProperties": false
+          |      "required": [],
+          |      "additionalProperties": true
           |    }
           |  },
           |  "$ref": "#/$defs/upickle.jsonschema.Person"
@@ -64,6 +63,11 @@ object JsonSchemaTests extends TestSuite {
     }
 
     test("recursiveCaseClass") {
+      SchemaSnapshotTestUtils.assertSerializationValidatesSchema[Node](
+        Node(1, Some(Node(2, None))),
+        """{"value":1,"next":{"value":2,"next":null}}"""
+      )
+
       val rendered = upickle.default.schema[Node].render(indent = 2)
       val expected =
         """{
@@ -82,15 +86,20 @@ object JsonSchemaTests extends TestSuite {
           |            },
           |            {
           |              "type": "null"
+          |            },
+          |            {
+          |              "type": "array",
+          |              "minItems": 0,
+          |              "maxItems": 1,
+          |              "items": {
+          |                "$ref": "#/$defs/upickle.jsonschema.Node"
+          |              }
           |            }
           |          ]
           |        }
           |      },
-          |      "required": [
-          |        "value",
-          |        "next"
-          |      ],
-          |      "additionalProperties": false
+          |      "required": [],
+          |      "additionalProperties": true
           |    }
           |  },
           |  "$ref": "#/$defs/upickle.jsonschema.Node"
@@ -99,17 +108,16 @@ object JsonSchemaTests extends TestSuite {
     }
 
     test("recursiveEnum") {
+      SchemaSnapshotTestUtils.assertSerializationValidatesSchema[LinkedList[Int]](
+        LinkedList.Cons(1, LinkedList.Cons(2, LinkedList.End)),
+        """{"$type":"Cons","value":1,"next":{"$type":"Cons","value":2,"next":"End"}}"""
+      )
+
       val rendered = upickle.default.schema[LinkedList[Int]].render(indent = 2)
       val expected =
         """{
           |  "$schema": "https://json-schema.org/draft/2020-12/schema",
           |  "$defs": {
-          |    "upickle.jsonschema.LinkedList.End": {
-          |      "type": "object",
-          |      "properties": {},
-          |      "required": [],
-          |      "additionalProperties": false
-          |    },
           |    "upickle.jsonschema.LinkedList.Cons[scala.Int]": {
           |      "type": "object",
           |      "properties": {
@@ -120,19 +128,31 @@ object JsonSchemaTests extends TestSuite {
           |          "$ref": "#/$defs/upickle.jsonschema.LinkedList[scala.Int]"
           |        }
           |      },
-          |      "required": [
-          |        "value",
-          |        "next"
-          |      ],
-          |      "additionalProperties": false
+          |      "required": [],
+          |      "additionalProperties": true
           |    },
           |    "upickle.jsonschema.LinkedList[scala.Int]": {
           |      "oneOf": [
           |        {
-          |          "$ref": "#/$defs/upickle.jsonschema.LinkedList.End"
+          |          "const": "End"
           |        },
           |        {
-          |          "$ref": "#/$defs/upickle.jsonschema.LinkedList.Cons[scala.Int]"
+          |          "allOf": [
+          |            {
+          |              "$ref": "#/$defs/upickle.jsonschema.LinkedList.Cons[scala.Int]"
+          |            },
+          |            {
+          |              "type": "object",
+          |              "properties": {
+          |                "$type": {
+          |                  "const": "Cons"
+          |                }
+          |              },
+          |              "required": [
+          |                "$type"
+          |              ]
+          |            }
+          |          ]
           |        }
           |      ]
           |    }

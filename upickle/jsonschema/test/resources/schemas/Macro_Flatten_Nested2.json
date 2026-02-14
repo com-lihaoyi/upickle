@@ -8,10 +8,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "name"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.Flatten.Nested2"

@@ -11,11 +11,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "firstName",
-        "lastName"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.KeyedPerson"

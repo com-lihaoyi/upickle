@@ -17,12 +17,8 @@
           }
         }
       },
-      "required": [
-        "name",
-        "whatever",
-        "types"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/upickletest.Result2"

@@ -20,16 +20,20 @@
             },
             {
               "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1,
+              "items": {
+                "type": "integer"
+              }
             }
           ]
         }
       },
-      "required": [
-        "foo",
-        "bar",
-        "qux"
-      ],
-      "additionalProperties": false
+      "required": [],
+      "additionalProperties": true
     }
   },
   "$ref": "#/$defs/scala.NamedTuple.NamedTuple[scala.Tuple3[\"foo\", \"bar\", \"qux\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Predef.String, scala.Option[scala.Int]]]"
