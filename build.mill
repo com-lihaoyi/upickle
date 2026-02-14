@@ -395,6 +395,7 @@ object upickle extends Module{
       def moduleDeps = Seq(upickle.jvm(scala3))
       override def mimaPreviousVersions = Seq.empty[String]
       override def mimaPreviousArtifacts = Seq.empty[Dep]
+      override def mimaReportBinaryIssues() = Task.Command {}
 
       object test extends CommonTestModule{
         override def mvnDeps = Seq(

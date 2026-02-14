@@ -102,11 +102,12 @@
 
         uPickle supports Scala 2.12, 2.13 and 3.1+
 
-  @sect{JSON Schema (Scala 3)}
+  @sect{JSON Schema (Scala 3, EXPERIMENTAL)}
     @p
       uPickle can derive JSON Schema documents from the same types you serialize
       with @hl.scala{Reader}/@hl.scala{Writer}/@hl.scala{ReadWriter}. This lives in
-      a separate module, currently targeting Scala 3.
+      a separate module, currently targeting Scala 3. This API is experimental and
+      may change between minor releases.
 
     @hl.scala
       "com.lihaoyi" %% "upickle-jsonschema" % "4.4.2" // SBT
