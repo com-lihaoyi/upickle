@@ -85,4 +85,9 @@ trait WritersVersionSpecific
     inline def derived[T](using Mirror.Of[T], ClassTag[T]): Writer[T] = macroWAll[T]
   end WriterExtension
 
-
+  inline given derivedStringBasedUnionEnumerationWriter[T <: String](using IsUnionOf[String, T]): Writer[T] =
+    new Writer[T] {
+      override def isJsonDictKey = true
+      def writeString(v: T): String = v
+      def write0[R](out: Visitor[_, R], v: T): R = out.visitString(writeString(v), -1)
+    }
