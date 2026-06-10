@@ -250,7 +250,7 @@ object ujson extends Module{
     }
 
     trait CommonCirceModule extends CommonPublishModule{
-      val circeVersion = "0.14.14"
+      val circeVersion = "0.14.15"
       def mvnDeps = Seq(mvn"io.circe::circe-parser::$circeVersion")
     }
   }
@@ -469,9 +469,9 @@ trait BenchModule extends CommonPlatformModule{
   def crossScalaVersion = scala213
   def scalaVersion = scala213
   def mvnDeps = Seq(
-    mvn"io.circe::circe-core::0.14.14",
-    mvn"io.circe::circe-generic::0.14.14",
-    mvn"io.circe::circe-parser::0.14.14",
+    mvn"io.circe::circe-core::0.14.15",
+    mvn"io.circe::circe-generic::0.14.15",
+    mvn"io.circe::circe-parser::0.14.15",
     mvn"com.typesafe.play::play-json::2.9.4",
     mvn"io.argonaut::argonaut:6.2.6",
     mvn"org.json4s::json4s-ast:3.6.12",
