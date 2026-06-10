@@ -25,7 +25,7 @@ val scalaNativeNamedTuples = "0.5.9" // the version of scala.native that the sca
 val scalaNative = "0.5.9"
 val scalaJs = "1.20.1"
 val scalaJsCirce = "1.20.1" // remove when updating scalaJs to the same version or higher
-val acyclic = "0.3.19"
+val acyclic = "0.3.21"
 
 val sourcecode = "0.4.2"
 
