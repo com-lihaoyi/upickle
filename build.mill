@@ -20,11 +20,11 @@ val scala213  = "2.13.16"
 val scala3   = "3.3.7"
 val scala381 = "3.8.1"
 val scala3NamedTuples = "3.7.0"
-val scalaJSNamedTuples = "1.20.1" // the version of scala.js that the scala3-library is built for.
+val scalaJSNamedTuples = "1.20.2" // the version of scala.js that the scala3-library is built for.
 val scalaNativeNamedTuples = "0.5.9" // the version of scala.native that the scala3-library is built for.
 val scalaNative = "0.5.9"
-val scalaJs = "1.20.1"
-val scalaJsCirce = "1.20.1" // remove when updating scalaJs to the same version or higher
+val scalaJs = "1.20.2"
+val scalaJsCirce = "1.20.2" // remove when updating scalaJs to the same version or higher
 val acyclic = "0.3.19"
 
 val sourcecode = "0.4.2"
@@ -481,7 +481,7 @@ trait BenchModule extends CommonPlatformModule{
 
 object bench extends Module {
   object js extends BenchModule with ScalaJSModule {
-    def scalaJSVersion = "1.20.1"
+    def scalaJSVersion = "1.20.2"
     def moduleDeps = Seq(upickle.js(scala213).test)
   }
 
