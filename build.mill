@@ -27,7 +27,7 @@ val scalaJs = "1.20.1"
 val scalaJsCirce = "1.20.1" // remove when updating scalaJs to the same version or higher
 val acyclic = "0.3.19"
 
-val sourcecode = "0.4.2"
+val sourcecode = "0.4.4"
 
 val dottyCustomVersion = Option(sys.props("dottyVersion"))
 
