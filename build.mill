@@ -258,7 +258,7 @@ object ujson extends Module{
   object play extends Cross[PlayModule](scala2JVMVersions)
   trait PlayModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
-    val playJsonVersion = "2.9.4"
+    val playJsonVersion = "2.10.8"
     def mvnDeps = Seq(mvn"com.typesafe.play::play-json:$playJsonVersion")
   }
 }
@@ -472,7 +472,7 @@ trait BenchModule extends CommonPlatformModule{
     mvn"io.circe::circe-core::0.14.14",
     mvn"io.circe::circe-generic::0.14.14",
     mvn"io.circe::circe-parser::0.14.14",
-    mvn"com.typesafe.play::play-json::2.9.4",
+    mvn"com.typesafe.play::play-json::2.10.8",
     mvn"io.argonaut::argonaut:6.2.6",
     mvn"org.json4s::json4s-ast:3.6.12",
     mvn"com.lihaoyi::sourcecode::$sourcecode",
