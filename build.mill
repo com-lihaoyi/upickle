@@ -400,7 +400,7 @@ object upickle extends Module{
       object test extends CommonTestModule{
         override def mvnDeps = Seq(
           mvn"com.lihaoyi::utest::0.10.0-RC1",
-          mvn"com.networknt:json-schema-validator:1.5.8"
+          mvn"com.networknt:json-schema-validator:1.5.9"
         )
         def moduleDeps = super.moduleDeps ++ Seq(
           upickle.jvm(scala3).test,
