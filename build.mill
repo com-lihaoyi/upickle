@@ -117,7 +117,7 @@ trait CommonPublishModule
 
   trait CommonTestModule0 extends ScalaModule with TestModule.Utest {
     def mvnDeps = {
-      Seq(mvn"com.lihaoyi::utest::0.8.3") ++
+      Seq(mvn"com.lihaoyi::utest::0.8.9") ++
       Option.when(!scalaVersion().startsWith("3."))(mvn"com.lihaoyi:::acyclic:$acyclic")
     }
 
