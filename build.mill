@@ -227,8 +227,8 @@ object ujson extends Module{
   trait Json4sModule extends CommonPublishModule{
     def moduleDeps = Seq(ujson.jvm())
     def mvnDeps = Seq(
-      mvn"org.json4s::json4s-ast:4.0.7",
-      mvn"org.json4s::json4s-native:4.0.7"
+      mvn"io.github.json4s::json4s-ast:4.1.0",
+      mvn"io.github.json4s::json4s-native:4.1.0"
     )
   }
 
@@ -474,7 +474,7 @@ trait BenchModule extends CommonPlatformModule{
     mvn"io.circe::circe-parser::0.14.14",
     mvn"com.typesafe.play::play-json::2.9.4",
     mvn"io.argonaut::argonaut:6.2.6",
-    mvn"org.json4s::json4s-ast:3.6.12",
+    mvn"io.github.json4s::json4s-ast:3.6.12",
     mvn"com.lihaoyi::sourcecode::$sourcecode",
   )
 }
