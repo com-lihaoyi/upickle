@@ -43,6 +43,27 @@ object SyntaxTests extends TestSuite{
       test{ TestUtil.checkParse("\" \\r \\n \\f \\t \\b \\\" \\\\ \\/ \"", true) }
       test{ TestUtil.checkParse("\" \\u53c9\\u70e7\\u5305 \"", true) }
       test{ TestUtil.checkParse("\" 叉烧包 \"", true) }
+      test("surrogate escapes") {
+        test("valid pairs") {
+          TestUtil.checkParse("\"\\uD800\\uDC00\"", true)
+          TestUtil.checkParse("\"\\uD83D\\uDE00\"", true)
+          TestUtil.checkParse("\"\\uDBFF\\uDFFF\"", true)
+        }
+        test("unpaired high surrogate") {
+          TestUtil.checkParse("\"\\uD800\"", false)
+          TestUtil.checkParse("\"\\uDBFF\"", false)
+          TestUtil.checkParse("\"\\uD800x\"", false)
+          TestUtil.checkParse("\"\\uD800\\u0041\"", false)
+          TestUtil.checkParse("\"\\uD800\\uD800\"", false)
+        }
+        test("unpaired low surrogate") {
+          TestUtil.checkParse("\"\\uDC00\"", false)
+          TestUtil.checkParse("\"\\uDFFF\"", false)
+        }
+        test("object key") {
+          TestUtil.checkParse("{\"\\uD800\": 1}", false)
+        }
+      }
       test{ TestUtil.checkParse("\" \\k \"", false) }
       test{ TestUtil.checkParse("\" \n \"", false) }
       test{ TestUtil.checkParse("\" \t \"", false) }

@@ -580,9 +580,26 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
           case '\\' => { outputBuilder.append('\\'); i += 2 }
 
           // if there's a problem then descape will explode
-          case 'u' =>
-            outputBuilder.appendC(descape(i))
-            i += 6
+          case 'u' => {
+            val escaped = descape(i)
+            if (Character.isHighSurrogate(escaped)) {
+              if (getElemSafe(i + 6) != '\\' || getElemSafe(i + 7) != 'u') {
+                die(i + 6, "expected low surrogate escape after high surrogate")
+              }
+              val lowSurrogate = descape(i + 6)
+              if (!Character.isLowSurrogate(lowSurrogate)) {
+                die(i + 6, "expected low surrogate escape after high surrogate")
+              }
+              outputBuilder.appendC(escaped)
+              outputBuilder.appendC(lowSurrogate)
+              i += 12
+            } else if (Character.isLowSurrogate(escaped)) {
+              die(i, "unexpected low surrogate escape")
+            } else {
+              outputBuilder.appendC(escaped)
+              i += 6
+            }
+          }
 
           case c => die(i + 1, s"illegal escape sequence after \\")
         }
