@@ -262,8 +262,8 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
   /**
    * Generate a Char from the hex digits of "\u1234" (i.e. "1234").
    *
-   * NOTE: This is only capable of generating characters from the basic plane.
-   * This is why it can only return Char instead of Int.
+   * NOTE: Returns a single UTF-16 code unit, which may be a surrogate
+   * (D800-DFFF). Callers are responsible for validating surrogate pairs.
    */
   protected[this] final def descape(i: Int): Char = {
     import upickle.core.RenderUtils.hex
@@ -581,7 +581,10 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
 
           case 'u' => {
             val escaped = descape(i)
-            if (Character.isHighSurrogate(escaped)) {
+            if (!Character.isSurrogate(escaped)) {
+              outputBuilder.appendC(escaped)
+              i += 6
+            } else if (Character.isHighSurrogate(escaped)) {
               if (getElemSafe(i + 6) != '\\' || getElemSafe(i + 7) != 'u') {
                 die(i + 6, "expected \\u escape after high surrogate")
               }
@@ -592,11 +595,8 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
               outputBuilder.appendC(escaped)
               outputBuilder.appendC(lowSurrogate)
               i += 12
-            } else if (Character.isLowSurrogate(escaped)) {
-              die(i, "unexpected low surrogate escape")
             } else {
-              outputBuilder.appendC(escaped)
-              i += 6
+              die(i, "unexpected low surrogate escape")
             }
           }
 
