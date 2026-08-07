@@ -72,24 +72,28 @@ object TestUtil {
       assert(r2a.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r2a)
       assert(r3a.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r3a)
       assert(r4a.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r4a)
+      assert(r5a.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r5a)
 
       assert(r0b.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r0a)
       assert(r1b.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r1a)
       assert(r2b.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r2a)
       assert(r3b.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r3a)
       assert(r4b.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r4a)
+      assert(r5b.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r5b)
 
       assert(r0c.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r0a)
       assert(r1c.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r1a)
       assert(r2c.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r2a)
       assert(r3c.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r3a)
       assert(r4c.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r4a)
+      assert(r5c.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r5c)
 
       assert(r0d.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r0a)
       assert(r1d.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r1a)
       assert(r2d.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r2a)
       assert(r3d.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r3a)
       assert(r4d.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r4a)
+      assert(r5d.failed.toOption.exists(_.isInstanceOf[ujson.ParsingFailedException]), r5d)
     }
   }
 }
