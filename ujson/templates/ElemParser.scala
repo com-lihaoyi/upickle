@@ -579,16 +579,15 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
           case '/' => { outputBuilder.append('/'); i += 2 }
           case '\\' => { outputBuilder.append('\\'); i += 2 }
 
-          // if there's a problem then descape will explode
           case 'u' => {
             val escaped = descape(i)
             if (Character.isHighSurrogate(escaped)) {
               if (getElemSafe(i + 6) != '\\' || getElemSafe(i + 7) != 'u') {
-                die(i + 6, "expected low surrogate escape after high surrogate")
+                die(i + 6, "expected \\u escape after high surrogate")
               }
               val lowSurrogate = descape(i + 6)
               if (!Character.isLowSurrogate(lowSurrogate)) {
-                die(i + 6, "expected low surrogate escape after high surrogate")
+                die(i + 6, "expected low surrogate (\\uDC00-\\uDFFF) after high surrogate")
               }
               outputBuilder.appendC(escaped)
               outputBuilder.appendC(lowSurrogate)

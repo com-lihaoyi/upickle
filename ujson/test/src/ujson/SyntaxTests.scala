@@ -49,12 +49,22 @@ object SyntaxTests extends TestSuite{
           TestUtil.checkParse("\"\\uD83D\\uDE00\"", true)
           TestUtil.checkParse("\"\\uDBFF\\uDFFF\"", true)
         }
+        test("valid pairs in context") {
+          TestUtil.checkParse("\"abc\\uD83D\\uDE00def\"", true)
+          TestUtil.checkParse("\"\\uD83D\\uDE00\\uD83D\\uDE01\"", true)
+          TestUtil.checkParse("\"\\uD83D\\uDE00\\n\"", true)
+          TestUtil.checkParse("\"\\u53c9\\uD83D\\uDE00\\u70e7\"", true)
+        }
         test("unpaired high surrogate") {
           TestUtil.checkParse("\"\\uD800\"", false)
           TestUtil.checkParse("\"\\uDBFF\"", false)
           TestUtil.checkParse("\"\\uD800x\"", false)
           TestUtil.checkParse("\"\\uD800\\u0041\"", false)
           TestUtil.checkParse("\"\\uD800\\uD800\"", false)
+        }
+        test("high surrogate with bad follow-up") {
+          TestUtil.checkParse("\"\\uD800\\\\uDC00\"", false)
+          TestUtil.checkParse("\"\\uD800\\n\"", false)
         }
         test("unpaired low surrogate") {
           TestUtil.checkParse("\"\\uDC00\"", false)
