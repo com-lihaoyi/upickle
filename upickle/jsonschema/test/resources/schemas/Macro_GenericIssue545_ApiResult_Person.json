@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.GenericIssue545.Person": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": true
+    },
+    "upickletest.GenericIssue545.ApiResult[upickletest.GenericIssue545.Person]": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/upickletest.GenericIssue545.Person"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1,
+              "items": {
+                "$ref": "#/$defs/upickletest.GenericIssue545.Person"
+              }
+            }
+          ]
+        },
+        "total_count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_count"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.GenericIssue545.ApiResult[upickletest.GenericIssue545.Person]"
+}

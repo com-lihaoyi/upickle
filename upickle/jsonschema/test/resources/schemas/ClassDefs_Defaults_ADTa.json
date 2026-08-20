@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Defaults.ADTa": {
+      "type": "object",
+      "properties": {
+        "i": {
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.Defaults.ADTa"
+}

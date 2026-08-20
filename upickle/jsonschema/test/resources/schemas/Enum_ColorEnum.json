@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.ColorEnum.Mix": {
+      "type": "object",
+      "properties": {
+        "mix": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mix"
+      ],
+      "additionalProperties": true
+    },
+    "upickletest.ColorEnum.Unknown": {
+      "type": "object",
+      "properties": {
+        "mix": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mix"
+      ],
+      "additionalProperties": true
+    },
+    "upickletest.ColorEnum": {
+      "oneOf": [
+        {
+          "const": "Red"
+        },
+        {
+          "const": "Green"
+        },
+        {
+          "const": "Blue"
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/upickletest.ColorEnum.Mix"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$type": {
+                  "const": "Mix"
+                }
+              },
+              "required": [
+                "$type"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/upickletest.ColorEnum.Unknown"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$type": {
+                  "const": "Unknown"
+                }
+              },
+              "required": [
+                "$type"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "$ref": "#/$defs/upickletest.ColorEnum"
+}

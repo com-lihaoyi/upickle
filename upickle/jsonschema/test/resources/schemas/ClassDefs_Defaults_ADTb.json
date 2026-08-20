@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Defaults.ADTb": {
+      "type": "object",
+      "properties": {
+        "i": {
+          "type": "integer"
+        },
+        "s": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "s"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.Defaults.ADTb"
+}

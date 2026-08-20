@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.ADTs.ADTa": {
+      "type": "object",
+      "properties": {
+        "i": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "i"
+      ],
+      "additionalProperties": true
+    },
+    "upickletest.ADTs.ADTf": {
+      "type": "object",
+      "properties": {
+        "i": {
+          "type": "integer"
+        },
+        "s": {
+          "type": "string"
+        },
+        "t": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "a": {
+          "$ref": "#/$defs/upickletest.ADTs.ADTa"
+        },
+        "q": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "o": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 1,
+                  "items": {
+                    "type": "boolean"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1,
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 1,
+                    "items": {
+                      "type": "boolean"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "i",
+        "s",
+        "t",
+        "a",
+        "q",
+        "o"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.ADTs.ADTf"
+}

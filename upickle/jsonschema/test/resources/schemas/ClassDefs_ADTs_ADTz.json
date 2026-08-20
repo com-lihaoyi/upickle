@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.ADTs.ADTz": {
+      "type": "object",
+      "properties": {
+        "t1": {
+          "type": "integer"
+        },
+        "t2": {
+          "type": "string"
+        },
+        "t3": {
+          "type": "integer"
+        },
+        "t4": {
+          "type": "string"
+        },
+        "t5": {
+          "type": "integer"
+        },
+        "t6": {
+          "type": "string"
+        },
+        "t7": {
+          "type": "integer"
+        },
+        "t8": {
+          "type": "string"
+        },
+        "t9": {
+          "type": "integer"
+        },
+        "t10": {
+          "type": "string"
+        },
+        "t11": {
+          "type": "integer"
+        },
+        "t12": {
+          "type": "string"
+        },
+        "t13": {
+          "type": "integer"
+        },
+        "t14": {
+          "type": "string"
+        },
+        "t15": {
+          "type": "integer"
+        },
+        "t16": {
+          "type": "string"
+        },
+        "t17": {
+          "type": "integer"
+        },
+        "t18": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10",
+        "t11",
+        "t12",
+        "t13",
+        "t14",
+        "t15",
+        "t16",
+        "t17",
+        "t18"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.ADTs.ADTz"
+}

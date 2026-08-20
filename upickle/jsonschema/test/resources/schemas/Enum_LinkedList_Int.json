@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.LinkedList.Node[scala.Int]": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "integer"
+        },
+        "next": {
+          "$ref": "#/$defs/upickletest.LinkedList[scala.Int]"
+        }
+      },
+      "required": [
+        "value",
+        "next"
+      ],
+      "additionalProperties": true
+    },
+    "upickletest.LinkedList.Node2[scala.Int]": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "integer"
+        },
+        "next": {
+          "$ref": "#/$defs/upickletest.LinkedList.Node[scala.Int]"
+        }
+      },
+      "required": [
+        "value",
+        "next"
+      ],
+      "additionalProperties": true
+    },
+    "upickletest.LinkedList[scala.Int]": {
+      "oneOf": [
+        {
+          "const": "End"
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/upickletest.LinkedList.Node[scala.Int]"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$type": {
+                  "const": "Node"
+                }
+              },
+              "required": [
+                "$type"
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/upickletest.LinkedList.Node2[scala.Int]"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$type": {
+                  "const": "Node2"
+                }
+              },
+              "required": [
+                "$type"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "$ref": "#/$defs/upickletest.LinkedList[scala.Int]"
+}

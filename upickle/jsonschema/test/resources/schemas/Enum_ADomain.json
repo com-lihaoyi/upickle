@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Domain": {
+      "oneOf": [
+        {
+          "const": "Something"
+        },
+        {
+          "const": "reddit.com"
+        }
+      ]
+    },
+    "upickletest.ADomain": {
+      "type": "object",
+      "properties": {
+        "d": {
+          "$ref": "#/$defs/upickletest.Domain"
+        }
+      },
+      "required": [
+        "d"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.ADomain"
+}

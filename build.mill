@@ -18,6 +18,7 @@ val scala212  = "2.12.20"
 val scala213  = "2.13.16"
 
 val scala3   = "3.3.7"
+val scala381 = "3.8.1"
 val scala3NamedTuples = "3.7.0"
 val scalaJSNamedTuples = "1.20.1" // the version of scala.js that the scala3-library is built for.
 val scalaNativeNamedTuples = "0.5.9" // the version of scala.native that the scala3-library is built for.
@@ -383,6 +384,28 @@ object upickle extends Module{
         override def mimaPreviousArtifacts = Seq.empty[Dep] // no previous versions
 
         object test extends CommonTestModule
+      }
+    }
+  }
+
+  object jsonschema extends Module {
+    object jvm extends Cross[JvmModule](Seq(scala381))
+    trait JvmModule extends CommonJvmModule {
+      def jvmId = "17"
+      def moduleDeps = Seq(upickle.jvm(scala3))
+      override def mimaPreviousVersions = Seq.empty[String]
+      override def mimaPreviousArtifacts = Seq.empty[Dep]
+      override def mimaReportBinaryIssues() = Task.Command {}
+
+      object test extends CommonTestModule{
+        override def mvnDeps = Seq(
+          mvn"com.lihaoyi::utest::0.10.0-RC1",
+          mvn"com.networknt:json-schema-validator:1.5.8"
+        )
+        def moduleDeps = super.moduleDeps ++ Seq(
+          upickle.jvm(scala3).test,
+          upickle.implicits.`named-tuples`.jvm(scala3NamedTuples).test
+        )
       }
     }
   }

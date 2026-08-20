@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Domain": {
+      "oneOf": [
+        {
+          "const": "Something"
+        },
+        {
+          "const": "reddit.com"
+        }
+      ]
+    }
+  },
+  "$ref": "#/$defs/upickletest.Domain"
+}

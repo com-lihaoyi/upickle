@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.ADTs.ADTc": {
+      "type": "object",
+      "properties": {
+        "i": {
+          "type": "integer"
+        },
+        "s": {
+          "type": "string"
+        },
+        "t": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "i",
+        "s",
+        "t"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.ADTs.ADTc"
+}

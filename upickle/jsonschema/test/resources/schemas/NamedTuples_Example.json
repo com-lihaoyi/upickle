@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "scala.NamedTuple.NamedTuple[scala.Tuple3[\"foo\", \"bar\", \"qux\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Predef.String, scala.Option[scala.Int]]]": {
+      "type": "object",
+      "properties": {
+        "foo": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "bar": {
+          "type": "string"
+        },
+        "qux": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1,
+              "items": {
+                "type": "integer"
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "foo",
+        "bar",
+        "qux"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/scala.NamedTuple.NamedTuple[scala.Tuple3[\"foo\", \"bar\", \"qux\"], scala.Tuple3[scala.collection.immutable.Seq[scala.Int], scala.Predef.String, scala.Option[scala.Int]]]"
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.SimpleEnum": {
+      "oneOf": [
+        {
+          "const": "A"
+        },
+        {
+          "const": "B"
+        }
+      ]
+    }
+  },
+  "$ref": "#/$defs/upickletest.SimpleEnum"
+}

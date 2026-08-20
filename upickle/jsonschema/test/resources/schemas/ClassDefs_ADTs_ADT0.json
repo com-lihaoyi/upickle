@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.ADTs.ADT0": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.ADTs.ADT0"
+}

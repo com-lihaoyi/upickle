@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Flatten.FlattenIntKey": {
+      "type": "object",
+      "properties": {
+        "i": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "i"
+      ],
+      "additionalProperties": {
+        "type": "string"
+      },
+      "propertyNames": {
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^-?(0|[1-9][0-9]*)$"
+          },
+          {
+            "enum": [
+              "i"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "$ref": "#/$defs/upickletest.Flatten.FlattenIntKey"
+}

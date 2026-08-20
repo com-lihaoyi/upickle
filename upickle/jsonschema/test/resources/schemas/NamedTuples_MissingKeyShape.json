@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "scala.NamedTuple.NamedTuple[scala.Tuple1[\"foo\"], scala.Tuple1[scala.Boolean]]": {
+      "type": "object",
+      "properties": {
+        "foo": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "foo"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/scala.NamedTuple.NamedTuple[scala.Tuple1[\"foo\"], scala.Tuple1[scala.Boolean]]"
+}

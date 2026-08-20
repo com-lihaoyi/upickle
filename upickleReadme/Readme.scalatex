@@ -26,7 +26,7 @@
   )
 )
 
-@sect("uPickle 4.4.2")
+@sect("uPickle 4.4.3")
   @div(display.flex, alignItems.center, flexDirection.column)
     @div
       @a(href := "https://www.patreon.com/lihaoyi")(
@@ -71,8 +71,8 @@
 
   @sect{Getting Started}
     @hl.scala
-      "com.lihaoyi" %% "upickle" % "4.4.2" // SBT
-      ivy"com.lihaoyi::upickle:4.4.2" // Mill
+      "com.lihaoyi" %% "upickle" % "4.4.3" // SBT
+      ivy"com.lihaoyi::upickle:4.4.3" // Mill
 
     @p
       And then you can immediately start writing and reading common Scala
@@ -94,13 +94,60 @@
       @p
         For ScalaJS applications, use this dependencies instead:
       @hl.scala
-        "com.lihaoyi" %%% "upickle" % "4.4.2" // SBT
-        ivy"com.lihaoyi::upickle::4.4.2" // Mill
+        "com.lihaoyi" %%% "upickle" % "4.4.3" // SBT
+        ivy"com.lihaoyi::upickle::4.4.3" // Mill
 
     @sect{Scala Versions}
       @p
 
         uPickle supports Scala 2.12, 2.13 and 3.1+
+
+  @sect{JSON Schema (Scala 3, EXPERIMENTAL)}
+    @p
+      uPickle can derive JSON Schema documents from the same types you serialize
+      with @hl.scala{Reader}/@hl.scala{Writer}/@hl.scala{ReadWriter}. This lives in
+      a separate module, currently targeting Scala 3. This API is experimental and
+      may change between minor releases.
+
+    @hl.scala
+      "com.lihaoyi" %% "upickle-jsonschema" % "4.4.3" // SBT
+      ivy"com.lihaoyi::upickle-jsonschema:4.4.3" // Mill
+
+    @p
+      Define @hl.scala{JsonSchema} instances (usually via @hl.scala{JsonSchema.derived}),
+      then call @hl.scala{upickle.default.schema[T]}:
+
+    @hl.scala
+      import upickle.default.*
+      import upickle.jsonschema.*
+
+      case class Address(street: String, zip: Int) derives ReadWriter
+      case class Person(name: String, address: Address) derives ReadWriter
+
+      given JsonSchema[Address] = JsonSchema.derived
+      given JsonSchema[Person] = JsonSchema.derived
+
+      val schemaJson: ujson.Value = upickle.default.schema[Person]
+      println(schemaJson.render(indent = 2))
+
+    @p
+      Recursive and mutually-recursive types are supported via @hl.scala{$ref}/@hl.scala{$defs}:
+
+    @hl.scala
+      import upickle.default.*
+      import upickle.jsonschema.*
+
+      case class Node(value: Int, next: Option[Node]) derives ReadWriter
+      lazy given JsonSchema[Node] = JsonSchema.derived
+
+      val recursiveSchema = upickle.default.schema[Node]
+
+    @p
+      To inspect just the collected definitions map, use @hl.scala{schemas[T]}:
+
+    @hl.scala
+      val defs: collection.immutable.ListMap[String, ujson.Value] =
+        upickle.default.schemas[Person]
 
   @sect{Basics}
     @sect{Builtins}
@@ -239,7 +286,7 @@
           for Scala 3.7.0 and above:
 
         @hl.scala
-          ivy"com.lihaoyi::upickle-implicits-named-tuples:4.4.2" // Mill build config
+          ivy"com.lihaoyi::upickle-implicits-named-tuples:4.4.3" // Mill build config
 
         @p
           You can read/write any named tuple value, as long as the fields can also be read/written,
@@ -1031,6 +1078,10 @@
       JSON library, and inherits a lot of it's performance from Erik's work.
 
   @sect{Version History}
+    @sect{4.4.3}
+      @ul
+        @li
+          Experimental JSON Schema support for uPickle @hl.scala{case class}es
     @sect{4.4.2}
       @ul
         @li

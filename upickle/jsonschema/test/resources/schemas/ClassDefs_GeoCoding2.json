@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "upickletest.Result2": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "whatever": {
+          "type": "string"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "whatever",
+        "types"
+      ],
+      "additionalProperties": true
+    },
+    "upickletest.GeoCoding2": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/upickletest.Result2"
+          }
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "results",
+        "status"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "$ref": "#/$defs/upickletest.GeoCoding2"
+}
