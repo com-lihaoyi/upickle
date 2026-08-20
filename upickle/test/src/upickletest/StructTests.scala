@@ -13,6 +13,11 @@ import language.postfixOps
 
 object StructTests extends TestSuite {
 
+  case class OptWrapper(opt: Option[String])
+  object OptWrapper {
+    implicit def rw: upickle.default.ReadWriter[OptWrapper] = upickle.default.macroRW
+  }
+
   val tests = Tests {
     test("arrays"){
       test("empty") - rwk(Array[Int](), "[]", upack.Arr())(_.toSeq)
@@ -507,6 +512,19 @@ object StructTests extends TestSuite {
         upickle.default.write(value) ==> serialized
         upickle.default.read[MyType](serialized) ==>
           Seq(Nil, List(Map(None -> "omg"), Map(Some("lol") -> null, None -> "")), List(null))
+      }
+
+      test("serializeNonesFalseWithOptionsAsNullsFalseFails") - {
+        object IncompatibleConfig extends upickle.AttributeTagged {
+          override def serializeNones = false
+          override def optionsAsNulls = false
+        }
+        implicit val rw: IncompatibleConfig.ReadWriter[OptWrapper] = IncompatibleConfig.macroRW
+        val expectedMsg = "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false"
+        val writeEx = intercept[Throwable](IncompatibleConfig.write(OptWrapper(None))).getMessage
+        assert(writeEx.startsWith(expectedMsg))
+        val readEx = intercept[Throwable](IncompatibleConfig.read[OptWrapper]("{}")).getCause.getMessage
+        assert(readEx.startsWith(expectedMsg))
       }
 
       test("tuples") - rw(

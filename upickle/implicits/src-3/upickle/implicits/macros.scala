@@ -125,10 +125,14 @@ private def storeDefaultsImpl[T](x: Expr[upickle.implicits.BaseCaseObjectContext
   val statements = allFields[T]
     .filter(!_._5)
     .zipWithIndex
-    .map { case ((_, _, _, default, _), i) =>
+    .map { case ((field, _, _, default, _), i) =>
       default match {
         case Some(defaultValue) => '{${x}.storeValueIfNotFound(${Expr(i)}, ${defaultValue})}
-        case None => '{}
+        case None =>
+          field.typeRef.asType match {
+            case '[Option[?]] => '{${x}.storeValueIfNotFound(${Expr(i)}, None)}
+            case _ => '{}
+          }
       }
     }
 
@@ -259,12 +263,22 @@ private def writeLengthImpl[T](thisOuter: Expr[upickle.core.Types with upickle.i
           report.error(s"${typeSymbol} is not a case class or a Iterable[(_, _)]")
           Nil
         }
-      }
-      else if (!defaults.contains(label)) List('{1})
-      else {
-        val serDflt = serDfltVals(thisOuter, field, classTypeRepr.typeSymbol)
+      } else {
+        val isOption = field.typeRef.asType match {
+          case '[Option[?]] => true
+          case _ => false
+        }
+        val hasDefault = defaults.contains(label)
+        def defaultsCond = {
+          val serDflt = serDfltVals(thisOuter, field, classTypeRepr.typeSymbol)
+          '{ ${serDflt} || ${select.asExprOf[Any]} != ${defaults(label)} }
+        }
+        def nonesCond = '{ ${ thisOuter }.serializeNones || ${ select.asExprOf[Option[?]] }.nonEmpty }
         List(
-          '{if (${serDflt} || ${select.asExprOf[Any]} != ${defaults(label)}) 1 else 0}
+          if (hasDefault && isOption) '{if ($defaultsCond && $nonesCond) 1 else 0}
+          else if (hasDefault) '{if ($defaultsCond) 1 else 0}
+          else if (isOption) '{if ($nonesCond) 1 else 0}
+          else '{1}
         )
       }
 
@@ -289,8 +303,15 @@ private def writeSnippetsImpl[R, T, W[_]](thisOuter: Expr[upickle.core.Types wit
                             v: Expr[T],
                             ctx: Expr[_root_.upickle.core.ObjVisitor[_, R]])
                            (using Quotes, Type[T], Type[R], Type[W]): Expr[Unit] =
-
   import quotes.reflect.*
+  val configCheck = '{
+    if (!${thisOuter}.optionsAsNulls && !${thisOuter}.serializeNones) {
+      throw new IllegalArgumentException(
+        "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false. " +
+        "When optionsAsNulls is false, Options are serialized as arrays ([t] or []), so the serializeNones setting does not apply."
+      )
+    }
+  }
 
     def loop(field: Symbol, label: String, classTypeRepr: TypeRepr, select: Select, defaults: Map[String, Expr[Object]]): List[Expr[Any]] =  
       val flatten = extractFlatten(field)
@@ -351,16 +372,26 @@ private def writeSnippetsImpl[R, T, W[_]](thisOuter: Expr[upickle.core.Types wit
                 ${select.asExprOf[Any]},
               )
             }
+            val isOption = field.typeRef.asType match {
+              case '[Option[?]] => true
+              case _ => false
+            }
+            val hasDefault = defaults.contains(label)
+            def nonesCond = '{ ${ thisOuter }.serializeNones || ${select.asExprOf[Option[?]]}.nonEmpty }
+            def defaultsCond = {
+              val serDflt = serDfltVals(thisOuter, field, classTypeRepr.typeSymbol)
+              '{ ${serDflt} || ${select.asExprOf[Any]} != ${defaults(label)} }
+            }
             List(
-              if (!defaults.contains(label)) snippet
-              else {
-                val serDflt = serDfltVals(thisOuter, field, classTypeRepr.typeSymbol)
-                '{if ($serDflt || ${select.asExprOf[Any]} != ${defaults(label)}) $snippet}
-              }
+              if (hasDefault && isOption) '{ if ($defaultsCond && $nonesCond) $snippet }
+              else if (hasDefault) '{ if ($defaultsCond) $snippet }
+              else if (isOption) '{ if ($nonesCond) $snippet }
+              else snippet
             )
       }
 
   Expr.block(
+    configCheck ::
     fieldLabelsImpl0[T]
       .flatMap { (rawLabel, label) =>
         val defaults = getDefaultParamsImpl0[T]

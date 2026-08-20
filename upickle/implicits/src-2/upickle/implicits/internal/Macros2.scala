@@ -327,6 +327,18 @@ object Macros2 {
             (TermName(s"localReader$idx"), TermName(s"aggregated$idx"))
         }.unzip
 
+      val hasOptionFields = types.exists(_.typeSymbol.fullName == "scala.Option")
+      val readConfigCheck = if (hasOptionFields) {
+        q"""
+          if (!${c.prefix}.optionsAsNulls && !${c.prefix}.serializeNones) {
+            throw new IllegalArgumentException(
+              "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false. " +
+              "When optionsAsNulls is false, Options are serialized as arrays ([t] or []), so the serializeNones setting does not apply."
+            )
+          }
+        """
+      } else q"()"
+
       def constructClass(constructedTpe: c.Type): c.universe.Tree = {
         def loop(tpe: c.Type, offset: Int): (c.universe.Tree, Int) = {
           val companion = companionTree(tpe)
@@ -482,9 +494,18 @@ object Macros2 {
             }
 
             def visitEnd(index: Int) = {
+              $readConfigCheck
+
               ..${
                 for(i <- defaultValues.indices if defaultValues(i).isDefined)
                   yield q"this.storeValueIfNotFound($i, ${defaultValues(i).get})"
+              }
+
+              if (!${c.prefix}.serializeNones) {
+                ..${
+                  for(i <- types.indices if types(i).typeSymbol.fullName == "scala.Option")
+                    yield q"this.storeValueIfNotFound($i, None)"
+                }
               }
 
               // Special-case 64 because java bit shifting ignores any RHS values above 63
@@ -584,9 +605,22 @@ object Macros2 {
                      $select
                    )
                 """
-              val default = if (defaultValue.isEmpty) snippet
-              else q"""if (${serDfltVals(symbol)} || $select != ${defaultValue.get}) $snippet"""
-              default :: Nil
+
+              val isOption = tpeOfField.typeSymbol.fullName == "scala.Option"
+              val hasDefault = defaultValue.nonEmpty
+
+              def nonesCond = q"${c.prefix}.serializeNones || $select.nonEmpty"
+              def defaultsCond = q"${serDfltVals(symbol)} || $select != ${defaultValue.get}"
+
+              val res = if (isOption && hasDefault) {
+                q"""if (($nonesCond) && ($defaultsCond)) $snippet"""
+              } else if(hasDefault) {
+                q"""if ($defaultsCond) $snippet"""
+              } else if(isOption) {
+                q"""if ($nonesCond) $snippet"""
+              } else snippet
+
+              res :: Nil
           }
         }
       }
@@ -606,12 +640,36 @@ object Macros2 {
               }
               else fail(s"Invalid type for flattening: $tpeOfField.")
             case None =>
-              val snippet = if (defaultValue.isEmpty) q"1"
-              else q"""if (${serDfltVals(symbol)} || $select != ${defaultValue.get}) 1 else 0"""
-              snippet :: Nil
+              val isOption = tpeOfField.typeSymbol.fullName == "scala.Option"
+              val hasDefault = defaultValue.nonEmpty
+
+              def nonesCond = q"${c.prefix}.serializeNones || $select.nonEmpty"
+              def defaultsCond = q"${serDfltVals(symbol)} || $select != ${defaultValue.get}"
+
+              val res = if (isOption && hasDefault) {
+                q"""if (($nonesCond) && ($defaultsCond)) 1 else 0"""
+              } else if(hasDefault) {
+                q"""if ($defaultsCond) 1 else 0"""
+              } else if(isOption) {
+                q"""if ($nonesCond) 1 else 0"""
+              } else q"1"
+
+              res :: Nil
           }
         }
       }
+
+      val hasOptionFields = types.exists(_.typeSymbol.fullName == "scala.Option")
+      val configCheck = if (hasOptionFields) {
+        q"""
+          if (!${c.prefix}.optionsAsNulls && !${c.prefix}.serializeNones) {
+            throw new IllegalArgumentException(
+              "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false. " +
+              "When optionsAsNulls is false, Options are serialized as arrays ([t] or []), so the serializeNones setting does not apply."
+            )
+          }
+        """
+      } else q"()"
 
       q"""
         new ${c.prefix}.CaseClassWriter[$targetType]{
@@ -626,6 +684,7 @@ object Macros2 {
           override def write0[R](out: _root_.upickle.core.Visitor[_, R], v: $targetType): R = {
             if (v == null) out.visitNull(-1)
             else {
+              $configCheck
               val ctx = out.visitObject(length(v), true, -1)
               ..${write(targetType, q"v")}
               ctx.visitEnd(-1)
