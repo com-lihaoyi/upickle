@@ -327,6 +327,18 @@ object Macros2 {
             (TermName(s"localReader$idx"), TermName(s"aggregated$idx"))
         }.unzip
 
+      val hasOptionFields = types.exists(_.typeSymbol.fullName == "scala.Option")
+      val readConfigCheck = if (hasOptionFields) {
+        q"""
+          if (!${c.prefix}.optionsAsNulls && !${c.prefix}.serializeNones) {
+            throw new IllegalArgumentException(
+              "Incompatible configuration: serializeNones = false cannot be used together with optionsAsNulls = false. " +
+              "When optionsAsNulls is false, Options are serialized as arrays ([t] or []), so the serializeNones setting does not apply."
+            )
+          }
+        """
+      } else q"()"
+
       def constructClass(constructedTpe: c.Type): c.universe.Tree = {
         def loop(tpe: c.Type, offset: Int): (c.universe.Tree, Int) = {
           val companion = companionTree(tpe)
@@ -482,6 +494,8 @@ object Macros2 {
             }
 
             def visitEnd(index: Int) = {
+              $readConfigCheck
+
               ..${
                 for(i <- defaultValues.indices if defaultValues(i).isDefined)
                   yield q"this.storeValueIfNotFound($i, ${defaultValues(i).get})"
