@@ -267,11 +267,15 @@ abstract class ElemParser[J] extends upickle.core.BufferingElemParser{
    */
   protected[this] final def descape(i: Int): Char = {
     import upickle.core.RenderUtils.hex
+    def hexAt(j: Int): Int = {
+      val h = hex(getElemSafe(j).toInt)
+      if (h < 0) die(j, "invalid hex digit in \\u escape") else h
+    }
     var x = 0
-    x = (x << 4) | hex(getElemSafe(i+2).toInt)
-    x = (x << 4) | hex(getElemSafe(i+3).toInt)
-    x = (x << 4) | hex(getElemSafe(i+4).toInt)
-    x = (x << 4) | hex(getElemSafe(i+5).toInt)
+    x = (x << 4) | hexAt(i+2)
+    x = (x << 4) | hexAt(i+3)
+    x = (x << 4) | hexAt(i+4)
+    x = (x << 4) | hexAt(i+5)
     x.toChar
   }
 
