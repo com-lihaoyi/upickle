@@ -59,6 +59,9 @@ object SyntaxTests extends TestSuite{
       test("literal BS NUL is invalid") { TestUtil.checkParse(qs("\\\u0000"), false) }
       test("literal BS ZERO is invalid") { TestUtil.checkParse(qs("\\0"), false) }
       test("literal BS X is invalid") { TestUtil.checkParse(qs("\\x"), false) }
+      test("invalid \\u hex digit g is rejected") { TestUtil.checkParse(qs("\\u00gZ"), false) }
+      test("invalid \\u hex digit X is rejected") { TestUtil.checkParse(qs("\\uXXXX"), false) }
+      test("invalid \\u hex digit G is rejected") { TestUtil.checkParse(qs("\\u0G00"), false) }
     }
     test("objects"){
       test{ TestUtil.checkParse("{}", true) }
